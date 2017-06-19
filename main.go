@@ -18,10 +18,10 @@ func main() {
 	rend := renderer.New()
 	cmd := handlers.NewCMD(rend)
 
-	r.Path("/dataset/cmd").Methods("GET").HandlerFunc(cmd.Landing)
-	r.Path("/dataset/cmd/middle").Methods("POST").HandlerFunc(cmd.CreateJobID)
-	r.Path("/dataset/cmd/{jobID}").Methods("GET").HandlerFunc(cmd.Middle)
-	r.Path("/dataset/cmd/{jobID}/finish").Methods("GET").HandlerFunc(cmd.PreviewAndDownload)
+	r.Path("/datasets/{datasetID}/editions/{editionID}/versions/{versionID}").Methods("GET").HandlerFunc(cmd.Landing)
+	r.Path("/datasets/{datasetID}/editions/{editionID}/versions/{versionID}/filter").Methods("POST").HandlerFunc(cmd.CreateJobID)
+	r.Path("/jobs/{jobID}").Methods("GET").HandlerFunc(cmd.Middle)
+	r.Path("/jobs/{jobID}/dimensions").Methods("GET").HandlerFunc(cmd.PreviewAndDownload)
 
 	s := server.New(cfg.BindAddr, r)
 

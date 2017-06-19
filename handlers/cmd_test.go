@@ -24,7 +24,7 @@ func TestUnitCMD(t *testing.T) {
 
 			c := NewCMD(mr)
 
-			testResponse(200, "landing-page", "/dataset/cmd", c.Landing)
+			testResponse(200, "landing-page", "/datasets/1234/editions/5678/versions/2017", c.Landing)
 		})
 
 		Convey("test error thrown when rendering landing page", func() {
@@ -33,19 +33,19 @@ func TestUnitCMD(t *testing.T) {
 
 			c := NewCMD(mr)
 
-			testResponse(500, "", "/dataset/cmd", c.Landing)
+			testResponse(500, "", "/datasets/1234/editions/5678/versions/2017", c.Landing)
 		})
 	})
 
 	Convey("test CreateJobID handler, creates a job id and redirects", t, func() {
 		c := NewCMD(nil)
 
-		w := testResponse(301, "", "/dataset/cmd/middle", c.CreateJobID)
+		w := testResponse(301, "", "/datasets/1234/editions/5678/versions/2017/filter", c.CreateJobID)
 
 		location := w.Header().Get("Location")
 		So(location, ShouldNotBeEmpty)
 
-		matched, err := regexp.MatchString(`^\/dataset\/cmd\/\d{8}$`, location)
+		matched, err := regexp.MatchString(`^\/jobs\/\d{8}$`, location)
 		So(err, ShouldBeNil)
 		So(matched, ShouldBeTrue)
 	})
@@ -57,7 +57,7 @@ func TestUnitCMD(t *testing.T) {
 
 			c := NewCMD(mr)
 
-			testResponse(200, "middle-page", "/dataset/cmd/12345678", c.Middle)
+			testResponse(200, "middle-page", "/jobs/12345678", c.Middle)
 		})
 
 		Convey("test error thrown when rendering middle page", func() {
@@ -66,7 +66,7 @@ func TestUnitCMD(t *testing.T) {
 
 			c := NewCMD(mr)
 
-			testResponse(500, "", "/dataset/cmd/12345678", c.Middle)
+			testResponse(500, "", "/jobs/12345678", c.Middle)
 		})
 	})
 
@@ -77,7 +77,7 @@ func TestUnitCMD(t *testing.T) {
 
 			c := NewCMD(mr)
 
-			testResponse(200, "finish-page", "/dataset/cmd/12345678/finish", c.PreviewAndDownload)
+			testResponse(200, "finish-page", "/jobs/12345678/dimensions", c.PreviewAndDownload)
 		})
 
 		Convey("test error thrown when rendering finish page", func() {
@@ -86,7 +86,7 @@ func TestUnitCMD(t *testing.T) {
 
 			c := NewCMD(mr)
 
-			testResponse(500, "", "/dataset/cmd/12345678/finish", c.PreviewAndDownload)
+			testResponse(500, "", "/jobs/12345678/dimensions", c.PreviewAndDownload)
 		})
 	})
 

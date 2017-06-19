@@ -40,13 +40,13 @@ func (c *CMD) Landing(w http.ResponseWriter, req *http.Request) {
 // CreateJobID controls the creating of a job idea when a new user journey is
 // requested
 func (c *CMD) CreateJobID(w http.ResponseWriter, req *http.Request) {
-	// TODO: This is a stubbed job id - replace with real job id from backend once
+	// TODO: This is a stubbed job id - replace with real job id from api once
 	// code has been written
 	jobID := rand.Intn(100000000)
 	jid := strconv.Itoa(jobID)
 
 	log.Trace("created job id", log.Data{"job_id": jid})
-	http.Redirect(w, req, "/dataset/cmd/"+jid, 301)
+	http.Redirect(w, req, "/jobs/"+jid, 301)
 }
 
 // Middle controls the rendering of a "middle" cmd page - this will be replaced
