@@ -9,6 +9,11 @@ import (
 	"github.com/ONSdigital/dp-frontend-dataset-controller/config"
 )
 
+// Renderer provides an interface for a service template renderer
+type Renderer interface {
+	Do(path string, b []byte) ([]byte, error)
+}
+
 // ErrInvalidRendererResponse is returned when the renderer service does not respons
 // with a status 200
 type ErrInvalidRendererResponse struct {
@@ -20,23 +25,23 @@ func (e ErrInvalidRendererResponse) Error() string {
 }
 
 // Renderer represents a template renderer for dp-frontend-dataset-controller
-type Renderer struct {
+type renderer struct {
 	client *http.Client
 	url    string
 }
 
 // New creates an instance of renderer with a default client
-func New() *Renderer {
+func New() Renderer {
 	cfg := config.Get()
 
-	return &Renderer{
+	return &renderer{
 		client: &http.Client{},
 		url:    cfg.RendererURL,
 	}
 }
 
 // Do sends a request to the renderer service to render a given template
-func (r *Renderer) Do(path string, b []byte) ([]byte, error) {
+func (r *renderer) Do(path string, b []byte) ([]byte, error) {
 	// Renderer required JSON to be sent so if byte array is empty, set it to be
 	// empty json
 	if b == nil {

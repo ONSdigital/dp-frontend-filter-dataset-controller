@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/ONSdigital/dp-frontend-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-dataset-controller/handlers"
+	"github.com/ONSdigital/dp-frontend-dataset-controller/renderer"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/gorilla/mux"
@@ -14,10 +15,13 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.Path("/dataset/cmd").Methods("GET").HandlerFunc(handlers.Landing)
-	r.Path("/dataset/cmd/middle").Methods("POST").HandlerFunc(handlers.CreateJobID)
-	r.Path("/dataset/cmd/{jobID}").Methods("GET").HandlerFunc(handlers.Middle)
-	r.Path("/dataset/cmd/{jobID}/finish").Methods("GET").HandlerFunc(handlers.PreviewAndDownload)
+	rend := renderer.New()
+	cmd := handlers.NewCMD(rend)
+
+	r.Path("/dataset/cmd").Methods("GET").HandlerFunc(cmd.Landing)
+	r.Path("/dataset/cmd/middle").Methods("POST").HandlerFunc(cmd.CreateJobID)
+	r.Path("/dataset/cmd/{jobID}").Methods("GET").HandlerFunc(cmd.Middle)
+	r.Path("/dataset/cmd/{jobID}/finish").Methods("GET").HandlerFunc(cmd.PreviewAndDownload)
 
 	s := server.New(cfg.BindAddr, r)
 
