@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/ONSdigital/dp-frontent-filter-dataset-controller/config"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 )
 
 // Renderer provides an interface for a service template renderer
@@ -24,7 +24,7 @@ func (e ErrInvalidRendererResponse) Error() string {
 	return fmt.Sprintf("invalid response from renderer service - status %d", e.responseCode)
 }
 
-// Renderer represents a template renderer for dp-frontent-filter-dataset-controller
+// Renderer represents a template renderer for dp-frontend-filter-dataset-controller
 type renderer struct {
 	client *http.Client
 	url    string

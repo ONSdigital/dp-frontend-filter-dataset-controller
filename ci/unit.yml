@@ -9,8 +9,8 @@ image_resource:
     tag: 1.8.3
 
 inputs:
-  - name: dp-frontent-filter-dataset-controller
-    path: go/src/github.com/ONSdigital/dp-frontent-filter-dataset-controller
+  - name: dp-frontend-filter-dataset-controller
+    path: go/src/github.com/ONSdigital/dp-frontend-filter-dataset-controller
 
 run:
-  path: go/src/github.com/ONSdigital/dp-frontent-filter-dataset-controller/ci/scripts/unit.sh
+  path: go/src/github.com/ONSdigital/dp-frontend-filter-dataset-controller/ci/scripts/unit.sh

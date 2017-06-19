@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/ONSdigital/dp-frontent-filter-dataset-controller/renderer"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
 )

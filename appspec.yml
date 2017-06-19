@@ -4,9 +4,9 @@ version: 0.0
 os: linux
 files:
   - source: scripts/codedeploy
-    destination: /home/${CODEDEPLOY_USER}/dp-frontent-filter-dataset-controller
+    destination: /home/${CODEDEPLOY_USER}/dp-frontend-filter-dataset-controller
 permissions:
-  - object: /home/${CODEDEPLOY_USER}/dp-frontent-filter-dataset-controller
+  - object: /home/${CODEDEPLOY_USER}/dp-frontend-filter-dataset-controller
     owner: ${CODEDEPLOY_USER}
     group: ${CODEDEPLOY_USER}
 hooks:

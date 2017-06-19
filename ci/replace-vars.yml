@@ -9,7 +9,7 @@ image_resource:
 
 inputs:
   - name: build
-  - name: dp-frontent-filter-dataset-controller
+  - name: dp-frontend-filter-dataset-controller
 
 outputs:
   - name: artifacts
@@ -21,4 +21,4 @@ params:
   ECR_REPOSITORY_URI:
 
 run:
-  path: dp-frontent-filter-dataset-controller/ci/scripts/replace-vars.sh
+  path: dp-frontend-filter-dataset-controller/ci/scripts/replace-vars.sh

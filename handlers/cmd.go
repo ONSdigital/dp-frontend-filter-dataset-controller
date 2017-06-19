@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/ONSdigital/dp-frontent-filter-dataset-controller/renderer"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )

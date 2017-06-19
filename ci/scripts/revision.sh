@@ -1,6 +1,6 @@
 #!/bin/bash -ux
 
-pushd dp-frontent-filter-dataset-controller
+pushd dp-frontend-filter-dataset-controller
   TAG=$(git describe --exact-match HEAD 2>/dev/null)
   REV=$(git rev-parse --short HEAD)
 popd
@@ -11,4 +11,4 @@ else
   echo $REV > artifacts/revision
 fi
 
-mv bin/dp-frontent-filter-dataset-controller artifacts/
+mv bin/dp-frontend-filter-dataset-controller artifacts/

@@ -3,7 +3,7 @@
 node {
     def gopath = pwd()
 
-    ws("${gopath}/src/github.com/ONSdigital/dp-frontent-filter-dataset-controller") {
+    ws("${gopath}/src/github.com/ONSdigital/dp-frontend-filter-dataset-controller") {
         stage('Checkout') {
             checkout scm
             sh 'git clean -dfx'
