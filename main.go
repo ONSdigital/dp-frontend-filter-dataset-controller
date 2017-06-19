@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/ONSdigital/dp-frontend-dataset-controller/config"
-	"github.com/ONSdigital/dp-frontend-dataset-controller/handlers"
-	"github.com/ONSdigital/dp-frontend-dataset-controller/renderer"
+	"github.com/ONSdigital/dp-frontent-filter-dataset-controller/config"
+	"github.com/ONSdigital/dp-frontent-filter-dataset-controller/handlers"
+	"github.com/ONSdigital/dp-frontent-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/gorilla/mux"
 )
 
 func main() {
-	log.Namespace = "dp-frontend-dataset-controller"
+	log.Namespace = "dp-frontent-filter-dataset-controller"
 	cfg := config.Get()
 
 	r := mux.NewRouter()

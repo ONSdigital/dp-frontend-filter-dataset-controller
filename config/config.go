@@ -2,7 +2,7 @@ package config
 
 import "os"
 
-// Config represents service configuration for dp-frontend-dataset-controller
+// Config represents service configuration for dp-frontent-filter-dataset-controller
 type Config struct {
 	BindAddr    string
 	RendererURL string

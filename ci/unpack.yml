@@ -9,10 +9,10 @@ image_resource:
 
 inputs:
   - name: build-bundle
-  - name: dp-frontend-dataset-controller
+  - name: dp-frontent-filter-dataset-controller
 
 outputs:
   - name: build
 
 run:
-  path: dp-frontend-dataset-controller/ci/scripts/unpack.sh
+  path: dp-frontent-filter-dataset-controller/ci/scripts/unpack.sh

@@ -1,4 +1,4 @@
-dp-frontend-dataset-controller
+dp-frontent-filter-dataset-controller
 ==================
 
 An HTTP service for the controlling of data relevant to a particular dataset.
