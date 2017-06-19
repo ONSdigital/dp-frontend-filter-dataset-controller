@@ -15,6 +15,12 @@
 			"revisionTime": "2017-06-02T12:31:46Z"
 		},
 		{
+			"checksumSHA1": "ST3iiJ6vhtfZDnujuW/HGXQCtZM=",
+			"path": "github.com/golang/mock/gomock",
+			"revision": "e9b646f0c18577a42c2e2c59f97dbcc5aa61db32",
+			"revisionTime": "2017-06-16T16:41:25Z"
+		},
+		{
 			"checksumSHA1": "6PQFibmHgsXFHoRQPmkw2V+59Lk=",
 			"path": "github.com/gorilla/mux",
 			"revision": "18fca31550181693b3a834a15b74b564b3605876",
