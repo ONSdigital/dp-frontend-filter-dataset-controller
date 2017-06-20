@@ -1,0 +1,37 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "AjbjbhFVAOP/1NU5HL+uy+X/yJo=",
+			"path": "github.com/ONSdigital/go-ns/log",
+			"revision": "8ff3e3747e0cd0f2f7d8c570586afd31c0790f75",
+			"revisionTime": "2017-06-15T10:07:49Z"
+		},
+		{
+			"checksumSHA1": "7Gnowh+J328u02q/Ph03VIw2fGI=",
+			"path": "github.com/ONSdigital/go-ns/server",
+			"revision": "7a0755469020390a462ae71b83b672bc59787468",
+			"revisionTime": "2017-06-02T12:31:46Z"
+		},
+		{
+			"checksumSHA1": "ST3iiJ6vhtfZDnujuW/HGXQCtZM=",
+			"path": "github.com/golang/mock/gomock",
+			"revision": "e9b646f0c18577a42c2e2c59f97dbcc5aa61db32",
+			"revisionTime": "2017-06-16T16:41:25Z"
+		},
+		{
+			"checksumSHA1": "6PQFibmHgsXFHoRQPmkw2V+59Lk=",
+			"path": "github.com/gorilla/mux",
+			"revision": "18fca31550181693b3a834a15b74b564b3605876",
+			"revisionTime": "2017-05-30T19:55:47Z"
+		},
+		{
+			"checksumSHA1": "f4m09DHEetaanti/GqUJzyCBTaI=",
+			"path": "github.com/smartystreets/goconvey/convey",
+			"revision": "9e8dc3f972df6c8fcc0375ef492c24d0bb204857",
+			"revisionTime": "2017-06-02T16:46:21Z"
+		}
+	],
+	"rootPath": "github.com/ONSdigital/dp-frontend-filter-dataset-controller"
+}
