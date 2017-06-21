@@ -3,5 +3,5 @@
 export GOPATH=$(pwd)/go
 
 pushd $GOPATH/src/github.com/ONSdigital/dp-frontend-filter-dataset-controller
-  go test -tags 'production' ./...
+  make test
 popd
