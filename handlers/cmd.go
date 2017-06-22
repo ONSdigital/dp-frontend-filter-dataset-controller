@@ -88,6 +88,17 @@ func (c *CMD) Middle(w http.ResponseWriter, req *http.Request) {
 	p.SearchDisabled = true
 	p.Data.JobID = vars["jobID"]
 
+	p.Breadcrumb = []model.TaxonomyNode{
+		{
+			Title: "Title of dataset",
+			URI:   "/",
+		},
+		{
+			Title: "Filter this dataset",
+			URI:   "/",
+		},
+	}
+
 	body, err := json.Marshal(p)
 	if err != nil {
 		log.Error(err, nil)

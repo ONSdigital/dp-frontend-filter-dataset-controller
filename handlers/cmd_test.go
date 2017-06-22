@@ -53,7 +53,7 @@ func TestUnitCMD(t *testing.T) {
 	})
 
 	Convey("test middle page cmd handler", t, func() {
-		expectedReqBody := `{"type":"","uri":"","taxonomy":null,"breadcrumb":null,"serviceMessage":"","metadata":{"title":"","description":"","keywords":null,"footer":{"enabled":true,"contact":"Matt Rout","release_date":"11 November 2016","next_release":"11 November 2017","dataset_id":"MR"}},"searchDisabled":true,"data":{"job_id":""}}`
+		expectedReqBody := `{"type":"","uri":"","taxonomy":null,"breadcrumb":[{"title":"Title of dataset","uri":"/"},{"title":"Filter this dataset","uri":"/"}],"serviceMessage":"","metadata":{"title":"","description":"","keywords":null,"footer":{"enabled":true,"contact":"Matt Rout","release_date":"11 November 2016","next_release":"11 November 2017","dataset_id":"MR"}},"searchDisabled":true,"data":{"job_id":""}}`
 		Convey("test successful request for getting cmd middle page", func() {
 			mr := renderer.NewMockRenderer(mockCtrl)
 			mr.EXPECT().Do("dataset/middlepage", []byte(expectedReqBody)).Return([]byte(`middle-page`), nil)
