@@ -3,6 +3,30 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "mA4j3aknt5TTNyQXPJOM0hen0mc=",
+			"path": "github.com/ONSdigital/dp-frontend-models/model",
+			"revision": "0a740088ce959a2df8be8679cd99cfce14680e42",
+			"revisionTime": "2017-06-20T08:14:29Z"
+		},
+		{
+			"checksumSHA1": "fAyPS71FyNTWhcs+JmSkZupUaeE=",
+			"path": "github.com/ONSdigital/dp-frontend-models/model/datasetpages/finishPage",
+			"revision": "0a740088ce959a2df8be8679cd99cfce14680e42",
+			"revisionTime": "2017-06-20T08:14:29Z"
+		},
+		{
+			"checksumSHA1": "E6WOaNeTQx60wzn2gKoIHzemheI=",
+			"path": "github.com/ONSdigital/dp-frontend-models/model/datasetpages/middlePage",
+			"revision": "0a740088ce959a2df8be8679cd99cfce14680e42",
+			"revisionTime": "2017-06-20T08:14:29Z"
+		},
+		{
+			"checksumSHA1": "F7QBp7GvgJJBjqmHOyVGys+1yAM=",
+			"path": "github.com/ONSdigital/dp-frontend-models/model/datasetpages/startPage",
+			"revision": "0a740088ce959a2df8be8679cd99cfce14680e42",
+			"revisionTime": "2017-06-20T08:14:29Z"
+		},
+		{
 			"checksumSHA1": "J9OiPnhPHFPhQ+R+dq6LFj+dTxE=",
 			"path": "github.com/ONSdigital/go-ns/handlers/requestID",
 			"revision": "7a0755469020390a462ae71b83b672bc59787468",
