@@ -18,9 +18,11 @@ func TestUnitCMD(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	Convey("test landing http cmd handler", t, func() {
+		expectedReqBody := `{"type":"","uri":"","taxonomy":null,"breadcrumb":null,"serviceMessage":"","metadata":{"title":"","description":"","keywords":null,"footer":{"enabled":true,"contact":"Matt Rout","release_date":"11 November 2016","next_release":"11 November 2017","dataset_id":"MR"}},"searchDisabled":true}`
+
 		Convey("test successful request for getting cmd landing page", func() {
 			mr := renderer.NewMockRenderer(mockCtrl)
-			mr.EXPECT().Do("dataset/startpage", nil).Return([]byte(`landing-page`), nil)
+			mr.EXPECT().Do("dataset/startpage", []byte(expectedReqBody)).Return([]byte(`landing-page`), nil)
 
 			c := NewCMD(mr)
 
@@ -29,7 +31,7 @@ func TestUnitCMD(t *testing.T) {
 
 		Convey("test error thrown when rendering landing page", func() {
 			mr := renderer.NewMockRenderer(mockCtrl)
-			mr.EXPECT().Do("dataset/startpage", nil).Return(nil, errors.New("something went wrong :-("))
+			mr.EXPECT().Do("dataset/startpage", []byte(expectedReqBody)).Return(nil, errors.New("something went wrong :-("))
 
 			c := NewCMD(mr)
 
@@ -51,9 +53,10 @@ func TestUnitCMD(t *testing.T) {
 	})
 
 	Convey("test middle page cmd handler", t, func() {
+		expectedReqBody := `{"type":"","uri":"","taxonomy":null,"breadcrumb":null,"serviceMessage":"","metadata":{"title":"","description":"","keywords":null,"footer":{"enabled":true,"contact":"Matt Rout","release_date":"11 November 2016","next_release":"11 November 2017","dataset_id":"MR"}},"searchDisabled":true,"data":{"job_id":""}}`
 		Convey("test successful request for getting cmd middle page", func() {
 			mr := renderer.NewMockRenderer(mockCtrl)
-			mr.EXPECT().Do("dataset/middlepage", []byte(`{"data":{"job_id":""}}`)).Return([]byte(`middle-page`), nil)
+			mr.EXPECT().Do("dataset/middlepage", []byte(expectedReqBody)).Return([]byte(`middle-page`), nil)
 
 			c := NewCMD(mr)
 
@@ -62,7 +65,7 @@ func TestUnitCMD(t *testing.T) {
 
 		Convey("test error thrown when rendering middle page", func() {
 			mr := renderer.NewMockRenderer(mockCtrl)
-			mr.EXPECT().Do("dataset/middlepage", []byte(`{"data":{"job_id":""}}`)).Return(nil, errors.New("something went wrong with middle page rendering :-("))
+			mr.EXPECT().Do("dataset/middlepage", []byte(expectedReqBody)).Return(nil, errors.New("something went wrong with middle page rendering :-("))
 
 			c := NewCMD(mr)
 
@@ -71,9 +74,10 @@ func TestUnitCMD(t *testing.T) {
 	})
 
 	Convey("test landing http finish handler", t, func() {
+		expectedReqBody := `{"type":"","uri":"","taxonomy":null,"breadcrumb":null,"serviceMessage":"","metadata":{"title":"","description":"","keywords":null,"footer":{"enabled":true,"contact":"Matt Rout","release_date":"11 November 2016","next_release":"11 November 2017","dataset_id":"MR"}},"searchDisabled":true}`
 		Convey("test successful request for getting cmd finish page", func() {
 			mr := renderer.NewMockRenderer(mockCtrl)
-			mr.EXPECT().Do("dataset/finishpage", nil).Return([]byte(`finish-page`), nil)
+			mr.EXPECT().Do("dataset/finishpage", []byte(expectedReqBody)).Return([]byte(`finish-page`), nil)
 
 			c := NewCMD(mr)
 
@@ -82,7 +86,7 @@ func TestUnitCMD(t *testing.T) {
 
 		Convey("test error thrown when rendering finish page", func() {
 			mr := renderer.NewMockRenderer(mockCtrl)
-			mr.EXPECT().Do("dataset/finishpage", nil).Return(nil, errors.New("something went wrong rendering finish page :-("))
+			mr.EXPECT().Do("dataset/finishpage", []byte(expectedReqBody)).Return(nil, errors.New("something went wrong rendering finish page :-("))
 
 			c := NewCMD(mr)
 
