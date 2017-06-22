@@ -1,8 +1,9 @@
 #!/bin/bash -eux
 
-export BINPATH=$(pwd)/bin
-export GOPATH=$(pwd)/go
+cwd=$(pwd)
+
+export GOPATH=$cwd/go
 
 pushd $GOPATH/src/github.com/ONSdigital/dp-frontend-filter-dataset-controller
-  go build -tags 'production' -o $BINPATH/dp-frontend-filter-dataset-controller
+  make build && cp build/dp-frontend-filter-dataset-controller $cwd/build
 popd

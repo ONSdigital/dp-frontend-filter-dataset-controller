@@ -6,14 +6,14 @@ image_resource:
   type: docker-image
   source:
     repository: golang
-    tag: 1.8.3
+    tags: 1.8.3
 
 inputs:
   - name: dp-frontend-filter-dataset-controller
     path: go/src/github.com/ONSdigital/dp-frontend-filter-dataset-controller
 
 outputs:
-  - name: bin
+  - name: build
 
 run:
   path: go/src/github.com/ONSdigital/dp-frontend-filter-dataset-controller/ci/scripts/build.sh
