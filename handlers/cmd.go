@@ -166,6 +166,18 @@ func (c *CMD) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	}
 
 	p.SearchDisabled = true
+
+	p.Breadcrumb = []model.TaxonomyNode{
+		{
+			Title: "Title of dataset",
+			URI:   "/",
+		},
+		{
+			Title: "Filter this dataset",
+			URI:   "/",
+		},
+	}
+
 	p.Metadata.Footer = getStubbedMetadataFooter()
 
 	b, err := json.Marshal(p)
