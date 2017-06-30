@@ -8,6 +8,7 @@ import (
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/dp-frontend-models/model"
+	"github.com/ONSdigital/dp-frontend-models/model/cmd/filterOverview"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/finishPage"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/middlePage"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/startPage"
@@ -118,6 +119,70 @@ func (c *CMD) Middle(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+func (c *CMD) FilterOverview(w http.ResponseWriter, req *http.Request) {
+
+	p := filterOverview.Page{
+		JobID: "12345",
+		Data: filterOverview.FilterOverview{
+			Dimensions: []filterOverview.Dimension{
+				{
+					Filter:          "Year",
+					AddedCategories: "2014",
+				},
+				{
+					Filter:          "Geographic Areas",
+					AddedCategories: "(1) All persons",
+					Link: filterOverview.Link{
+						URL:   "/jobs/12345/dimensions/geography",
+						Label: "Please add",
+					},
+				},
+				{
+					Filter:          "Sex",
+					AddedCategories: "(1) All Persons",
+					Link: filterOverview.Link{
+						URL:   "/jobs/12345/dimensions/sex",
+						Label: "Filter",
+					},
+				},
+				{
+					Filter:          "Age",
+					AddedCategories: "(1) 0 - 92",
+					Link: filterOverview.Link{
+						URL:   "/jobs/12345/dimensions/age",
+						Label: "Filter",
+					},
+				},
+			},
+			PreviewAndDownload: filterOverview.Link{
+				URL: "/jobs/12345",
+			},
+			Cancel: filterOverview.Link{
+				URL: "https://ons.gov.uk",
+			},
+		},
+	}
+
+	p.SearchDisabled = true
+	p.Metadata.Footer = getStubbedMetadataFooter()
+
+	b, err := json.Marshal(p)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	templateBytes, err := c.r.Do("cmd/filter-overview", b)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(templateBytes)
 }
 
 // PreviewAndDownload will control the rendering of the preview and download page
