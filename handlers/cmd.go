@@ -8,6 +8,7 @@ import (
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/dp-frontend-models/model"
+	"github.com/ONSdigital/dp-frontend-models/model/cmd/ageSelector"
 	"github.com/ONSdigital/dp-frontend-models/model/cmd/filterOverview"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/finishPage"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/middlePage"
@@ -121,6 +122,8 @@ func (c *CMD) Middle(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// FilterOverview controls the render of the filter overview template
+// Contains stubbed data for now - page to be populated by the API
 func (c *CMD) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	p := filterOverview.Page{
@@ -188,6 +191,77 @@ func (c *CMD) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	}
 
 	templateBytes, err := c.r.Do("cmd/filter-overview", b)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(templateBytes)
+}
+
+// ageSelectorRange controls the render of the age selector template
+// Contains stubbed data for now - page to be populated by the API
+func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
+	p := ageSelectorRange.Page{
+		JobID: "12345",
+		Data: ageSelectorRange.AgeSelectorRange{
+			AddFromList: ageSelectorRange.Link{
+				URL: "/list-page/",
+			},
+			NumberOfSelectors: 1,
+			AddAges: ageSelectorRange.Link{
+				Label: "Add ages",
+				URL:   "/add-to-basket/",
+			},
+			AddNewRange: ageSelectorRange.Link{
+				URL: "/add-another-range",
+			},
+			RemoveRange: ageSelectorRange.Link{
+				URL:   "/remove-range",
+				Label: "Remove",
+			},
+			SaveAndReturn: ageSelectorRange.Link{
+				URL: "/save/",
+			},
+			Cancel: ageSelectorRange.Link{
+				URL: "/cancel/",
+			},
+			FiltersAmount: 2,
+			FiltersAdded: []ageSelectorRange.Filter{
+				{
+					RemoveURL: "/remove-this/",
+					Label:     "All ages",
+				},
+				{
+					RemoveURL: "/remove-this-2/",
+					Label:     "43",
+				},
+				{
+					RemoveURL: "/remove-this-3/",
+					Label:     "18",
+				},
+			},
+			RemoveAll: ageSelectorRange.Link{
+				URL: "/remove-all/",
+			},
+			AgeRange: ageSelectorRange.Range{
+				StartNum: 30,
+				EndNum:   90,
+			},
+		},
+	}
+
+	p.SearchDisabled = true
+
+	b, err := json.Marshal(p)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	templateBytes, err := c.r.Do("cmd/age-selector-range", b)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)

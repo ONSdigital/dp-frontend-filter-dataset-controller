@@ -23,6 +23,7 @@ func main() {
 	r.Path("/jobs/{jobID}").Methods("GET").HandlerFunc(cmd.Middle)
 
 	r.Path("/jobs/{jobID}/dimensions").Methods("GET").HandlerFunc(cmd.FilterOverview)
+	r.Path("/jobs/{jobID}/dimensions/age").Methods("GET").HandlerFunc(cmd.AgeSelectorRange)
 
 	s := server.New(cfg.BindAddr, r)
 
