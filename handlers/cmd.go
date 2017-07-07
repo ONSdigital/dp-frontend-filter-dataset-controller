@@ -8,8 +8,9 @@ import (
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/dp-frontend-models/model"
-	"github.com/ONSdigital/dp-frontend-models/model/cmd/ageSelector"
-	"github.com/ONSdigital/dp-frontend-models/model/cmd/filterOverview"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/ageSelectorList"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/ageSelectorRange"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/finishPage"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/middlePage"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/startPage"
@@ -170,18 +171,18 @@ func (c *CMD) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	p.SearchDisabled = true
 
-	p.Breadcrumb = []model.TaxonomyNode{
-		{
-			Title: "Title of dataset",
-			URI:   "/",
-		},
-		{
-			Title: "Filter this dataset",
-			URI:   "/",
-		},
-	}
-
-	p.Metadata.Footer = getStubbedMetadataFooter()
+	// p.Breadcrumb = []model.TaxonomyNode{
+	// 	{
+	// 		Title: "Title of dataset",
+	// 		URI:   "/",
+	// 	},
+	// 	{
+	// 		Title: "Filter this dataset",
+	// 		URI:   "/",
+	// 	},
+	// }
+	//
+	// p.Metadata.Footer = getStubbedMetadataFooter()
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -207,7 +208,7 @@ func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 		JobID: "12345",
 		Data: ageSelectorRange.AgeSelectorRange{
 			AddFromList: ageSelectorRange.Link{
-				URL: "/list-page/",
+				URL: "/jobs/12345/dimensions/age-list",
 			},
 			NumberOfSelectors: 1,
 			AddAges: ageSelectorRange.Link{
@@ -262,6 +263,30 @@ func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 	}
 
 	templateBytes, err := c.r.Do("cmd/age-selector-range", b)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(templateBytes)
+}
+
+// ageSelectorList controls the render of the age selector list template
+// Contains stubbed data for now - page to be populated by the API
+func (c *CMD) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
+	var p ageSelectorList.Page
+
+	p.SearchDisabled = true
+
+	b, err := json.Marshal(p)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	templateBytes, err := c.r.Do("cmd/age-selector-list", b)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
