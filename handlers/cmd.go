@@ -125,7 +125,7 @@ func (c *CMD) Middle(w http.ResponseWriter, req *http.Request) {
 
 // GeographySearch ...
 func (c *CMD) GeographySearch(w http.ResponseWriter, req *http.Request) {
-	templateBytes, err := c.r.Do("cmd/geography-search", nil)
+	templateBytes, err := c.r.Do("dataset-filter/geography-search", nil)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
