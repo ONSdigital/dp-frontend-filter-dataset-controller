@@ -155,7 +155,7 @@ func (c *CMD) FilterOverview(w http.ResponseWriter, req *http.Request) {
 					Filter:          "Age",
 					AddedCategories: "(1) 0 - 92",
 					Link: filterOverview.Link{
-						URL:   "/jobs/12345/dimensions/age",
+						URL:   "/jobs/12345/dimensions/age-range",
 						Label: "Filter",
 					},
 				},
@@ -171,18 +171,18 @@ func (c *CMD) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	p.SearchDisabled = true
 
-	// p.Breadcrumb = []model.TaxonomyNode{
-	// 	{
-	// 		Title: "Title of dataset",
-	// 		URI:   "/",
-	// 	},
-	// 	{
-	// 		Title: "Filter this dataset",
-	// 		URI:   "/",
-	// 	},
-	// }
-	//
-	// p.Metadata.Footer = getStubbedMetadataFooter()
+	p.Breadcrumb = []model.TaxonomyNode{
+		{
+			Title: "Title of dataset",
+			URI:   "/",
+		},
+		{
+			Title: "Filter this dataset",
+			URI:   "/",
+		},
+	}
+
+	p.Metadata.Footer = getStubbedMetadataFooter()
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -191,7 +191,7 @@ func (c *CMD) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	templateBytes, err := c.r.Do("cmd/filter-overview", b)
+	templateBytes, err := c.r.Do("dataset-filter/filter-overview", b)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -262,7 +262,7 @@ func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	templateBytes, err := c.r.Do("cmd/age-selector-range", b)
+	templateBytes, err := c.r.Do("dataset-filter/age-selector-range", b)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -275,7 +275,42 @@ func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 // ageSelectorList controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
 func (c *CMD) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
-	var p ageSelectorList.Page
+	p := ageSelectorList.Page{
+		JobID: "12345",
+		Data: ageSelectorList.AgeSelectorList{
+			AddFromRange: ageSelectorList.Link{
+				URL: "/jobs/12345/dimensions/age-range",
+			},
+			SaveAndReturn: ageSelectorList.Link{
+				URL: "/save/",
+			},
+			Cancel: ageSelectorList.Link{
+				URL: "/cancel/",
+			},
+			FiltersAdded: []ageSelectorList.Filter{
+				{
+					RemoveURL: "/remove-this/",
+					Label:     "All ages",
+				},
+				{
+					RemoveURL: "/remove-this-2/",
+					Label:     "43",
+				},
+				{
+					RemoveURL: "/remove-this-3/",
+					Label:     "18",
+				},
+			},
+			RemoveAll: ageSelectorList.Link{
+				URL: "/remove-all/",
+			},
+			FiltersAmount: 2,
+			AgeRange: ageSelectorList.Range{
+				StartNum: 30,
+				EndNum:   90,
+			},
+		},
+	}
 
 	p.SearchDisabled = true
 
@@ -286,7 +321,7 @@ func (c *CMD) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	templateBytes, err := c.r.Do("cmd/age-selector-list", b)
+	templateBytes, err := c.r.Do("dataset-filter/age-selector-list", b)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)

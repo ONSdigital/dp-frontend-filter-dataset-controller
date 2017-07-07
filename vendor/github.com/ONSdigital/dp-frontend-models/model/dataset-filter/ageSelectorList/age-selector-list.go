@@ -11,17 +11,13 @@ type Page struct {
 
 // AgeSelectorList ...
 type AgeSelectorList struct {
-	AddFromList       Link     `json:"add_from_list"`
-	NumberOfSelectors int      `json:"num_of_selectors"`
-	AddAges           Link     `json:"add_ages"`
-	AddNewRange       Link     `json:"add_new_range"`
-	RemoveRange       Link     `json:"remove_range"`
-	SaveAndReturn     Link     `json:"save_and_return"`
-	Cancel            Link     `json:"cancel"`
-	FiltersAmount     int      `json:"filters_amount"`
-	FiltersAdded      []Filter `json:"filters_added"`
-	RemoveAll         Link     `json:"remove_all"`
-	AgeRange          Range    `json:"age_range"`
+	AddFromRange  Link     `json:"add_from_range"`
+	SaveAndReturn Link     `json:"save_and_return"`
+	Cancel        Link     `json:"cancel"`
+	FiltersAmount int      `json:"filters_amount"`
+	FiltersAdded  []Filter `json:"filters_added"`
+	RemoveAll     Link     `json:"remove_all"`
+	AgeRange      Range    `json:"age_range"`
 }
 
 // Link ...
