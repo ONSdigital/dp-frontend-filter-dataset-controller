@@ -213,7 +213,7 @@ func (c *CMD) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	w.Write(templateBytes)
 }
 
-// ageSelectorRange controls the render of the age selector template
+// AgeSelectorRange controls the render of the age selector template
 // Contains stubbed data for now - page to be populated by the API
 func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 	p := ageSelectorRange.Page{
@@ -284,7 +284,7 @@ func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 	w.Write(templateBytes)
 }
 
-// ageSelectorList controls the render of the age selector list template
+// AgeSelectorList controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
 func (c *CMD) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
 	p := ageSelectorList.Page{
