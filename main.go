@@ -21,7 +21,10 @@ func main() {
 	r.Path("/datasets/{datasetID}/editions/{editionID}/versions/{versionID}").Methods("GET").HandlerFunc(cmd.Landing)
 	r.Path("/datasets/{datasetID}/editions/{editionID}/versions/{versionID}/filter").Methods("POST").HandlerFunc(cmd.CreateJobID)
 	r.Path("/jobs/{jobID}").Methods("GET").HandlerFunc(cmd.Middle)
-	r.Path("/jobs/{jobID}/dimensions").Methods("GET").HandlerFunc(cmd.PreviewAndDownload)
+
+	r.Path("/jobs/{jobID}/dimensions").Methods("GET").HandlerFunc(cmd.FilterOverview)
+	r.Path("/jobs/{jobID}/dimensions/age-range").Methods("GET").HandlerFunc(cmd.AgeSelectorRange)
+	r.Path("/jobs/{jobID}/dimensions/age-list").Methods("GET").HandlerFunc(cmd.AgeSelectorList)
 
 	s := server.New(cfg.BindAddr, r)
 

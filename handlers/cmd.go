@@ -8,6 +8,9 @@ import (
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/dp-frontend-models/model"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/ageSelectorList"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/ageSelectorRange"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/finishPage"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/middlePage"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/startPage"
@@ -118,6 +121,214 @@ func (c *CMD) Middle(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+// FilterOverview controls the render of the filter overview template
+// Contains stubbed data for now - page to be populated by the API
+func (c *CMD) FilterOverview(w http.ResponseWriter, req *http.Request) {
+
+	p := filterOverview.Page{
+		JobID: "12345",
+		Data: filterOverview.FilterOverview{
+			Dimensions: []filterOverview.Dimension{
+				{
+					Filter:          "Year",
+					AddedCategories: "2014",
+				},
+				{
+					Filter:          "Geographic Areas",
+					AddedCategories: "(1) All persons",
+					Link: filterOverview.Link{
+						URL:   "/jobs/12345/dimensions/geography",
+						Label: "Please add",
+					},
+				},
+				{
+					Filter:          "Sex",
+					AddedCategories: "(1) All Persons",
+					Link: filterOverview.Link{
+						URL:   "/jobs/12345/dimensions/sex",
+						Label: "Filter",
+					},
+				},
+				{
+					Filter:          "Age",
+					AddedCategories: "(1) 0 - 92",
+					Link: filterOverview.Link{
+						URL:   "/jobs/12345/dimensions/age-range",
+						Label: "Filter",
+					},
+				},
+			},
+			PreviewAndDownload: filterOverview.Link{
+				URL: "/jobs/12345",
+			},
+			Cancel: filterOverview.Link{
+				URL: "https://ons.gov.uk",
+			},
+		},
+	}
+
+	p.SearchDisabled = true
+
+	p.Breadcrumb = []model.TaxonomyNode{
+		{
+			Title: "Title of dataset",
+			URI:   "/",
+		},
+		{
+			Title: "Filter this dataset",
+			URI:   "/",
+		},
+	}
+
+	p.Metadata.Footer = getStubbedMetadataFooter()
+
+	b, err := json.Marshal(p)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	templateBytes, err := c.r.Do("dataset-filter/filter-overview", b)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(templateBytes)
+}
+
+// AgeSelectorRange controls the render of the age selector template
+// Contains stubbed data for now - page to be populated by the API
+func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
+	p := ageSelectorRange.Page{
+		JobID: "12345",
+		Data: ageSelectorRange.AgeSelectorRange{
+			AddFromList: ageSelectorRange.Link{
+				URL: "/jobs/12345/dimensions/age-list",
+			},
+			NumberOfSelectors: 1,
+			AddAges: ageSelectorRange.Link{
+				Label: "Add ages",
+				URL:   "/add-to-basket/",
+			},
+			AddNewRange: ageSelectorRange.Link{
+				URL: "/add-another-range",
+			},
+			RemoveRange: ageSelectorRange.Link{
+				URL:   "/remove-range",
+				Label: "Remove",
+			},
+			SaveAndReturn: ageSelectorRange.Link{
+				URL: "/save/",
+			},
+			Cancel: ageSelectorRange.Link{
+				URL: "/cancel/",
+			},
+			FiltersAmount: 2,
+			FiltersAdded: []ageSelectorRange.Filter{
+				{
+					RemoveURL: "/remove-this/",
+					Label:     "All ages",
+				},
+				{
+					RemoveURL: "/remove-this-2/",
+					Label:     "43",
+				},
+				{
+					RemoveURL: "/remove-this-3/",
+					Label:     "18",
+				},
+			},
+			RemoveAll: ageSelectorRange.Link{
+				URL: "/remove-all/",
+			},
+			AgeRange: ageSelectorRange.Range{
+				StartNum: 30,
+				EndNum:   90,
+			},
+		},
+	}
+
+	p.SearchDisabled = true
+
+	b, err := json.Marshal(p)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	templateBytes, err := c.r.Do("dataset-filter/age-selector-range", b)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(templateBytes)
+}
+
+// AgeSelectorList controls the render of the age selector list template
+// Contains stubbed data for now - page to be populated by the API
+func (c *CMD) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
+	p := ageSelectorList.Page{
+		JobID: "12345",
+		Data: ageSelectorList.AgeSelectorList{
+			AddFromRange: ageSelectorList.Link{
+				URL: "/jobs/12345/dimensions/age-range",
+			},
+			SaveAndReturn: ageSelectorList.Link{
+				URL: "/save/",
+			},
+			Cancel: ageSelectorList.Link{
+				URL: "/cancel/",
+			},
+			FiltersAdded: []ageSelectorList.Filter{
+				{
+					RemoveURL: "/remove-this/",
+					Label:     "All ages",
+				},
+				{
+					RemoveURL: "/remove-this-2/",
+					Label:     "43",
+				},
+				{
+					RemoveURL: "/remove-this-3/",
+					Label:     "18",
+				},
+			},
+			RemoveAll: ageSelectorList.Link{
+				URL: "/remove-all/",
+			},
+			FiltersAmount: 2,
+			AgeRange: ageSelectorList.Range{
+				StartNum: 30,
+				EndNum:   90,
+			},
+		},
+	}
+
+	p.SearchDisabled = true
+
+	b, err := json.Marshal(p)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	templateBytes, err := c.r.Do("dataset-filter/age-selector-list", b)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(templateBytes)
 }
 
 // PreviewAndDownload will control the rendering of the preview and download page
