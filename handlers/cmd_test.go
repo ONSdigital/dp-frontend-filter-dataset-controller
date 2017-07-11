@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"testing"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
@@ -37,19 +36,6 @@ func TestUnitCMD(t *testing.T) {
 
 			testResponse(500, "", "/datasets/1234/editions/5678/versions/2017", c.Landing)
 		})
-	})
-
-	Convey("test CreateJobID handler, creates a job id and redirects", t, func() {
-		c := NewCMD(nil)
-
-		w := testResponse(301, "", "/datasets/1234/editions/5678/versions/2017/filter", c.CreateJobID)
-
-		location := w.Header().Get("Location")
-		So(location, ShouldNotBeEmpty)
-
-		matched, err := regexp.MatchString(`^\/jobs\/\d{8}$`, location)
-		So(err, ShouldBeNil)
-		So(matched, ShouldBeTrue)
 	})
 
 	Convey("test middle page cmd handler", t, func() {
