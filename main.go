@@ -25,7 +25,7 @@ func main() {
 	r.Path("/jobs/{jobID}/dimensions").Methods("GET").HandlerFunc(cmd.FilterOverview)
 	r.Path("/jobs/{jobID}/dimensions/age-range").Methods("GET").HandlerFunc(cmd.AgeSelectorRange)
 	r.Path("/jobs/{jobID}/dimensions/age-list").Methods("GET").HandlerFunc(cmd.AgeSelectorList)
-	r.Path("/jobs/{jobID}/dimensions/geography").Methods("GET").HandlerFunc(cmd.GeographySearch)
+	r.Path("/jobs/{jobID}/dimensions/geography").Methods("GET").HandlerFunc(cmd.Geography)
 
 	s := server.New(cfg.BindAddr, r)
 
