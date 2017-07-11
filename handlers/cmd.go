@@ -343,7 +343,20 @@ func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 		},
 	}
 
+	p.Breadcrumb = []model.TaxonomyNode{
+		{
+			Title: "Title of dataset",
+			URI:   "/",
+		},
+		{
+			Title: "Filter this dataset",
+			URI:   "/",
+		},
+	}
+
 	p.SearchDisabled = true
+
+	p.Metadata.Footer = getStubbedMetadataFooter()
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -402,7 +415,20 @@ func (c *CMD) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
 		},
 	}
 
+	p.Breadcrumb = []model.TaxonomyNode{
+		{
+			Title: "Title of dataset",
+			URI:   "/",
+		},
+		{
+			Title: "Filter this dataset",
+			URI:   "/",
+		},
+	}
+
 	p.SearchDisabled = true
+
+	p.Metadata.Footer = getStubbedMetadataFooter()
 
 	b, err := json.Marshal(p)
 	if err != nil {
