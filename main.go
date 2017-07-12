@@ -18,8 +18,7 @@ func main() {
 	rend := renderer.New()
 	cmd := handlers.NewCMD(rend)
 
-	r.Path("/jobs/{jobID}").Methods("GET").HandlerFunc(cmd.Middle)
-
+	r.Path("/jobs/{jobID}").Methods("GET").HandlerFunc(cmd.PreviewPage)
 	r.Path("/jobs/{jobID}/dimensions").Methods("GET").HandlerFunc(cmd.FilterOverview)
 	r.Path("/jobs/{jobID}/dimensions/age-range").Methods("GET").HandlerFunc(cmd.AgeSelectorRange)
 	r.Path("/jobs/{jobID}/dimensions/age-list").Methods("GET").HandlerFunc(cmd.AgeSelectorList)
