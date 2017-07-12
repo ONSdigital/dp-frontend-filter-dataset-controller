@@ -12,8 +12,8 @@ import (
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/ageSelectorRange"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/geography"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/finishPage"
-	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/middlePage"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/startPage"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
@@ -80,12 +80,12 @@ func (c *CMD) CreateJobID(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, "/jobs/"+jid, 301)
 }
 
-// Middle controls the rendering of a "middle" cmd page - this will be replaced
+// PreviewPage controls the rendering of the preview and download page - this will be replaced
 // by other handlers when further pages are defined by UX
-func (c *CMD) Middle(w http.ResponseWriter, req *http.Request) {
+func (c *CMD) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 
-	var p middlePage.Page
+	var p previewPage.Page
 
 	// Needs to be populated from API - this is stubbed data
 	p.Metadata.Footer = getStubbedMetadataFooter()
@@ -110,7 +110,7 @@ func (c *CMD) Middle(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	b, err := c.r.Do("dataset/middlepage", body)
+	b, err := c.r.Do("dataset-filter/preview-page", body)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -130,10 +130,10 @@ func (c *CMD) Geography(w http.ResponseWriter, req *http.Request) {
 		JobID: "12345",
 		Data: geography.Geography{
 			SaveAndReturn: geography.Link{
-				URL: "/save/",
+				URL: "/jobs/12345/dimensions",
 			},
 			Cancel: geography.Link{
-				URL: "/cancel/",
+				URL: "/jobs/12345/dimensions",
 			},
 			FiltersAmount: 2,
 			FiltersAdded: []geography.Filter{
@@ -313,10 +313,10 @@ func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 				Label: "Remove",
 			},
 			SaveAndReturn: ageSelectorRange.Link{
-				URL: "/save/",
+				URL: "/jobs/12345/dimensions",
 			},
 			Cancel: ageSelectorRange.Link{
-				URL: "/cancel/",
+				URL: "/jobs/12345/dimensions",
 			},
 			FiltersAmount: 2,
 			FiltersAdded: []ageSelectorRange.Filter{
@@ -385,10 +385,10 @@ func (c *CMD) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
 				URL: "/jobs/12345/dimensions/age-range",
 			},
 			SaveAndReturn: ageSelectorList.Link{
-				URL: "/save/",
+				URL: "/jobs/12345/dimensions",
 			},
 			Cancel: ageSelectorList.Link{
-				URL: "/cancel/",
+				URL: "/jobs/12345/dimensions",
 			},
 			FiltersAdded: []ageSelectorList.Filter{
 				{
