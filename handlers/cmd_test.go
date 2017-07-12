@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"testing"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
@@ -36,40 +35,6 @@ func TestUnitCMD(t *testing.T) {
 			c := NewCMD(mr)
 
 			testResponse(500, "", "/datasets/1234/editions/5678/versions/2017", c.Landing)
-		})
-	})
-
-	Convey("test CreateJobID handler, creates a job id and redirects", t, func() {
-		c := NewCMD(nil)
-
-		w := testResponse(301, "", "/datasets/1234/editions/5678/versions/2017/filter", c.CreateJobID)
-
-		location := w.Header().Get("Location")
-		So(location, ShouldNotBeEmpty)
-
-		matched, err := regexp.MatchString(`^\/jobs\/\d{8}$`, location)
-		So(err, ShouldBeNil)
-		So(matched, ShouldBeTrue)
-	})
-
-	Convey("test middle page cmd handler", t, func() {
-		expectedReqBody := `{"type":"","uri":"","taxonomy":null,"breadcrumb":[{"title":"Title of dataset","uri":"/"},{"title":"Filter this dataset","uri":"/"}],"serviceMessage":"","metadata":{"title":"","description":"","keywords":null,"footer":{"enabled":true,"contact":"Matt Rout","release_date":"11 November 2016","next_release":"11 November 2017","dataset_id":"MR"}},"searchDisabled":true,"data":{"job_id":""}}`
-		Convey("test successful request for getting cmd middle page", func() {
-			mr := renderer.NewMockRenderer(mockCtrl)
-			mr.EXPECT().Do("dataset/middlepage", []byte(expectedReqBody)).Return([]byte(`middle-page`), nil)
-
-			c := NewCMD(mr)
-
-			testResponse(200, "middle-page", "/jobs/12345678", c.Middle)
-		})
-
-		Convey("test error thrown when rendering middle page", func() {
-			mr := renderer.NewMockRenderer(mockCtrl)
-			mr.EXPECT().Do("dataset/middlepage", []byte(expectedReqBody)).Return(nil, errors.New("something went wrong with middle page rendering :-("))
-
-			c := NewCMD(mr)
-
-			testResponse(500, "", "/jobs/12345678", c.Middle)
 		})
 	})
 
