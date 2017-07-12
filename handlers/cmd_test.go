@@ -38,27 +38,6 @@ func TestUnitCMD(t *testing.T) {
 		})
 	})
 
-	Convey("test middle page cmd handler", t, func() {
-		expectedReqBody := `{"type":"","uri":"","taxonomy":null,"breadcrumb":[{"title":"Title of dataset","uri":"/"},{"title":"Filter this dataset","uri":"/"}],"serviceMessage":"","metadata":{"title":"","description":"","keywords":null,"footer":{"enabled":true,"contact":"Matt Rout","release_date":"11 November 2016","next_release":"11 November 2017","dataset_id":"MR"}},"searchDisabled":true,"data":{"job_id":""}}`
-		Convey("test successful request for getting cmd middle page", func() {
-			mr := renderer.NewMockRenderer(mockCtrl)
-			mr.EXPECT().Do("dataset/middlepage", []byte(expectedReqBody)).Return([]byte(`middle-page`), nil)
-
-			c := NewCMD(mr)
-
-			testResponse(200, "middle-page", "/jobs/12345678", c.Middle)
-		})
-
-		Convey("test error thrown when rendering middle page", func() {
-			mr := renderer.NewMockRenderer(mockCtrl)
-			mr.EXPECT().Do("dataset/middlepage", []byte(expectedReqBody)).Return(nil, errors.New("something went wrong with middle page rendering :-("))
-
-			c := NewCMD(mr)
-
-			testResponse(500, "", "/jobs/12345678", c.Middle)
-		})
-	})
-
 	Convey("test landing http finish handler", t, func() {
 		expectedReqBody := `{"type":"","uri":"","taxonomy":null,"breadcrumb":null,"serviceMessage":"","metadata":{"title":"","description":"","keywords":null,"footer":{"enabled":true,"contact":"Matt Rout","release_date":"11 November 2016","next_release":"11 November 2017","dataset_id":"MR"}},"searchDisabled":true}`
 		Convey("test successful request for getting cmd finish page", func() {
