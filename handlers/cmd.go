@@ -11,6 +11,7 @@ import (
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/ageSelectorList"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/ageSelectorRange"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/geography"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/finishPage"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/middlePage"
 	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/startPage"
@@ -121,6 +122,95 @@ func (c *CMD) Middle(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+// Geography ...
+func (c *CMD) Geography(w http.ResponseWriter, req *http.Request) {
+	p := geography.Page{
+		JobID: "12345",
+		Data: geography.Geography{
+			SaveAndReturn: geography.Link{
+				URL: "/save/",
+			},
+			Cancel: geography.Link{
+				URL: "/cancel/",
+			},
+			FiltersAmount: 2,
+			FiltersAdded: []geography.Filter{
+				{
+					RemoveURL: "/remove-this/",
+					Label:     "All ages",
+				},
+				{
+					RemoveURL: "/remove-this-2/",
+					Label:     "43",
+				},
+				{
+					RemoveURL: "/remove-this-3/",
+					Label:     "18",
+				},
+			},
+			FilterList: []geography.List{
+				{
+					Location: "United Kingdom",
+				},
+				{
+					Location: "England",
+					SubNum:   10,
+					SubType:  "Regions",
+					SubURL:   "/regions/",
+				},
+				{
+					Location: "Wales",
+					SubNum:   5,
+					SubType:  "Regions",
+					SubURL:   "/regions/",
+				},
+			},
+			RemoveAll: geography.Link{
+				URL: "/remove-all/",
+			},
+			AddAllFilters: geography.AddAll{
+				URL:    "/add-all/",
+				Amount: 3,
+			},
+			GoBack: geography.Link{
+				URL: "/back/",
+			},
+			Parent: "Wales: Counties",
+		},
+	}
+
+	p.Breadcrumb = []model.TaxonomyNode{
+		{
+			Title: "Title of dataset",
+			URI:   "/",
+		},
+		{
+			Title: "Filter this dataset",
+			URI:   "/",
+		},
+	}
+
+	p.SearchDisabled = true
+
+	p.Metadata.Footer = getStubbedMetadataFooter()
+
+	b, err := json.Marshal(p)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	templateBytes, err := c.r.Do("dataset-filter/geography", b)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(templateBytes)
 }
 
 // FilterOverview controls the render of the filter overview template
@@ -253,7 +343,20 @@ func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 		},
 	}
 
+	p.Breadcrumb = []model.TaxonomyNode{
+		{
+			Title: "Title of dataset",
+			URI:   "/",
+		},
+		{
+			Title: "Filter this dataset",
+			URI:   "/",
+		},
+	}
+
 	p.SearchDisabled = true
+
+	p.Metadata.Footer = getStubbedMetadataFooter()
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -312,7 +415,20 @@ func (c *CMD) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
 		},
 	}
 
+	p.Breadcrumb = []model.TaxonomyNode{
+		{
+			Title: "Title of dataset",
+			URI:   "/",
+		},
+		{
+			Title: "Filter this dataset",
+			URI:   "/",
+		},
+	}
+
 	p.SearchDisabled = true
+
+	p.Metadata.Footer = getStubbedMetadataFooter()
 
 	b, err := json.Marshal(p)
 	if err != nil {
