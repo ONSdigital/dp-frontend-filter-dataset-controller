@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/ageSelectorList"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/ageSelectorRange"
-	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/geography"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	"github.com/ONSdigital/go-ns/log"
@@ -44,7 +45,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	// Needs to be populated from API - this is stubbed data
 	p.Metadata.Footer = getStubbedMetadataFooter()
 	p.SearchDisabled = true
-	p.Data.JobID = vars["jobID"]
+	p.Data.FilterID = vars["filterID"]
 
 	p.Breadcrumb = []model.TaxonomyNode{
 		{
@@ -81,13 +82,13 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 // Geography ...
 func (f *Filter) Geography(w http.ResponseWriter, req *http.Request) {
 	p := geography.Page{
-		JobID: "12345",
+		FilterID: "12345",
 		Data: geography.Geography{
 			SaveAndReturn: geography.Link{
-				URL: "/jobs/12345/dimensions",
+				URL: "/filters/12345/dimensions",
 			},
 			Cancel: geography.Link{
-				URL: "/jobs/12345/dimensions",
+				URL: "/filters/12345/dimensions",
 			},
 			FiltersAmount: 2,
 			FiltersAdded: []geography.Filter{
@@ -170,63 +171,47 @@ func (f *Filter) Geography(w http.ResponseWriter, req *http.Request) {
 // FilterOverview controls the render of the filter overview template
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	filterID := vars["filterID"]
 
-	p := filterOverview.Page{
-		JobID: "12345",
-		Data: filterOverview.FilterOverview{
-			Dimensions: []filterOverview.Dimension{
-				{
-					Filter:          "Year",
-					AddedCategories: []string{"2014"},
-				},
-				{
-					Filter:          "Geographic Areas",
-					AddedCategories: []string{"All persons"},
-					Link: filterOverview.Link{
-						URL:   "/jobs/12345/dimensions/geography",
-						Label: "Please add",
-					},
-				},
-				{
-					Filter:          "Sex",
-					AddedCategories: []string{"All Persons"},
-					Link: filterOverview.Link{
-						URL:   "/jobs/12345/dimensions/sex",
-						Label: "Filter",
-					},
-				},
-				{
-					Filter:          "Age",
-					AddedCategories: []string{"0 - 92", "2 - 18", "18-65", "65-92"},
-					Link: filterOverview.Link{
-						URL:   "/jobs/12345/dimensions/age-range",
-						Label: "Filter",
-					},
-				},
-			},
-			PreviewAndDownload: filterOverview.Link{
-				URL: "/jobs/12345",
-			},
-			Cancel: filterOverview.Link{
-				URL: "https://ons.gov.uk",
-			},
+	dimensions := []data.Dimension{
+		{
+			Name:   "year",
+			Values: []string{"2014"},
+		},
+		{
+			Name:   "geography",
+			Values: []string{"England and Wales, Bristol"},
+		},
+		{
+			Name:   "sex",
+			Values: []string{"All persons"},
+		},
+		{
+			Name:   "age-range",
+			Values: []string{"0 - 92", "2 - 18", "18 - 65"},
 		},
 	}
 
-	p.SearchDisabled = true
-
-	p.Breadcrumb = []model.TaxonomyNode{
-		{
-			Title: "Title of dataset",
-			URI:   "/",
-		},
-		{
-			Title: "Filter this dataset",
-			URI:   "/",
-		},
+	filter := data.Filter{
+		FilterID: filterID,
+		Edition:  "12345",
+		Dataset:  "849209",
+		Version:  "2017",
 	}
 
-	p.Metadata.Footer = getStubbedMetadataFooter()
+	dataset := data.Dataset{
+		ID:          "849209",
+		ReleaseDate: "17 January 2017",
+		Contact: data.Contact{
+			Name:      "Matt Rout",
+			Telephone: "07984593234",
+			Email:     "matt@gmail.com",
+		},
+		Title: "Small Area Population Estimates",
+	}
+
+	p := mapper.CreateFilterOverview(dimensions, filter, dataset, filterID)
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -249,10 +234,10 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 	p := ageSelectorRange.Page{
-		JobID: "12345",
+		FilterID: "12345",
 		Data: ageSelectorRange.AgeSelectorRange{
 			AddFromList: ageSelectorRange.Link{
-				URL: "/jobs/12345/dimensions/age-list",
+				URL: "/filters/12345/dimensions/age-list",
 			},
 			NumberOfSelectors: 1,
 			AddAges: ageSelectorRange.Link{
@@ -267,10 +252,10 @@ func (f *Filter) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 				Label: "Remove",
 			},
 			SaveAndReturn: ageSelectorRange.Link{
-				URL: "/jobs/12345/dimensions",
+				URL: "/filters/12345/dimensions",
 			},
 			Cancel: ageSelectorRange.Link{
-				URL: "/jobs/12345/dimensions",
+				URL: "/filters/12345/dimensions",
 			},
 			FiltersAmount: 2,
 			FiltersAdded: []ageSelectorRange.Filter{
@@ -333,16 +318,16 @@ func (f *Filter) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
 	p := ageSelectorList.Page{
-		JobID: "12345",
+		FilterID: "12345",
 		Data: ageSelectorList.AgeSelectorList{
 			AddFromRange: ageSelectorList.Link{
-				URL: "/jobs/12345/dimensions/age-range",
+				URL: "/filters/12345/dimensions/age-range",
 			},
 			SaveAndReturn: ageSelectorList.Link{
-				URL: "/jobs/12345/dimensions",
+				URL: "/filters/12345/dimensions",
 			},
 			Cancel: ageSelectorList.Link{
-				URL: "/jobs/12345/dimensions",
+				URL: "/filters/12345/dimensions",
 			},
 			FiltersAdded: []ageSelectorList.Filter{
 				{
