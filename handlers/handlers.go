@@ -11,7 +11,6 @@ import (
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/geography"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
-	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/finishPage"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
@@ -400,33 +399,4 @@ func (f *Filter) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.Write(templateBytes)
-}
-
-// PreviewAndDownload will control the rendering of the preview and download page
-func (f *Filter) PreviewAndDownload(w http.ResponseWriter, req *http.Request) {
-	var p finishPage.Page
-
-	// Needs to be populated from API - this is stubbed data
-	p.Metadata.Footer = getStubbedMetadataFooter()
-	p.SearchDisabled = true
-
-	pBytes, err := json.Marshal(p)
-	if err != nil {
-		log.Error(err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	b, err := f.r.Do("dataset/finishpage", pBytes)
-	if err != nil {
-		log.Error(err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if _, err := w.Write(b); err != nil {
-		log.Error(err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
 }
