@@ -177,11 +177,11 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 			Dimensions: []filterOverview.Dimension{
 				{
 					Filter:          "Year",
-					AddedCategories: "2014",
+					AddedCategories: []string{"2014"},
 				},
 				{
 					Filter:          "Geographic Areas",
-					AddedCategories: "(1) All persons",
+					AddedCategories: []string{"All persons"},
 					Link: filterOverview.Link{
 						URL:   "/jobs/12345/dimensions/geography",
 						Label: "Please add",
@@ -189,7 +189,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 				},
 				{
 					Filter:          "Sex",
-					AddedCategories: "(1) All Persons",
+					AddedCategories: []string{"All Persons"},
 					Link: filterOverview.Link{
 						URL:   "/jobs/12345/dimensions/sex",
 						Label: "Filter",
@@ -197,7 +197,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 				},
 				{
 					Filter:          "Age",
-					AddedCategories: "(1) 0 - 92",
+					AddedCategories: []string{"0 - 92", "2 - 18", "18-65", "65-92"},
 					Link: filterOverview.Link{
 						URL:   "/jobs/12345/dimensions/age-range",
 						Label: "Filter",
