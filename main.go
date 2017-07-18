@@ -16,13 +16,13 @@ func main() {
 	r := mux.NewRouter()
 
 	rend := renderer.New()
-	cmd := handlers.NewCMD(rend)
+	filter := handlers.NewFilter(rend)
 
-	r.Path("/jobs/{jobID}").Methods("GET").HandlerFunc(cmd.PreviewPage)
-	r.Path("/jobs/{jobID}/dimensions").Methods("GET").HandlerFunc(cmd.FilterOverview)
-	r.Path("/jobs/{jobID}/dimensions/age-range").Methods("GET").HandlerFunc(cmd.AgeSelectorRange)
-	r.Path("/jobs/{jobID}/dimensions/age-list").Methods("GET").HandlerFunc(cmd.AgeSelectorList)
-	r.Path("/jobs/{jobID}/dimensions/geography").Methods("GET").HandlerFunc(cmd.Geography)
+	r.Path("/jobs/{jobID}").Methods("GET").HandlerFunc(filter.PreviewPage)
+	r.Path("/jobs/{jobID}/dimensions").Methods("GET").HandlerFunc(filter.FilterOverview)
+	r.Path("/jobs/{jobID}/dimensions/age-range").Methods("GET").HandlerFunc(filter.AgeSelectorRange)
+	r.Path("/jobs/{jobID}/dimensions/age-list").Methods("GET").HandlerFunc(filter.AgeSelectorList)
+	r.Path("/jobs/{jobID}/dimensions/geography").Methods("GET").HandlerFunc(filter.Geography)
 
 	s := server.New(cfg.BindAddr, r)
 
