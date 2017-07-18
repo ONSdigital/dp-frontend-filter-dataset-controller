@@ -43,7 +43,7 @@ func TestUnitMapper(t *testing.T) {
 		So(fop.Breadcrumb[0].URI, ShouldEqual, "/datasets/"+filter.Dataset+"/editions/"+filter.Edition+"/versions/"+filter.Version)
 		So(fop.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
 		So(fop.Metadata.Footer.Enabled, ShouldBeTrue)
-		So(fop.Metadata.Footer.Contact, ShouldEqual, dataset.Contact)
+		So(fop.Metadata.Footer.Contact, ShouldEqual, dataset.Contact.Name)
 		So(fop.Metadata.Footer.ReleaseDate, ShouldEqual, dataset.ReleaseDate)
 		So(fop.Metadata.Footer.DatasetID, ShouldEqual, dataset.ID)
 	})

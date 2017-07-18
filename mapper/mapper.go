@@ -15,7 +15,8 @@ var dimensionTitleTranslator = map[string]string{
 	"sex":       "Sex",
 }
 
-// CreateFilterOverview ...
+// CreateFilterOverview maps data items from API responses to form a filter overview
+// front end page model
 func CreateFilterOverview(dimensions []data.Dimension, filter data.Filter, dataset data.Dataset, filterID string) filterOverview.Page {
 	var p filterOverview.Page
 
