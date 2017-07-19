@@ -4,27 +4,26 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/ageSelectorList"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/ageSelectorRange"
-	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/geography"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
-	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/finishPage"
-	"github.com/ONSdigital/dp-frontend-models/model/datasetpages/startPage"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
 
-// CMD represents the handlers for CMD
-type CMD struct {
+// Filter represents the handlers for Filtering
+type Filter struct {
 	r renderer.Renderer
 }
 
-// NewCMD creates a new instance of CMD
-func NewCMD(r renderer.Renderer) *CMD {
-	return &CMD{r: r}
+// NewFilter creates a new instance of Filter
+func NewFilter(r renderer.Renderer) *Filter {
+	return &Filter{r: r}
 }
 
 func getStubbedMetadataFooter() model.Footer {
@@ -37,37 +36,8 @@ func getStubbedMetadataFooter() model.Footer {
 	}
 }
 
-// Landing handles the controller functionality for the landing page
-func (c *CMD) Landing(w http.ResponseWriter, req *http.Request) {
-	var p startPage.Page
-
-	// Needs to be populated from API - this is stubbed data
-	p.Metadata.Footer = getStubbedMetadataFooter()
-	p.SearchDisabled = true
-
-	pBytes, err := json.Marshal(p)
-	if err != nil {
-		log.Error(err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	b, err := c.r.Do("dataset/startpage", pBytes)
-	if err != nil {
-		log.Error(err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if _, err := w.Write(b); err != nil {
-		log.Error(err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-}
-
 // PreviewPage controls the rendering of the preview and download page
-func (c *CMD) PreviewPage(w http.ResponseWriter, req *http.Request) {
+func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 
 	var p previewPage.Page
@@ -75,7 +45,7 @@ func (c *CMD) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	// Needs to be populated from API - this is stubbed data
 	p.Metadata.Footer = getStubbedMetadataFooter()
 	p.SearchDisabled = true
-	p.Data.JobID = vars["jobID"]
+	p.Data.FilterID = vars["filterID"]
 
 	p.Breadcrumb = []model.TaxonomyNode{
 		{
@@ -95,7 +65,7 @@ func (c *CMD) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	b, err := c.r.Do("dataset-filter/preview-page", body)
+	b, err := f.r.Do("dataset-filter/preview-page", body)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -110,15 +80,15 @@ func (c *CMD) PreviewPage(w http.ResponseWriter, req *http.Request) {
 }
 
 // Geography ...
-func (c *CMD) Geography(w http.ResponseWriter, req *http.Request) {
+func (f *Filter) Geography(w http.ResponseWriter, req *http.Request) {
 	p := geography.Page{
-		JobID: "12345",
+		FilterID: "12345",
 		Data: geography.Geography{
 			SaveAndReturn: geography.Link{
-				URL: "/jobs/12345/dimensions",
+				URL: "/filters/12345/dimensions",
 			},
 			Cancel: geography.Link{
-				URL: "/jobs/12345/dimensions",
+				URL: "/filters/12345/dimensions",
 			},
 			FiltersAmount: 2,
 			FiltersAdded: []geography.Filter{
@@ -188,7 +158,7 @@ func (c *CMD) Geography(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	templateBytes, err := c.r.Do("dataset-filter/geography", b)
+	templateBytes, err := f.r.Do("dataset-filter/geography", b)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -200,64 +170,49 @@ func (c *CMD) Geography(w http.ResponseWriter, req *http.Request) {
 
 // FilterOverview controls the render of the filter overview template
 // Contains stubbed data for now - page to be populated by the API
-func (c *CMD) FilterOverview(w http.ResponseWriter, req *http.Request) {
+func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	filterID := vars["filterID"]
 
-	p := filterOverview.Page{
-		JobID: "12345",
-		Data: filterOverview.FilterOverview{
-			Dimensions: []filterOverview.Dimension{
-				{
-					Filter:          "Year",
-					AddedCategories: "2014",
-				},
-				{
-					Filter:          "Geographic Areas",
-					AddedCategories: "(1) All persons",
-					Link: filterOverview.Link{
-						URL:   "/jobs/12345/dimensions/geography",
-						Label: "Please add",
-					},
-				},
-				{
-					Filter:          "Sex",
-					AddedCategories: "(1) All Persons",
-					Link: filterOverview.Link{
-						URL:   "/jobs/12345/dimensions/sex",
-						Label: "Filter",
-					},
-				},
-				{
-					Filter:          "Age",
-					AddedCategories: "(1) 0 - 92",
-					Link: filterOverview.Link{
-						URL:   "/jobs/12345/dimensions/age-range",
-						Label: "Filter",
-					},
-				},
-			},
-			PreviewAndDownload: filterOverview.Link{
-				URL: "/jobs/12345",
-			},
-			Cancel: filterOverview.Link{
-				URL: "https://ons.gov.uk",
-			},
+	dimensions := []data.Dimension{
+		{
+			Name:   "year",
+			Values: []string{"2014"},
+		},
+		{
+			Name:   "geography",
+			Values: []string{"England and Wales, Bristol"},
+		},
+		{
+			Name:   "sex",
+			Values: []string{"All persons"},
+		},
+		{
+			Name:   "age-range",
+			Values: []string{"0 - 92", "2 - 18", "18 - 65"},
 		},
 	}
 
-	p.SearchDisabled = true
-
-	p.Breadcrumb = []model.TaxonomyNode{
-		{
-			Title: "Title of dataset",
-			URI:   "/",
-		},
-		{
-			Title: "Filter this dataset",
-			URI:   "/",
-		},
+	filter := data.Filter{
+		FilterID: filterID,
+		Edition:  "12345",
+		Dataset:  "849209",
+		Version:  "2017",
 	}
 
-	p.Metadata.Footer = getStubbedMetadataFooter()
+	dataset := data.Dataset{
+		ID:          "849209",
+		ReleaseDate: "17 January 2017",
+		NextRelease: "17 February 2017",
+		Contact: data.Contact{
+			Name:      "Matt Rout",
+			Telephone: "07984593234",
+			Email:     "matt@gmail.com",
+		},
+		Title: "Small Area Population Estimates",
+	}
+
+	p := mapper.CreateFilterOverview(dimensions, filter, dataset, filterID)
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -266,7 +221,7 @@ func (c *CMD) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	templateBytes, err := c.r.Do("dataset-filter/filter-overview", b)
+	templateBytes, err := f.r.Do("dataset-filter/filter-overview", b)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -278,12 +233,12 @@ func (c *CMD) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 // AgeSelectorRange controls the render of the age selector template
 // Contains stubbed data for now - page to be populated by the API
-func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
+func (f *Filter) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 	p := ageSelectorRange.Page{
-		JobID: "12345",
+		FilterID: "12345",
 		Data: ageSelectorRange.AgeSelectorRange{
 			AddFromList: ageSelectorRange.Link{
-				URL: "/jobs/12345/dimensions/age-list",
+				URL: "/filters/12345/dimensions/age-list",
 			},
 			NumberOfSelectors: 1,
 			AddAges: ageSelectorRange.Link{
@@ -298,10 +253,10 @@ func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 				Label: "Remove",
 			},
 			SaveAndReturn: ageSelectorRange.Link{
-				URL: "/jobs/12345/dimensions",
+				URL: "/filters/12345/dimensions",
 			},
 			Cancel: ageSelectorRange.Link{
-				URL: "/jobs/12345/dimensions",
+				URL: "/filters/12345/dimensions",
 			},
 			FiltersAmount: 2,
 			FiltersAdded: []ageSelectorRange.Filter{
@@ -350,7 +305,7 @@ func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	templateBytes, err := c.r.Do("dataset-filter/age-selector-range", b)
+	templateBytes, err := f.r.Do("dataset-filter/age-selector-range", b)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -362,18 +317,18 @@ func (c *CMD) AgeSelectorRange(w http.ResponseWriter, req *http.Request) {
 
 // AgeSelectorList controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
-func (c *CMD) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
+func (f *Filter) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
 	p := ageSelectorList.Page{
-		JobID: "12345",
+		FilterID: "12345",
 		Data: ageSelectorList.AgeSelectorList{
 			AddFromRange: ageSelectorList.Link{
-				URL: "/jobs/12345/dimensions/age-range",
+				URL: "/filters/12345/dimensions/age-range",
 			},
 			SaveAndReturn: ageSelectorList.Link{
-				URL: "/jobs/12345/dimensions",
+				URL: "/filters/12345/dimensions",
 			},
 			Cancel: ageSelectorList.Link{
-				URL: "/jobs/12345/dimensions",
+				URL: "/filters/12345/dimensions",
 			},
 			FiltersAdded: []ageSelectorList.Filter{
 				{
@@ -422,7 +377,7 @@ func (c *CMD) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	templateBytes, err := c.r.Do("dataset-filter/age-selector-list", b)
+	templateBytes, err := f.r.Do("dataset-filter/age-selector-list", b)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -430,33 +385,4 @@ func (c *CMD) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.Write(templateBytes)
-}
-
-// PreviewAndDownload will control the rendering of the preview and download page
-func (c *CMD) PreviewAndDownload(w http.ResponseWriter, req *http.Request) {
-	var p finishPage.Page
-
-	// Needs to be populated from API - this is stubbed data
-	p.Metadata.Footer = getStubbedMetadataFooter()
-	p.SearchDisabled = true
-
-	pBytes, err := json.Marshal(p)
-	if err != nil {
-		log.Error(err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	b, err := c.r.Do("dataset/finishpage", pBytes)
-	if err != nil {
-		log.Error(err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if _, err := w.Write(b); err != nil {
-		log.Error(err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
 }
