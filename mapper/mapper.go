@@ -53,7 +53,7 @@ func CreateFilterOverview(dimensions []data.Dimension, filter data.Filter, datas
 		Enabled:     true,
 		Contact:     dataset.Contact.Name,
 		ReleaseDate: dataset.ReleaseDate,
-		NextRelease: dataset.ReleaseDate,
+		NextRelease: dataset.NextRelease,
 		DatasetID:   dataset.ID,
 	}
 

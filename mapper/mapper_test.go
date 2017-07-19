@@ -83,6 +83,7 @@ func getTestDataset() data.Dataset {
 	return data.Dataset{
 		ID:          "849209",
 		ReleaseDate: "17 January 2017",
+		NextRelease: "17 January 2018",
 		Contact: data.Contact{
 			Name:      "Matt Rout",
 			Telephone: "07984593234",

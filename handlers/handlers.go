@@ -203,6 +203,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	dataset := data.Dataset{
 		ID:          "849209",
 		ReleaseDate: "17 January 2017",
+		NextRelease: "17 February 2017",
 		Contact: data.Contact{
 			Name:      "Matt Rout",
 			Telephone: "07984593234",
