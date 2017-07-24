@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -47,6 +48,33 @@ func TestUnitMapper(t *testing.T) {
 		So(fop.Metadata.Footer.ReleaseDate, ShouldEqual, dataset.ReleaseDate)
 		So(fop.Metadata.Footer.DatasetID, ShouldEqual, dataset.ID)
 	})
+
+	Convey("test CreatePreviewPage correctly maps to previewPage frontend model", t, func() {
+		dimensions := getTestDimensions()
+		filter := getTestFilter()
+		dataset := getTestDataset()
+
+		pp := CreatePreviewPage(dimensions, filter, dataset, filter.FilterID)
+		So(pp.SearchDisabled, ShouldBeTrue)
+		So(pp.Breadcrumb, ShouldHaveLength, 3)
+		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
+		So(pp.Breadcrumb[0].URI, ShouldEqual, "/datasets/"+filter.Dataset+"/editions/"+filter.Edition+"/versions/"+filter.Version)
+		So(pp.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
+		So(pp.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
+		So(pp.Breadcrumb[2].Title, ShouldEqual, "Preview")
+		So(pp.Data.FilterID, ShouldEqual, filter.FilterID)
+		So(pp.Metadata.Footer.Enabled, ShouldBeTrue)
+		So(pp.Metadata.Footer.Contact, ShouldEqual, dataset.Contact.Name)
+		So(pp.Metadata.Footer.ReleaseDate, ShouldEqual, dataset.ReleaseDate)
+		So(pp.Metadata.Footer.DatasetID, ShouldEqual, dataset.ID)
+		So(pp.Data.Downloads[0].Extension, ShouldEqual, "csv")
+		So(pp.Data.Downloads[0].Size, ShouldEqual, "362783")
+		So(pp.Data.Downloads[0].URI, ShouldEqual, "/")
+
+		for i, dim := range pp.Data.Dimensions {
+			So(dim, ShouldResemble, previewPage.Dimension(dimensions[i]))
+		}
+	})
 }
 
 func getTestDimensions() []data.Dimension {
@@ -76,6 +104,16 @@ func getTestFilter() data.Filter {
 		Edition:  "12345",
 		Dataset:  "849209",
 		Version:  "2017",
+		Downloads: map[string]data.Download{
+			"csv": {
+				Size: "362783",
+				URL:  "/",
+			},
+			"xls": {
+				Size: "373929",
+				URL:  "/",
+			},
+		},
 	}
 }
 
