@@ -1,0 +1,30 @@
+{
+    "id": "098273",
+    "label": "Clothing",
+    "children": [
+        {
+            "id": "098273",
+            "label": "03.1.2 Garments",
+            "uri": "/dimensions/goods-and-services/098273",
+            "hasDataPoint": false
+        },
+        {
+            "id": "098273",
+            "label": "03.1.3 Other Clothing and clothing accessories",
+            "uri": "/dimensions/goods-and-services/098273",
+            "hasDataPoint": false
+        },
+        {
+            "id": "098273",
+            "label": "03.2 Footwear including repairs",
+            "uri": "/dimensions/goods-and-services/098273",
+            "hasDataPoint": false
+        }
+    ],
+    "parents": [
+        {
+            "uri": "/dimensions/goods-and-services/012345",
+            "label": "03 Clothing and footwear"
+        }
+    ]
+}

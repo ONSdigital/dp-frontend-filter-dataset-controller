@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
@@ -33,6 +35,152 @@ func getStubbedMetadataFooter() model.Footer {
 		NextRelease: "11 November 2017",
 		DatasetID:   "MR",
 	}
+}
+
+// HierarchyAddAll ...
+func (f *Filter) HierarchyAddAll(w http.ResponseWriter, req *http.Request) {
+	// TODO: Needs to make a call to the filter api to update job
+
+	vars := mux.Vars(req)
+
+	filterID := vars["filterID"]
+	hierarchyID := vars["hierarchyID"]
+	dimensionType := vars["dimensionType"]
+
+	uri := fmt.Sprintf("/filters/%s/dimensions/%s/%s", filterID, dimensionType, hierarchyID)
+
+	http.Redirect(w, req, uri, 301)
+}
+
+// HierarchyRemoveAll ...
+func (f *Filter) HierarchyRemoveAll(w http.ResponseWriter, req *http.Request) {
+	// TODO: Needs to make a call to the filter api to update job
+
+	vars := mux.Vars(req)
+
+	filterID := vars["filterID"]
+	hierarchyID := vars["hierarchyID"]
+	dimensionType := vars["dimensionType"]
+
+	uri := fmt.Sprintf("/filters/%s/dimensions/%s/%s", filterID, dimensionType, hierarchyID)
+
+	http.Redirect(w, req, uri, 301)
+}
+
+// HierarchyAdd ...
+func (f *Filter) HierarchyAdd(w http.ResponseWriter, req *http.Request) {
+	// TODO: Needs to make a call to the filter api to update job
+
+	vars := mux.Vars(req)
+
+	filterID := vars["filterID"]
+	hierarchyID := vars["hierarchyID"]
+	dimensionType := vars["dimensionType"]
+
+	uri := fmt.Sprintf("/filters/%s/dimensions/%s/%s", filterID, dimensionType, hierarchyID)
+
+	http.Redirect(w, req, uri, 301)
+}
+
+// HierarchyRemove ...
+func (f *Filter) HierarchyRemove(w http.ResponseWriter, req *http.Request) {
+	// TODO: Needs to make a call to the filter api to update job
+
+	vars := mux.Vars(req)
+
+	filterID := vars["filterID"]
+	hierarchyID := vars["hierarchyID"]
+	dimensionType := vars["dimensionType"]
+
+	uri := fmt.Sprintf("/filters/%s/dimensions/%s/%s", filterID, dimensionType, hierarchyID)
+
+	http.Redirect(w, req, uri, 301)
+}
+
+// Hierarchy ...
+func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+
+	hierarchyID := vars["hierarchyID"]
+	dimensionType := vars["dimensionType"]
+
+	// Replace this with a call to the hierarchy api
+	b, err := ioutil.ReadFile("hierarchy/" + hierarchyID + ".json")
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	var h data.Hierarchy
+	if err = json.Unmarshal(b, &h); err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	d := data.Dataset{
+		ID:          "849209",
+		ReleaseDate: "17 January 2017",
+		NextRelease: "17 February 2017",
+		Contact: data.Contact{
+			Name:      "Matt Rout",
+			Telephone: "07984593234",
+			Email:     "matt@gmail.com",
+		},
+		Title: "Consumer Prices Index (COICOP): 2016",
+	}
+
+	fil := data.Filter{
+		FilterID: vars["filterID"],
+		Edition:  "12345",
+		Dataset:  "849209",
+		Version:  "2017",
+		Dimensions: []data.Dimension{
+			{
+				Name:   dimensionType,
+				Values: []string{"03.1 Clothing", "03.1.2 Garments", "03.2 Footwear including repairs"},
+			},
+		},
+		Downloads: map[string]data.Download{
+			"csv": {
+				Size: "362783",
+				URL:  "/",
+			},
+			"xls": {
+				Size: "373929",
+				URL:  "/",
+			},
+		},
+	}
+
+	met := data.Metadata{
+		Name:        "goods and services",
+		Description: "Goods and services provides information ....",
+	}
+
+	p := mapper.CreateHierarchyPage(h, d, fil, met, req.URL.Path, dimensionType)
+
+	body, err := json.Marshal(p)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	b, err = f.r.Do("dataset-filter/hierarchy", body)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if _, err := w.Write(b); err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 }
 
 // PreviewPage controls the rendering of the preview and download page
@@ -199,20 +347,14 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	dimensions := []data.Dimension{
 		{
-			Name:   "year",
-			Values: []string{"2014"},
+			Name:   "month",
+			Values: []string{"January", "February", "March"},
 		},
 		{
-			Name:   "geography",
-			Values: []string{"England and Wales, Bristol"},
-		},
-		{
-			Name:   "sex",
-			Values: []string{"All persons"},
-		},
-		{
-			Name:   "age-range",
-			Values: []string{"0 - 92", "2 - 18", "18 - 65"},
+			Name: "goods-and-services",
+			Hierarchy: data.Hierarchy{
+				ID: "012345",
+			},
 		},
 	}
 
@@ -232,7 +374,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 			Telephone: "07984593234",
 			Email:     "matt@gmail.com",
 		},
-		Title: "Small Area Population Estimates",
+		Title: "Consumer Prices Index (COICOP): 2016",
 	}
 
 	p := mapper.CreateFilterOverview(dimensions, filter, dataset, filterID)

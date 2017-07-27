@@ -2,8 +2,7 @@ package main
 
 import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/routes"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/gorilla/mux"
@@ -15,14 +14,7 @@ func main() {
 
 	r := mux.NewRouter()
 
-	rend := renderer.New()
-	filter := handlers.NewFilter(rend)
-
-	r.Path("/filters/{filterID}").Methods("GET").HandlerFunc(filter.PreviewPage)
-	r.Path("/filters/{filterID}/dimensions").Methods("GET").HandlerFunc(filter.FilterOverview)
-	r.Path("/filters/{filterID}/dimensions/age-range").Methods("GET").HandlerFunc(filter.AgeSelectorRange)
-	r.Path("/filters/{filterID}/dimensions/age-list").Methods("GET").HandlerFunc(filter.AgeSelectorList)
-	r.Path("/filters/{filterID}/dimensions/geography").Methods("GET").HandlerFunc(filter.Geography)
+	routes.Init(r)
 
 	s := server.New(cfg.BindAddr, r)
 

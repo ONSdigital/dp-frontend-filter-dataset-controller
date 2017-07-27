@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
-	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -72,7 +71,8 @@ func TestUnitMapper(t *testing.T) {
 		So(pp.Data.Downloads[0].URI, ShouldEqual, "/")
 
 		for i, dim := range pp.Data.Dimensions {
-			So(dim, ShouldResemble, previewPage.Dimension(dimensions[i]))
+			So(dim.Values, ShouldResemble, dimensions[i].Values)
+			So(dim.Name, ShouldEqual, dimensions[i].Name)
 		}
 	})
 }

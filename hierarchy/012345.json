@@ -1,0 +1,20 @@
+{
+    "id": "012345",
+    "label": "Clothing and footwear",
+    "children": [
+        {
+            "id": "098273",
+            "label": "03.1 Clothing",
+            "uri": "/dimensions/goods-and-services/098273",
+            "noOfChildren": 3,
+            "hasDataPoint": true
+        },
+        {
+            "id": "098273",
+            "label": "03.2 Footwear including repairs",
+            "uri": "/dimensions/goods-and-services/098273",
+            "noOfChildren": 1,
+            "hasDataPoint": true
+        }
+    ]
+}

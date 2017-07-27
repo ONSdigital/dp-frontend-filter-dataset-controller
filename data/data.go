@@ -2,8 +2,9 @@ package data
 
 // Dimension represents a dimension to be filtered upon
 type Dimension struct {
-	Name   string   `json:"name"`
-	Values []string `json:"values"`
+	Name      string    `json:"name"`
+	Values    []string  `json:"values"`
+	Hierarchy Hierarchy `json:"hierarchy,omitempty"`
 }
 
 // Filter represents a response model from the filter api
@@ -47,4 +48,29 @@ type Contact struct {
 	Name      string `json:"name"`
 	Telephone string `json:"telephone"`
 	Email     string `json:"email"`
+}
+
+type Hierarchy struct {
+	ID       string   `json:"id"`
+	Label    string   `json:"label"`
+	Children []Child  `json:"children"`
+	Parents  []Parent `json:"parents"`
+}
+
+type Metadata struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+type Child struct {
+	ID               string `json:"id"`
+	Label            string `json:"label"`
+	URI              string `json:"uri"`
+	NumberofChildren int    `json:"noOfChildren"`
+	HasDataPoint     bool   `json:"hasDataPoint"`
+}
+
+type Parent struct {
+	URI   string `json:"uri"`
+	Label string `json:"label"`
 }
