@@ -25,7 +25,7 @@ func main() {
 	r.Path("/filters/{filterID}").Methods("GET").HandlerFunc(filter.PreviewPage)
 	r.Path("/filters/{filterID}/dimensions").Methods("GET").HandlerFunc(filter.FilterOverview)
 	r.Path("/filters/{filterID}/dimensions/age-range").Methods("GET").HandlerFunc(filter.RangeSelector)
-	r.Path("/filters/{filterID}/dimensions/age-list").Methods("GET").HandlerFunc(filter.AgeSelectorList)
+	r.Path("/filters/{filterID}/dimensions/age-list").Methods("GET").HandlerFunc(filter.ListSelector)
 	r.Path("/filters/{filterID}/dimensions/geography").Methods("GET").HandlerFunc(filter.Geography)
 
 	s := server.New(cfg.BindAddr, r)

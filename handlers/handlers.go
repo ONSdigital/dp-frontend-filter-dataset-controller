@@ -8,8 +8,8 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/dp-frontend-models/model"
-	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/ageSelectorList"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/geography"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/rangeSelector"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
@@ -354,22 +354,26 @@ func (f *Filter) RangeSelector(w http.ResponseWriter, req *http.Request) {
 	w.Write(templateBytes)
 }
 
-// AgeSelectorList controls the render of the age selector list template
+// ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
-func (f *Filter) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
-	p := ageSelectorList.Page{
+func (f *Filter) ListSelector(w http.ResponseWriter, req *http.Request) {
+	p := listSelector.Page{
 		FilterID: "12345",
-		Data: ageSelectorList.AgeSelectorList{
-			AddFromRange: ageSelectorList.Link{
-				URL: "/filters/12345/dimensions/age-range",
+		Data: listSelector.ListSelector{
+			AddFromRange: listSelector.Link{
+				Label: "add age range",
+				URL:   "/filters/12345/dimensions/age-range",
 			},
-			SaveAndReturn: ageSelectorList.Link{
+			SaveAndReturn: listSelector.Link{
 				URL: "/filters/12345/dimensions",
 			},
-			Cancel: ageSelectorList.Link{
+			AddAllInRange: listSelector.Link{
+				Label: "All ages",
+			},
+			Cancel: listSelector.Link{
 				URL: "/filters/12345/dimensions",
 			},
-			FiltersAdded: []ageSelectorList.Filter{
+			FiltersAdded: []listSelector.Filter{
 				{
 					RemoveURL: "/remove-this/",
 					Label:     "All ages",
@@ -383,13 +387,16 @@ func (f *Filter) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
 					Label:     "18",
 				},
 			},
-			RemoveAll: ageSelectorList.Link{
+			RemoveAll: listSelector.Link{
 				URL: "/remove-all/",
 			},
 			FiltersAmount: 2,
-			AgeRange: ageSelectorList.Range{
-				StartNum: 30,
-				EndNum:   90,
+			RangeData: listSelector.Range{
+				StartNum:     30,
+				EndNum:       90,
+				StartLabel:   "Youngest",
+				EndLabel:     "Oldest",
+				AppendString: "and over",
 			},
 		},
 	}
@@ -416,7 +423,7 @@ func (f *Filter) AgeSelectorList(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	templateBytes, err := f.r.Do("dataset-filter/age-selector-list", b)
+	templateBytes, err := f.r.Do("dataset-filter/list-selector", b)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
