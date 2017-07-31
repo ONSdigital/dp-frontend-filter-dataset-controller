@@ -6,12 +6,31 @@ type Dimension struct {
 	Values []string `json:"values"`
 }
 
+// FilterDimension represents a dimension response from the filter api
+type FilterDimension struct {
+	Name string `json:"name"`
+	URI  string `json:"dimension_url"`
+}
+
+// FilterDimensionValues ...
+type FilterDimensionValues struct {
+	Items           []FilterDimensionValueItem `json:"items"`
+	NumberOfResults int                        `json:"number_of_results"`
+}
+
+// FilterDimensionValueItem ...
+type FilterDimensionValueItem struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 // Filter represents a response model from the filter api
 type Filter struct {
 	FilterID   string              `json:"filter_id"`
 	Dataset    string              `json:"dataset"`
 	Edition    string              `json:"edition"`
-	Version    string              `json:"state"`
+	Version    string              `json:"version"`
+	State      string              `json:"state"`
 	Dimensions []Dimension         `json:"dimensions"`
 	Downloads  map[string]Download `json:"downloads"`
 	Events     map[string][]Event  `json:"events"`

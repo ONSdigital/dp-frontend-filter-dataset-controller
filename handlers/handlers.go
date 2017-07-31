@@ -17,12 +17,18 @@ import (
 
 // Filter represents the handlers for Filtering
 type Filter struct {
-	r renderer.Renderer
+	r  renderer.Renderer
+	fc FilterClient
+	dc DatasetClient
 }
 
 // NewFilter creates a new instance of Filter
-func NewFilter(r renderer.Renderer) *Filter {
-	return &Filter{r: r}
+func NewFilter(r renderer.Renderer, fc FilterClient, dc DatasetClient) *Filter {
+	return &Filter{
+		r:  r,
+		fc: fc,
+		dc: dc,
+	}
 }
 
 func getStubbedMetadataFooter() model.Footer {
@@ -197,42 +203,45 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	dimensions := []data.Dimension{
-		{
-			Name:   "year",
-			Values: []string{"2014"},
-		},
-		{
-			Name:   "geography",
-			Values: []string{"England and Wales, Bristol"},
-		},
-		{
-			Name:   "sex",
-			Values: []string{"All persons"},
-		},
-		{
-			Name:   "age-range",
-			Values: []string{"0 - 92", "2 - 18", "18 - 65"},
-		},
+	dims, err := f.fc.GetDimensions(filterID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	filter := data.Filter{
-		FilterID: filterID,
-		Edition:  "12345",
-		Dataset:  "849209",
-		Version:  "2017",
+	var dimensions []data.Dimension
+	for _, dim := range dims {
+		var vals data.FilterDimensionValues
+		vals, err = f.fc.GetDimensionOptions(filterID, dim.Name)
+		if err != nil {
+			log.ErrorR(req, err, nil)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		var values []string
+		for _, val := range vals.Items {
+			values = append(values, val.Name)
+		}
+
+		dimensions = append(dimensions, data.Dimension{
+			Name:   dim.Name,
+			Values: values,
+		})
 	}
 
-	dataset := data.Dataset{
-		ID:          "849209",
-		ReleaseDate: "17 January 2017",
-		NextRelease: "17 February 2017",
-		Contact: data.Contact{
-			Name:      "Matt Rout",
-			Telephone: "07984593234",
-			Email:     "matt@gmail.com",
-		},
-		Title: "Small Area Population Estimates",
+	filter, err := f.fc.GetJobState(filterID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	dataset, err := f.dc.GetDataset(filterID, filter.Edition, filter.Version)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	p := mapper.CreateFilterOverview(dimensions, filter, dataset, filterID)

@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dataset"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/filter"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/go-ns/log"
@@ -16,7 +18,9 @@ func main() {
 	r := mux.NewRouter()
 
 	rend := renderer.New()
-	filter := handlers.NewFilter(rend)
+	fc := filter.New(cfg.FilterAPIURL)
+	dc := dataset.New(cfg.DatasetAPIURL)
+	filter := handlers.NewFilter(rend, fc, dc)
 
 	r.Path("/filters/{filterID}").Methods("GET").HandlerFunc(filter.PreviewPage)
 	r.Path("/filters/{filterID}/dimensions").Methods("GET").HandlerFunc(filter.FilterOverview)
