@@ -10,10 +10,12 @@ import (
 )
 
 var dimensionTitleTranslator = map[string]string{
-	"geography": "Geographic Areas",
-	"year":      "Year",
-	"age-range": "Age",
-	"sex":       "Sex",
+	"geography":          "Geographic Areas",
+	"year":               "Year",
+	"age-range":          "Age",
+	"sex":                "Sex",
+	"month":              "Month",
+	"goods-and-services": "Goods and Services",
 }
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
