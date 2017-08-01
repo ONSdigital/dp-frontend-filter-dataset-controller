@@ -2,11 +2,13 @@ package mapper
 
 import (
 	"fmt"
+	"math/rand"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
 	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
+	"github.com/ONSdigital/go-ns/log"
 )
 
 var dimensionTitleTranslator = map[string]string{
@@ -63,6 +65,13 @@ func CreateFilterOverview(dimensions []data.Dimension, filter data.Filter, datas
 	return p
 }
 
+// Random boolean generator
+func randBool() bool {
+	b := rand.Float32() < 0.5
+	log.Debug("random bool", log.Data{"bool": b})
+	return b
+}
+
 // CreatePreviewPage maps data items from API responses to create a preview page
 func CreatePreviewPage(dimensions []data.Dimension, filter data.Filter, dataset data.Dataset, filterID string) previewPage.Page {
 	var p previewPage.Page
@@ -102,6 +111,8 @@ func CreatePreviewPage(dimensions []data.Dimension, filter data.Filter, dataset 
 	for _, dim := range dimensions {
 		p.Data.Dimensions = append(p.Data.Dimensions, previewPage.Dimension(dim))
 	}
+
+	p.IsContentLoaded = randBool()
 
 	return p
 }
