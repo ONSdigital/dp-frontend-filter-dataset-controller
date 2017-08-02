@@ -327,20 +327,8 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 }
 
 func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) {
-	ns := req.URL.Query().Get("nSelectors")
 
-	var nSelectors int
-	var err error
-	if ns == "" {
-		nSelectors = 1
-	} else {
-		nSelectors, err = strconv.Atoi(ns)
-		if err != nil {
-			nSelectors = 1
-		}
-	}
-
-	p := mapper.CreateRangeSelectorPage(name, selectedValues, allValues, filter, dataset, nSelectors)
+	p := mapper.CreateRangeSelectorPage(name, selectedValues, allValues, filter, dataset)
 
 	b, err := json.Marshal(p)
 	if err != nil {

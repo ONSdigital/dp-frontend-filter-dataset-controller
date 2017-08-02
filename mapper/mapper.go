@@ -132,7 +132,7 @@ func CreateListSelectorPage(name string, selectedValues, allValues data.Dimensio
 }
 
 // CreateRangeSelectorPage ...
-func CreateRangeSelectorPage(name string, selectedValues, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset, nSelectors int) rangeSelector.Page {
+func CreateRangeSelectorPage(name string, selectedValues, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) rangeSelector.Page {
 	var p rangeSelector.Page
 
 	p.SearchDisabled = true
@@ -163,12 +163,6 @@ func CreateRangeSelectorPage(name string, selectedValues, allValues data.Dimensi
 	p.Data.AddAllInRange = rangeSelector.Link{
 		Label: fmt.Sprintf("All %ss", name),
 	}
-	p.Data.AddNewRange = rangeSelector.Link{
-		URL: fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filter.FilterID, name, nSelectors+1),
-	}
-	p.Data.RemoveRange = rangeSelector.Link{
-		URL: fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filter.FilterID, name, nSelectors-1),
-	}
 	p.Data.SaveAndReturn = rangeSelector.Link{
 		URL: fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
 	}
@@ -191,8 +185,6 @@ func CreateRangeSelectorPage(name string, selectedValues, allValues data.Dimensi
 	p.Data.RangeData.StartLabel = "Start"
 	p.Data.RangeData.EndLabel = "End"
 	p.Data.RangeData.URL = fmt.Sprintf("/filters/%s/dimensions/%s/range", filter.FilterID, name)
-
-	p.Data.NumberOfSelectors = nSelectors + 1
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
