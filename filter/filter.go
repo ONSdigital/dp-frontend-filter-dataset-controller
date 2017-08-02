@@ -42,6 +42,32 @@ func New(filterAPIURL string) *Client {
 	}
 }
 
+// GetDimension returns information on a requested dimension name for a given filterID
+func (c *Client) GetDimension(filterID, name string) (dim data.FilterDimension, err error) {
+	uri := fmt.Sprintf("%s/filters/%s/dimensions/%s", c.url, filterID, name)
+	resp, err := c.cli.Get(uri)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		err = &ErrInvalidFilterAPIResponse{http.StatusOK, resp.StatusCode, uri}
+		return
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	if err = json.Unmarshal(b, &dim); err != nil {
+		return
+	}
+
+	return
+}
+
 // GetDimensions will return the dimensions associated with the provided filter id
 func (c *Client) GetDimensions(filterID string) (dims []data.FilterDimension, err error) {
 	uri := fmt.Sprintf("%s/filters/%s/dimensions", c.url, filterID)
@@ -74,7 +100,7 @@ func (c *Client) GetDimensions(filterID string) (dims []data.FilterDimension, er
 }
 
 // GetDimensionOptions ...
-func (c *Client) GetDimensionOptions(filterID, name string) (fdv data.FilterDimensionValues, err error) {
+func (c *Client) GetDimensionOptions(filterID, name string) (fdv data.DimensionValues, err error) {
 	uri := fmt.Sprintf("%s/filters/%s/dimensions/%s/options", c.url, filterID, name)
 	resp, err := c.cli.Get(uri)
 	if err != nil {

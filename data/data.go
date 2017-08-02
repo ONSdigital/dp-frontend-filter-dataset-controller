@@ -12,16 +12,17 @@ type FilterDimension struct {
 	URI  string `json:"dimension_url"`
 }
 
-// FilterDimensionValues ...
-type FilterDimensionValues struct {
-	Items           []FilterDimensionValueItem `json:"items"`
-	NumberOfResults int                        `json:"number_of_results"`
+// DimensionValues ...
+type DimensionValues struct {
+	Items           []DimensionValueItem `json:"items"`
+	NumberOfResults int                  `json:"number_of_results"`
 }
 
-// FilterDimensionValueItem ...
-type FilterDimensionValueItem struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+// DimensionValueItem ...
+type DimensionValueItem struct {
+	ID    string `json:"id"`
+	Label string `json:"label"`
+	Name  string `json:"name"`
 }
 
 // Filter represents a response model from the filter api

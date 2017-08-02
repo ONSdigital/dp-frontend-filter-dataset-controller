@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"regexp"
+	"strconv"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
@@ -10,24 +13,27 @@ import (
 	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/geography"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
-	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/rangeSelector"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
 
 // Filter represents the handlers for Filtering
 type Filter struct {
-	r  renderer.Renderer
-	fc FilterClient
-	dc DatasetClient
+	r   renderer.Renderer
+	fc  FilterClient
+	dc  DatasetClient
+	clc CodelistClient
+	val Validator
 }
 
 // NewFilter creates a new instance of Filter
-func NewFilter(r renderer.Renderer, fc FilterClient, dc DatasetClient) *Filter {
+func NewFilter(r renderer.Renderer, fc FilterClient, dc DatasetClient, clc CodelistClient, val Validator) *Filter {
 	return &Filter{
-		r:  r,
-		fc: fc,
-		dc: dc,
+		r:   r,
+		fc:  fc,
+		dc:  dc,
+		clc: clc,
+		val: val,
 	}
 }
 
@@ -212,7 +218,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	var dimensions []data.Dimension
 	for _, dim := range dims {
-		var vals data.FilterDimensionValues
+		var vals data.DimensionValues
 		vals, err = f.fc.GetDimensionOptions(filterID, dim.Name)
 		if err != nil {
 			log.ErrorR(req, err, nil)
@@ -266,76 +272,63 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 // RangeSelector controls the render of the range selector template
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) RangeSelector(w http.ResponseWriter, req *http.Request) {
-	p := rangeSelector.Page{
-		FilterID: "12345",
-		Data: rangeSelector.RangeSelector{
-			AddFromList: rangeSelector.Link{
-				Label: "Add age range",
-				URL:   "/filters/12345/dimensions/age-list",
-			},
-			NumberOfSelectors: 1,
-			AddRange: rangeSelector.Link{
-				Label: "Add ages",
-				URL:   "/add-to-basket/",
-			},
-			AddAllInRange: rangeSelector.Link{
-				Label: "All ages",
-			},
-			AddNewRange: rangeSelector.Link{
-				URL: "/add-another-range",
-			},
-			RemoveRange: rangeSelector.Link{
-				URL:   "/remove-range",
-				Label: "Remove",
-			},
-			SaveAndReturn: rangeSelector.Link{
-				URL: "/filters/12345/dimensions",
-			},
-			Cancel: rangeSelector.Link{
-				URL: "/filters/12345/dimensions",
-			},
-			FiltersAmount: 2,
-			FiltersAdded: []rangeSelector.Filter{
-				{
-					RemoveURL: "/remove-this/",
-					Label:     "All ages",
-				},
-				{
-					RemoveURL: "/remove-this-2/",
-					Label:     "43",
-				},
-				{
-					RemoveURL: "/remove-this-3/",
-					Label:     "18",
-				},
-			},
-			RemoveAll: rangeSelector.Link{
-				URL: "/remove-all/",
-			},
-			RangeData: rangeSelector.Range{
-				StartNum:     30,
-				EndNum:       90,
-				StartLabel:   "Youngest",
-				EndLabel:     "Oldest",
-				AppendString: "and over",
-			},
-		},
+	vars := mux.Vars(req)
+	name := vars["name"]
+	ns := req.URL.Query().Get("nSelectors")
+	filterID := vars["filterID"]
+
+	filter, err := f.fc.GetJobState(filterID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	p.Breadcrumb = []model.TaxonomyNode{
-		{
-			Title: "Title of dataset",
-			URI:   "/",
-		},
-		{
-			Title: "Filter this dataset",
-			URI:   "/",
-		},
+	selectedValues, err := f.fc.GetDimensionOptions(filterID, name)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	p.SearchDisabled = true
+	dataset, err := f.dc.GetDataset(filterID, filter.Edition, filter.Version)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	p.Metadata.Footer = getStubbedMetadataFooter()
+	dim, err := f.fc.GetDimension(filterID, name)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	codeID := getCodeIDFromURI(dim.URI)
+	if codeID == "" {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	allValues, err := f.clc.GetValues(codeID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	var nSelectors int
+	if ns == "" {
+		nSelectors = 1
+	} else {
+		nSelectors, err = strconv.Atoi(ns)
+		if err != nil {
+			nSelectors = 1
+		}
+	}
+
+	p := mapper.CreateRangeSelectorPage(name, selectedValues, allValues, filter, dataset, nSelectors)
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -431,4 +424,93 @@ func (f *Filter) ListSelector(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.Write(templateBytes)
+}
+
+type Range struct {
+	Start string `schema:"start"`
+	End   string `schema:"end"`
+}
+
+// AddRange will add a range of values to a filter job
+func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	name := vars["name"]
+	ns := req.URL.Query().Get("nSelectors")
+	filterID := vars["filterID"]
+
+	var r Range
+
+	if err := f.val.Validate(req, &r); err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	var nSelectors int
+	var err error
+	if ns == "" {
+		nSelectors = 1
+	} else {
+		nSelectors, err = strconv.Atoi(ns)
+		if err != nil {
+			nSelectors = 1
+		}
+	}
+
+	/*dim, err := f.fc.GetDimension(filterID, name)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	codeID := getCodeIDFromURI(dim.URI)
+	if codeID == "" {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	allValues, err := f.clc.GetValues(codeID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} */
+
+	url := fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filterID, name, nSelectors+1)
+	http.Redirect(w, req, url, 301)
+}
+
+func (f *Filter) RemoveRange(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	name := vars["name"]
+	ns := req.URL.Query().Get("nSelectors")
+	filterID := vars["filterID"]
+
+	var nSelectors int
+	var err error
+	if ns == "" {
+		nSelectors = 1
+	} else {
+		nSelectors, err = strconv.Atoi(ns)
+		if err != nil {
+			nSelectors = 1
+		}
+	}
+
+	url := fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filterID, name, nSelectors-1)
+	http.Redirect(w, req, url, 301)
+
+}
+
+func getCodeIDFromURI(uri string) string {
+	codeReg := regexp.MustCompile(`^\/code-lists\/(.+)\/codes$`)
+	subs := codeReg.FindStringSubmatch(uri)
+
+	if len(subs) == 2 {
+		return subs[1]
+	}
+
+	log.Info("could not extract codeID from uri", nil)
+	return ""
 }
