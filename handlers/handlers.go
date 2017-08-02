@@ -14,7 +14,6 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/geography"
-	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
@@ -321,7 +320,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 
 	selectorType := req.URL.Query().Get("selectorType")
 	if selectorType == "list" {
-		f.listSelector(w, req)
+		f.listSelector(w, req, name, selectedValues, allValues, filter, dataset)
 	} else {
 		f.rangeSelector(w, req, name, selectedValues, allValues, filter, dataset)
 	}
@@ -362,65 +361,8 @@ func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name st
 
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
-func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request) {
-	p := listSelector.Page{
-		FilterID: "12345",
-		Data: listSelector.ListSelector{
-			AddFromRange: listSelector.Link{
-				Label: "add age range",
-				URL:   "/filters/12345/dimensions/age-range",
-			},
-			SaveAndReturn: listSelector.Link{
-				URL: "/filters/12345/dimensions",
-			},
-			AddAllInRange: listSelector.Link{
-				Label: "All ages",
-			},
-			Cancel: listSelector.Link{
-				URL: "/filters/12345/dimensions",
-			},
-			FiltersAdded: []listSelector.Filter{
-				{
-					RemoveURL: "/remove-this/",
-					Label:     "All ages",
-				},
-				{
-					RemoveURL: "/remove-this-2/",
-					Label:     "43",
-				},
-				{
-					RemoveURL: "/remove-this-3/",
-					Label:     "18",
-				},
-			},
-			RemoveAll: listSelector.Link{
-				URL: "/remove-all/",
-			},
-			FiltersAmount: 2,
-			RangeData: listSelector.Range{
-				StartNum:     30,
-				EndNum:       90,
-				StartLabel:   "Youngest",
-				EndLabel:     "Oldest",
-				AppendString: "and over",
-			},
-		},
-	}
-
-	p.Breadcrumb = []model.TaxonomyNode{
-		{
-			Title: "Title of dataset",
-			URI:   "/",
-		},
-		{
-			Title: "Filter this dataset",
-			URI:   "/",
-		},
-	}
-
-	p.SearchDisabled = true
-
-	p.Metadata.Footer = getStubbedMetadataFooter()
+func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) {
+	p := mapper.CreateListSelectorPage(name, selectedValues, allValues, filter, dataset)
 
 	b, err := json.Marshal(p)
 	if err != nil {

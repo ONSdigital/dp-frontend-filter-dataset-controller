@@ -7,6 +7,7 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
 	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/rangeSelector"
 	"github.com/ONSdigital/go-ns/log"
@@ -54,6 +55,70 @@ func CreateFilterOverview(dimensions []data.Dimension, filter data.Filter, datas
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter this dataset",
 	})
+
+	p.Metadata.Footer = model.Footer{
+		Enabled:     true,
+		Contact:     dataset.Contact.Name,
+		ReleaseDate: dataset.ReleaseDate,
+		NextRelease: dataset.NextRelease,
+		DatasetID:   dataset.ID,
+	}
+
+	return p
+}
+
+func CreateListSelectorPage(name string, selectedValues, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) listSelector.Page {
+	var p listSelector.Page
+
+	p.SearchDisabled = true
+	p.FilterID = filter.FilterID
+
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: dataset.Title,
+		URI:   fmt.Sprintf("/datasets/%s/editions/%s/versions/%s", filter.Dataset, filter.Edition, filter.Version),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: "Filter this dataset",
+		URI:   fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: dimensionTitleTranslator[name],
+	})
+
+	p.Data.AddFromRange = listSelector.Link{
+		Label: fmt.Sprintf("add %s range", name),
+		URL:   fmt.Sprintf("/filters/%s/dimensions/%s", filter.FilterID, name),
+	}
+
+	p.Data.SaveAndReturn = listSelector.Link{
+		URL: fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
+	}
+	p.Data.Cancel = listSelector.Link{
+		URL: fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
+	}
+
+	for _, val := range selectedValues.Items {
+		p.Data.FiltersAdded = append(p.Data.FiltersAdded, listSelector.Filter{
+			RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s", filter.FilterID, name, val.Name),
+			Label:     val.Name,
+		})
+	}
+
+	for _, val := range allValues.Items {
+		var isSelected bool
+		for _, selVal := range selectedValues.Items {
+			if selVal.Name == val.Label {
+				isSelected = true
+			}
+		}
+
+		p.Data.RangeData.Values = append(p.Data.RangeData.Values, listSelector.Value{
+			Label:      val.Label,
+			IsSelected: isSelected,
+		})
+	}
+
+	p.Data.FiltersAmount = len(selectedValues.Items)
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
