@@ -122,6 +122,26 @@ func (c *Client) GetDimensionOptions(filterID, name string) (fdv data.DimensionV
 	return
 }
 
+// AddDimensionValue adds a particular value to a filter job for a given filterID
+// and name
+func (c *Client) AddDimensionValue(filterID, name, value string) error {
+	uri := fmt.Sprintf("%s/filters/%s/dimensions/%s/options/%s", c.url, filterID, name, value)
+	req, err := http.NewRequest("POST", uri, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.cli.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusCreated {
+		return &ErrInvalidFilterAPIResponse{http.StatusCreated, resp.StatusCode, uri}
+	}
+	return nil
+}
+
 // GetJobState ...
 func (c *Client) GetJobState(filterID string) (f data.Filter, err error) {
 	uri := fmt.Sprintf("%s/filters/%s", c.url, filterID)

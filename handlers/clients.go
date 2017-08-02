@@ -8,6 +8,7 @@ type FilterClient interface {
 	GetDimensionOptions(filterID, name string) (fdv data.DimensionValues, err error)
 	GetJobState(filterID string) (f data.Filter, err error)
 	GetDimension(filterID, name string) (dim data.FilterDimension, err error)
+	AddDimensionValue(filterID, name, value string) error
 }
 
 // DatasetClient ...

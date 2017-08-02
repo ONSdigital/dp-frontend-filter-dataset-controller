@@ -89,7 +89,7 @@ func CreateRangeSelectorPage(name string, selectedValues, allValues data.Dimensi
 
 	p.Data.AddFromList = rangeSelector.Link{
 		Label: fmt.Sprintf("Add %s range", name),
-		URL:   fmt.Sprintf("/filters/%s/dimensions/%s-list", filter.FilterID, name),
+		URL:   fmt.Sprintf("/filters/%s/dimensions/%s?selectorType=list", filter.FilterID, name),
 	}
 	p.Data.AddRange = rangeSelector.Link{
 		Label: fmt.Sprintf("Add %ss", name),

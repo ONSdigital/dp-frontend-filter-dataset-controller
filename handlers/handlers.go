@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/dp-frontend-models/model"
@@ -269,12 +271,11 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	w.Write(templateBytes)
 }
 
-// RangeSelector controls the render of the range selector template
+// DimensionSelector controls the render of the range selector template
 // Contains stubbed data for now - page to be populated by the API
-func (f *Filter) RangeSelector(w http.ResponseWriter, req *http.Request) {
+func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]
-	ns := req.URL.Query().Get("nSelectors")
 	filterID := vars["filterID"]
 
 	filter, err := f.fc.GetJobState(filterID)
@@ -318,7 +319,19 @@ func (f *Filter) RangeSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	selectorType := req.URL.Query().Get("selectorType")
+	if selectorType == "list" {
+		f.listSelector(w, req)
+	} else {
+		f.rangeSelector(w, req, name, selectedValues, allValues, filter, dataset)
+	}
+}
+
+func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) {
+	ns := req.URL.Query().Get("nSelectors")
+
 	var nSelectors int
+	var err error
 	if ns == "" {
 		nSelectors = 1
 	} else {
@@ -349,7 +362,7 @@ func (f *Filter) RangeSelector(w http.ResponseWriter, req *http.Request) {
 
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
-func (f *Filter) ListSelector(w http.ResponseWriter, req *http.Request) {
+func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request) {
 	p := listSelector.Page{
 		FilterID: "12345",
 		Data: listSelector.ListSelector{
@@ -457,7 +470,7 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	/*dim, err := f.fc.GetDimension(filterID, name)
+	dim, err := f.fc.GetDimension(filterID, name)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -475,10 +488,60 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
-	} */
+	}
 
-	url := fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filterID, name, nSelectors+1)
-	http.Redirect(w, req, url, 301)
+	var values []string
+	labelIDMap := make(map[string]string)
+	for _, val := range allValues.Items {
+		values = append(values, val.Label)
+		labelIDMap[val.Label] = val.ID
+	}
+
+	if name == "month" {
+		dats, err := dates.ConvertToReadable(values)
+		if err != nil {
+			log.ErrorR(req, err, nil)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		start, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s", r.Start))
+		if err != nil {
+			log.ErrorR(req, err, nil)
+			w.WriteHeader(http.StatusInternalServerError)
+			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filterID, name, nSelectors)
+			http.Redirect(w, req, redirectURL, 301)
+		}
+
+		end, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s", r.End))
+		if err != nil {
+			log.ErrorR(req, err, nil)
+			w.WriteHeader(http.StatusInternalServerError)
+			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filterID, name, nSelectors)
+			http.Redirect(w, req, redirectURL, 301)
+		}
+
+		if end.Before(start) {
+			log.Info("end date before start date", log.Data{"start": start, "end": end})
+			w.WriteHeader(http.StatusInternalServerError)
+			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filterID, name, nSelectors)
+			http.Redirect(w, req, redirectURL, 301)
+		}
+
+		dats = dates.Sort(dats)
+		values = dates.ConvertToCoded(dats)
+		for i, dat := range dats {
+			if dat.Equal(start) || dat.After(start) && dat.Before(end) || dat.Equal(end) {
+				if err := f.fc.AddDimensionValue(filterID, name, labelIDMap[values[i]]); err != nil {
+					log.TraceR(req, err.Error(), nil)
+					continue
+				}
+			}
+		}
+	}
+
+	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filterID, name, nSelectors+1)
+	http.Redirect(w, req, redirectURL, 301)
 }
 
 func (f *Filter) RemoveRange(w http.ResponseWriter, req *http.Request) {
@@ -500,7 +563,6 @@ func (f *Filter) RemoveRange(w http.ResponseWriter, req *http.Request) {
 
 	url := fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filterID, name, nSelectors-1)
 	http.Redirect(w, req, url, 301)
-
 }
 
 func getCodeIDFromURI(uri string) string {
