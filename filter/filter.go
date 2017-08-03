@@ -142,6 +142,26 @@ func (c *Client) AddDimensionValue(filterID, name, value string) error {
 	return nil
 }
 
+// RemoveDimensionValue removes a particular value to a filter job for a given filterID
+// and name
+func (c *Client) RemoveDimensionValue(filterID, name, value string) error {
+	uri := fmt.Sprintf("%s/filters/%s/dimensions/%s/options/%s", c.url, filterID, name, value)
+	req, err := http.NewRequest("DELETE", uri, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.cli.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return &ErrInvalidFilterAPIResponse{http.StatusOK, resp.StatusCode, uri}
+	}
+	return nil
+}
+
 // GetJobState ...
 func (c *Client) GetJobState(filterID string) (f data.Filter, err error) {
 	uri := fmt.Sprintf("%s/filters/%s", c.url, filterID)

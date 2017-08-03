@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
@@ -18,7 +19,7 @@ var dimensionTitleTranslator = map[string]string{
 	"year":               "Year",
 	"age-range":          "Age",
 	"sex":                "Sex",
-	"month":              "Month",
+	"time":               "Time",
 	"goods-and-services": "Goods and Services",
 }
 
@@ -32,8 +33,22 @@ func CreateFilterOverview(dimensions []data.Dimension, filter data.Filter, datas
 	for _, d := range dimensions {
 		var fod filterOverview.Dimension
 
-		for _, ac := range d.Values {
-			fod.AddedCategories = append(fod.AddedCategories, ac)
+		if d.Name == "time" {
+			var selectedDates []string
+			for _, val := range d.Values {
+				selectedDates = append(selectedDates, val)
+			}
+
+			selectedDats, _ := dates.ConvertToReadable(selectedDates)
+			selectedDats = dates.Sort(selectedDats)
+
+			for _, ac := range selectedDats {
+				fod.AddedCategories = append(fod.AddedCategories, dates.ConvertToMonthYear(ac))
+			}
+		} else {
+			for _, ac := range d.Values {
+				fod.AddedCategories = append(fod.AddedCategories, ac)
+			}
 		}
 
 		fod.Link.URL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, d.Name)
@@ -72,6 +87,7 @@ func CreateListSelectorPage(name string, selectedValues, allValues data.Dimensio
 
 	p.SearchDisabled = true
 	p.FilterID = filter.FilterID
+	p.Data.Title = dimensionTitleTranslator[name]
 
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dataset.Title,
@@ -97,25 +113,52 @@ func CreateListSelectorPage(name string, selectedValues, allValues data.Dimensio
 		URL: fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
 	}
 
-	for _, val := range selectedValues.Items {
-		p.Data.FiltersAdded = append(p.Data.FiltersAdded, listSelector.Filter{
-			RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s", filter.FilterID, name, val.Name),
-			Label:     val.Name,
-		})
+	p.Data.AddAllInRange = listSelector.Link{
+		Label: fmt.Sprintf("All %ss", name),
 	}
 
-	for _, val := range allValues.Items {
-		var isSelected bool
-		for _, selVal := range selectedValues.Items {
-			if selVal.Name == val.Label {
-				isSelected = true
-			}
+	p.Data.RangeData.URL = fmt.Sprintf("/filters/%s/dimensions/%s/list", filter.FilterID, name)
+
+	p.Data.RemoveAll.URL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all", filter.FilterID, name)
+
+	if name == "time" {
+
+		var origDates []string
+		for _, val := range allValues.Items {
+			origDates = append(origDates, val.Label)
 		}
 
-		p.Data.RangeData.Values = append(p.Data.RangeData.Values, listSelector.Value{
-			Label:      val.Label,
-			IsSelected: isSelected,
-		})
+		dats, _ := dates.ConvertToReadable(origDates)
+		dats = dates.Sort(dats)
+
+		var selectedDates []string
+		for _, val := range selectedValues.Items {
+			selectedDates = append(selectedDates, val.Name)
+		}
+
+		selectedDats, _ := dates.ConvertToReadable(selectedDates)
+
+		for i, val := range selectedDats {
+			p.Data.FiltersAdded = append(p.Data.FiltersAdded, listSelector.Filter{
+				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s", filter.FilterID, name, selectedValues.Items[i].ID),
+				Label:     dates.ConvertToMonthYear(val),
+			})
+		}
+
+		for _, val := range dats {
+			var isSelected bool
+			for _, selVal := range selectedDats {
+				if selVal.Equal(val) {
+					isSelected = true
+				}
+			}
+
+			p.Data.RangeData.Values = append(p.Data.RangeData.Values, listSelector.Value{
+				Label:      dates.ConvertToMonthYear(val),
+				IsSelected: isSelected,
+			})
+		}
+
 	}
 
 	p.Data.FiltersAmount = len(selectedValues.Items)
@@ -169,10 +212,17 @@ func CreateRangeSelectorPage(name string, selectedValues, allValues data.Dimensi
 	p.Data.Cancel = rangeSelector.Link{
 		URL: fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
 	}
+	var selectedDates []string
 	for _, val := range selectedValues.Items {
+		selectedDates = append(selectedDates, val.Name)
+	}
+
+	selectedDats, _ := dates.ConvertToReadable(selectedDates)
+
+	for i, val := range selectedDats {
 		p.Data.FiltersAdded = append(p.Data.FiltersAdded, rangeSelector.Filter{
-			RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s", filter.FilterID, name, val.Name),
-			Label:     val.Name,
+			RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s", filter.FilterID, name, selectedValues.Items[i].ID),
+			Label:     dates.ConvertToMonthYear(val),
 		})
 	}
 

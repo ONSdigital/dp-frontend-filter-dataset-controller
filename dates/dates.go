@@ -41,6 +41,11 @@ func ConvertToReadable(dates []string) ([]time.Time, error) {
 	return readableDates, nil
 }
 
+// ConvertToMonthYear takes a time.Time object and converts to MM yyyy
+func ConvertToMonthYear(d time.Time) string {
+	return fmt.Sprintf("%s %d", d.Month().String(), d.Year())
+}
+
 // Sort orders a list of times
 func Sort(dates []time.Time) TimeSlice {
 	d := TimeSlice(dates)

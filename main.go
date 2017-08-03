@@ -45,8 +45,10 @@ func main() {
 	r.Path("/filters/{filterID}/dimensions/geography").Methods("GET").HandlerFunc(filter.Geography)
 
 	r.Path("/filters/{filterID}/dimensions/{name}").Methods("GET").HandlerFunc(filter.DimensionSelector)
-	r.Path("/filters/{filterID}/dimensions/{name}/range-add").Methods("POST").HandlerFunc(filter.AddRange)
-	r.Path("/filters/{filterID}/dimensions/{name}/range-delete").Methods("POST").HandlerFunc(filter.RemoveRange)
+	r.Path("/filters/{filterID}/dimensions/{name}/remove-all").HandlerFunc(filter.DimensionRemoveAll)
+	r.Path("/filters/{filterID}/dimensions/{name}/remove/{option}").HandlerFunc(filter.DimensionRemoveOne)
+	r.Path("/filters/{filterID}/dimensions/{name}/range").Methods("POST").HandlerFunc(filter.AddRange)
+	r.Path("/filters/{filterID}/dimensions/{name}/list").Methods("POST").HandlerFunc(filter.AddList)
 
 	s := server.New(cfg.BindAddr, r)
 

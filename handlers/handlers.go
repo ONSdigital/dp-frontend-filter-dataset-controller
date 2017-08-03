@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
@@ -378,7 +378,6 @@ type Range struct {
 func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]
-	ns := req.URL.Query().Get("nSelectors")
 	filterID := vars["filterID"]
 
 	var r Range
@@ -389,45 +388,14 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var nSelectors int
-	var err error
-	if ns == "" {
-		nSelectors = 1
-	} else {
-		nSelectors, err = strconv.Atoi(ns)
-		if err != nil {
-			nSelectors = 1
-		}
-	}
-
-	dim, err := f.fc.GetDimension(filterID, name)
+	values, labelIDMap, err := f.getDimensionValues(filterID, name)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	codeID := getCodeIDFromURI(dim.URI)
-	if codeID == "" {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	allValues, err := f.clc.GetValues(codeID)
-	if err != nil {
-		log.ErrorR(req, err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	var values []string
-	labelIDMap := make(map[string]string)
-	for _, val := range allValues.Items {
-		values = append(values, val.Label)
-		labelIDMap[val.Label] = val.ID
-	}
-
-	if name == "month" {
+	if name == "time" {
 		dats, err := dates.ConvertToReadable(values)
 		if err != nil {
 			log.ErrorR(req, err, nil)
@@ -439,7 +407,7 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			log.ErrorR(req, err, nil)
 			w.WriteHeader(http.StatusInternalServerError)
-			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filterID, name, nSelectors)
+			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
 			http.Redirect(w, req, redirectURL, 301)
 		}
 
@@ -447,14 +415,14 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			log.ErrorR(req, err, nil)
 			w.WriteHeader(http.StatusInternalServerError)
-			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filterID, name, nSelectors)
+			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
 			http.Redirect(w, req, redirectURL, 301)
 		}
 
 		if end.Before(start) {
 			log.Info("end date before start date", log.Data{"start": start, "end": end})
 			w.WriteHeader(http.StatusInternalServerError)
-			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filterID, name, nSelectors)
+			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
 			http.Redirect(w, req, redirectURL, 301)
 		}
 
@@ -470,29 +438,157 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filterID, name, nSelectors+1)
+	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
 	http.Redirect(w, req, redirectURL, 301)
 }
 
-func (f *Filter) RemoveRange(w http.ResponseWriter, req *http.Request) {
+// AddAll ,.,,
+func (f *Filter) AddAll(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]
-	ns := req.URL.Query().Get("nSelectors")
 	filterID := vars["filterID"]
 
-	var nSelectors int
-	var err error
-	if ns == "" {
-		nSelectors = 1
-	} else {
-		nSelectors, err = strconv.Atoi(ns)
-		if err != nil {
-			nSelectors = 1
+	vals, err := f.fc.GetDimensionOptions(filterID, name)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
+		http.Redirect(w, req, redirectURL, 301)
+	}
+
+	for _, val := range vals.Items {
+		if err := f.fc.AddDimensionValue(filterID, name, val.ID); err != nil {
+			log.ErrorR(req, err, nil)
 		}
 	}
 
-	url := fmt.Sprintf("/filters/%s/dimensions/%s?nSelectors=%d", filterID, name, nSelectors-1)
-	http.Redirect(w, req, url, 301)
+	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
+	http.Redirect(w, req, redirectURL, 301)
+}
+
+func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	name := vars["name"]
+	filterID := vars["filterID"]
+
+	if err := req.ParseForm(); err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if _, ok := req.Form["All times"]; ok {
+		f.AddAll(w, req)
+		return
+	}
+
+	values, labelIDMap, err := f.getDimensionValues(filterID, name)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if name == "time" {
+		dats, err := dates.ConvertToReadable(values)
+		if err != nil {
+			log.ErrorR(req, err, nil)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		values = dates.ConvertToCoded(dats)
+
+		for k := range req.Form {
+			if k == ":uri" {
+				continue
+			}
+
+			val, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s", k))
+			if err != nil {
+				log.ErrorR(req, err, nil)
+				w.WriteHeader(http.StatusInternalServerError)
+				redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
+				http.Redirect(w, req, redirectURL, 301)
+			}
+
+			for i, dat := range dats {
+				if dat.Equal(val) {
+					if err := f.fc.AddDimensionValue(filterID, name, labelIDMap[values[i]]); err != nil {
+						log.TraceR(req, err.Error(), nil)
+						continue
+					}
+				}
+			}
+		}
+	}
+
+	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s?selectorType=list", filterID, name)
+	http.Redirect(w, req, redirectURL, 301)
+}
+
+func (f *Filter) getDimensionValues(filterID, name string) (values []string, labelIDMap map[string]string, err error) {
+	dim, err := f.fc.GetDimension(filterID, name)
+	if err != nil {
+		return
+	}
+
+	codeID := getCodeIDFromURI(dim.URI)
+	if codeID == "" {
+		err = errors.New("missing code id from uri")
+		return
+	}
+
+	allValues, err := f.clc.GetValues(codeID)
+	if err != nil {
+		return
+	}
+
+	labelIDMap = make(map[string]string)
+	for _, val := range allValues.Items {
+		values = append(values, val.Label)
+		labelIDMap[val.Label] = val.ID
+	}
+
+	return
+}
+
+// DimensionRemoveAll ...
+func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	name := vars["name"]
+	filterID := vars["filterID"]
+
+	vals, err := f.fc.GetDimensionOptions(filterID, name)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
+		http.Redirect(w, req, redirectURL, 301)
+	}
+
+	for _, val := range vals.Items {
+		if err := f.fc.RemoveDimensionValue(filterID, name, val.ID); err != nil {
+			log.ErrorR(req, err, nil)
+		}
+	}
+
+	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
+	http.Redirect(w, req, redirectURL, 301)
+}
+
+// DimensionRemoveOne ...
+func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	name := vars["name"]
+	filterID := vars["filterID"]
+	option := vars["option"]
+
+	if err := f.fc.RemoveDimensionValue(filterID, name, option); err != nil {
+		log.ErrorR(req, err, nil)
+	}
+
+	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
+	http.Redirect(w, req, redirectURL, 301)
 }
 
 func getCodeIDFromURI(uri string) string {
