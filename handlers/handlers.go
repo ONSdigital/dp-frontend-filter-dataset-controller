@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
@@ -380,6 +381,17 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 	name := vars["name"]
 	filterID := vars["filterID"]
 
+	if err := req.ParseForm(); err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if _, ok := req.Form["All times"]; ok {
+		f.AddAll(w, req)
+		return
+	}
+
 	var r Range
 
 	if err := f.val.Validate(req, &r); err != nil {
@@ -442,7 +454,7 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, redirectURL, 301)
 }
 
-// AddAll ,.,,
+// AddAll ...
 func (f *Filter) AddAll(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]
@@ -456,11 +468,17 @@ func (f *Filter) AddAll(w http.ResponseWriter, req *http.Request) {
 		http.Redirect(w, req, redirectURL, 301)
 	}
 
+	var wg sync.WaitGroup
 	for _, val := range vals.Items {
-		if err := f.fc.AddDimensionValue(filterID, name, val.ID); err != nil {
-			log.ErrorR(req, err, nil)
-		}
+		wg.Add(1)
+		go func(val data.DimensionValueItem) {
+			if err := f.fc.AddDimensionValue(filterID, name, val.ID); err != nil {
+				log.ErrorR(req, err, nil)
+			}
+			wg.Done()
+		}(val)
 	}
+	wg.Wait()
 
 	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
 	http.Redirect(w, req, redirectURL, 301)
@@ -566,11 +584,17 @@ func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
 		http.Redirect(w, req, redirectURL, 301)
 	}
 
+	var wg sync.WaitGroup
 	for _, val := range vals.Items {
-		if err := f.fc.RemoveDimensionValue(filterID, name, val.ID); err != nil {
-			log.ErrorR(req, err, nil)
-		}
+		wg.Add(1)
+		go func(val data.DimensionValueItem) {
+			if err := f.fc.RemoveDimensionValue(filterID, name, val.ID); err != nil {
+				log.ErrorR(req, err, nil)
+			}
+			wg.Done()
+		}(val)
 	}
+	wg.Wait()
 
 	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
 	http.Redirect(w, req, redirectURL, 301)

@@ -82,6 +82,8 @@ func CreateFilterOverview(dimensions []data.Dimension, filter data.Filter, datas
 	return p
 }
 
+// CreateListSelectorPage maps items from API responses to form the model for a
+// dimension list selector page
 func CreateListSelectorPage(name string, selectedValues, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) listSelector.Page {
 	var p listSelector.Page
 
@@ -174,7 +176,8 @@ func CreateListSelectorPage(name string, selectedValues, allValues data.Dimensio
 	return p
 }
 
-// CreateRangeSelectorPage ...
+// CreateRangeSelectorPage maps items from API responses to form a dimension range
+// selector page model
 func CreateRangeSelectorPage(name string, selectedValues, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) rangeSelector.Page {
 	var p rangeSelector.Page
 
@@ -231,6 +234,10 @@ func CreateRangeSelectorPage(name string, selectedValues, allValues data.Dimensi
 	for _, val := range allValues.Items {
 		p.Data.RangeData.Values = append(p.Data.RangeData.Values, val.Label)
 	}
+
+	p.Data.RangeData.URL = fmt.Sprintf("/filters/%s/dimensions/%s/range", filter.FilterID, name)
+
+	p.Data.RemoveAll.URL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all", filter.FilterID, name)
 
 	p.Data.RangeData.StartLabel = "Start"
 	p.Data.RangeData.EndLabel = "End"
