@@ -1,0 +1,20 @@
+[
+  {
+    "id": "start",
+    "rules": [
+      {
+        "name": "min_length",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "end",
+    "rules": [
+      {
+        "name": "min_length",
+        "value": 1
+      }
+    ]
+  }
+]

@@ -7,12 +7,32 @@ type Dimension struct {
 	Hierarchy Hierarchy `json:"hierarchy,omitempty"`
 }
 
+// FilterDimension represents a dimension response from the filter api
+type FilterDimension struct {
+	Name string `json:"name"`
+	URI  string `json:"dimension_url"`
+}
+
+// DimensionValues ...
+type DimensionValues struct {
+	Items           []DimensionValueItem `json:"items"`
+	NumberOfResults int                  `json:"number_of_results"`
+}
+
+// DimensionValueItem ...
+type DimensionValueItem struct {
+	ID    string `json:"id"`
+	Label string `json:"label"`
+	Name  string `json:"name"`
+}
+
 // Filter represents a response model from the filter api
 type Filter struct {
 	FilterID   string              `json:"filter_id"`
 	Dataset    string              `json:"dataset"`
 	Edition    string              `json:"edition"`
-	Version    string              `json:"state"`
+	Version    string              `json:"version"`
+	State      string              `json:"state"`
 	Dimensions []Dimension         `json:"dimensions"`
 	Downloads  map[string]Download `json:"downloads"`
 	Events     map[string][]Event  `json:"events"`
