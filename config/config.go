@@ -18,7 +18,7 @@ func Get() *Config {
 		BindAddr:       ":20001",
 		RendererURL:    "http://localhost:20010",
 		CodeListAPIURL: "http://localhost:22400",
-		FilterAPIURL:   "http://localhost:20011",
+		FilterAPIURL:   "http://localhost:22100",
 		DatasetAPIURL:  "http://localhost:20012",
 	}
 

@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/routes"
+	datasetapistubber "github.com/ONSdigital/dp-frontend-filter-dataset-controller/stubbed-apis/dataset-api-stubber"
+	filterapistubber "github.com/ONSdigital/dp-frontend-filter-dataset-controller/stubbed-apis/filter-api-stubber"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/gorilla/mux"
@@ -17,6 +19,10 @@ func main() {
 	routes.Init(r)
 
 	s := server.New(cfg.BindAddr, r)
+
+	// TODO: Remove these when the real apis become available
+	go filterapistubber.Start()
+	go datasetapistubber.Start()
 
 	log.Debug("listening...", log.Data{
 		"bind_address": cfg.BindAddr,

@@ -1,0 +1,12 @@
+{
+  "dimensions": [
+    {
+      "name": "time",
+      "dimension_url": "/dimensions/time"
+    },
+    {
+      "name": "goods-and-services",
+      "dimension_url": "/hierarchies/goods-and-services"
+    }
+  ]
+}

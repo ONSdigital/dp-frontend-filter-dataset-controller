@@ -39,15 +39,18 @@ func Init(r *mux.Router) {
 	r.Path("/filters/{filterID}/dimensions").Methods("GET").HandlerFunc(filter.FilterOverview)
 	r.Path("/filters/{filterID}/dimensions/geography").Methods("GET").HandlerFunc(filter.Geography)
 
-	r.Path("/filters/{filterID}/dimensions/{dimensionType}/{hierarchyID}").Methods("GET").HandlerFunc(filter.Hierarchy)
-	r.Path("/filters/{filterID}/dimensions/{dimensionType}/{hierarchyID}/remove/{value}").HandlerFunc(filter.HierarchyRemove)
-	r.Path("/filters/{filterID}/dimensions/{dimensionType}/{hierarchyID}/add/{value}").HandlerFunc(filter.HierarchyAdd)
-	r.Path("/filters/{filterID}/dimensions/{dimensionType}/{hierarchyID}/add-all").HandlerFunc(filter.HierarchyAddAll)
-	r.Path("/filters/{filterID}/dimensions/{dimensionType}/{hierarchyID}/remove-all").HandlerFunc(filter.HierarchyRemoveAll)
-
 	r.Path("/filters/{filterID}/dimensions/{name}").Methods("GET").HandlerFunc(filter.DimensionSelector)
 	r.Path("/filters/{filterID}/dimensions/{name}/remove-all").HandlerFunc(filter.DimensionRemoveAll)
 	r.Path("/filters/{filterID}/dimensions/{name}/remove/{option}").HandlerFunc(filter.DimensionRemoveOne)
 	r.Path("/filters/{filterID}/dimensions/{name}/range").Methods("POST").HandlerFunc(filter.AddRange)
 	r.Path("/filters/{filterID}/dimensions/{name}/list").Methods("POST").HandlerFunc(filter.AddList)
+
+	r.Path("/filters/{filterID}/{uri:.*}/{name}{uri:.*}/remove-all").HandlerFunc(filter.DimensionRemoveAll)
+
+	r.Path("/filters/{filterID}/hierarchies/{name}").Methods("GET").HandlerFunc(filter.Hierarchy)
+	r.Path("/filters/{filterID}/hierarchies/{name}/{hierarchyID}").Methods("GET").HandlerFunc(filter.Hierarchy)
+	r.Path("/filters/{filterID}/hierarchies/{name}/{hierarchyID}/remove/{value}").HandlerFunc(filter.HierarchyRemove)
+	r.Path("/filters/{filterID}/hierarchies/{name}/{hierarchyID}/add/{value}").HandlerFunc(filter.HierarchyAdd)
+	r.Path("/filters/{filterID}/hierarchies/{uri:.*}/add-all").HandlerFunc(filter.HierarchyAddAll)
+
 }

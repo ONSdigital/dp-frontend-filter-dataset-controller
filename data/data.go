@@ -71,10 +71,10 @@ type Contact struct {
 }
 
 type Hierarchy struct {
-	ID       string   `json:"id"`
-	Label    string   `json:"label"`
-	Children []Child  `json:"children"`
-	Parents  []Parent `json:"parents"`
+	ID       string  `json:"id"`
+	Label    string  `json:"label"`
+	Children []Child `json:"children"`
+	Parent   Parent  `json:"parent"`
 }
 
 type Metadata struct {
@@ -85,12 +85,14 @@ type Metadata struct {
 type Child struct {
 	ID               string `json:"id"`
 	Label            string `json:"label"`
-	URI              string `json:"uri"`
-	NumberofChildren int    `json:"noOfChildren"`
-	HasDataPoint     bool   `json:"hasDataPoint"`
+	URL              string `json:"url"`
+	NumberofChildren int    `json:"number_of_children"`
+	LabelCode        string `json:"label_code"`
 }
 
 type Parent struct {
-	URI   string `json:"uri"`
-	Label string `json:"label"`
+	URL       string `json:"url"`
+	Label     string `json:"label"`
+	LabelCode string `json:"label_code"`
+	ID        string `json:"id"`
 }

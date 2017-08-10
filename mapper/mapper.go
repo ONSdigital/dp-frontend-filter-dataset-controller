@@ -24,6 +24,7 @@ var dimensionTitleTranslator = map[string]string{
 	"month":              "Month",
 	"time":               "Time",
 	"goods-and-services": "Goods and Services",
+	"CPI":                "Goods and Services",
 }
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
@@ -317,9 +318,16 @@ func CreatePreviewPage(dimensions []data.Dimension, filter data.Filter, dataset 
 	return p
 }
 
-// CreateHierarchyPage ...
-func CreateHierarchyPage(h data.Hierarchy, d data.Dataset, f data.Filter, met data.Metadata, curPath, dimensionTitle string) hierarchy.Page {
+// CreateHierarchyPage maps data items from API responses to form a hirearchy page
+func CreateHierarchyPage(h data.Hierarchy, parents []data.Parent, d data.Dataset, f data.Filter, met data.Metadata, curPath, dimensionTitle string) hierarchy.Page {
 	var p hierarchy.Page
+
+	var title string
+	if len(parents) == 0 {
+		title = dimensionTitleTranslator[dimensionTitle]
+	} else {
+		title = h.Label
+	}
 
 	p.SearchDisabled = true
 
@@ -331,23 +339,32 @@ func CreateHierarchyPage(h data.Hierarchy, d data.Dataset, f data.Filter, met da
 		Title: "Filter this dataset",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
-	for _, par := range h.Parents {
+	for i, par := range parents {
+		var title string
+		if i == 0 {
+			title = dimensionTitleTranslator[dimensionTitle]
+		} else {
+			title = par.Label
+		}
 		p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-			Title: par.Label,
-			URI:   fmt.Sprintf("/filters/%s%s", f.FilterID, par.URI),
+			Title: title,
+			URI:   fmt.Sprintf("/filters/%s%s", f.FilterID, par.URL),
 		})
 	}
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: h.Label,
+		Title: title,
 	})
 
 	p.FilterID = f.FilterID
-	p.Data.Title = h.Label
-
-	if len(h.Parents) > 0 {
-		p.Data.Parent = h.Parents[len(h.Parents)-1].Label
+	p.Data.Title = title
+	if len(parents) > 0 {
+		if len(parents) == 1 {
+			p.Data.Parent = dimensionTitleTranslator[dimensionTitle]
+		} else {
+			p.Data.Parent = parents[len(parents)-1].Label
+		}
 		p.Data.GoBack = hierarchy.Link{
-			URL: fmt.Sprintf("/filters/%s%s", f.FilterID, h.Parents[len(h.Parents)-1].URI),
+			URL: fmt.Sprintf("/filters/%s%s", f.FilterID, parents[len(parents)-1].URL),
 		}
 	}
 
@@ -380,7 +397,7 @@ func CreateHierarchyPage(h data.Hierarchy, d data.Dataset, f data.Filter, met da
 		p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
 			Label:    child.Label,
 			SubNum:   strconv.Itoa(child.NumberofChildren),
-			SubURL:   fmt.Sprintf("/filters/%s%s", f.FilterID, child.URI),
+			SubURL:   fmt.Sprintf("/filters/%s%s", f.FilterID, child.URL),
 			Selected: selected,
 		})
 
@@ -388,6 +405,7 @@ func CreateHierarchyPage(h data.Hierarchy, d data.Dataset, f data.Filter, met da
 
 	p.Data.Metadata = hierarchy.Metadata(met)
 	p.Data.SaveAndReturn.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
+	p.Data.Cancel.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
