@@ -87,6 +87,12 @@
 			"revisionTime": "2017-07-17T12:56:40Z"
 		},
 		{
+			"checksumSHA1": "g4tKk8uEPuoLAER3Cd5SglmmtAE=",
+			"path": "github.com/ONSdigital/go-ns/validator",
+			"revision": "0728a5717abea304f9fab56417680ce800d0e35e",
+			"revisionTime": "2017-07-17T12:56:40Z"
+		},
+		{
 			"checksumSHA1": "ST3iiJ6vhtfZDnujuW/HGXQCtZM=",
 			"path": "github.com/golang/mock/gomock",
 			"revision": "9e3cfa9279f269a4c4d703dacd64b05184cec28e",
