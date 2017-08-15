@@ -79,14 +79,11 @@ func TestUnitMapper(t *testing.T) {
 	Convey("test CreateListSelector page correctly maps to listSelector frontend model", t, func() {
 		filter := getTestFilter()
 		dataset := getTestDataset()
-		selectedValues := data.DimensionValues{
-			Items: []data.DimensionValueItem{
-				{
-					Name: "2010.02",
-					ID:   "abcdefg",
-				},
+		selectedValues := data.DimensionOptions{
+			URLS: []string{
+				"/filters/12345/dimensions/time/38jd83ik",
+				"/filters/12345/dimensions/time/abcdefg",
 			},
-			NumberOfResults: 1,
 		}
 		allValues := data.DimensionValues{
 			Items: []data.DimensionValueItem{
@@ -123,15 +120,15 @@ func TestUnitMapper(t *testing.T) {
 		So(p.Data.Cancel.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
 		So(p.Data.AddAllInRange.Label, ShouldEqual, "All times")
 		So(p.Data.RangeData.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/list")
-		So(p.Data.RemoveAll.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/remove-all")
+		So(p.Data.RemoveAll.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/remove-all?selectorType=list")
 		So(p.Data.RangeData.Values, ShouldHaveLength, 3)
 		So(p.Data.RangeData.Values[0].Label, ShouldEqual, "February 2010")
-		So(p.Data.RangeData.Values[0].IsSelected, ShouldBeTrue)
+		So(p.Data.RangeData.Values[0].IsSelected, ShouldBeFalse)
 		So(p.Data.RangeData.Values[1].Label, ShouldEqual, "March 2010")
 		So(p.Data.RangeData.Values[1].IsSelected, ShouldBeFalse)
 		So(p.Data.RangeData.Values[2].Label, ShouldEqual, "April 2010")
 		So(p.Data.RangeData.Values[2].IsSelected, ShouldBeFalse)
-		So(p.Data.FiltersAmount, ShouldEqual, 1)
+		So(p.Data.FiltersAmount, ShouldEqual, 2)
 		So(p.Metadata.Footer.Enabled, ShouldBeTrue)
 		So(p.Metadata.Footer.Contact, ShouldEqual, dataset.Contact.Name)
 		So(p.Metadata.Footer.ReleaseDate, ShouldEqual, dataset.ReleaseDate)
@@ -141,14 +138,11 @@ func TestUnitMapper(t *testing.T) {
 	Convey("test CreateRangeSelectorPage successfully maps to a rangeSelector page model", t, func() {
 		filter := getTestFilter()
 		dataset := getTestDataset()
-		selectedValues := data.DimensionValues{
-			Items: []data.DimensionValueItem{
-				{
-					Name: "2010.02",
-					ID:   "abcdefg",
-				},
+		selectedValues := data.DimensionOptions{
+			URLS: []string{
+				"/filters/12345/dimensions/time/38jd83ik",
+				"/filters/12345/dimensions/time/abcdefg",
 			},
-			NumberOfResults: 1,
 		}
 		allValues := data.DimensionValues{
 			Items: []data.DimensionValueItem{

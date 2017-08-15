@@ -1,7 +1,9 @@
 package filter
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -51,7 +53,9 @@ func (c *Client) GetDimension(filterID, name string) (dim data.FilterDimension, 
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		err = &ErrInvalidFilterAPIResponse{http.StatusOK, resp.StatusCode, uri}
+		if resp.StatusCode != http.StatusNoContent {
+			err = &ErrInvalidFilterAPIResponse{http.StatusOK, resp.StatusCode, uri}
+		}
 		return
 	}
 
@@ -87,20 +91,12 @@ func (c *Client) GetDimensions(filterID string) (dims []data.FilterDimension, er
 	}
 	defer resp.Body.Close()
 
-	dimensions := struct {
-		Dims []data.FilterDimension `json:"dimensions"`
-	}{}
-
-	if err = json.Unmarshal(b, &dimensions); err != nil {
-		return
-	}
-
-	dims = dimensions.Dims
+	err = json.Unmarshal(b, &dims)
 	return
 }
 
 // GetDimensionOptions ...
-func (c *Client) GetDimensionOptions(filterID, name string) (fdv data.DimensionValues, err error) {
+func (c *Client) GetDimensionOptions(filterID, name string) (opts data.DimensionOptions, err error) {
 	uri := fmt.Sprintf("%s/filters/%s/dimensions/%s/options", c.url, filterID, name)
 	resp, err := c.cli.Get(uri)
 	if err != nil {
@@ -108,7 +104,9 @@ func (c *Client) GetDimensionOptions(filterID, name string) (fdv data.DimensionV
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		err = &ErrInvalidFilterAPIResponse{http.StatusOK, resp.StatusCode, uri}
+		if resp.StatusCode != http.StatusNoContent {
+			err = &ErrInvalidFilterAPIResponse{http.StatusOK, resp.StatusCode, uri}
+		}
 		return
 	}
 
@@ -118,7 +116,7 @@ func (c *Client) GetDimensionOptions(filterID, name string) (fdv data.DimensionV
 	}
 	defer resp.Body.Close()
 
-	err = json.Unmarshal(b, &fdv)
+	err = json.Unmarshal(b, &opts)
 	return
 }
 
@@ -159,6 +157,41 @@ func (c *Client) RemoveDimensionValue(filterID, name, value string) error {
 	if resp.StatusCode != http.StatusOK {
 		return &ErrInvalidFilterAPIResponse{http.StatusOK, resp.StatusCode, uri}
 	}
+	return nil
+}
+
+// RemoveDimension ...
+func (c *Client) RemoveDimension(filterID, name string) (err error) {
+	uri := fmt.Sprintf("%s/filters/%s/dimensions/%s", c.url, filterID, name)
+	req, err := http.NewRequest("DELETE", uri, nil)
+	if err != nil {
+		return
+	}
+
+	resp, err := c.cli.Do(req)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		err = &ErrInvalidFilterAPIResponse{http.StatusOK, resp.StatusCode, uri}
+		return
+	}
+
+	return
+}
+
+// AddDimension ...
+func (c *Client) AddDimension(id, name string) error {
+	resp, err := http.Post(fmt.Sprintf("%s/filters/%s/dimensions/%s", c.url, id, name), "application/json", bytes.NewBufferString(`{}`))
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusCreated {
+		return errors.New("invalid status from filter api")
+	}
+
 	return nil
 }
 

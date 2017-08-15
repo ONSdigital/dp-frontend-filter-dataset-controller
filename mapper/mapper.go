@@ -3,7 +3,9 @@ package mapper
 import (
 	"fmt"
 	"math/rand"
+	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
@@ -24,7 +26,7 @@ var dimensionTitleTranslator = map[string]string{
 	"month":              "Month",
 	"time":               "Time",
 	"goods-and-services": "Goods and Services",
-	"CPI":                "Goods and Services",
+	"CPI":                "Goods and Services", // This is temporary until the codelist api is updated
 }
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
@@ -60,7 +62,11 @@ func CreateFilterOverview(dimensions []data.Dimension, filter data.Filter, datas
 		} else {
 			fod.Link.URL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, d.Name)
 		}
-		fod.Link.Label = "Filter"
+		if len(fod.AddedCategories) > 0 {
+			fod.Link.Label = "Filter"
+		} else {
+			fod.Link.Label = "Please select"
+		}
 
 		fod.Filter = dimensionTitleTranslator[d.Name]
 
@@ -92,7 +98,7 @@ func CreateFilterOverview(dimensions []data.Dimension, filter data.Filter, datas
 
 // CreateListSelectorPage maps items from API responses to form the model for a
 // dimension list selector page
-func CreateListSelectorPage(name string, selectedValues, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) listSelector.Page {
+func CreateListSelectorPage(name string, selectedValues data.DimensionOptions, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) listSelector.Page {
 	var p listSelector.Page
 
 	p.SearchDisabled = true
@@ -129,36 +135,52 @@ func CreateListSelectorPage(name string, selectedValues, allValues data.Dimensio
 
 	p.Data.RangeData.URL = fmt.Sprintf("/filters/%s/dimensions/%s/list", filter.FilterID, name)
 
-	p.Data.RemoveAll.URL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all", filter.FilterID, name)
+	p.Data.RemoveAll.URL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all?selectorType=list", filter.FilterID, name)
+
+	lookup := getIDNameLookup(allValues.Items)
+
+	var selectedListValues, selectedListIDs []string
+	for _, uri := range selectedValues.URLS {
+		id := getOptionID(uri)
+		selectedListValues = append(selectedListValues, lookup[id])
+		selectedListIDs = append(selectedListIDs, id)
+	}
+
+	var allListValues, allListIDs []string
+	for _, val := range allValues.Items {
+		allListValues = append(allListValues, val.Label)
+		allListIDs = append(allListIDs, val.ID)
+	}
 
 	if name == "time" {
 
-		var origDates []string
-		for _, val := range allValues.Items {
-			origDates = append(origDates, val.Label)
+		dats, _ := dates.ConvertToReadable(allListValues)
+
+		timeIDLookup := make(map[time.Time]string)
+		for i, dat := range dats {
+			timeIDLookup[dat] = allListIDs[i]
 		}
 
-		dats, _ := dates.ConvertToReadable(origDates)
 		dats = dates.Sort(dats)
 
-		var selectedDates []string
-		for _, val := range selectedValues.Items {
-			selectedDates = append(selectedDates, val.Name)
+		selectedDats, err := dates.ConvertToReadable(selectedListValues)
+		if err != nil {
+			log.Error(err, nil)
 		}
 
-		selectedDats, _ := dates.ConvertToReadable(selectedDates)
+		selectedDats = dates.Sort(selectedDats)
 
-		for i, val := range selectedDats {
+		for _, val := range selectedDats {
 			p.Data.FiltersAdded = append(p.Data.FiltersAdded, listSelector.Filter{
-				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s", filter.FilterID, name, selectedValues.Items[i].ID),
+				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s?selectorType=list", filter.FilterID, name, timeIDLookup[val]),
 				Label:     dates.ConvertToMonthYear(val),
 			})
 		}
 
 		for _, val := range dats {
 			var isSelected bool
-			for _, selVal := range selectedDats {
-				if selVal.Equal(val) {
+			for _, selDat := range selectedDats {
+				if selDat.Equal(val) {
 					isSelected = true
 				}
 			}
@@ -171,7 +193,11 @@ func CreateListSelectorPage(name string, selectedValues, allValues data.Dimensio
 
 	}
 
-	p.Data.FiltersAmount = len(selectedValues.Items)
+	if len(allListValues) == len(selectedListValues) {
+		p.Data.AddAllChecked = true
+	}
+
+	p.Data.FiltersAmount = len(selectedValues.URLS)
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
@@ -186,7 +212,7 @@ func CreateListSelectorPage(name string, selectedValues, allValues data.Dimensio
 
 // CreateRangeSelectorPage maps items from API responses to form a dimension range
 // selector page model
-func CreateRangeSelectorPage(name string, selectedValues, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) rangeSelector.Page {
+func CreateRangeSelectorPage(name string, selectedValues data.DimensionOptions, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) rangeSelector.Page {
 	var p rangeSelector.Page
 
 	p.SearchDisabled = true
@@ -217,27 +243,45 @@ func CreateRangeSelectorPage(name string, selectedValues, allValues data.Dimensi
 	p.Data.AddAllInRange = rangeSelector.Link{
 		Label: fmt.Sprintf("All %ss", name),
 	}
+	if len(selectedValues.URLS) == len(allValues.Items) {
+		p.Data.AddAllChecked = true
+	}
 	p.Data.SaveAndReturn = rangeSelector.Link{
 		URL: fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
 	}
 	p.Data.Cancel = rangeSelector.Link{
 		URL: fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
 	}
-	var selectedDates []string
-	for _, val := range selectedValues.Items {
-		selectedDates = append(selectedDates, val.Name)
+	var selectedRangeValues, selectedRangeIDs []string
+	for _, uri := range selectedValues.URLS {
+		id := getOptionID(uri)
+		for _, val := range allValues.Items {
+			if val.ID == id {
+				selectedRangeValues = append(selectedRangeValues, val.Label)
+				selectedRangeIDs = append(selectedRangeIDs, val.ID)
+			}
+		}
 	}
 
-	selectedDats, _ := dates.ConvertToReadable(selectedDates)
+	if name == "time" {
+		selectedDats, _ := dates.ConvertToReadable(selectedRangeValues)
 
-	for i, val := range selectedDats {
-		p.Data.FiltersAdded = append(p.Data.FiltersAdded, rangeSelector.Filter{
-			RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s", filter.FilterID, name, selectedValues.Items[i].ID),
-			Label:     dates.ConvertToMonthYear(val),
-		})
+		timeIDLookup := make(map[time.Time]string)
+		for i, dat := range selectedDats {
+			timeIDLookup[dat] = selectedRangeIDs[i]
+		}
+
+		selectedDats = dates.Sort(selectedDats)
+
+		for _, val := range selectedDats {
+			p.Data.FiltersAdded = append(p.Data.FiltersAdded, rangeSelector.Filter{
+				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s", filter.FilterID, name, timeIDLookup[val]),
+				Label:     dates.ConvertToMonthYear(val),
+			})
+		}
 	}
 
-	p.Data.FiltersAmount = len(selectedValues.Items)
+	p.Data.FiltersAmount = len(selectedRangeValues)
 
 	for _, val := range allValues.Items {
 		p.Data.RangeData.Values = append(p.Data.RangeData.Values, val.Label)
@@ -318,6 +362,22 @@ func CreatePreviewPage(dimensions []data.Dimension, filter data.Filter, dataset 
 	return p
 }
 
+func getNameIDLookup(vals []data.DimensionValueItem) map[string]string {
+	lookup := make(map[string]string)
+	for _, val := range vals {
+		lookup[val.Name] = val.ID
+	}
+	return lookup
+}
+
+func getIDNameLookup(vals []data.DimensionValueItem) map[string]string {
+	lookup := make(map[string]string)
+	for _, val := range vals {
+		lookup[val.ID] = val.Label
+	}
+	return lookup
+}
+
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
 func CreateHierarchyPage(h data.Hierarchy, parents []data.Parent, d data.Dataset, f data.Filter, met data.Metadata, curPath, dimensionTitle string) hierarchy.Page {
 	var p hierarchy.Page
@@ -340,10 +400,7 @@ func CreateHierarchyPage(h data.Hierarchy, parents []data.Parent, d data.Dataset
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
 	for i, par := range parents {
-		var title string
-		if i == 0 {
-			title = dimensionTitleTranslator[dimensionTitle]
-		} else {
+		if i != 0 {
 			title = par.Label
 		}
 		p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -416,4 +473,16 @@ func CreateHierarchyPage(h data.Hierarchy, parents []data.Parent, d data.Dataset
 	}
 
 	return p
+}
+
+func getOptionID(uri string) string {
+	optionReg := regexp.MustCompile(`^\/filters\/.+\/dimensions\/.+\/options\/(.+)$`)
+	subs := optionReg.FindStringSubmatch(uri)
+
+	if len(subs) == 2 {
+		return subs[1]
+	}
+
+	log.Info("could not extract optionID from uri", log.Data{"uri": uri})
+	return ""
 }

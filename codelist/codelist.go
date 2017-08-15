@@ -64,3 +64,34 @@ func (c *Client) GetValues(id string) (vals data.DimensionValues, err error) {
 	err = json.Unmarshal(b, &vals)
 	return
 }
+
+func (c *Client) GetIdNameMap(id string) (map[string]string, error) {
+	uri := fmt.Sprintf("%s/code-lists/%s/codes", c.url, id)
+	resp, err := c.cli.Get(uri)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		err = &ErrInvalidCodelistAPIResponse{http.StatusOK, resp.StatusCode, uri}
+		return nil, err
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var vals data.DimensionValues
+	if err = json.Unmarshal(b, &vals); err != nil {
+		return nil, err
+	}
+
+	idNames := make(map[string]string)
+	for _, val := range vals.Items {
+		idNames[val.ID] = val.Label
+	}
+
+	return idNames, nil
+}

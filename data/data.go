@@ -19,6 +19,11 @@ type DimensionValues struct {
 	NumberOfResults int                  `json:"number_of_results"`
 }
 
+// DimensionOptions ...
+type DimensionOptions struct {
+	URLS []string `json:"dimension_option_urls"`
+}
+
 // DimensionValueItem ...
 type DimensionValueItem struct {
 	ID    string `json:"id"`
@@ -28,14 +33,15 @@ type DimensionValueItem struct {
 
 // Filter represents a response model from the filter api
 type Filter struct {
-	FilterID   string              `json:"filter_id"`
-	Dataset    string              `json:"dataset"`
-	Edition    string              `json:"edition"`
-	Version    string              `json:"version"`
-	State      string              `json:"state"`
-	Dimensions []Dimension         `json:"dimensions"`
-	Downloads  map[string]Download `json:"downloads"`
-	Events     map[string][]Event  `json:"events"`
+	FilterID        string              `json:"filter_job_id"`
+	DatasetFilterID string              `json:"dataset_filter_id"`
+	Dataset         string              `json:"dataset"`
+	Edition         string              `json:"edition"`
+	Version         string              `json:"version"`
+	State           string              `json:"state"`
+	Dimensions      []Dimension         `json:"dimensions"`
+	Downloads       map[string]Download `json:"downloads"`
+	Events          map[string][]Event  `json:"events"`
 }
 
 // Download represents a download within a filter from api response

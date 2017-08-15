@@ -23,9 +23,17 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	codeID := "64d384f1-ea3b-445c-8fb8-aa453f96e58a"
+	idNameLookup, err := f.clc.GetIdNameMap(codeID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	var dimensions []data.Dimension
 	for _, dim := range dims {
-		var vals data.DimensionValues
+		var vals data.DimensionOptions
 		vals, err = f.fc.GetDimensionOptions(filterID, dim.Name)
 		if err != nil {
 			log.ErrorR(req, err, nil)
@@ -33,8 +41,9 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		var values []string
-		for _, val := range vals.Items {
-			values = append(values, val.Name)
+		for _, val := range vals.URLS {
+			id := getOptionID(val)
+			values = append(values, idNameLookup[id])
 		}
 
 		dimensions = append(dimensions, data.Dimension{
@@ -50,7 +59,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.dc.GetDataset(filterID, filter.Edition, filter.Version)
+	dataset, err := f.dc.GetDataset(filterID, "2016", "v1")
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
