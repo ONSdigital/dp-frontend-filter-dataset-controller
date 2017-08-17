@@ -23,12 +23,24 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	codeID := "64d384f1-ea3b-445c-8fb8-aa453f96e58a"
+	codeID := "64d384f1-ea3b-445c-8fb8-aa453f96e58a" // time
 	idNameLookup, err := f.clc.GetIdNameMap(codeID)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+
+	codeID = "e44de4c4-d39e-4e2f-942b-3ca10584d078" // goods-and-services
+	map2, err := f.clc.GetIdNameMap(codeID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	for k, v := range map2 {
+		idNameLookup[k] = v
 	}
 
 	var dimensions []data.Dimension

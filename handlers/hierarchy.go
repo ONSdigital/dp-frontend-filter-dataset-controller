@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
+	"strings"
+	"sync"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
@@ -12,97 +15,216 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// HierarchyAddAll allows the adding of all values in a hierarchy
-func (f *Filter) HierarchyAddAll(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-
-	filterID := vars["filterID"]
-
-	//TODO: Get all fields from the hierarchy api - post them to the filter api
-	//TODO: Use the regex: \/filters\/\w+(\/hierarchies\/.+)\/add-all to extract the url call to the hierarchy api
-
-	uri := fmt.Sprintf("/filters/%s/dimensions/", filterID)
-
-	http.Redirect(w, req, uri, 301)
-}
-
 // HierarchyRemoveAll allows the removing of all selected values in a hierarchy
 func (f *Filter) HierarchyRemoveAll(w http.ResponseWriter, req *http.Request) {
-	// TODO: Needs to make a call to the filter api to update job
-
 	vars := mux.Vars(req)
 
 	filterID := vars["filterID"]
+	name := vars["name"]
 
-	//TODO: Get all fields from the hierarchy api - post them to the filter api
-	//TODO: Use the regex: \/filters\/\w+(\/hierarchies\/.+)\/add-all to extract the url call to the hierarchy api
+	log.Debug("name", log.Data{"name": name})
 
-	uri := fmt.Sprintf("/filters/%s/dimensions", filterID)
+	if name == "CPI" {
+		name = "goods-and-services"
+	}
 
-	http.Redirect(w, req, uri, 301)
+	if err := f.fc.RemoveDimension(filterID, name); err != nil {
+		log.ErrorR(req, err, nil)
+	}
+
+	if err := f.fc.AddDimension(filterID, name); err != nil {
+		log.ErrorR(req, err, nil)
+	}
+
+	curPath := req.URL.Path
+
+	pathReg := regexp.MustCompile(`^(\/filters\/.+\/hierarchies\/.+)\/remove-all$`)
+	pathSubs := pathReg.FindStringSubmatch(curPath)
+
+	redirectURI := pathSubs[1]
+
+	http.Redirect(w, req, redirectURI, 302)
 }
 
-// HierarchyAdd adds a single hierarchy value to a hierarchy
-func (f *Filter) HierarchyAdd(w http.ResponseWriter, req *http.Request) {
-	// TODO: Needs to make a call to the filter api to update job
-
+// HierarchyUpdate ...
+func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 
 	filterID := vars["filterID"]
-	hierarchyID := vars["hierarchyID"]
-	dimensionType := vars["name"]
+	name := vars["name"]
 
-	uri := fmt.Sprintf("/filters/%s/dimensions/%s/%s", filterID, dimensionType, hierarchyID)
+	if err := req.ParseForm(); err != nil {
+		log.ErrorR(req, err, nil)
+		return
+	}
 
-	http.Redirect(w, req, uri, 301)
+	curPath := req.URL.Path
+
+	pathReg := regexp.MustCompile(`^\/filters\/.+\/hierarchies\/(.+)\/update$`)
+	pathSubs := pathReg.FindStringSubmatch(curPath)
+
+	hierarchyPath := pathSubs[1]
+	hierarchyPath = strings.Replace(hierarchyPath, "goods-and-services", "CPI", -1)
+
+	var redirectURI string
+	if len(req.Form["save-and-return"]) > 0 {
+		redirectURI = fmt.Sprintf("/filters/%s/dimensions", filterID)
+	} else {
+		pathReg := regexp.MustCompile(`^(\/filters\/.+\/hierarchies\/.+)\/update$`)
+		pathSubs := pathReg.FindStringSubmatch(req.URL.Path)
+		if len(pathSubs) > 1 {
+			redirectURI = pathSubs[1]
+		}
+	}
+
+	if name == "CPI" {
+		name = "goods-and-services"
+	}
+
+	if len(req.Form["add-all"]) > 0 {
+		f.addAllHierarchyLevel(w, req, filterID, name, redirectURI, hierarchyPath)
+		return
+	}
+
+	if len(req.Form["remove-all"]) > 0 {
+		f.removeAllHierarchyLevel(w, req, filterID, name, redirectURI, hierarchyPath)
+		return
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		h, err := f.hc.GetHierarchy(hierarchyPath)
+		if err != nil {
+			log.ErrorR(req, err, nil)
+		}
+
+		opts, err := f.fc.GetDimensionOptions(filterID, name)
+		if err != nil {
+			log.ErrorR(req, err, nil)
+		}
+
+		for _, hv := range h.Children {
+			for _, uri := range opts.URLS {
+				id := getOptionID(uri)
+				if id == hv.ID {
+					if _, ok := req.Form[hv.ID]; !ok {
+						if err := f.fc.RemoveDimensionValue(filterID, name, hv.ID); err != nil {
+							log.ErrorR(req, err, nil)
+						}
+					}
+				}
+			}
+		}
+
+		wg.Done()
+	}()
+
+	for k := range req.Form {
+		if k == "save-and-return" || k == ":uri" {
+			continue
+		}
+
+		if strings.Contains(k, "redirect:") {
+			redirectReg := regexp.MustCompile(`^redirect:(.+)$`)
+			redirectSubs := redirectReg.FindStringSubmatch(k)
+			redirectURI = redirectSubs[1]
+			continue
+		}
+
+		if err := f.fc.AddDimensionValue(filterID, name, k); err != nil {
+			log.TraceR(req, err.Error(), nil)
+			continue
+		}
+	}
+
+	http.Redirect(w, req, redirectURI, 302)
+}
+
+func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, filterID, name, redirectURI, hierarchyPath string) {
+
+	h, err := f.hc.GetHierarchy(hierarchyPath)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		return
+	}
+
+	for _, child := range h.Children {
+		if err := f.fc.AddDimensionValue(filterID, name, child.ID); err != nil {
+			log.ErrorR(req, err, nil)
+		}
+	}
+
+	http.Redirect(w, req, redirectURI, 302)
+}
+
+func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Request, filterID, name, redirectURI, hierarchyPath string) {
+
+	h, err := f.hc.GetHierarchy(hierarchyPath)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		return
+	}
+
+	for _, child := range h.Children {
+		if err := f.fc.RemoveDimensionValue(filterID, name, child.ID); err != nil {
+			log.ErrorR(req, err, nil)
+		}
+	}
+
+	http.Redirect(w, req, redirectURI, 302)
 }
 
 // HierarchyRemove removes a single value from a hierarchy
 func (f *Filter) HierarchyRemove(w http.ResponseWriter, req *http.Request) {
-	// TODO: Needs to make a call to the filter api to update job
-
 	vars := mux.Vars(req)
 
 	filterID := vars["filterID"]
-	hierarchyID := vars["hierarchyID"]
-	dimensionType := vars["name"]
+	name := vars["name"]
+	option := vars["option"]
 
-	uri := fmt.Sprintf("/filters/%s/dimensions/%s/%s", filterID, dimensionType, hierarchyID)
+	if name == "CPI" {
+		name = "goods-and-services"
+	}
 
-	http.Redirect(w, req, uri, 301)
+	if err := f.fc.RemoveDimensionValue(filterID, name, option); err != nil {
+		log.ErrorR(req, err, nil)
+		return
+	}
+
+	curPath := req.URL.Path
+
+	pathReg := regexp.MustCompile(`^(\/filters\/.+\/hierarchies\/.+)\/remove\/.+$`)
+	pathSubs := pathReg.FindStringSubmatch(curPath)
+
+	redirectURI := pathSubs[1]
+
+	http.Redirect(w, req, redirectURI, 302)
 }
 
 // Hierarchy controls the rendering of the hierarchy template
 func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	dimensionType := vars["name"]
-	hierarchyID := vars["hierarchyID"]
 	filterID := vars["filterID"]
 
-	var uri string
-	if hierarchyID != "" {
-		uri = "http://localhost:22600/hierarchies/CPI/" + hierarchyID
-	} else {
-		uri = "http://localhost:22600/hierarchies/CPI"
-	}
+	path := req.URL.Path
 
-	resp, err := http.Get(uri)
-	if err != nil {
-		log.ErrorR(req, err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
+	pathReg := regexp.MustCompile(`^\/filters\/.+\/hierarchies\/(.+)$`)
+	pathsubs := pathReg.FindStringSubmatch(path)
+	if len(pathsubs) < 2 {
+		log.Info("could not get hierarchy path", nil)
 		return
 	}
 
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.ErrorR(req, err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	defer resp.Body.Close()
+	hierarchyPath := pathsubs[1]
 
-	var h data.Hierarchy
-	if err = json.Unmarshal(b, &h); err != nil {
+	// TODO: This will need to be removed when the hierarchy is updated
+	hierarchyPath = strings.Replace(hierarchyPath, "goods-and-services", "CPI", -1)
+
+	h, err := f.hc.GetHierarchy(hierarchyPath)
+	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -113,6 +235,32 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+
+	if dimensionType == "CPI" {
+		dimensionType = "goods-and-services"
+	}
+
+	selectedValues, err := f.fc.GetDimensionOptions(filterID, dimensionType)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	codeid := "e44de4c4-d39e-4e2f-942b-3ca10584d078"
+	idLabelMap, err := f.clc.GetIdNameMap(codeid)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	var selectedLabels, selectedIDs []string
+	for _, uri := range selectedValues.URLS {
+		id := getOptionID(uri)
+		selectedIDs = append(selectedIDs, id)
+		selectedLabels = append(selectedLabels, idLabelMap[id])
 	}
 
 	d := data.Dataset{
@@ -135,7 +283,8 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		Dimensions: []data.Dimension{
 			{
 				Name:   dimensionType,
-				Values: []string{"03.1 Clothing", "03.1.2 Garments", "03.2 Footwear including repairs"},
+				Values: selectedLabels,
+				IDs:    selectedIDs,
 			},
 		},
 		Downloads: map[string]data.Download{
@@ -164,7 +313,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	b, err = f.r.Do("dataset-filter/hierarchy", body)
+	b, err := f.r.Do("dataset-filter/hierarchy", body)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -197,7 +346,7 @@ func getHierarchyParents(p data.Parent) ([]data.Parent, error) {
 		defer resp.Body.Close()
 
 		var h data.Hierarchy
-		if err := json.Unmarshal(b, &h); err != nil {
+		if err = json.Unmarshal(b, &h); err != nil {
 			return parents, err
 		}
 

@@ -12,6 +12,7 @@ type FilterClient interface {
 	RemoveDimensionValue(filterID, name, value string) error
 	RemoveDimension(filterID, name string) (err error)
 	AddDimension(filterID, name string) (err error)
+	AddDimensionValues(filterID, name string, options []string) error
 }
 
 // DatasetClient ...
@@ -23,4 +24,9 @@ type DatasetClient interface {
 type CodelistClient interface {
 	GetValues(id string) (vals data.DimensionValues, err error)
 	GetIdNameMap(id string) (map[string]string, error)
+}
+
+// HierarchyClient ...
+type HierarchyClient interface {
+	GetHierarchy(path string) (h data.Hierarchy, err error)
 }

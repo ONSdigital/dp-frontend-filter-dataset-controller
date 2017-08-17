@@ -8,6 +8,7 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dataset"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/filter"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/hierarchy"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/validator"
@@ -33,7 +34,8 @@ func Init(r *mux.Router) {
 	fc := filter.New(cfg.FilterAPIURL)
 	dc := dataset.New(cfg.DatasetAPIURL)
 	clc := codelist.New(cfg.CodeListAPIURL)
-	filter := handlers.NewFilter(rend, fc, dc, clc, v)
+	hc := hierarchy.New(cfg.HierarchyAPIURL)
+	filter := handlers.NewFilter(rend, fc, dc, clc, hc, v)
 
 	r.Path("/filters/{filterID}").Methods("GET").HandlerFunc(filter.PreviewPage)
 	r.Path("/filters/{filterID}/dimensions").Methods("GET").HandlerFunc(filter.FilterOverview)
@@ -44,13 +46,14 @@ func Init(r *mux.Router) {
 	r.Path("/filters/{filterID}/dimensions/{name}/remove/{option}").HandlerFunc(filter.DimensionRemoveOne)
 	r.Path("/filters/{filterID}/dimensions/{name}/range").Methods("POST").HandlerFunc(filter.AddRange)
 	r.Path("/filters/{filterID}/dimensions/{name}/list").Methods("POST").HandlerFunc(filter.AddList)
+	r.Path("/filters/{filterID}/dimensions/{name}{uri:.*}/remove-all").HandlerFunc(filter.DimensionRemoveAll)
 
-	r.Path("/filters/{filterID}/{uri:.*}/{name}{uri:.*}/remove-all").HandlerFunc(filter.DimensionRemoveAll)
-
+	r.Path("/filters/{filterID}/hierarchies/{name}/update").Methods("POST").HandlerFunc(filter.HierarchyUpdate)
+	r.Path("/filters/{filterID}/hierarchies/{name}/{uri:.*}/update").Methods("POST").HandlerFunc(filter.HierarchyUpdate)
+	r.Path("/filters/{filterID}/hierarchies/{name}/remove/{option}").HandlerFunc(filter.HierarchyRemove)
+	r.Path("/filters/{filterID}/hierarchies/{name}/{uri:.*}/remove/{option}").HandlerFunc(filter.HierarchyRemove)
+	r.Path("/filters/{filterID}/hierarchies/{name}/remove-all").HandlerFunc(filter.HierarchyRemoveAll)
+	r.Path("/filters/{filterID}/hierarchies/{name}/{uri:.*}/remove-all").HandlerFunc(filter.HierarchyRemoveAll)
+	r.Path("/filters/{filterID}/hierarchies/{name}/{uri:.*}").Methods("GET").HandlerFunc(filter.Hierarchy)
 	r.Path("/filters/{filterID}/hierarchies/{name}").Methods("GET").HandlerFunc(filter.Hierarchy)
-	r.Path("/filters/{filterID}/hierarchies/{name}/{hierarchyID}").Methods("GET").HandlerFunc(filter.Hierarchy)
-	r.Path("/filters/{filterID}/hierarchies/{name}/{hierarchyID}/remove/{value}").HandlerFunc(filter.HierarchyRemove)
-	r.Path("/filters/{filterID}/hierarchies/{name}/{hierarchyID}/add/{value}").HandlerFunc(filter.HierarchyAdd)
-	r.Path("/filters/{filterID}/hierarchies/{uri:.*}/add-all").HandlerFunc(filter.HierarchyAddAll)
-
 }

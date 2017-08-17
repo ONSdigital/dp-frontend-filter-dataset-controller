@@ -169,8 +169,6 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Debug("values", log.Data{"values": values})
-
 	if name == "time" {
 		dats, err := dates.ConvertToReadable(values)
 		if err != nil {
@@ -211,13 +209,17 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 		}
 
 		values = dates.ConvertToCoded(dats)
+		var options []string
 		for i, dat := range dats {
 			if dat.Equal(start) || dat.After(start) && dat.Before(end) || dat.Equal(end) {
-				if err := f.fc.AddDimensionValue(filterID, name, labelIDMap[values[i]]); err != nil {
-					log.TraceR(req, err.Error(), nil)
-					continue
-				}
+				options = append(options, labelIDMap[values[i]])
 			}
+		}
+
+		if err := f.fc.AddDimensionValues(filterID, name, options); err != nil {
+			log.ErrorR(req, err, nil)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 	}
 
@@ -236,17 +238,15 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 		return
 	}
 
-	var wg sync.WaitGroup
+	var options []string
 	for _, val := range vals.Items {
-		wg.Add(1)
-		go func(id string) {
-			if err := f.fc.AddDimensionValue(filterID, name, id); err != nil {
-				log.ErrorR(req, err, nil)
-			}
-			wg.Done()
-		}(val.ID)
+		options = append(options, val.ID)
 	}
-	wg.Wait()
+
+	if err := f.fc.AddDimensionValues(filterID, name, options); err != nil {
+		log.ErrorR(req, err, nil)
+		return
+	}
 
 	http.Redirect(w, req, redirectURL, 302)
 }
@@ -270,45 +270,40 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	values, labelIDMap, err := f.getDimensionValues(filterID, name)
-	if err != nil {
-		log.ErrorR(req, err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	var wg sync.WaitGroup
+	wg.Add(1)
 
-	if name == "time" {
-		dats, err := dates.ConvertToReadable(values)
+	// concurrently remove any fields that have been deselected
+	go func() {
+		opts, err := f.fc.GetDimensionOptions(filterID, name)
 		if err != nil {
 			log.ErrorR(req, err, nil)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
 		}
-		values = dates.ConvertToCoded(dats)
 
-		for k := range req.Form {
-			if k == ":uri" || k == "save-and-return" {
-				continue
-			}
-
-			val, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s", k))
-			if err != nil {
-				log.ErrorR(req, err, nil)
-				w.WriteHeader(http.StatusInternalServerError)
-				redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-				http.Redirect(w, req, redirectURL, 302)
-			}
-
-			for i, dat := range dats {
-				if dat.Equal(val) {
-					if err := f.fc.AddDimensionValue(filterID, name, labelIDMap[values[i]]); err != nil {
-						log.TraceR(req, err.Error(), nil)
-						continue
-					}
+		for _, uri := range opts.URLS {
+			id := getOptionID(uri)
+			if _, ok := req.Form[id]; !ok {
+				if err := f.fc.RemoveDimensionValue(filterID, name, id); err != nil {
+					log.ErrorR(req, err, nil)
 				}
 			}
 		}
+
+		wg.Done()
+	}()
+
+	for k := range req.Form {
+		if k == ":uri" || k == "save-and-return" {
+			continue
+		}
+
+		if err := f.fc.AddDimensionValue(filterID, name, k); err != nil {
+			log.TraceR(req, err.Error(), nil)
+			continue
+		}
 	}
+
+	wg.Wait()
 
 	http.Redirect(w, req, redirectURL, 302)
 }

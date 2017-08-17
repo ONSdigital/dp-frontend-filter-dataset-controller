@@ -187,6 +187,7 @@ func CreateListSelectorPage(name string, selectedValues data.DimensionOptions, a
 
 			p.Data.RangeData.Values = append(p.Data.RangeData.Values, listSelector.Value{
 				Label:      dates.ConvertToMonthYear(val),
+				ID:         timeIDLookup[val],
 				IsSelected: isSelected,
 			})
 		}
@@ -400,11 +401,14 @@ func CreateHierarchyPage(h data.Hierarchy, parents []data.Parent, d data.Dataset
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
 	for i, par := range parents {
+		var breadrumbTitle string
 		if i != 0 {
-			title = par.Label
+			breadrumbTitle = par.Label
+		} else {
+			breadrumbTitle = dimensionTitleTranslator[dimensionTitle]
 		}
 		p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-			Title: title,
+			Title: breadrumbTitle,
 			URI:   fmt.Sprintf("/filters/%s%s", f.FilterID, par.URL),
 		})
 	}
@@ -431,10 +435,10 @@ func CreateHierarchyPage(h data.Hierarchy, parents []data.Parent, d data.Dataset
 
 	for _, dim := range f.Dimensions {
 		if dim.Name == dimensionTitle {
-			for _, val := range dim.Values {
+			for i, val := range dim.Values {
 				p.Data.FiltersAdded = append(p.Data.FiltersAdded, hierarchy.Filter{
 					Label:     val,
-					RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, val),
+					RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, dim.IDs[i]),
 				})
 			}
 		}
@@ -444,8 +448,8 @@ func CreateHierarchyPage(h data.Hierarchy, parents []data.Parent, d data.Dataset
 		var selected bool
 		for _, dim := range f.Dimensions {
 			if dim.Name == dimensionTitle {
-				for _, val := range dim.Values {
-					if val == child.Label {
+				for _, id := range dim.IDs {
+					if id == child.ID {
 						selected = true
 					}
 				}
@@ -453,15 +457,16 @@ func CreateHierarchyPage(h data.Hierarchy, parents []data.Parent, d data.Dataset
 		}
 		p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
 			Label:    child.Label,
+			ID:       child.ID,
 			SubNum:   strconv.Itoa(child.NumberofChildren),
-			SubURL:   fmt.Sprintf("/filters/%s%s", f.FilterID, child.URL),
+			SubURL:   fmt.Sprintf("redirect:/filters/%s%s", f.FilterID, child.URL),
 			Selected: selected,
 		})
 
 	}
 
 	p.Data.Metadata = hierarchy.Metadata(met)
-	p.Data.SaveAndReturn.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
+	p.Data.SaveAndReturn.URL = curPath + "/update"
 	p.Data.Cancel.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
 
 	p.Metadata.Footer = model.Footer{

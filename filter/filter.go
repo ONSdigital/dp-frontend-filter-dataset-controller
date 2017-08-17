@@ -217,3 +217,30 @@ func (c *Client) GetJobState(filterID string) (f data.Filter, err error) {
 	err = json.Unmarshal(b, &f)
 	return
 }
+
+// AddDimensionValues ...
+func (c *Client) AddDimensionValues(filterID, name string, options []string) error {
+	uri := fmt.Sprintf("%s/filters/%s/dimensions/%s", c.url, filterID, name)
+
+	body := struct {
+		Options []string `json:"options"`
+	}{
+		Options: options,
+	}
+
+	b, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.cli.Post(uri, "application/json", bytes.NewBuffer(b))
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusCreated {
+		return &ErrInvalidFilterAPIResponse{http.StatusCreated, resp.StatusCode, uri}
+	}
+
+	return nil
+}

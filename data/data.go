@@ -4,6 +4,7 @@ package data
 type Dimension struct {
 	Name      string    `json:"name"`
 	Values    []string  `json:"values"`
+	IDs       []string  `json:"ids"`
 	Hierarchy Hierarchy `json:"hierarchy,omitempty"`
 }
 
