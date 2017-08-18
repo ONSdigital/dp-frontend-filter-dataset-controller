@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
@@ -95,4 +96,32 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.Write(templateBytes)
+}
+
+// FilterOverviewClearAll removes all selected options for all dimensions
+func (f *Filter) FilterOverviewClearAll(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	filterID := vars["filterID"]
+
+	dims, err := f.fc.GetDimensions(filterID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		return
+	}
+
+	for _, dim := range dims {
+		if err := f.fc.RemoveDimension(filterID, dim.Name); err != nil {
+			log.ErrorR(req, err, nil)
+			return
+		}
+
+		if err := f.fc.AddDimension(filterID, dim.Name); err != nil {
+			log.ErrorR(req, err, nil)
+			return
+		}
+	}
+
+	redirectURL := fmt.Sprintf("/filters/%s/dimensions", filterID)
+
+	http.Redirect(w, req, redirectURL, 302)
 }

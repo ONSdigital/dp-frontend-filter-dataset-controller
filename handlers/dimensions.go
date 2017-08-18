@@ -124,10 +124,12 @@ func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name str
 
 // Range represents range labels in the range selector page
 type Range struct {
-	Start         string `schema:"start"`
-	End           string `schema:"end"`
-	SaveAndReturn string `schema:"save-and-return"`
-	AddAll        string `schema:"add-all"`
+	Start          string `schema:"start"`
+	End            string `schema:"end"`
+	SaveAndReturn  string `schema:"save-and-return"`
+	AddAll         string `schema:"add-all"`
+	AddAllRange    string `schema:"add-all-range"`
+	RemoveAllRange string `schema:"remove-all-range"`
 }
 
 // AddRange will add a range of values to a filter job
@@ -159,6 +161,17 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 
 	if len(r.AddAll) > 0 {
 		f.addAll(w, req, redirectURL)
+		return
+	}
+
+	if len(req.Form["add-all-range"]) > 0 {
+		f.addAll(w, req, redirectURL)
+		return
+	}
+
+	if len(req.Form["remove-all-range"]) > 0 {
+		redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all", filterID, name)
+		http.Redirect(w, req, redirectURL, 302)
 		return
 	}
 
@@ -266,7 +279,14 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 	redirectURL := fmt.Sprintf("/filters/%s/dimensions", filterID)
 
 	if len(req.Form["add-all"]) > 0 {
+		redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s?selectorType=list", filterID, name)
 		f.addAll(w, req, redirectURL)
+		return
+	}
+
+	if len(req.Form["remove-all"]) > 0 {
+		redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all?selectorType=list", filterID, name)
+		http.Redirect(w, req, redirectURL, 302)
 		return
 	}
 

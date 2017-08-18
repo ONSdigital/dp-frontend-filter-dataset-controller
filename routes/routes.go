@@ -39,6 +39,7 @@ func Init(r *mux.Router) {
 
 	r.Path("/filters/{filterID}").Methods("GET").HandlerFunc(filter.PreviewPage)
 	r.Path("/filters/{filterID}/dimensions").Methods("GET").HandlerFunc(filter.FilterOverview)
+	r.Path("/filters/{filterID}/dimensions/clear-all").HandlerFunc(filter.FilterOverviewClearAll)
 	r.Path("/filters/{filterID}/dimensions/geography").Methods("GET").HandlerFunc(filter.Geography)
 
 	r.Path("/filters/{filterID}/dimensions/{name}").Methods("GET").HandlerFunc(filter.DimensionSelector)

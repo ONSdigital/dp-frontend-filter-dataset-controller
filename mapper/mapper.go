@@ -36,8 +36,14 @@ func CreateFilterOverview(dimensions []data.Dimension, filter data.Filter, datas
 
 	p.FilterID = filterID
 
+	disableButton := true
+
 	for _, d := range dimensions {
 		var fod filterOverview.Dimension
+
+		if len(d.Values) > 0 {
+			disableButton = false
+		}
 
 		if d.Name == "time" {
 			var selectedDates []string
@@ -73,8 +79,12 @@ func CreateFilterOverview(dimensions []data.Dimension, filter data.Filter, datas
 		p.Data.Dimensions = append(p.Data.Dimensions, fod)
 	}
 
-	p.Data.PreviewAndDownload.URL = fmt.Sprintf("/filters/%s", filterID)
+	if p.Data.PreviewAndDownloadDisabled = disableButton; !p.Data.PreviewAndDownloadDisabled {
+		p.Data.PreviewAndDownload.URL = fmt.Sprintf("/filters/%s", filterID)
+	}
+
 	p.Data.Cancel.URL = "/"
+	p.Data.ClearAll.URL = fmt.Sprintf("/filters/%s/dimensions/clear-all", filterID)
 	p.SearchDisabled = true
 
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -310,7 +320,7 @@ func CreateRangeSelectorPage(name string, selectedValues data.DimensionOptions, 
 
 // Random boolean generator
 func randBool() bool {
-	b := rand.Float32() < 0.5
+	b := rand.Float32() < 0.2
 	log.Debug("random bool", log.Data{"bool": b})
 	return b
 }
