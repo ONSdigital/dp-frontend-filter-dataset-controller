@@ -79,10 +79,12 @@ func TestUnitMapper(t *testing.T) {
 	Convey("test CreateListSelector page correctly maps to listSelector frontend model", t, func() {
 		filter := getTestFilter()
 		dataset := getTestDataset()
-		selectedValues := data.DimensionOptions{
-			URLS: []string{
-				"/filters/12345/dimensions/time/38jd83ik",
-				"/filters/12345/dimensions/time/abcdefg",
+		selectedValues := []data.DimensionOption{
+			{
+				Option: "38jd83ik",
+			},
+			{
+				Option: "bcdefg",
 			},
 		}
 		allValues := data.DimensionValues{
@@ -125,7 +127,7 @@ func TestUnitMapper(t *testing.T) {
 		So(p.Data.RangeData.Values[0].Label, ShouldEqual, "February 2010")
 		So(p.Data.RangeData.Values[0].IsSelected, ShouldBeFalse)
 		So(p.Data.RangeData.Values[1].Label, ShouldEqual, "March 2010")
-		So(p.Data.RangeData.Values[1].IsSelected, ShouldBeFalse)
+		So(p.Data.RangeData.Values[1].IsSelected, ShouldBeTrue)
 		So(p.Data.RangeData.Values[2].Label, ShouldEqual, "April 2010")
 		So(p.Data.RangeData.Values[2].IsSelected, ShouldBeFalse)
 		So(p.Data.FiltersAmount, ShouldEqual, 2)
@@ -138,10 +140,12 @@ func TestUnitMapper(t *testing.T) {
 	Convey("test CreateRangeSelectorPage successfully maps to a rangeSelector page model", t, func() {
 		filter := getTestFilter()
 		dataset := getTestDataset()
-		selectedValues := data.DimensionOptions{
-			URLS: []string{
-				"/filters/12345/dimensions/time/38jd83ik",
-				"/filters/12345/dimensions/time/abcdefg",
+		selectedValues := []data.DimensionOption{
+			{
+				Option: "38jd83ik",
+			},
+			{
+				Option: "bcdefg",
 			},
 		}
 		allValues := data.DimensionValues{

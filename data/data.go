@@ -20,9 +20,10 @@ type DimensionValues struct {
 	NumberOfResults int                  `json:"number_of_results"`
 }
 
-// DimensionOptions ...
-type DimensionOptions struct {
-	URLS []string `json:"dimension_option_urls"`
+// DimensionOption ...
+type DimensionOption struct {
+	DimensionOptionsURL string `json:"dimension_option_url"`
+	Option              string `json:"option"`
 }
 
 // DimensionValueItem ...

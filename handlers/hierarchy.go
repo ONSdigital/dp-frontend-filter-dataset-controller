@@ -106,9 +106,8 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		}
 
 		for _, hv := range h.Children {
-			for _, uri := range opts.URLS {
-				id := getOptionID(uri)
-				if id == hv.ID {
+			for _, opt := range opts {
+				if opt.Option == hv.ID {
 					if _, ok := req.Form[hv.ID]; !ok {
 						if err := f.FilterClient.RemoveDimensionValue(filterID, name, hv.ID); err != nil {
 							log.ErrorR(req, err, nil)
@@ -257,10 +256,9 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var selectedLabels, selectedIDs []string
-	for _, uri := range selectedValues.URLS {
-		id := getOptionID(uri)
-		selectedIDs = append(selectedIDs, id)
-		selectedLabels = append(selectedLabels, idLabelMap[id])
+	for _, opt := range selectedValues {
+		selectedIDs = append(selectedIDs, opt.Option)
+		selectedLabels = append(selectedLabels, idLabelMap[opt.Option])
 	}
 
 	d := data.Dataset{

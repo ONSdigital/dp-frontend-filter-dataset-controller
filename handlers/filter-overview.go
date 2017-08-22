@@ -46,7 +46,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	var dimensions []data.Dimension
 	for _, dim := range dims {
-		var vals data.DimensionOptions
+		var vals []data.DimensionOption
 		vals, err = f.FilterClient.GetDimensionOptions(filterID, dim.Name)
 		if err != nil {
 			log.ErrorR(req, err, nil)
@@ -54,9 +54,8 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		var values []string
-		for _, val := range vals.URLS {
-			id := getOptionID(val)
-			values = append(values, idNameLookup[id])
+		for _, val := range vals {
+			values = append(values, idNameLookup[val.Option])
 		}
 
 		dimensions = append(dimensions, data.Dimension{

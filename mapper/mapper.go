@@ -3,7 +3,6 @@ package mapper
 import (
 	"fmt"
 	"math/rand"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -108,7 +107,7 @@ func CreateFilterOverview(dimensions []data.Dimension, filter data.Filter, datas
 
 // CreateListSelectorPage maps items from API responses to form the model for a
 // dimension list selector page
-func CreateListSelectorPage(name string, selectedValues data.DimensionOptions, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) listSelector.Page {
+func CreateListSelectorPage(name string, selectedValues []data.DimensionOption, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) listSelector.Page {
 	var p listSelector.Page
 
 	p.SearchDisabled = true
@@ -150,10 +149,9 @@ func CreateListSelectorPage(name string, selectedValues data.DimensionOptions, a
 	lookup := getIDNameLookup(allValues.Items)
 
 	var selectedListValues, selectedListIDs []string
-	for _, uri := range selectedValues.URLS {
-		id := getOptionID(uri)
-		selectedListValues = append(selectedListValues, lookup[id])
-		selectedListIDs = append(selectedListIDs, id)
+	for _, opt := range selectedValues {
+		selectedListValues = append(selectedListValues, lookup[opt.Option])
+		selectedListIDs = append(selectedListIDs, opt.Option)
 	}
 
 	var allListValues, allListIDs []string
@@ -208,7 +206,7 @@ func CreateListSelectorPage(name string, selectedValues data.DimensionOptions, a
 		p.Data.AddAllChecked = true
 	}
 
-	p.Data.FiltersAmount = len(selectedValues.URLS)
+	p.Data.FiltersAmount = len(selectedListValues)
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
@@ -223,7 +221,7 @@ func CreateListSelectorPage(name string, selectedValues data.DimensionOptions, a
 
 // CreateRangeSelectorPage maps items from API responses to form a dimension range
 // selector page model
-func CreateRangeSelectorPage(name string, selectedValues data.DimensionOptions, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) rangeSelector.Page {
+func CreateRangeSelectorPage(name string, selectedValues []data.DimensionOption, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) rangeSelector.Page {
 	var p rangeSelector.Page
 
 	p.SearchDisabled = true
@@ -254,7 +252,7 @@ func CreateRangeSelectorPage(name string, selectedValues data.DimensionOptions, 
 	p.Data.AddAllInRange = rangeSelector.Link{
 		Label: fmt.Sprintf("All %ss", name),
 	}
-	if len(selectedValues.URLS) == len(allValues.Items) {
+	if len(selectedValues) == len(allValues.Items) {
 		p.Data.AddAllChecked = true
 	}
 	p.Data.SaveAndReturn = rangeSelector.Link{
@@ -264,10 +262,9 @@ func CreateRangeSelectorPage(name string, selectedValues data.DimensionOptions, 
 		URL: fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
 	}
 	var selectedRangeValues, selectedRangeIDs []string
-	for _, uri := range selectedValues.URLS {
-		id := getOptionID(uri)
+	for _, opt := range selectedValues {
 		for _, val := range allValues.Items {
-			if val.ID == id {
+			if val.ID == opt.Option {
 				selectedRangeValues = append(selectedRangeValues, val.Label)
 				selectedRangeIDs = append(selectedRangeIDs, val.ID)
 			}
@@ -488,16 +485,4 @@ func CreateHierarchyPage(h data.Hierarchy, parents []data.Parent, d data.Dataset
 	}
 
 	return p
-}
-
-func getOptionID(uri string) string {
-	optionReg := regexp.MustCompile(`^\/filters\/.+\/dimensions\/.+\/options\/(.+)$`)
-	subs := optionReg.FindStringSubmatch(uri)
-
-	if len(subs) == 2 {
-		return subs[1]
-	}
-
-	log.Info("could not extract optionID from uri", log.Data{"uri": uri})
-	return ""
 }

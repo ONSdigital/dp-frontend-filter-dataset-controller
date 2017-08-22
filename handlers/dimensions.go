@@ -79,7 +79,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues data.DimensionOptions, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) {
+func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []data.DimensionOption, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) {
 
 	p := mapper.CreateRangeSelectorPage(name, selectedValues, allValues, filter, dataset)
 
@@ -102,7 +102,7 @@ func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name st
 
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
-func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues data.DimensionOptions, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) {
+func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []data.DimensionOption, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) {
 	p := mapper.CreateListSelectorPage(name, selectedValues, allValues, filter, dataset)
 
 	b, err := json.Marshal(p)
@@ -300,10 +300,9 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 			log.ErrorR(req, err, nil)
 		}
 
-		for _, uri := range opts.URLS {
-			id := getOptionID(uri)
-			if _, ok := req.Form[id]; !ok {
-				if err := f.FilterClient.RemoveDimensionValue(filterID, name, id); err != nil {
+		for _, opt := range opts {
+			if _, ok := req.Form[opt.Option]; !ok {
+				if err := f.FilterClient.RemoveDimensionValue(filterID, name, opt.Option); err != nil {
 					log.ErrorR(req, err, nil)
 				}
 			}
@@ -408,17 +407,5 @@ func getCodeIDFromURI(uri string) string {
 	}
 
 	log.Info("could not extract codeID from uri", nil)
-	return ""
-}
-
-func getOptionID(uri string) string {
-	optionReg := regexp.MustCompile(`^\/filters\/.+\/dimensions\/.+\/options\/(.+)$`)
-	subs := optionReg.FindStringSubmatch(uri)
-
-	if len(subs) == 2 {
-		return subs[1]
-	}
-
-	log.Info("could not extract optionID from uri", log.Data{"uri": uri})
 	return ""
 }
