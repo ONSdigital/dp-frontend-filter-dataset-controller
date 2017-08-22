@@ -336,7 +336,7 @@ func (f *Filter) getDimensionValues(filterID, name string) (values []string, lab
 
 	log.Debug("dimension", log.Data{"dimension": dim})
 
-	/*codeID := getCodeIDFromURI(dim.URI)
+	/*codeID := getCodeIDFromURI(dim.URI) // TODO: uncomment when real codeid becomes available
 	if codeID == "" {
 		err = errors.New("missing code id from uri")
 		return

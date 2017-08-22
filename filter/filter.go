@@ -95,7 +95,7 @@ func (c *Client) GetDimensions(filterID string) (dims []data.FilterDimension, er
 	return
 }
 
-// GetDimensionOptions ...
+// GetDimensionOptions retrieves a list of the dimension options
 func (c *Client) GetDimensionOptions(filterID, name string) (opts data.DimensionOptions, err error) {
 	uri := fmt.Sprintf("%s/filters/%s/dimensions/%s/options", c.url, filterID, name)
 	resp, err := c.cli.Get(uri)
