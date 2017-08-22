@@ -16,12 +16,16 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 
 	dimensions := []data.Dimension{
 		{
-			Name:   "Geography",
-			Values: []string{"Wales", "Cardiff", "Caerphilly", "Newport", "Pontypridd", "Merthyr Tydfil"},
+			Name:   "Time",
+			Values: []string{"January 2017", "January 2016", "January 2015", "January 2014", "January 2013", "January 2012"},
 		},
 		{
-			Name:   "Population",
-			Values: []string{"30000000", "284384", "37238", "428219", "32161", "281994"},
+			Name:   "Goods and Services",
+			Values: []string{"Clothing", "Education", "Aviation", "12", "11", "10"},
+		},
+		{
+			Name:   "CPI",
+			Values: []string{"0.23", "0.48", "0.593", "0.38", "0.349", "0.389"},
 		},
 	}
 
@@ -63,7 +67,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	b, err := f.r.Do("dataset-filter/preview-page", body)
+	b, err := f.Renderer.Do("dataset-filter/preview-page", body)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)

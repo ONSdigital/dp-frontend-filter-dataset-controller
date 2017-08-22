@@ -160,7 +160,7 @@ func (c *Client) RemoveDimensionValue(filterID, name, value string) error {
 	return nil
 }
 
-// RemoveDimension ...
+// RemoveDimension removes a given dimension from a filter job
 func (c *Client) RemoveDimension(filterID, name string) (err error) {
 	uri := fmt.Sprintf("%s/filters/%s/dimensions/%s", c.url, filterID, name)
 	req, err := http.NewRequest("DELETE", uri, nil)
@@ -181,7 +181,7 @@ func (c *Client) RemoveDimension(filterID, name string) (err error) {
 	return
 }
 
-// AddDimension ...
+// AddDimension adds a new dimension to a filter job
 func (c *Client) AddDimension(id, name string) error {
 	resp, err := http.Post(fmt.Sprintf("%s/filters/%s/dimensions/%s", c.url, id, name), "application/json", bytes.NewBufferString(`{}`))
 	if err != nil {
@@ -195,7 +195,7 @@ func (c *Client) AddDimension(id, name string) error {
 	return nil
 }
 
-// GetJobState ...
+// GetJobState will return the current state of the filter job
 func (c *Client) GetJobState(filterID string) (f data.Filter, err error) {
 	uri := fmt.Sprintf("%s/filters/%s", c.url, filterID)
 	resp, err := c.cli.Get(uri)
@@ -218,7 +218,7 @@ func (c *Client) GetJobState(filterID string) (f data.Filter, err error) {
 	return
 }
 
-// AddDimensionValues ...
+// AddDimensionValues adds many options to a filter job dimension
 func (c *Client) AddDimensionValues(filterID, name string, options []string) error {
 	uri := fmt.Sprintf("%s/filters/%s/dimensions/%s", c.url, filterID, name)
 

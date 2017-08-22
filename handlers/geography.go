@@ -89,7 +89,7 @@ func (f *Filter) Geography(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	templateBytes, err := f.r.Do("dataset-filter/geography", b)
+	templateBytes, err := f.Renderer.Do("dataset-filter/geography", b)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)

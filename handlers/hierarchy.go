@@ -28,11 +28,11 @@ func (f *Filter) HierarchyRemoveAll(w http.ResponseWriter, req *http.Request) {
 		name = "goods-and-services"
 	}
 
-	if err := f.fc.RemoveDimension(filterID, name); err != nil {
+	if err := f.FilterClient.RemoveDimension(filterID, name); err != nil {
 		log.ErrorR(req, err, nil)
 	}
 
-	if err := f.fc.AddDimension(filterID, name); err != nil {
+	if err := f.FilterClient.AddDimension(filterID, name); err != nil {
 		log.ErrorR(req, err, nil)
 	}
 
@@ -95,12 +95,12 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 	wg.Add(1)
 
 	go func() {
-		h, err := f.hc.GetHierarchy(hierarchyPath)
+		h, err := f.HierarchyClient.GetHierarchy(hierarchyPath)
 		if err != nil {
 			log.ErrorR(req, err, nil)
 		}
 
-		opts, err := f.fc.GetDimensionOptions(filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptions(filterID, name)
 		if err != nil {
 			log.ErrorR(req, err, nil)
 		}
@@ -110,7 +110,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 				id := getOptionID(uri)
 				if id == hv.ID {
 					if _, ok := req.Form[hv.ID]; !ok {
-						if err := f.fc.RemoveDimensionValue(filterID, name, hv.ID); err != nil {
+						if err := f.FilterClient.RemoveDimensionValue(filterID, name, hv.ID); err != nil {
 							log.ErrorR(req, err, nil)
 						}
 					}
@@ -133,7 +133,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		if err := f.fc.AddDimensionValue(filterID, name, k); err != nil {
+		if err := f.FilterClient.AddDimensionValue(filterID, name, k); err != nil {
 			log.TraceR(req, err.Error(), nil)
 			continue
 		}
@@ -144,14 +144,14 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 
 func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, filterID, name, redirectURI, hierarchyPath string) {
 
-	h, err := f.hc.GetHierarchy(hierarchyPath)
+	h, err := f.HierarchyClient.GetHierarchy(hierarchyPath)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		return
 	}
 
 	for _, child := range h.Children {
-		if err := f.fc.AddDimensionValue(filterID, name, child.ID); err != nil {
+		if err := f.FilterClient.AddDimensionValue(filterID, name, child.ID); err != nil {
 			log.ErrorR(req, err, nil)
 		}
 	}
@@ -161,14 +161,14 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 
 func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Request, filterID, name, redirectURI, hierarchyPath string) {
 
-	h, err := f.hc.GetHierarchy(hierarchyPath)
+	h, err := f.HierarchyClient.GetHierarchy(hierarchyPath)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		return
 	}
 
 	for _, child := range h.Children {
-		if err := f.fc.RemoveDimensionValue(filterID, name, child.ID); err != nil {
+		if err := f.FilterClient.RemoveDimensionValue(filterID, name, child.ID); err != nil {
 			log.ErrorR(req, err, nil)
 		}
 	}
@@ -188,7 +188,7 @@ func (f *Filter) HierarchyRemove(w http.ResponseWriter, req *http.Request) {
 		name = "goods-and-services"
 	}
 
-	if err := f.fc.RemoveDimensionValue(filterID, name, option); err != nil {
+	if err := f.FilterClient.RemoveDimensionValue(filterID, name, option); err != nil {
 		log.ErrorR(req, err, nil)
 		return
 	}
@@ -223,7 +223,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	// TODO: This will need to be removed when the hierarchy is updated
 	hierarchyPath = strings.Replace(hierarchyPath, "goods-and-services", "CPI", -1)
 
-	h, err := f.hc.GetHierarchy(hierarchyPath)
+	h, err := f.HierarchyClient.GetHierarchy(hierarchyPath)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -241,7 +241,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		dimensionType = "goods-and-services"
 	}
 
-	selectedValues, err := f.fc.GetDimensionOptions(filterID, dimensionType)
+	selectedValues, err := f.FilterClient.GetDimensionOptions(filterID, dimensionType)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -249,7 +249,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	}
 
 	codeid := "e44de4c4-d39e-4e2f-942b-3ca10584d078"
-	idLabelMap, err := f.clc.GetIdNameMap(codeid)
+	idLabelMap, err := f.CodeListClient.GetIdNameMap(codeid)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -313,7 +313,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	b, err := f.r.Do("dataset-filter/hierarchy", body)
+	b, err := f.Renderer.Do("dataset-filter/hierarchy", body)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)

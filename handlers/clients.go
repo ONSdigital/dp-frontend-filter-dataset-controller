@@ -15,18 +15,18 @@ type FilterClient interface {
 	AddDimensionValues(filterID, name string, options []string) error
 }
 
-// DatasetClient ...
+// DatasetClient contains methods expected for a dataset client
 type DatasetClient interface {
 	GetDataset(id, edition, version string) (d data.Dataset, err error)
 }
 
-// CodelistClient ...
+// CodelistClient contains methods expected for a codelist client
 type CodelistClient interface {
 	GetValues(id string) (vals data.DimensionValues, err error)
 	GetIdNameMap(id string) (map[string]string, error)
 }
 
-// HierarchyClient ...
+// HierarchyClient contains methods expected for a heirarchy client
 type HierarchyClient interface {
 	GetHierarchy(path string) (h data.Hierarchy, err error)
 }

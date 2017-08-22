@@ -27,28 +27,28 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		http.Redirect(w, req, url, 302)
 	}
 
-	filter, err := f.fc.GetJobState(filterID)
+	filter, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	selectedValues, err := f.fc.GetDimensionOptions(filterID, name)
+	selectedValues, err := f.FilterClient.GetDimensionOptions(filterID, name)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	dataset, err := f.dc.GetDataset(filterID, "2016", "v1")
+	dataset, err := f.DatasetClient.GetDataset(filterID, "2016", "v1") // TODO: this will need to be replaced with the real edition/version when it becomes available
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	dim, err := f.fc.GetDimension(filterID, name)
+	dim, err := f.FilterClient.GetDimension(filterID, name)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -57,14 +57,14 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 
 	log.Debug("dimension", log.Data{"dimension": dim})
 
-	/*codeID := getCodeIDFromURI(dim.URI)
+	/*codeID := getCodeIDFromURI(dim.URI) // TODO: uncomment this code when the codelist api is updated with real urls
 	if codeID == "" {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}*/
 
-	codeID := "64d384f1-ea3b-445c-8fb8-aa453f96e58a"
-	allValues, err := f.clc.GetValues(codeID)
+	codeID := "64d384f1-ea3b-445c-8fb8-aa453f96e58a" // TODO: remove this with real codeids when available
+	allValues, err := f.CodeListClient.GetValues(codeID)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -90,7 +90,7 @@ func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name st
 		return
 	}
 
-	templateBytes, err := f.r.Do("dataset-filter/range-selector", b)
+	templateBytes, err := f.Renderer.Do("dataset-filter/range-selector", b)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -112,7 +112,7 @@ func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name str
 		return
 	}
 
-	templateBytes, err := f.r.Do("dataset-filter/list-selector", b)
+	templateBytes, err := f.Renderer.Do("dataset-filter/list-selector", b)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -229,7 +229,7 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-		if err := f.fc.AddDimensionValues(filterID, name, options); err != nil {
+		if err := f.FilterClient.AddDimensionValues(filterID, name, options); err != nil {
 			log.ErrorR(req, err, nil)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -245,7 +245,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 	filterID := vars["filterID"]
 
 	codeID := "64d384f1-ea3b-445c-8fb8-aa453f96e58a"
-	vals, err := f.clc.GetValues(codeID)
+	vals, err := f.CodeListClient.GetValues(codeID)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		return
@@ -256,7 +256,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 		options = append(options, val.ID)
 	}
 
-	if err := f.fc.AddDimensionValues(filterID, name, options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(filterID, name, options); err != nil {
 		log.ErrorR(req, err, nil)
 		return
 	}
@@ -295,7 +295,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 
 	// concurrently remove any fields that have been deselected
 	go func() {
-		opts, err := f.fc.GetDimensionOptions(filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptions(filterID, name)
 		if err != nil {
 			log.ErrorR(req, err, nil)
 		}
@@ -303,7 +303,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 		for _, uri := range opts.URLS {
 			id := getOptionID(uri)
 			if _, ok := req.Form[id]; !ok {
-				if err := f.fc.RemoveDimensionValue(filterID, name, id); err != nil {
+				if err := f.FilterClient.RemoveDimensionValue(filterID, name, id); err != nil {
 					log.ErrorR(req, err, nil)
 				}
 			}
@@ -317,7 +317,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		if err := f.fc.AddDimensionValue(filterID, name, k); err != nil {
+		if err := f.FilterClient.AddDimensionValue(filterID, name, k); err != nil {
 			log.TraceR(req, err.Error(), nil)
 			continue
 		}
@@ -329,7 +329,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 }
 
 func (f *Filter) getDimensionValues(filterID, name string) (values []string, labelIDMap map[string]string, err error) {
-	dim, err := f.fc.GetDimension(filterID, name)
+	dim, err := f.FilterClient.GetDimension(filterID, name)
 	if err != nil {
 		return
 	}
@@ -343,7 +343,7 @@ func (f *Filter) getDimensionValues(filterID, name string) (values []string, lab
 	}*/
 
 	codeID := "64d384f1-ea3b-445c-8fb8-aa453f96e58a"
-	allValues, err := f.clc.GetValues(codeID)
+	allValues, err := f.CodeListClient.GetValues(codeID)
 	if err != nil {
 		return
 	}
@@ -365,11 +365,11 @@ func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
 	filterID := vars["filterID"]
 	selectorType := req.URL.Query().Get("selectorType")
 
-	if err := f.fc.RemoveDimension(filterID, name); err != nil {
+	if err := f.FilterClient.RemoveDimension(filterID, name); err != nil {
 		log.ErrorR(req, err, nil)
 	}
 
-	if err := f.fc.AddDimension(filterID, name); err != nil {
+	if err := f.FilterClient.AddDimension(filterID, name); err != nil {
 		log.ErrorR(req, err, nil)
 	}
 
@@ -388,7 +388,7 @@ func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
 	option := vars["option"]
 	selectorType := req.URL.Query().Get("selectorType")
 
-	if err := f.fc.RemoveDimensionValue(filterID, name, option); err != nil {
+	if err := f.FilterClient.RemoveDimensionValue(filterID, name, option); err != nil {
 		log.ErrorR(req, err, nil)
 	}
 

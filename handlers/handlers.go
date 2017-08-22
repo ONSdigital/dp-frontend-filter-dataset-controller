@@ -7,23 +7,23 @@ import (
 
 // Filter represents the handlers for Filtering
 type Filter struct {
-	r   renderer.Renderer
-	fc  FilterClient
-	dc  DatasetClient
-	clc CodelistClient
-	hc  HierarchyClient
-	val Validator
+	Renderer        renderer.Renderer
+	FilterClient    FilterClient
+	DatasetClient   DatasetClient
+	CodeListClient  CodelistClient
+	HierarchyClient HierarchyClient
+	val             Validator
 }
 
 // NewFilter creates a new instance of Filter
 func NewFilter(r renderer.Renderer, fc FilterClient, dc DatasetClient, clc CodelistClient, hc HierarchyClient, val Validator) *Filter {
 	return &Filter{
-		r:   r,
-		fc:  fc,
-		dc:  dc,
-		clc: clc,
-		hc:  hc,
-		val: val,
+		Renderer:        r,
+		FilterClient:    fc,
+		DatasetClient:   dc,
+		CodeListClient:  clc,
+		HierarchyClient: hc,
+		val:             val,
 	}
 }
 func getStubbedMetadataFooter() model.Footer {
