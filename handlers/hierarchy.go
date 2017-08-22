@@ -248,7 +248,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	codeid := "e44de4c4-d39e-4e2f-942b-3ca10584d078"
+	codeid := "e44de4c4-d39e-4e2f-942b-3ca10584d078" // TODO: Remove this when the real code id becomes available
 	idLabelMap, err := f.CodeListClient.GetIdNameMap(codeid)
 	if err != nil {
 		log.ErrorR(req, err, nil)
