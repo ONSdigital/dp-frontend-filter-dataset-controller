@@ -20,7 +20,7 @@ type DimensionValues struct {
 	NumberOfResults int                  `json:"number_of_results"`
 }
 
-// DimensionOption ...
+// DimensionOption represents a dimension option from the filter api
 type DimensionOption struct {
 	DimensionOptionsURL string `json:"dimension_option_url"`
 	Option              string `json:"option"`
