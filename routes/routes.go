@@ -2,12 +2,14 @@ package routes
 
 import (
 	"os"
+	"time"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/codelist"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dataset"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/filter"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/healthcheck"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/hierarchy"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/go-ns/log"
@@ -36,6 +38,18 @@ func Init(r *mux.Router) {
 	clc := codelist.New(cfg.CodeListAPIURL)
 	hc := hierarchy.New(cfg.HierarchyAPIURL)
 	filter := handlers.NewFilter(rend, fc, dc, clc, hc, v)
+
+	go func() {
+		for {
+			timer := time.NewTimer(time.Second * 60)
+
+			healthcheck.MonitorExternal(fc, dc, clc, hc, rend)
+
+			<-timer.C
+		}
+	}()
+
+	r.Path("/healthcheck").HandlerFunc(healthcheck.Do)
 
 	r.Path("/filters/{filterID}").Methods("GET").HandlerFunc(filter.PreviewPage)
 	r.Path("/filters/{filterID}/dimensions").Methods("GET").HandlerFunc(filter.FilterOverview)
