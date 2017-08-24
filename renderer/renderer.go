@@ -43,22 +43,17 @@ func New() Renderer {
 }
 
 // Healthcheck calls the healthcheck endpoint on the renderer and returns any errors
-func (r *renderer) Healthcheck() error {
+func (r *renderer) Healthcheck() (string, error) {
 	resp, err := r.client.Get(r.url + "/healthcheck")
 	if err != nil {
-		return err
+		return "renderer", err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return ErrInvalidRendererResponse{resp.StatusCode}
+		return "renderer", ErrInvalidRendererResponse{resp.StatusCode}
 	}
 
-	return nil
-}
-
-// Name returns the name of service the renderer is associated with
-func (r *renderer) Name() string {
-	return "renderer"
+	return "", nil
 }
 
 // Do sends a request to the renderer service to render a given template
