@@ -26,7 +26,9 @@ job "dp-frontend-filter-dataset-controller" {
       config {
         command = "${NOMAD_TASK_DIR}/start-task"
 
-        args = ["./dp-frontend-filter-dataset-controller"]
+        args = [
+          "${NOMAD_TASK_DIR}/dp-frontend-filter-dataset-controller",
+        ]
       }
 
       service {
