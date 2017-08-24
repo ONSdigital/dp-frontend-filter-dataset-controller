@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/healthcheck"
+	"github.com/ONSdigital/go-ns/healthcheck"
 )
 
 // Renderer provides an interface for a service template renderer

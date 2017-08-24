@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/healthcheck"
+	"github.com/ONSdigital/go-ns/healthcheck"
 )
 
 // FilterClient contains the methods expected for a filter client
