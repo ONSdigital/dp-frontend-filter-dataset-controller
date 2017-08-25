@@ -2,6 +2,7 @@ BINPATH ?= build
 
 build:
 	go build -tags 'production' -o $(BINPATH)/dp-frontend-filter-dataset-controller
+	cp rules.json $(BINPATH)
 
 debug:
 	go build -tags 'debug' -o $(BINPATH)/dp-frontend-filter-dataset-controller
