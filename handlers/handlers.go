@@ -1,13 +1,12 @@
 package handlers
 
 import (
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
 	"github.com/ONSdigital/dp-frontend-models/model"
 )
 
 // Filter represents the handlers for Filtering
 type Filter struct {
-	Renderer        renderer.Renderer
+	Renderer        Renderer
 	FilterClient    FilterClient
 	DatasetClient   DatasetClient
 	CodeListClient  CodelistClient
@@ -16,7 +15,7 @@ type Filter struct {
 }
 
 // NewFilter creates a new instance of Filter
-func NewFilter(r renderer.Renderer, fc FilterClient, dc DatasetClient, clc CodelistClient, hc HierarchyClient, val Validator) *Filter {
+func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, clc CodelistClient, hc HierarchyClient, val Validator) *Filter {
 	return &Filter{
 		Renderer:        r,
 		FilterClient:    fc,

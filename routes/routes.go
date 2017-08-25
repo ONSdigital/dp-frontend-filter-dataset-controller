@@ -4,13 +4,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/codelist"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dataset"
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/filter"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/hierarchy"
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/renderer"
+	"github.com/ONSdigital/go-ns/clients/codelist"
+	"github.com/ONSdigital/go-ns/clients/dataset"
+	"github.com/ONSdigital/go-ns/clients/filter"
+	"github.com/ONSdigital/go-ns/clients/hierarchy"
+	"github.com/ONSdigital/go-ns/clients/renderer"
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/validator"
@@ -29,7 +29,7 @@ func Init(r *mux.Router) {
 
 	v, err := validator.New(fi)
 	if err != nil {
-		log.ErrorC("failed to crare form validator", err, nil)
+		log.ErrorC("failed to create form validator", err, nil)
 	}
 
 	rend := renderer.New()

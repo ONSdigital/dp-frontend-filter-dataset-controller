@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
+	"github.com/ONSdigital/go-ns/clients/dataset"
+	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
@@ -14,7 +15,7 @@ import (
 func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 
-	dimensions := []data.Dimension{
+	dimensions := []filter.ModelDimension{
 		{
 			Name:   "Time",
 			Values: []string{"January 2017", "January 2016", "January 2015", "January 2014", "January 2013", "January 2012"},
@@ -29,11 +30,11 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		},
 	}
 
-	dataset := data.Dataset{
+	dataset := dataset.Model{
 		ID:          "849209",
 		ReleaseDate: "17 January 2017",
 		NextRelease: "17 February 2017",
-		Contact: data.Contact{
+		Contact: dataset.Contact{
 			Name:      "Matt Rout",
 			Telephone: "07984593234",
 			Email:     "matt@gmail.com",
@@ -41,12 +42,12 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		Title: "Small Area Population Estimates",
 	}
 
-	filter := data.Filter{
+	filter := filter.Model{
 		FilterID: vars["filterID"],
 		Edition:  "12345",
 		Dataset:  "849209",
 		Version:  "2017",
-		Downloads: map[string]data.Download{
+		Downloads: map[string]filter.Download{
 			"csv": {
 				Size: "362783",
 				URL:  "/",

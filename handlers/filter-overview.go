@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
+	"github.com/ONSdigital/go-ns/clients/dataset"
+	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
@@ -25,7 +26,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	}
 
 	codeID := "64d384f1-ea3b-445c-8fb8-aa453f96e58a" // time
-	idNameLookup, err := f.CodeListClient.GetIdNameMap(codeID)
+	idNameLookup, err := f.CodeListClient.GetIDNameMap(codeID)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -33,7 +34,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	}
 
 	codeID = "e44de4c4-d39e-4e2f-942b-3ca10584d078" // goods-and-services
-	map2, err := f.CodeListClient.GetIdNameMap(codeID)
+	map2, err := f.CodeListClient.GetIDNameMap(codeID)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -44,9 +45,9 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		idNameLookup[k] = v
 	}
 
-	var dimensions []data.Dimension
+	var dimensions []filter.ModelDimension
 	for _, dim := range dims {
-		var vals []data.DimensionOption
+		var vals []filter.DimensionOption
 		vals, err = f.FilterClient.GetDimensionOptions(filterID, dim.Name)
 		if err != nil {
 			log.ErrorR(req, err, nil)
@@ -58,7 +59,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 			values = append(values, idNameLookup[val.Option])
 		}
 
-		dimensions = append(dimensions, data.Dimension{
+		dimensions = append(dimensions, filter.ModelDimension{
 			Name:   dim.Name,
 			Values: values,
 		})
@@ -78,7 +79,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}*/
 
-	dataset := data.Dataset{
+	dataset := dataset.Model{
 		ID:          "3784782",
 		Title:       "Consumer Prices Index (COICOP): 2016",
 		URL:         "/datasets/3784782/editions/2017/versions/1",
@@ -86,7 +87,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		NextRelease: "11 Nov 2019",
 		Edition:     "2017",
 		Version:     "1",
-		Contact: data.Contact{
+		Contact: dataset.Contact{
 			Name:      "Matt Rout",
 			Telephone: "07984598308",
 			Email:     "matt@gmail.com",

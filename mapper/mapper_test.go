@@ -3,7 +3,9 @@ package mapper
 import (
 	"testing"
 
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
+	"github.com/ONSdigital/go-ns/clients/codelist"
+	"github.com/ONSdigital/go-ns/clients/dataset"
+	"github.com/ONSdigital/go-ns/clients/filter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -77,9 +79,8 @@ func TestUnitMapper(t *testing.T) {
 	})
 
 	Convey("test CreateListSelector page correctly maps to listSelector frontend model", t, func() {
-		filter := getTestFilter()
 		dataset := getTestDataset()
-		selectedValues := []data.DimensionOption{
+		selectedValues := []filter.DimensionOption{
 			{
 				Option: "38jd83ik",
 			},
@@ -87,8 +88,10 @@ func TestUnitMapper(t *testing.T) {
 				Option: "bcdefg",
 			},
 		}
-		allValues := data.DimensionValues{
-			Items: []data.DimensionValueItem{
+
+		filter := getTestFilter()
+		allValues := codelist.DimensionValues{
+			Items: []codelist.Item{
 				{
 					Label: "2010.02",
 					ID:    "abcdefg",
@@ -138,9 +141,8 @@ func TestUnitMapper(t *testing.T) {
 	})
 
 	Convey("test CreateRangeSelectorPage successfully maps to a rangeSelector page model", t, func() {
-		filter := getTestFilter()
 		dataset := getTestDataset()
-		selectedValues := []data.DimensionOption{
+		selectedValues := []filter.DimensionOption{
 			{
 				Option: "38jd83ik",
 			},
@@ -148,8 +150,10 @@ func TestUnitMapper(t *testing.T) {
 				Option: "bcdefg",
 			},
 		}
-		allValues := data.DimensionValues{
-			Items: []data.DimensionValueItem{
+
+		filter := getTestFilter()
+		allValues := codelist.DimensionValues{
+			Items: []codelist.Item{
 				{
 					Label: "2010.02",
 					ID:    "abcdefg",
@@ -191,8 +195,8 @@ func TestUnitMapper(t *testing.T) {
 	})
 }
 
-func getTestDimensions() []data.Dimension {
-	return []data.Dimension{
+func getTestDimensions() []filter.ModelDimension {
+	return []filter.ModelDimension{
 		{
 			Name:   "year",
 			Values: []string{"2014"},
@@ -216,13 +220,13 @@ func getTestDimensions() []data.Dimension {
 	}
 }
 
-func getTestFilter() data.Filter {
-	return data.Filter{
+func getTestFilter() filter.Model {
+	return filter.Model{
 		FilterID: "12349876",
 		Edition:  "12345",
 		Dataset:  "849209",
 		Version:  "2017",
-		Downloads: map[string]data.Download{
+		Downloads: map[string]filter.Download{
 			"csv": {
 				Size: "362783",
 				URL:  "/",
@@ -235,12 +239,12 @@ func getTestFilter() data.Filter {
 	}
 }
 
-func getTestDataset() data.Dataset {
-	return data.Dataset{
+func getTestDataset() dataset.Model {
+	return dataset.Model{
 		ID:          "849209",
 		ReleaseDate: "17 January 2017",
 		NextRelease: "17 January 2018",
-		Contact: data.Contact{
+		Contact: dataset.Contact{
 			Name:      "Matt Rout",
 			Telephone: "07984593234",
 			Email:     "matt@gmail.com",

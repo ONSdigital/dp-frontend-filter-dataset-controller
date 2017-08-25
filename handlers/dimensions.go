@@ -8,9 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
+	"github.com/ONSdigital/go-ns/clients/codelist"
+	"github.com/ONSdigital/go-ns/clients/dataset"
+	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
@@ -48,7 +50,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 			return
 		} */
 
-	dataset := data.Dataset{
+	dataset := dataset.Model{
 		ID:          "3784782",
 		Title:       "Consumer Prices Index (COICOP): 2016",
 		URL:         "/datasets/3784782/editions/2017/versions/1",
@@ -56,7 +58,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		NextRelease: "11 Nov 2019",
 		Edition:     "2017",
 		Version:     "1",
-		Contact: data.Contact{
+		Contact: dataset.Contact{
 			Name:      "Matt Rout",
 			Telephone: "07984598308",
 			Email:     "matt@gmail.com",
@@ -94,7 +96,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []data.DimensionOption, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) {
+func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dataset dataset.Model) {
 
 	p := mapper.CreateRangeSelectorPage(name, selectedValues, allValues, filter, dataset)
 
@@ -117,7 +119,7 @@ func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name st
 
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
-func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []data.DimensionOption, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) {
+func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dataset dataset.Model) {
 	p := mapper.CreateListSelectorPage(name, selectedValues, allValues, filter, dataset)
 
 	b, err := json.Marshal(p)

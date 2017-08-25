@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
@@ -14,6 +13,10 @@ import (
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/rangeSelector"
+	"github.com/ONSdigital/go-ns/clients/codelist"
+	"github.com/ONSdigital/go-ns/clients/dataset"
+	"github.com/ONSdigital/go-ns/clients/filter"
+	hierarchyClient "github.com/ONSdigital/go-ns/clients/hierarchy"
 	"github.com/ONSdigital/go-ns/log"
 )
 
@@ -30,7 +33,7 @@ var dimensionTitleTranslator = map[string]string{
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
 // front end page model
-func CreateFilterOverview(dimensions []data.Dimension, filter data.Filter, dataset data.Dataset, filterID string) filterOverview.Page {
+func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Model, dataset dataset.Model, filterID string) filterOverview.Page {
 	var p filterOverview.Page
 
 	p.FilterID = filterID
@@ -107,7 +110,7 @@ func CreateFilterOverview(dimensions []data.Dimension, filter data.Filter, datas
 
 // CreateListSelectorPage maps items from API responses to form the model for a
 // dimension list selector page
-func CreateListSelectorPage(name string, selectedValues []data.DimensionOption, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) listSelector.Page {
+func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dataset dataset.Model) listSelector.Page {
 	var p listSelector.Page
 
 	p.SearchDisabled = true
@@ -221,7 +224,7 @@ func CreateListSelectorPage(name string, selectedValues []data.DimensionOption, 
 
 // CreateRangeSelectorPage maps items from API responses to form a dimension range
 // selector page model
-func CreateRangeSelectorPage(name string, selectedValues []data.DimensionOption, allValues data.DimensionValues, filter data.Filter, dataset data.Dataset) rangeSelector.Page {
+func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dataset dataset.Model) rangeSelector.Page {
 	var p rangeSelector.Page
 
 	p.SearchDisabled = true
@@ -323,7 +326,7 @@ func randBool() bool {
 }
 
 // CreatePreviewPage maps data items from API responses to create a preview page
-func CreatePreviewPage(dimensions []data.Dimension, filter data.Filter, dataset data.Dataset, filterID string) previewPage.Page {
+func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, dataset dataset.Model, filterID string) previewPage.Page {
 	var p previewPage.Page
 
 	p.SearchDisabled = true
@@ -370,7 +373,7 @@ func CreatePreviewPage(dimensions []data.Dimension, filter data.Filter, dataset 
 	return p
 }
 
-func getNameIDLookup(vals []data.DimensionValueItem) map[string]string {
+func getNameIDLookup(vals []codelist.Item) map[string]string {
 	lookup := make(map[string]string)
 	for _, val := range vals {
 		lookup[val.Name] = val.ID
@@ -378,7 +381,7 @@ func getNameIDLookup(vals []data.DimensionValueItem) map[string]string {
 	return lookup
 }
 
-func getIDNameLookup(vals []data.DimensionValueItem) map[string]string {
+func getIDNameLookup(vals []codelist.Item) map[string]string {
 	lookup := make(map[string]string)
 	for _, val := range vals {
 		lookup[val.ID] = val.Label
@@ -387,7 +390,7 @@ func getIDNameLookup(vals []data.DimensionValueItem) map[string]string {
 }
 
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
-func CreateHierarchyPage(h data.Hierarchy, parents []data.Parent, d data.Dataset, f data.Filter, met data.Metadata, curPath, dimensionTitle string) hierarchy.Page {
+func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Parent, d dataset.Model, f filter.Model, met dataset.Metadata, curPath, dimensionTitle string) hierarchy.Page {
 	var p hierarchy.Page
 
 	var title string

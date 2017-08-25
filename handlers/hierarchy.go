@@ -9,8 +9,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/data"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
+	"github.com/ONSdigital/go-ns/clients/dataset"
+	"github.com/ONSdigital/go-ns/clients/filter"
+	"github.com/ONSdigital/go-ns/clients/hierarchy"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
@@ -248,7 +250,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	}
 
 	codeid := "e44de4c4-d39e-4e2f-942b-3ca10584d078" // TODO: Remove this when the real code id becomes available
-	idLabelMap, err := f.CodeListClient.GetIdNameMap(codeid)
+	idLabelMap, err := f.CodeListClient.GetIDNameMap(codeid)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -261,11 +263,11 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		selectedLabels = append(selectedLabels, idLabelMap[opt.Option])
 	}
 
-	d := data.Dataset{
+	d := dataset.Model{
 		ID:          "849209",
 		ReleaseDate: "17 January 2017",
 		NextRelease: "17 February 2017",
-		Contact: data.Contact{
+		Contact: dataset.Contact{
 			Name:      "Matt Rout",
 			Telephone: "07984593234",
 			Email:     "matt@gmail.com",
@@ -273,19 +275,19 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		Title: "Consumer Prices Index (COICOP): 2016",
 	}
 
-	fil := data.Filter{
+	fil := filter.Model{
 		FilterID: filterID,
 		Edition:  "12345",
 		Dataset:  "849209",
 		Version:  "2017",
-		Dimensions: []data.Dimension{
+		Dimensions: []filter.ModelDimension{
 			{
 				Name:   dimensionType,
 				Values: selectedLabels,
 				IDs:    selectedIDs,
 			},
 		},
-		Downloads: map[string]data.Download{
+		Downloads: map[string]filter.Download{
 			"csv": {
 				Size: "362783",
 				URL:  "/",
@@ -297,7 +299,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		},
 	}
 
-	met := data.Metadata{
+	met := dataset.Metadata{
 		Name:        "goods and services",
 		Description: "Goods and services provides information ....",
 	}
@@ -326,8 +328,8 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 
 }
 
-func getHierarchyParents(p data.Parent) ([]data.Parent, error) {
-	var parents []data.Parent
+func getHierarchyParents(p hierarchy.Parent) ([]hierarchy.Parent, error) {
+	var parents []hierarchy.Parent
 
 	if p.URL != "" {
 		parents = append(parents, p)
@@ -343,7 +345,7 @@ func getHierarchyParents(p data.Parent) ([]data.Parent, error) {
 		}
 		defer resp.Body.Close()
 
-		var h data.Hierarchy
+		var h hierarchy.Model
 		if err = json.Unmarshal(b, &h); err != nil {
 			return parents, err
 		}
