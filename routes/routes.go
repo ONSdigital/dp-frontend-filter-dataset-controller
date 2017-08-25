@@ -32,7 +32,7 @@ func Init(r *mux.Router) {
 		log.ErrorC("failed to create form validator", err, nil)
 	}
 
-	rend := renderer.New()
+	rend := renderer.New(cfg.RendererURL)
 	fc := filter.New(cfg.FilterAPIURL)
 	dc := dataset.New(cfg.DatasetAPIURL)
 	clc := codelist.New(cfg.CodeListAPIURL)
