@@ -21,7 +21,9 @@ job "dp-frontend-filter-dataset-controller" {
 
       artifact {
         source = "s3::https://s3-eu-west-1.amazonaws.com/{{BUILD_BUCKET}}/dp-frontend-filter-dataset-controller/{{REVISION}}.tar.gz
+      }
 
+      artifact {
         source = "s3::https://s3-eu-west-1.amazonaws.com/{{DEPLOYMENT_BUCKET}}/dp-frontend-filter-dataset-controller/{{REVISION}}.tar.gz"
       }
 
