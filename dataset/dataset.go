@@ -43,22 +43,17 @@ func New(datasetAPIURL string) *Client {
 }
 
 // Healthcheck calls the healthcheck endpoint on the api and alerts the caller of any errors
-func (c *Client) Healthcheck() error {
+func (c *Client) Healthcheck() (string, error) {
 	resp, err := c.cli.Get(c.url + "/healthcheck")
 	if err != nil {
-		return err
+		return "dataset-api", err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return &ErrInvalidDatasetAPIResponse{http.StatusOK, resp.StatusCode, "/healthcheck"}
+		return "dataset-api", &ErrInvalidDatasetAPIResponse{http.StatusOK, resp.StatusCode, "/healthcheck"}
 	}
 
-	return nil
-}
-
-// Name returns the name of the api the client connects to
-func (c *Client) Name() string {
-	return "dataset-api"
+	return "", nil
 }
 
 // GetDataset ...
