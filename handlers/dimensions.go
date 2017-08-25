@@ -41,11 +41,26 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.DatasetClient.GetDataset(filterID, "2016", "v1") // TODO: this will need to be replaced with the real edition/version when it becomes available
-	if err != nil {
-		log.ErrorR(req, err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	/*	dataset, err := f.DatasetClient.GetDataset(filterID, "2016", "v1") // TODO: this will need to be replaced with the real edition/version when it becomes available
+		if err != nil {
+			log.ErrorR(req, err, nil)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		} */
+
+	dataset := data.Dataset{
+		ID:          "3784782",
+		Title:       "Consumer Prices Index (COICOP): 2016",
+		URL:         "/datasets/3784782/editions/2017/versions/1",
+		ReleaseDate: "11 Nov 2017",
+		NextRelease: "11 Nov 2019",
+		Edition:     "2017",
+		Version:     "1",
+		Contact: data.Contact{
+			Name:      "Matt Rout",
+			Telephone: "07984598308",
+			Email:     "matt@gmail.com",
+		},
 	}
 
 	dim, err := f.FilterClient.GetDimension(filterID, name)

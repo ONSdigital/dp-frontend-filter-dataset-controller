@@ -7,10 +7,12 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
+	"github.com/ONSdigital/go-ns/healthcheck"
 )
 
 // Renderer provides an interface for a service template renderer
 type Renderer interface {
+	healthcheck.Client
 	Do(path string, b []byte) ([]byte, error)
 }
 
@@ -38,6 +40,20 @@ func New() Renderer {
 		client: &http.Client{},
 		url:    cfg.RendererURL,
 	}
+}
+
+// Healthcheck calls the healthcheck endpoint on the renderer and returns any errors
+func (r *renderer) Healthcheck() (string, error) {
+	resp, err := r.client.Get(r.url + "/healthcheck")
+	if err != nil {
+		return "renderer", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "renderer", ErrInvalidRendererResponse{resp.StatusCode}
+	}
+
+	return "", nil
 }
 
 // Do sends a request to the renderer service to render a given template

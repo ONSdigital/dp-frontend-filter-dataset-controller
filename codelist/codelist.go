@@ -42,6 +42,20 @@ func New(codelistAPIURL string) *Client {
 	}
 }
 
+// Healthcheck calls the healthcheck endpoint on the api and alerts the caller of any errors
+func (c *Client) Healthcheck() (string, error) {
+	resp, err := c.cli.Get(c.url + "/healthcheck")
+	if err != nil {
+		return "code-list-api", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "code-list-api", &ErrInvalidCodelistAPIResponse{http.StatusOK, resp.StatusCode, "/healthcheck"}
+	}
+
+	return "", nil
+}
+
 // GetValues ...
 func (c *Client) GetValues(id string) (vals data.DimensionValues, err error) {
 	uri := fmt.Sprintf("%s/code-lists/%s/codes", c.url, id)

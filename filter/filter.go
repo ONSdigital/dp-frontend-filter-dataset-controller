@@ -44,6 +44,20 @@ func New(filterAPIURL string) *Client {
 	}
 }
 
+// Healthcheck calls the healthcheck endpoint on the api and alerts the caller of any errors
+func (c *Client) Healthcheck() (string, error) {
+	resp, err := c.cli.Get(c.url + "/healthcheck")
+	if err != nil {
+		return "filter-api", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "filter-api", &ErrInvalidFilterAPIResponse{http.StatusOK, resp.StatusCode, "/healthcheck"}
+	}
+
+	return "", nil
+}
+
 // GetDimension returns information on a requested dimension name for a given filterID
 func (c *Client) GetDimension(filterID, name string) (dim data.FilterDimension, err error) {
 	uri := fmt.Sprintf("%s/filters/%s/dimensions/%s", c.url, filterID, name)

@@ -75,6 +75,12 @@
 			"revisionTime": "2017-07-17T12:56:40Z"
 		},
 		{
+			"checksumSHA1": "frommRRYL1krd0sO1SDYP0hyxTg=",
+			"path": "github.com/ONSdigital/go-ns/healthcheck",
+			"revision": "5ddbd13c0113ba1b369c6ebb24e394cd7669548c",
+			"revisionTime": "2017-08-24T15:32:32Z"
+		},
+		{
 			"checksumSHA1": "AjbjbhFVAOP/1NU5HL+uy+X/yJo=",
 			"path": "github.com/ONSdigital/go-ns/log",
 			"revision": "0728a5717abea304f9fab56417680ce800d0e35e",

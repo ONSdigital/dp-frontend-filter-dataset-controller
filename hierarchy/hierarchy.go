@@ -42,8 +42,22 @@ func New(hierarchyAPIURL string) *Client {
 	}
 }
 
+// Healthcheck calls the healthcheck endpoint on the api and alerts the caller of any errors
+func (c *Client) Healthcheck() (string, error) {
+	resp, err := c.cli.Get(c.url + "/healthcheck")
+	if err != nil {
+		return "hierarchy-api", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "hierarchy-api", &ErrInvalidHierarchyAPIResponse{http.StatusOK, resp.StatusCode, "/healthcheck"}
+	}
+
+	return "", nil
+}
+
 // GetHierarchy returns the hierarchy for the requested path
-func (c Client) GetHierarchy(path string) (h data.Hierarchy, err error) {
+func (c *Client) GetHierarchy(path string) (h data.Hierarchy, err error) {
 	uri := fmt.Sprintf("%s/hierarchies/%s", c.url, path)
 
 	resp, err := c.cli.Get(uri)
