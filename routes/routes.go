@@ -2,7 +2,6 @@ package routes
 
 import (
 	"os"
-	"time"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
@@ -18,7 +17,7 @@ import (
 )
 
 // Init initialises routes for the service
-func Init(r *mux.Router) {
+func Init(r *mux.Router) (*renderer.Renderer, *filter.Client, *dataset.Client, *codelist.Client, *hierarchy.Client) {
 	cfg := config.Get()
 
 	fi, err := os.Open("rules.json")
@@ -38,16 +37,6 @@ func Init(r *mux.Router) {
 	clc := codelist.New(cfg.CodeListAPIURL)
 	hc := hierarchy.New(cfg.HierarchyAPIURL)
 	filter := handlers.NewFilter(rend, fc, dc, clc, hc, v)
-
-	go func() {
-		for {
-			timer := time.NewTimer(time.Second * 60)
-
-			healthcheck.MonitorExternal(fc, dc, clc, hc, rend)
-
-			<-timer.C
-		}
-	}()
 
 	r.Path("/healthcheck").HandlerFunc(healthcheck.Do)
 
@@ -71,4 +60,6 @@ func Init(r *mux.Router) {
 	r.Path("/filters/{filterID}/hierarchies/{name}/{uri:.*}/remove-all").HandlerFunc(filter.HierarchyRemoveAll)
 	r.Path("/filters/{filterID}/hierarchies/{name}/{uri:.*}").Methods("GET").HandlerFunc(filter.Hierarchy)
 	r.Path("/filters/{filterID}/hierarchies/{name}").Methods("GET").HandlerFunc(filter.Hierarchy)
+
+	return rend, fc, dc, clc, hc
 }
