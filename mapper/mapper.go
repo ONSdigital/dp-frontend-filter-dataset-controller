@@ -158,18 +158,18 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 	}
 
 	var allListValues, allListIDs []string
+	valueIDmap := make(map[string]string)
 	for _, val := range allValues.Items {
 		allListValues = append(allListValues, val.Label)
 		allListIDs = append(allListIDs, val.ID)
+		valueIDmap[val.Label] = val.ID
 	}
 
 	if name == "time" {
 
-		dats, _ := dates.ConvertToReadable(allListValues)
-
-		timeIDLookup := make(map[time.Time]string)
-		for i, dat := range dats {
-			timeIDLookup[dat] = allListIDs[i]
+		dats, err := dates.ConvertToReadable(allListValues)
+		if err != nil {
+			log.Error(err, nil)
 		}
 
 		dats = dates.Sort(dats)
@@ -183,7 +183,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 		for _, val := range selectedDats {
 			p.Data.FiltersAdded = append(p.Data.FiltersAdded, listSelector.Filter{
-				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s?selectorType=list", filter.FilterID, name, timeIDLookup[val]),
+				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s?selectorType=list", filter.FilterID, name, valueIDmap[fmt.Sprintf("%d.%02d", val.Year(), val.Month())]),
 				Label:     dates.ConvertToMonthYear(val),
 			})
 		}
@@ -198,7 +198,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 			p.Data.RangeData.Values = append(p.Data.RangeData.Values, listSelector.Value{
 				Label:      dates.ConvertToMonthYear(val),
-				ID:         timeIDLookup[val],
+				ID:         valueIDmap[fmt.Sprintf("%d.%02d", val.Year(), val.Month())],
 				IsSelected: isSelected,
 			})
 		}
@@ -274,8 +274,17 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 		}
 	}
 
+	p.Data.FiltersAmount = len(selectedRangeValues)
+
+	for _, val := range allValues.Items {
+		p.Data.RangeData.Values = append(p.Data.RangeData.Values, val.Label)
+	}
+
 	if name == "time" {
-		selectedDats, _ := dates.ConvertToReadable(selectedRangeValues)
+		selectedDats, err := dates.ConvertToReadable(selectedRangeValues)
+		if err != nil {
+			log.Error(err, nil)
+		}
 
 		timeIDLookup := make(map[time.Time]string)
 		for i, dat := range selectedDats {
@@ -290,12 +299,25 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 				Label:     dates.ConvertToMonthYear(val),
 			})
 		}
-	}
 
-	p.Data.FiltersAmount = len(selectedRangeValues)
+		allDats, err := dates.ConvertToReadable(p.Data.RangeData.Values)
+		if err != nil {
+			log.Error(err, nil)
+		}
 
-	for _, val := range allValues.Items {
-		p.Data.RangeData.Values = append(p.Data.RangeData.Values, val.Label)
+		allDats = dates.Sort(allDats)
+
+		firstYear := allDats[0].Year()
+		lastYear := allDats[len(allDats)-1].Year()
+		diffYears := lastYear - firstYear
+
+		for i := 0; i < diffYears+1; i++ {
+			p.Data.DateRangeData.YearValues = append(p.Data.DateRangeData.YearValues, fmt.Sprintf("%d", firstYear+i))
+		}
+
+		for i := 0; i < 12; i++ {
+			p.Data.DateRangeData.MonthValues = append(p.Data.DateRangeData.MonthValues, time.Month(i+1).String())
+		}
 	}
 
 	p.Data.RangeData.URL = fmt.Sprintf("/filters/%s/dimensions/%s/range", filter.FilterID, name)

@@ -14,6 +14,7 @@ import (
 	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/log"
+	"github.com/ONSdigital/go-ns/validator"
 	"github.com/gorilla/mux"
 )
 
@@ -143,6 +144,10 @@ func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name str
 type Range struct {
 	Start          string `schema:"start"`
 	End            string `schema:"end"`
+	StartMonth     string `schema:"start-month"`
+	StartYear      string `schema:"start-year"`
+	EndMonth       string `schema:"end-month"`
+	EndYear        string `schema:"end-year"`
 	SaveAndReturn  string `schema:"save-and-return"`
 	AddAll         string `schema:"add-all"`
 	AddAllRange    string `schema:"add-all-range"`
@@ -165,6 +170,10 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 
 	if err := f.val.Validate(req, &r); err != nil {
 		log.ErrorR(req, err, nil)
+		if _, ok := err.(validator.ErrFormValidationFailed); ok {
+			errs := err.(validator.ErrFormValidationFailed).GetFieldErrors()
+			log.Debug("field errors", log.Data{"errs": errs})
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -215,7 +224,7 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 			r.End = dates.ConvertToMonthYear(dats[len(dats)-1])
 		}
 
-		start, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s", r.Start))
+		start, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s %s", r.StartMonth, r.StartYear))
 		if err != nil {
 			log.ErrorR(req, err, nil)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -223,7 +232,7 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 			http.Redirect(w, req, redirectURL, 302)
 		}
 
-		end, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s", r.End))
+		end, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s %s", r.EndMonth, r.EndYear))
 		if err != nil {
 			log.ErrorR(req, err, nil)
 			w.WriteHeader(http.StatusInternalServerError)
