@@ -142,16 +142,16 @@ func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name str
 
 // Range represents range labels in the range selector page
 type Range struct {
-	Start          string `schema:"start"`
-	End            string `schema:"end"`
-	StartMonth     string `schema:"start-month"`
-	StartYear      string `schema:"start-year"`
-	EndMonth       string `schema:"end-month"`
-	EndYear        string `schema:"end-year"`
-	SaveAndReturn  string `schema:"save-and-return"`
 	AddAll         string `schema:"add-all"`
 	AddAllRange    string `schema:"add-all-range"`
+	End            string `schema:"end"`
+	EndMonth       string `schema:"end-month"`
+	EndYear        string `schema:"end-year"`
 	RemoveAllRange string `schema:"remove-all-range"`
+	Start          string `schema:"start"`
+	StartMonth     string `schema:"start-month"`
+	StartYear      string `schema:"start-year"`
+	SaveAndReturn  string `schema:"save-and-return"`
 }
 
 // AddRange will add a range of values to a filter job

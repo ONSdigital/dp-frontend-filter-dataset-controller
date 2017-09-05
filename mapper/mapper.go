@@ -166,7 +166,6 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 	}
 
 	if name == "time" {
-
 		dats, err := dates.ConvertToReadable(allListValues)
 		if err != nil {
 			log.Error(err, nil)
