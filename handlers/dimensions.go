@@ -18,6 +18,67 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// GetDimensionOptionsJSON will return a list of selected options from the filter api with corresponding label
+func (f *Filter) GetDimensionOptionsJSON(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	name := vars["name"]
+	filterID := vars["filterID"]
+
+	opts, err := f.FilterClient.GetDimensionOptions(filterID, name)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	idNameMap, err := f.CodeListClient.GetIDNameMap("64d384f1-ea3b-445c-8fb8-aa453f96e58a") // TODO: replace with a real codelist code
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	type labelID struct {
+		Label string `json:"label"`
+		ID    string `json:"id"`
+	}
+
+	var codedDates []string
+	labelIDMap := make(map[string]string)
+	for _, opt := range opts {
+		codedDates = append(codedDates, idNameMap[opt.Option])
+		labelIDMap[idNameMap[opt.Option]] = opt.Option
+	}
+
+	readbleDates, err := dates.ConvertToReadable(codedDates)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	readbleDates = dates.Sort(readbleDates)
+
+	var lids []labelID
+	for _, date := range readbleDates {
+		lid := labelID{
+			Label: fmt.Sprintf("%s %d", date.Month(), date.Year()),
+			ID:    labelIDMap[fmt.Sprintf("%d.%02d", date.Year(), date.Month())],
+		}
+
+		lids = append(lids, lid)
+	}
+
+	b, err := json.Marshal(lids)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(b)
+}
+
 // DimensionSelector controls the render of the range selector template
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {

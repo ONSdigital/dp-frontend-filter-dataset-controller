@@ -184,6 +184,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 			p.Data.FiltersAdded = append(p.Data.FiltersAdded, listSelector.Filter{
 				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s?selectorType=list", filter.FilterID, name, valueIDmap[fmt.Sprintf("%d.%02d", val.Year(), val.Month())]),
 				Label:     dates.ConvertToMonthYear(val),
+				ID:        valueIDmap[fmt.Sprintf("%d.%02d", val.Year(), val.Month())],
 			})
 		}
 
@@ -296,6 +297,7 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 			p.Data.FiltersAdded = append(p.Data.FiltersAdded, rangeSelector.Filter{
 				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s", filter.FilterID, name, timeIDLookup[val]),
 				Label:     dates.ConvertToMonthYear(val),
+				ID:        timeIDLookup[val],
 			})
 		}
 
@@ -470,6 +472,7 @@ func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Pare
 				p.Data.FiltersAdded = append(p.Data.FiltersAdded, hierarchy.Filter{
 					Label:     val,
 					RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, dim.IDs[i]),
+					ID:        dim.IDs[i],
 				})
 			}
 		}

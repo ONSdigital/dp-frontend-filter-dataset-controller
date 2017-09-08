@@ -51,6 +51,7 @@ func Init(r *mux.Router) (*renderer.Renderer, *filter.Client, *dataset.Client, *
 	r.Path("/filters/{filterID}/dimensions/{name}/range").Methods("POST").HandlerFunc(filter.AddRange)
 	r.Path("/filters/{filterID}/dimensions/{name}/list").Methods("POST").HandlerFunc(filter.AddList)
 	r.Path("/filters/{filterID}/dimensions/{name}{uri:.*}/remove-all").HandlerFunc(filter.DimensionRemoveAll)
+	r.Path("/filters/{filterID}/dimensions/{name}/options.json").HandlerFunc(filter.GetDimensionOptionsJSON)
 
 	r.Path("/filters/{filterID}/hierarchies/{name}/update").Methods("POST").HandlerFunc(filter.HierarchyUpdate)
 	r.Path("/filters/{filterID}/hierarchies/{name}/{uri:.*}/update").Methods("POST").HandlerFunc(filter.HierarchyUpdate)
