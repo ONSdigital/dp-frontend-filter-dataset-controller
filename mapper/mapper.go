@@ -2,7 +2,6 @@ package mapper
 
 import (
 	"fmt"
-	"math/rand"
 	"strconv"
 	"time"
 
@@ -341,13 +340,6 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 
 }
 
-// Random boolean generator
-func randBool() bool {
-	b := rand.Float32() < 0.2
-	log.Debug("random bool", log.Data{"bool": b})
-	return b
-}
-
 // CreatePreviewPage maps data items from API responses to create a preview page
 func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, dataset dataset.Model, filterID string) previewPage.Page {
 	var p previewPage.Page
@@ -391,7 +383,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 		})
 	}
 
-	p.IsContentLoaded = randBool()
+	p.IsContentLoaded = true
 
 	return p
 }

@@ -18,6 +18,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type labelID struct {
+	Label string `json:"label"`
+	ID    string `json:"id"`
+}
+
 // GetDimensionOptionsJSON will return a list of selected options from the filter api with corresponding label
 func (f *Filter) GetDimensionOptionsJSON(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
@@ -38,35 +43,34 @@ func (f *Filter) GetDimensionOptionsJSON(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	type labelID struct {
-		Label string `json:"label"`
-		ID    string `json:"id"`
-	}
-
-	var codedDates []string
-	labelIDMap := make(map[string]string)
-	for _, opt := range opts {
-		codedDates = append(codedDates, idNameMap[opt.Option])
-		labelIDMap[idNameMap[opt.Option]] = opt.Option
-	}
-
-	readbleDates, err := dates.ConvertToReadable(codedDates)
-	if err != nil {
-		log.ErrorR(req, err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	readbleDates = dates.Sort(readbleDates)
-
 	var lids []labelID
-	for _, date := range readbleDates {
-		lid := labelID{
-			Label: fmt.Sprintf("%s %d", date.Month(), date.Year()),
-			ID:    labelIDMap[fmt.Sprintf("%d.%02d", date.Year(), date.Month())],
+
+	if name == "time" {
+
+		var codedDates []string
+		labelIDMap := make(map[string]string)
+		for _, opt := range opts {
+			codedDates = append(codedDates, idNameMap[opt.Option])
+			labelIDMap[idNameMap[opt.Option]] = opt.Option
 		}
 
-		lids = append(lids, lid)
+		readbleDates, err := dates.ConvertToReadable(codedDates)
+		if err != nil {
+			log.ErrorR(req, err, nil)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		readbleDates = dates.Sort(readbleDates)
+
+		for _, date := range readbleDates {
+			lid := labelID{
+				Label: fmt.Sprintf("%s %d", date.Month(), date.Year()),
+				ID:    labelIDMap[fmt.Sprintf("%d.%02d", date.Year(), date.Month())],
+			}
+
+			lids = append(lids, lid)
+		}
 	}
 
 	b, err := json.Marshal(lids)

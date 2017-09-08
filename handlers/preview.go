@@ -11,9 +11,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var waited = make(map[string]bool)
+
 // PreviewPage controls the rendering of the preview and download page
 func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
+	filterID := vars["filterID"]
 
 	dimensions := []filter.ModelDimension{
 		{
@@ -60,6 +63,11 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	}
 
 	p := mapper.CreatePreviewPage(dimensions, filter, dataset, vars["filterID"])
+
+	if _, ok := waited[filterID]; !ok {
+		p.IsContentLoaded = false
+	}
+	waited[filterID] = true
 
 	body, err := json.Marshal(p)
 	if err != nil {
