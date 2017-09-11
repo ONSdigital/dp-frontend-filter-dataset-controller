@@ -295,8 +295,6 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Debug("adding range", log.Data{"r": r})
-
 	var redirectURL string
 	if len(r.SaveAndReturn) > 0 {
 		redirectURL = fmt.Sprintf("/filters/%s/dimensions", filterID)
@@ -390,6 +388,14 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 	}
 
 	http.Redirect(w, req, redirectURL, 302)
+}
+
+// DimensionAddAll will add all dimension values to a basket
+func (f *Filter) DimensionAddAll(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	name := vars["name"]
+	filterID := vars["filterID"]
+	f.addAll(w, req, fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name))
 }
 
 func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL string) {
