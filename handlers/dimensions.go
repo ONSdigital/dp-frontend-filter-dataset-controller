@@ -23,8 +23,60 @@ type labelID struct {
 	ID    string `json:"id"`
 }
 
-// GetDimensionOptionsJSON will return a list of selected options from the filter api with corresponding label
-func (f *Filter) GetDimensionOptionsJSON(w http.ResponseWriter, req *http.Request) {
+// GetAllDimensionOptionsJSON will return a list of all options from the codelist api
+func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	name := vars["name"]
+
+	idNameMap, err := f.CodeListClient.GetIDNameMap("64d384f1-ea3b-445c-8fb8-aa453f96e58a") // TODO: replace with a real codelist code
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	var lids []labelID
+
+	if name == "time" {
+
+		var codedDates []string
+		labelIDMap := make(map[string]string)
+		for k, v := range idNameMap {
+			codedDates = append(codedDates, v)
+			labelIDMap[v] = k
+		}
+
+		readbleDates, err := dates.ConvertToReadable(codedDates)
+		if err != nil {
+			log.ErrorR(req, err, nil)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		readbleDates = dates.Sort(readbleDates)
+
+		for _, date := range readbleDates {
+			lid := labelID{
+				Label: fmt.Sprintf("%s %d", date.Month(), date.Year()),
+				ID:    labelIDMap[fmt.Sprintf("%d.%02d", date.Year(), date.Month())],
+			}
+
+			lids = append(lids, lid)
+		}
+	}
+
+	b, err := json.Marshal(lids)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(b)
+}
+
+// GetSelectedDimensionOptionsJSON will return a list of selected options from the filter api with corresponding label
+func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
