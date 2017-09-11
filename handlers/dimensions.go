@@ -367,9 +367,18 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 		}
 
 		values = dates.ConvertToCoded(dats)
+		var options []string
 		for i, dat := range dats {
 			if dat.Equal(start) || dat.After(start) && dat.Before(end) || dat.Equal(end) {
 				f.FilterClient.AddDimensionValue(filterID, name, labelIDMap[values[i]])
+				options = append(options, labelIDMap[values[i]])
+			}
+
+			if len(r.SaveAndReturn) == 0 {
+				if err := f.FilterClient.AddDimensionValues(filterID, name, options); err != nil {
+					log.ErrorR(req, err, nil)
+					return
+				}
 			}
 		}
 	}
