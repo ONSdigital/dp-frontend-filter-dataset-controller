@@ -305,6 +305,11 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 			http.Redirect(w, req, redirectURL, 302)
 		}
 
+		if start.Equal(end) && len(r.SaveAndReturn) > 0 {
+			start = dats[0]
+			end = dats[len(dats)-1]
+		}
+
 		if end.Before(start) {
 			log.Info("end date before start date", log.Data{"start": start, "end": end})
 			w.WriteHeader(http.StatusInternalServerError)
