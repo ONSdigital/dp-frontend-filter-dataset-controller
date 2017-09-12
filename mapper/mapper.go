@@ -36,6 +36,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 	var p filterOverview.Page
 
 	p.FilterID = filterID
+	p.Metadata.Title = "Filter Options"
 
 	disableButton := true
 
