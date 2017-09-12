@@ -2,7 +2,6 @@ package mapper
 
 import (
 	"fmt"
-	"math/rand"
 	"strconv"
 	"time"
 
@@ -37,6 +36,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 	var p filterOverview.Page
 
 	p.FilterID = filterID
+	p.Metadata.Title = "Filter Options"
 
 	disableButton := true
 
@@ -184,6 +184,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 			p.Data.FiltersAdded = append(p.Data.FiltersAdded, listSelector.Filter{
 				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s?selectorType=list", filter.FilterID, name, valueIDmap[fmt.Sprintf("%d.%02d", val.Year(), val.Month())]),
 				Label:     dates.ConvertToMonthYear(val),
+				ID:        valueIDmap[fmt.Sprintf("%d.%02d", val.Year(), val.Month())],
 			})
 		}
 
@@ -296,6 +297,7 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 			p.Data.FiltersAdded = append(p.Data.FiltersAdded, rangeSelector.Filter{
 				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s", filter.FilterID, name, timeIDLookup[val]),
 				Label:     dates.ConvertToMonthYear(val),
+				ID:        timeIDLookup[val],
 			})
 		}
 
@@ -337,13 +339,6 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 
 	return p
 
-}
-
-// Random boolean generator
-func randBool() bool {
-	b := rand.Float32() < 0.2
-	log.Debug("random bool", log.Data{"bool": b})
-	return b
 }
 
 // CreatePreviewPage maps data items from API responses to create a preview page
@@ -389,7 +384,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 		})
 	}
 
-	p.IsContentLoaded = randBool()
+	p.IsContentLoaded = true
 
 	return p
 }
@@ -470,6 +465,7 @@ func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Pare
 				p.Data.FiltersAdded = append(p.Data.FiltersAdded, hierarchy.Filter{
 					Label:     val,
 					RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, dim.IDs[i]),
+					ID:        dim.IDs[i],
 				})
 			}
 		}
