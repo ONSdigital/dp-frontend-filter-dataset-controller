@@ -20,7 +20,7 @@ func Get() *Config {
 		RendererURL:     "http://localhost:20010",
 		CodeListAPIURL:  "http://localhost:22400",
 		FilterAPIURL:    "http://localhost:22100",
-		DatasetAPIURL:   "http://localhost:20012",
+		DatasetAPIURL:   "http://localhost:22000",
 		HierarchyAPIURL: "http://localhost:22600",
 	}
 

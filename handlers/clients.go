@@ -22,10 +22,13 @@ type FilterClient interface {
 	AddDimensionValues(filterID, name string, options []string) error
 }
 
-// DatasetClient contains methods expected for a dataset client
+// DatasetClient is an interface with methods required for a dataset client
 type DatasetClient interface {
 	healthcheck.Client
-	GetDataset(id, edition, version string) (d dataset.Model, err error)
+	Get(id string) (m dataset.Model, err error)
+	GetEditions(id string) (m []dataset.Edition, err error)
+	GetVersions(id, edition string) (m []dataset.Version, err error)
+	GetVersion(id, edition, version string) (m dataset.Version, err error)
 }
 
 // CodelistClient contains methods expected for a codelist client

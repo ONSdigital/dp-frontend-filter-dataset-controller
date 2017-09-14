@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
-	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
@@ -33,36 +33,46 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		},
 	}
 
-	dataset := dataset.Model{
-		ID:          "849209",
-		ReleaseDate: "17 January 2017",
-		NextRelease: "17 February 2017",
-		Contact: dataset.Contact{
-			Name:      "Matt Rout",
-			Telephone: "07984593234",
-			Email:     "matt@gmail.com",
-		},
-		Title: "Small Area Population Estimates",
+	fil, err := f.FilterClient.GetJobState(filterID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	filter := filter.Model{
-		FilterID: vars["filterID"],
-		Edition:  "12345",
-		Dataset:  "849209",
-		Version:  "2017",
-		Downloads: map[string]filter.Download{
-			"csv": {
-				Size: "362783",
-				URL:  "/",
-			},
-			"xls": {
-				Size: "373929",
-				URL:  "/",
-			},
+	fil.Downloads = map[string]filter.Download{
+		"csv": {
+			Size: "362783",
+			URL:  "/",
+		},
+		"xls": {
+			Size: "373929",
+			URL:  "/",
 		},
 	}
 
-	p := mapper.CreatePreviewPage(dimensions, filter, dataset, vars["filterID"])
+	versionURL := fil.DatasetFilterID
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	dataset, err := f.DatasetClient.Get(datasetID)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	p := mapper.CreatePreviewPage(dimensions, fil, dataset, filterID, datasetID, ver.ReleaseDate)
 
 	if _, ok := waited[filterID]; !ok {
 		p.IsContentLoaded = false

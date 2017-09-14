@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
-	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
@@ -72,29 +72,27 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	/*dataset, err := f.DatasetClient.GetDataset(filterID, "2016", "v1")
+	versionURL := filter.DatasetFilterID
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
-	}*/
-
-	dataset := dataset.Model{
-		ID:          "3784782",
-		Title:       "Consumer Prices Index (COICOP): 2016",
-		URL:         "/datasets/3784782/editions/2017/versions/1",
-		ReleaseDate: "11 Nov 2017",
-		NextRelease: "11 Nov 2019",
-		Edition:     "2017",
-		Version:     "1",
-		Contact: dataset.Contact{
-			Name:      "Matt Rout",
-			Telephone: "07984598308",
-			Email:     "matt@gmail.com",
-		},
+	}
+	dataset, err := f.DatasetClient.Get(datasetID)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	p := mapper.CreateFilterOverview(dimensions, filter, dataset, filterID)
+	p := mapper.CreateFilterOverview(dimensions, filter, dataset, filterID, datasetID, ver.ReleaseDate)
 
 	b, err := json.Marshal(p)
 	if err != nil {

@@ -32,7 +32,7 @@ var dimensionTitleTranslator = map[string]string{
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
 // front end page model
-func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Model, dataset dataset.Model, filterID string) filterOverview.Page {
+func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterID, datasetID, releaseDate string) filterOverview.Page {
 	var p filterOverview.Page
 
 	p.FilterID = filterID
@@ -90,8 +90,8 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 	p.SearchDisabled = true
 
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: dataset.Title,
-		URI:   fmt.Sprintf("/datasets/%s/editions/%s/versions/%s", filter.Dataset, filter.Edition, filter.Version),
+		Title: dst.Title,
+		URI:   filter.DatasetFilterID,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter this dataset",
@@ -99,10 +99,10 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dataset.Contact.Name,
-		ReleaseDate: dataset.ReleaseDate,
-		NextRelease: dataset.NextRelease,
-		DatasetID:   dataset.ID,
+		Contact:     dst.Contact.Name,
+		ReleaseDate: releaseDate,
+		NextRelease: dst.NextRelease,
+		DatasetID:   datasetID,
 	}
 
 	return p
@@ -110,7 +110,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 
 // CreateListSelectorPage maps items from API responses to form the model for a
 // dimension list selector page
-func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dataset dataset.Model) listSelector.Page {
+func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dst dataset.Model, datasetID, releaseDate string) listSelector.Page {
 	var p listSelector.Page
 
 	p.SearchDisabled = true
@@ -118,8 +118,8 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 	p.Data.Title = dimensionTitleTranslator[name]
 
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: dataset.Title,
-		URI:   fmt.Sprintf("/datasets/%s/editions/%s/versions/%s", filter.Dataset, filter.Edition, filter.Version),
+		Title: dst.Title,
+		URI:   filter.DatasetFilterID,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter this dataset",
@@ -213,10 +213,10 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dataset.Contact.Name,
-		ReleaseDate: dataset.ReleaseDate,
-		NextRelease: dataset.NextRelease,
-		DatasetID:   dataset.ID,
+		Contact:     dst.Contact.Name,
+		ReleaseDate: releaseDate,
+		NextRelease: dst.NextRelease,
+		DatasetID:   datasetID,
 	}
 
 	return p
@@ -224,14 +224,14 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 // CreateRangeSelectorPage maps items from API responses to form a dimension range
 // selector page model
-func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dataset dataset.Model) rangeSelector.Page {
+func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dst dataset.Model, datasetID, releaseDate string) rangeSelector.Page {
 	var p rangeSelector.Page
 
 	p.SearchDisabled = true
 
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: dataset.Title,
-		URI:   fmt.Sprintf("/datasets/%s/editions/%s/versions/%s", filter.Dataset, filter.Edition, filter.Version),
+		Title: dst.Title,
+		URI:   filter.DatasetFilterID,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter this dataset",
@@ -331,10 +331,10 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dataset.Contact.Name,
-		ReleaseDate: dataset.ReleaseDate,
-		NextRelease: dataset.NextRelease,
-		DatasetID:   dataset.ID,
+		Contact:     dst.Contact.Name,
+		ReleaseDate: releaseDate,
+		NextRelease: dst.NextRelease,
+		DatasetID:   datasetID,
 	}
 
 	return p
@@ -342,14 +342,14 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 }
 
 // CreatePreviewPage maps data items from API responses to create a preview page
-func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, dataset dataset.Model, filterID string) previewPage.Page {
+func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterID, datasetID, releaseDate string) previewPage.Page {
 	var p previewPage.Page
 
 	p.SearchDisabled = true
 
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: dataset.Title,
-		URI:   fmt.Sprintf("/datasets/%s/editions/%s/versions/%s", filter.Dataset, filter.Edition, filter.Version),
+		Title: dst.Title,
+		URI:   filter.DatasetFilterID,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter this dataset",
@@ -363,10 +363,10 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dataset.Contact.Name,
-		ReleaseDate: dataset.ReleaseDate,
-		NextRelease: dataset.NextRelease,
-		DatasetID:   dataset.ID,
+		Contact:     dst.Contact.Name,
+		ReleaseDate: releaseDate,
+		NextRelease: dst.NextRelease,
+		DatasetID:   datasetID,
 	}
 
 	for ext, d := range filter.Downloads {
@@ -406,7 +406,7 @@ func getIDNameLookup(vals []codelist.Item) map[string]string {
 }
 
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
-func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Parent, d dataset.Model, f filter.Model, met dataset.Metadata, curPath, dimensionTitle string) hierarchy.Page {
+func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Parent, dst dataset.Model, f filter.Model, curPath, dimensionTitle, datasetID, releaseDate string) hierarchy.Page {
 	var p hierarchy.Page
 
 	var title string
@@ -419,8 +419,8 @@ func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Pare
 	p.SearchDisabled = true
 
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: d.Title,
-		URI:   fmt.Sprintf("/datasets/%s/editions/%s/versions/%s", f.Dataset, f.Edition, f.Version),
+		Title: dst.Title,
+		URI:   f.DatasetFilterID,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter this dataset",
@@ -492,16 +492,16 @@ func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Pare
 
 	}
 
-	p.Data.Metadata = hierarchy.Metadata(met)
+	//p.Data.Metadata = hierarchy.Metadata(met)
 	p.Data.SaveAndReturn.URL = curPath + "/update"
 	p.Data.Cancel.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     d.Contact.Name,
-		ReleaseDate: d.ReleaseDate,
-		NextRelease: d.NextRelease,
-		DatasetID:   d.ID,
+		Contact:     dst.Contact.Name,
+		ReleaseDate: releaseDate,
+		NextRelease: dst.NextRelease,
+		DatasetID:   datasetID,
 	}
 
 	return p

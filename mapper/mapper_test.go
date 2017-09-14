@@ -15,7 +15,7 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dataset := getTestDataset()
 
-		fop := CreateFilterOverview(dimensions, filter, dataset, filter.FilterID)
+		fop := CreateFilterOverview(dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992")
 		So(fop.FilterID, ShouldEqual, filter.FilterID)
 		So(fop.SearchDisabled, ShouldBeTrue)
 		So(fop.Data.Dimensions, ShouldHaveLength, 5)
@@ -42,12 +42,12 @@ func TestUnitMapper(t *testing.T) {
 		So(fop.Data.Cancel.URL, ShouldEqual, "/")
 		So(fop.Breadcrumb, ShouldHaveLength, 2)
 		So(fop.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(fop.Breadcrumb[0].URI, ShouldEqual, "/datasets/"+filter.Dataset+"/editions/"+filter.Edition+"/versions/"+filter.Version)
+		So(fop.Breadcrumb[0].URI, ShouldEqual, filter.DatasetFilterID)
 		So(fop.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
 		So(fop.Metadata.Footer.Enabled, ShouldBeTrue)
 		So(fop.Metadata.Footer.Contact, ShouldEqual, dataset.Contact.Name)
-		So(fop.Metadata.Footer.ReleaseDate, ShouldEqual, dataset.ReleaseDate)
-		So(fop.Metadata.Footer.DatasetID, ShouldEqual, dataset.ID)
+		So(fop.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")
+		So(fop.Metadata.Footer.DatasetID, ShouldEqual, "12345")
 	})
 
 	Convey("test CreatePreviewPage correctly maps to previewPage frontend model", t, func() {
@@ -55,19 +55,19 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dataset := getTestDataset()
 
-		pp := CreatePreviewPage(dimensions, filter, dataset, filter.FilterID)
+		pp := CreatePreviewPage(dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992")
 		So(pp.SearchDisabled, ShouldBeTrue)
 		So(pp.Breadcrumb, ShouldHaveLength, 3)
 		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(pp.Breadcrumb[0].URI, ShouldEqual, "/datasets/"+filter.Dataset+"/editions/"+filter.Edition+"/versions/"+filter.Version)
+		So(pp.Breadcrumb[0].URI, ShouldEqual, filter.DatasetFilterID)
 		So(pp.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
 		So(pp.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
 		So(pp.Breadcrumb[2].Title, ShouldEqual, "Preview")
 		So(pp.Data.FilterID, ShouldEqual, filter.FilterID)
 		So(pp.Metadata.Footer.Enabled, ShouldBeTrue)
 		So(pp.Metadata.Footer.Contact, ShouldEqual, dataset.Contact.Name)
-		So(pp.Metadata.Footer.ReleaseDate, ShouldEqual, dataset.ReleaseDate)
-		So(pp.Metadata.Footer.DatasetID, ShouldEqual, dataset.ID)
+		So(pp.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")
+		So(pp.Metadata.Footer.DatasetID, ShouldEqual, "12345")
 		So(pp.Data.Downloads[0].Extension, ShouldEqual, "csv")
 		So(pp.Data.Downloads[0].Size, ShouldEqual, "362783")
 		So(pp.Data.Downloads[0].URI, ShouldEqual, "/")
@@ -108,14 +108,14 @@ func TestUnitMapper(t *testing.T) {
 			NumberOfResults: 1,
 		}
 
-		p := CreateListSelectorPage("time", selectedValues, allValues, filter, dataset)
+		p := CreateListSelectorPage("time", selectedValues, allValues, filter, dataset, "12345", "11-11-1992")
 		So(p.Data.Title, ShouldEqual, "Time")
 		So(p.SearchDisabled, ShouldBeTrue)
 		So(p.FilterID, ShouldEqual, filter.FilterID)
 
 		So(p.Breadcrumb, ShouldHaveLength, 3)
 		So(p.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(p.Breadcrumb[0].URI, ShouldEqual, "/datasets/"+filter.Dataset+"/editions/"+filter.Edition+"/versions/"+filter.Version)
+		So(p.Breadcrumb[0].URI, ShouldEqual, filter.DatasetFilterID)
 		So(p.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
 		So(p.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
 		So(p.Breadcrumb[2].Title, ShouldEqual, "Time")
@@ -136,8 +136,8 @@ func TestUnitMapper(t *testing.T) {
 		So(p.Data.FiltersAmount, ShouldEqual, 2)
 		So(p.Metadata.Footer.Enabled, ShouldBeTrue)
 		So(p.Metadata.Footer.Contact, ShouldEqual, dataset.Contact.Name)
-		So(p.Metadata.Footer.ReleaseDate, ShouldEqual, dataset.ReleaseDate)
-		So(p.Metadata.Footer.DatasetID, ShouldEqual, dataset.ID)
+		So(p.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")
+		So(p.Metadata.Footer.DatasetID, ShouldEqual, "12345")
 	})
 
 	Convey("test CreateRangeSelectorPage successfully maps to a rangeSelector page model", t, func() {
@@ -170,14 +170,14 @@ func TestUnitMapper(t *testing.T) {
 			NumberOfResults: 1,
 		}
 
-		p := CreateRangeSelectorPage("time", selectedValues, allValues, filter, dataset)
+		p := CreateRangeSelectorPage("time", selectedValues, allValues, filter, dataset, "12345", "11-11-1992")
 		So(p.Data.Title, ShouldEqual, "Time")
 		So(p.SearchDisabled, ShouldBeTrue)
 		So(p.FilterID, ShouldEqual, filter.FilterID)
 
 		So(p.Breadcrumb, ShouldHaveLength, 3)
 		So(p.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(p.Breadcrumb[0].URI, ShouldEqual, "/datasets/"+filter.Dataset+"/editions/"+filter.Edition+"/versions/"+filter.Version)
+		So(p.Breadcrumb[0].URI, ShouldEqual, filter.DatasetFilterID)
 		So(p.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
 		So(p.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
 		So(p.Breadcrumb[2].Title, ShouldEqual, "Time")
@@ -190,8 +190,8 @@ func TestUnitMapper(t *testing.T) {
 		So(p.Data.RemoveAll.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/remove-all")
 		So(p.Metadata.Footer.Enabled, ShouldBeTrue)
 		So(p.Metadata.Footer.Contact, ShouldEqual, dataset.Contact.Name)
-		So(p.Metadata.Footer.ReleaseDate, ShouldEqual, dataset.ReleaseDate)
-		So(p.Metadata.Footer.DatasetID, ShouldEqual, dataset.ID)
+		So(p.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")
+		So(p.Metadata.Footer.DatasetID, ShouldEqual, "12345")
 	})
 }
 
@@ -222,10 +222,11 @@ func getTestDimensions() []filter.ModelDimension {
 
 func getTestFilter() filter.Model {
 	return filter.Model{
-		FilterID: "12349876",
-		Edition:  "12345",
-		Dataset:  "849209",
-		Version:  "2017",
+		FilterID:        "12349876",
+		DatasetFilterID: "/filters/12345/editions/2016/versions/1",
+		Edition:         "12345",
+		Dataset:         "849209",
+		Version:         "2017",
 		Downloads: map[string]filter.Download{
 			"csv": {
 				Size: "362783",
@@ -241,8 +242,6 @@ func getTestFilter() filter.Model {
 
 func getTestDataset() dataset.Model {
 	return dataset.Model{
-		ID:          "849209",
-		ReleaseDate: "17 January 2017",
 		NextRelease: "17 January 2018",
 		Contact: dataset.Contact{
 			Name:      "Matt Rout",

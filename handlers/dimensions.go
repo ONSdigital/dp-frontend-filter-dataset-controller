@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/go-ns/clients/codelist"
 	"github.com/ONSdigital/go-ns/clients/dataset"
@@ -161,26 +162,25 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	/*	dataset, err := f.DatasetClient.GetDataset(filterID, "2016", "v1") // TODO: this will need to be replaced with the real edition/version when it becomes available
-		if err != nil {
-			log.ErrorR(req, err, nil)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		} */
+	versionURL := filter.DatasetFilterID
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	dataset := dataset.Model{
-		ID:          "3784782",
-		Title:       "Consumer Prices Index (COICOP): 2016",
-		URL:         "/datasets/3784782/editions/2017/versions/1",
-		ReleaseDate: "11 Nov 2017",
-		NextRelease: "11 Nov 2019",
-		Edition:     "2017",
-		Version:     "1",
-		Contact: dataset.Contact{
-			Name:      "Matt Rout",
-			Telephone: "07984598308",
-			Email:     "matt@gmail.com",
-		},
+	dataset, err := f.DatasetClient.Get(datasetID)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	dim, err := f.FilterClient.GetDimension(filterID, name)
@@ -208,15 +208,15 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 
 	selectorType := req.URL.Query().Get("selectorType")
 	if selectorType == "list" {
-		f.listSelector(w, req, name, selectedValues, allValues, filter, dataset)
+		f.listSelector(w, req, name, selectedValues, allValues, filter, dataset, datasetID, ver.ReleaseDate)
 	} else {
-		f.rangeSelector(w, req, name, selectedValues, allValues, filter, dataset)
+		f.rangeSelector(w, req, name, selectedValues, allValues, filter, dataset, datasetID, ver.ReleaseDate)
 	}
 }
 
-func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dataset dataset.Model) {
+func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dataset dataset.Model, datasetID, releaseDate string) {
 
-	p := mapper.CreateRangeSelectorPage(name, selectedValues, allValues, filter, dataset)
+	p := mapper.CreateRangeSelectorPage(name, selectedValues, allValues, filter, dataset, datasetID, releaseDate)
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -237,8 +237,8 @@ func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name st
 
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
-func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dataset dataset.Model) {
-	p := mapper.CreateListSelectorPage(name, selectedValues, allValues, filter, dataset)
+func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dataset dataset.Model, datasetID, releaseDate string) {
+	p := mapper.CreateListSelectorPage(name, selectedValues, allValues, filter, dataset, datasetID, releaseDate)
 
 	b, err := json.Marshal(p)
 	if err != nil {

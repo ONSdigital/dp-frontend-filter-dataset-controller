@@ -9,8 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
-	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/clients/hierarchy"
 	"github.com/ONSdigital/go-ns/log"
@@ -263,48 +263,42 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		selectedLabels = append(selectedLabels, idLabelMap[opt.Option])
 	}
 
-	d := dataset.Model{
-		ID:          "849209",
-		ReleaseDate: "17 January 2017",
-		NextRelease: "17 February 2017",
-		Contact: dataset.Contact{
-			Name:      "Matt Rout",
-			Telephone: "07984593234",
-			Email:     "matt@gmail.com",
-		},
-		Title: "Consumer Prices Index (COICOP): 2016",
+	fil, err := f.FilterClient.GetJobState(filterID)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	fil := filter.Model{
-		FilterID: filterID,
-		Edition:  "12345",
-		Dataset:  "849209",
-		Version:  "2017",
-		Dimensions: []filter.ModelDimension{
-			{
-				Name:   dimensionType,
-				Values: selectedLabels,
-				IDs:    selectedIDs,
-			},
-		},
-		Downloads: map[string]filter.Download{
-			"csv": {
-				Size: "362783",
-				URL:  "/",
-			},
-			"xls": {
-				Size: "373929",
-				URL:  "/",
-			},
+	versionURL := fil.DatasetFilterID
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	dataset, err := f.DatasetClient.Get(datasetID)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	fil.Dimensions = []filter.ModelDimension{
+		{
+			Name:   dimensionType,
+			Values: selectedLabels,
+			IDs:    selectedIDs,
 		},
 	}
 
-	met := dataset.Metadata{
-		Name:        "goods and services",
-		Description: "Goods and services provides information ....",
-	}
-
-	p := mapper.CreateHierarchyPage(h, parents, d, fil, met, req.URL.Path, dimensionType)
+	p := mapper.CreateHierarchyPage(h, parents, dataset, fil, req.URL.Path, dimensionType, datasetID, ver.ReleaseDate)
 
 	body, err := json.Marshal(p)
 	if err != nil {

@@ -80,8 +80,6 @@ func (f *Filter) Geography(w http.ResponseWriter, req *http.Request) {
 
 	p.SearchDisabled = true
 
-	p.Metadata.Footer = getStubbedMetadataFooter()
-
 	b, err := json.Marshal(p)
 	if err != nil {
 		log.Error(err, nil)
