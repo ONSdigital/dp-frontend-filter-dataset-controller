@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
@@ -93,7 +94,18 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	latestURL, err := url.Parse(dataset.Links.LatestVersion.URL)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	p := mapper.CreateFilterOverview(dimensions, filter, dataset, filterID, datasetID, ver.ReleaseDate)
+
+	if latestURL.Path == versionURL {
+		p.Data.IsLatestVersion = true
+	}
 
 	b, err := json.Marshal(p)
 	if err != nil {

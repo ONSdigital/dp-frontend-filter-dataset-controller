@@ -16,6 +16,7 @@ type FilterOverview struct {
 	PreviewAndDownloadDisabled bool        `json:"preview_and_download_disabled"`
 	ClearAll                   Link        `json:"clear_all"`
 	Cancel                     Link        `json:"cancel"`
+	IsLatestVersion            bool        `json:"is_latest_version"`
 }
 
 // Dimension ...

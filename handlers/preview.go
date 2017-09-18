@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
@@ -77,7 +78,18 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	latestURL, err := url.Parse(dataset.Links.LatestVersion.URL)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	p := mapper.CreatePreviewPage(dimensions, fil, dataset, filterID, datasetID, ver.ReleaseDate)
+
+	if latestURL.Path == versionURL {
+		p.Data.IsLatestVersion = true
+	}
 
 	if fil.State != "completed" {
 		p.IsContentLoaded = false
