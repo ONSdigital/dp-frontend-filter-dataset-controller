@@ -11,8 +11,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var waited = make(map[string]bool)
-
 // PreviewPage controls the rendering of the preview and download page
 func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
@@ -40,18 +38,25 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fil.Downloads = map[string]filter.Download{
-		"csv": {
-			Size: "362783",
-			URL:  "/",
-		},
-		"xls": {
-			Size: "373929",
-			URL:  "/",
-		},
+	if fil.State == "created" {
+		fil.State = "submitted"
+
+		f.FilterClient.RemoveDimension(filterID, "time")
+		f.FilterClient.RemoveDimension(filterID, "goods-and-services")
+
+		f.FilterClient.AddDimension(filterID, "Time")
+		f.FilterClient.AddDimension(filterID, "Geography")
+		f.FilterClient.AddDimension(filterID, "Aggregate")
+
+		f.FilterClient.AddDimensionValues(filterID, "Time", []string{"Jan-96", "Feb-96", "Feb-97", "Feb-98", "Mar-02", "Jun-08", "Dec-10", "Nov-11"})
+		f.FilterClient.AddDimensionValue(filterID, "Geography", "K02000001")
+		f.FilterClient.AddDimensionValues(filterID, "Aggregate", []string{"cpi1dim1G10100", "cpi1dim1G20100"})
+
+		f.FilterClient.UpdateJob(fil)
 	}
 
-	versionURL := fil.DatasetFilterID
+	// versionURL := filter.
+	versionURL := "/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL)
 	if err != nil {
 		log.Error(err, nil)
@@ -74,10 +79,9 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 
 	p := mapper.CreatePreviewPage(dimensions, fil, dataset, filterID, datasetID, ver.ReleaseDate)
 
-	if _, ok := waited[filterID]; !ok {
+	if fil.State != "completed" {
 		p.IsContentLoaded = false
 	}
-	waited[filterID] = true
 
 	body, err := json.Marshal(p)
 	if err != nil {

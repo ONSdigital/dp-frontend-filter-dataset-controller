@@ -159,6 +159,18 @@ func (_mr *MockFilterClientMockRecorder) RemoveDimensionValue(arg0, arg1, arg2 i
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveDimensionValue", arg0, arg1, arg2)
 }
 
+// UpdateJob mocks base method
+func (_m *MockFilterClient) UpdateJob(_param0 filter.Model) error {
+	ret := _m.ctrl.Call(_m, "UpdateJob", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateJob indicates an expected call of UpdateJob
+func (_mr *MockFilterClientMockRecorder) UpdateJob(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "UpdateJob", arg0)
+}
+
 // MockDatasetClient is a mock of DatasetClient interface
 type MockDatasetClient struct {
 	ctrl     *gomock.Controller

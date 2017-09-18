@@ -20,6 +20,7 @@ type FilterClient interface {
 	RemoveDimension(filterID, name string) (err error)
 	AddDimension(filterID, name string) (err error)
 	AddDimensionValues(filterID, name string, options []string) error
+	UpdateJob(m filter.Model) error
 }
 
 // DatasetClient is an interface with methods required for a dataset client

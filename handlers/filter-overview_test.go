@@ -32,8 +32,8 @@ func TestUnitFilterOverview(t *testing.T) {
 			mockFilterClient.EXPECT().GetDimensionOptions("12345", "Goods and Services").Return([]filter.DimensionOption{}, nil)
 			mockFilterClient.EXPECT().GetJobState("12345").Return(filter.Model{DatasetFilterID: "/datasets/12345/editions/2016/versions/1"}, nil)
 			mockDatasetClient := NewMockDatasetClient(mockCtrl)
-			mockDatasetClient.EXPECT().Get("12345").Return(dataset.Model{}, nil)
-			mockDatasetClient.EXPECT().GetVersion("12345", "2016", "1").Return(dataset.Version{}, nil)
+			mockDatasetClient.EXPECT().Get("95c4669b-3ae9-4ba7-b690-87e890a1c67c").Return(dataset.Model{}, nil)
+			mockDatasetClient.EXPECT().GetVersion("95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1").Return(dataset.Version{}, nil)
 			mockRenderer := NewMockRenderer(mockCtrl)
 			mockRenderer.EXPECT().Do("dataset-filter/filter-overview", gomock.Any()).Return([]byte("some-bytes"), nil)
 

@@ -65,11 +65,8 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 			}
 		}
 
-		if d.Hierarchy.ID != "" {
-			fod.Link.URL = fmt.Sprintf("/filters/%s/dimensions/%s/%s", filterID, d.Name, d.Hierarchy.ID)
-		} else {
-			fod.Link.URL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, d.Name)
-		}
+		fod.Link.URL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, d.Name)
+
 		if len(fod.AddedCategories) > 0 {
 			fod.Link.Label = "Filter"
 		} else {
