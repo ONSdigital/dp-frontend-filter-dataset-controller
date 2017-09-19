@@ -54,7 +54,7 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 			vals = append(vals, val.Option)
 		}
 
-		if err := f.FilterClient.AddDimensionValues(filterID, dim.Name, vals); err != nil {
+		if err := f.FilterClient.AddDimensionValues(newFilterID, dim.Name, vals); err != nil {
 			log.ErrorR(req, err, nil)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
