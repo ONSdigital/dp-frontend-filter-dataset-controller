@@ -63,5 +63,7 @@ func Init(r *mux.Router) (*renderer.Renderer, *filter.Client, *dataset.Client, *
 	r.Path("/filters/{filterID}/hierarchies/{name}/{uri:.*}").Methods("GET").HandlerFunc(filter.Hierarchy)
 	r.Path("/filters/{filterID}/hierarchies/{name}").Methods("GET").HandlerFunc(filter.Hierarchy)
 
+	r.Path("/filters/{filterID}/use-latest-version").HandlerFunc(filter.UseLatest)
+
 	return rend, fc, dc, clc, hc
 }

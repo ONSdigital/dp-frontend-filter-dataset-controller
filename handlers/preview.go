@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -90,6 +91,9 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	if latestURL.Path == versionURL {
 		p.Data.IsLatestVersion = true
 	}
+
+	p.Data.LatestVersion.DatasetLandingPageURL = versionURL
+	p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterID)
 
 	if fil.State != "completed" {
 		p.IsContentLoaded = false
