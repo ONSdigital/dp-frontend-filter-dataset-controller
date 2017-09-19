@@ -14,12 +14,12 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	oldJob, err := f.FilterClient.GetJobState(filterID)
+	/*oldJob, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
-	}
+	}*/
 
 	dims, err := f.FilterClient.GetDimensions(filterID)
 	if err != nil {
