@@ -373,19 +373,13 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-		if len(r.SaveAndReturn) == 0 {
-			if err := f.FilterClient.AddDimensionValues(filterID, name, options); err != nil {
+		for _, opt := range options {
+			if err := f.FilterClient.AddDimensionValue(filterID, name, opt); err != nil {
 				log.ErrorR(req, err, nil)
 				return
 			}
-		} else {
-			for _, opt := range options {
-				if err := f.FilterClient.AddDimensionValue(filterID, name, opt); err != nil {
-					log.ErrorR(req, err, nil)
-					return
-				}
-			}
 		}
+
 	}
 
 	http.Redirect(w, req, redirectURL, 302)
