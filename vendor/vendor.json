@@ -9,22 +9,10 @@
 			"revisionTime": "2017-07-18T12:33:43Z"
 		},
 		{
-			"checksumSHA1": "o0XvWcvnMQKkkfwOjZ/kTb2QWqw=",
-			"path": "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/ageSelectorList",
-			"revision": "fd87760f288b942010fdb9db9ae9ffe91212ad36",
-			"revisionTime": "2017-07-18T12:33:43Z"
-		},
-		{
 			"checksumSHA1": "WFzDhLFdAQv2xOSf1cfT5ao2Aqs=",
 			"path": "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview",
 			"revision": "bb3aa88cefc1b32f0c431d6773407983fc69e6bb",
 			"revisionTime": "2017-09-18T14:39:20Z"
-		},
-		{
-			"checksumSHA1": "SYAN6yoO2rm77uoFL385zKDM4Qk=",
-			"path": "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/geography",
-			"revision": "fd87760f288b942010fdb9db9ae9ffe91212ad36",
-			"revisionTime": "2017-07-18T12:33:43Z"
 		},
 		{
 			"checksumSHA1": "LIctl/UiTCCoBj2/PN/iK/OFOG0=",
@@ -49,18 +37,6 @@
 			"path": "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/rangeSelector",
 			"revision": "6e8f6da58fb44e177821771ae820b9a07d625082",
 			"revisionTime": "2017-09-08T08:49:08Z"
-		},
-		{
-			"checksumSHA1": "fAyPS71FyNTWhcs+JmSkZupUaeE=",
-			"path": "github.com/ONSdigital/dp-frontend-models/model/datasetpages/finishPage",
-			"revision": "0a740088ce959a2df8be8679cd99cfce14680e42",
-			"revisionTime": "2017-06-20T08:14:29Z"
-		},
-		{
-			"checksumSHA1": "F7QBp7GvgJJBjqmHOyVGys+1yAM=",
-			"path": "github.com/ONSdigital/dp-frontend-models/model/datasetpages/startPage",
-			"revision": "0a740088ce959a2df8be8679cd99cfce14680e42",
-			"revisionTime": "2017-06-20T08:14:29Z"
 		},
 		{
 			"checksumSHA1": "69d0SN73mCOiO1fhExC6wwTe8eM=",
@@ -141,6 +117,18 @@
 			"revisionTime": "2017-06-14T19:52:02Z"
 		},
 		{
+			"checksumSHA1": "yIkYzW7bzAD81zHyuCNmEj4+oxQ=",
+			"path": "github.com/gopherjs/gopherjs/js",
+			"revision": "b40cd48c38f9a18eb3db20d163bad78de12cf0b7",
+			"revisionTime": "2017-09-06T18:39:36Z"
+		},
+		{
+			"checksumSHA1": "iIUYZyoanCQQTUaWsu8b+iOSPt4=",
+			"path": "github.com/gorilla/context",
+			"revision": "aed02d124ae4a0e94fea4541c8effd05bf0c8296",
+			"revisionTime": "2016-05-25T20:33:19Z"
+		},
+		{
 			"checksumSHA1": "6PQFibmHgsXFHoRQPmkw2V+59Lk=",
 			"path": "github.com/gorilla/mux",
 			"revision": "18fca31550181693b3a834a15b74b564b3605876",
@@ -211,6 +199,12 @@
 			"path": "github.com/smartystreets/goconvey/convey/reporting",
 			"revision": "9e8dc3f972df6c8fcc0375ef492c24d0bb204857",
 			"revisionTime": "2017-06-02T16:46:21Z"
+		},
+		{
+			"checksumSHA1": "tY+5thYxjKDUQyQXYcBqogmMS5U=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "314a259e304ff91bd6985da2a7149bbf91237993",
+			"revisionTime": "2017-07-19T03:44:26Z"
 		}
 	],
 	"rootPath": "github.com/ONSdigital/dp-frontend-filter-dataset-controller"
