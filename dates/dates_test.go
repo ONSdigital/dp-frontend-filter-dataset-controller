@@ -10,7 +10,7 @@ import (
 func TestUnitDates(t *testing.T) {
 	Convey("test ConvertToReadable", t, func() {
 		Convey("converts a string slice with values in the format `yyyy.mm` to time.Time slice", func() {
-			times, err := ConvertToReadable([]string{"2006.05"})
+			times, err := ConvertToReadable([]string{"May-06"})
 			So(err, ShouldBeNil)
 			So(times, ShouldHaveLength, 1)
 			So(times[0].Month().String(), ShouldEqual, "May")
@@ -18,7 +18,7 @@ func TestUnitDates(t *testing.T) {
 		})
 
 		Convey("test error thrown if unable to parse date", func() {
-			times, err := ConvertToReadable([]string{"2010.13"})
+			times, err := ConvertToReadable([]string{"Nop-13"})
 			So(err, ShouldNotBeNil)
 			So(times, ShouldBeEmpty)
 		})
@@ -47,8 +47,8 @@ func TestUnitDates(t *testing.T) {
 		time3, _ := time.Parse("01-02-2006", "10-01-2006")
 
 		codedDates := ConvertToCoded([]time.Time{time1, time2, time3})
-		So(codedDates[0], ShouldEqual, "2006.07")
-		So(codedDates[1], ShouldEqual, "2006.02")
-		So(codedDates[2], ShouldEqual, "2006.10")
+		So(codedDates[0], ShouldEqual, "Jul-06")
+		So(codedDates[1], ShouldEqual, "Feb-06")
+		So(codedDates[2], ShouldEqual, "Oct-06")
 	})
 }

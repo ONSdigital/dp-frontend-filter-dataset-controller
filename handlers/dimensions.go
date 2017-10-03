@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"regexp"
 	"sync"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
-	"github.com/ONSdigital/go-ns/clients/codelist"
 	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/log"
@@ -24,12 +24,27 @@ type labelID struct {
 	ID    string `json:"id"`
 }
 
-// GetAllDimensionOptionsJSON will return a list of all options from the codelist api
+// GetAllDimensionOptionsJSON will return a list of all options from the dataset api
 func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]
+	filterID := vars["filterID"]
 
-	idNameMap, err := f.CodeListClient.GetIDNameMap("64d384f1-ea3b-445c-8fb8-aa453f96e58a") // TODO: replace with a real codelist code
+	fj, err := f.FilterClient.GetJobState(filterID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	versionURL, err := url.Parse(fj.Links.Version.HRef)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	idNameMap, err := f.getIDNameMap(versionURL.Path, name)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -59,7 +74,7 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 		for _, date := range readbleDates {
 			lid := labelID{
 				Label: fmt.Sprintf("%s %d", date.Month(), date.Year()),
-				ID:    labelIDMap[fmt.Sprintf("%d.%02d", date.Year(), date.Month())],
+				ID:    labelIDMap[date.Format("Jan-06")],
 			}
 
 			lids = append(lids, lid)
@@ -76,6 +91,25 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 	w.Write(b)
 }
 
+func (f *Filter) getIDNameMap(versionURL, dimension string) (map[string]string, error) {
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL)
+	if err != nil {
+		return nil, err
+	}
+
+	idNameMap := make(map[string]string)
+	opts, err := f.DatasetClient.GetOptions(datasetID, edition, version, dimension)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, opt := range opts.Items {
+		idNameMap[opt.Option] = opt.Label
+	}
+
+	return idNameMap, nil
+}
+
 // GetSelectedDimensionOptionsJSON will return a list of selected options from the filter api with corresponding label
 func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
@@ -89,7 +123,20 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 		return
 	}
 
-	idNameMap, err := f.CodeListClient.GetIDNameMap("64d384f1-ea3b-445c-8fb8-aa453f96e58a") // TODO: replace with a real codelist code
+	fj, err := f.FilterClient.GetJobState(filterID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	versionURL, err := url.Parse(fj.Links.Version.HRef)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	idNameMap, err := f.getIDNameMap(versionURL.Path, name)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -119,7 +166,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 		for _, date := range readbleDates {
 			lid := labelID{
 				Label: fmt.Sprintf("%s %d", date.Month(), date.Year()),
-				ID:    labelIDMap[fmt.Sprintf("%d.%02d", date.Year(), date.Month())],
+				ID:    labelIDMap[date.Format("Jan-06")],
 			}
 
 			lids = append(lids, lid)
@@ -143,10 +190,11 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 	name := vars["name"]
 	filterID := vars["filterID"]
 
-	if name == "goods-and-services" || name == "CPI" {
-		url := fmt.Sprintf("/filters/%s/hierarchies/%s", filterID, name)
+	/*	if name == "aggregate" || name == "CPI" {
+		//url := fmt.Sprintf("/filters/%s/hierarchies/%s", filterID, name)
+		url := fmt.Sprintf("/filters/%s/dimensions/%s?selectorType=list", filterID, name)
 		http.Redirect(w, req, url, 302)
-	}
+	} */
 
 	filter, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
@@ -162,9 +210,20 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	//versionURL := filter.DatasetFilterID
-	versionURL := "/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL)
+	fj, err := f.FilterClient.GetJobState(filterID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	versionURL, err := url.Parse(fj.Links.Version.HRef)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -184,23 +243,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dim, err := f.FilterClient.GetDimension(filterID, name)
-	if err != nil {
-		log.ErrorR(req, err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	log.Debug("dimension", log.Data{"dimension": dim})
-
-	/*codeID := getCodeIDFromURI(dim.URI) // TODO: uncomment this code when the codelist api is updated with real urls
-	if codeID == "" {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}*/
-
-	codeID := "64d384f1-ea3b-445c-8fb8-aa453f96e58a" // TODO: remove this with real codeids when available
-	allValues, err := f.CodeListClient.GetValues(codeID)
+	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, name)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -215,7 +258,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dataset dataset.Model, datasetID, releaseDate string) {
+func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.Model, datasetID, releaseDate string) {
 
 	p := mapper.CreateRangeSelectorPage(name, selectedValues, allValues, filter, dataset, datasetID, releaseDate)
 
@@ -238,7 +281,7 @@ func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name st
 
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
-func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dataset dataset.Model, datasetID, releaseDate string) {
+func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.Model, datasetID, releaseDate string) {
 	p := mapper.CreateListSelectorPage(name, selectedValues, allValues, filter, dataset, datasetID, releaseDate)
 
 	b, err := json.Marshal(p)
@@ -373,6 +416,7 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 
+		log.InfoR(req, "options", log.Data{"options": options, "values": values})
 		for _, opt := range options {
 			if err := f.FilterClient.AddDimensionValue(filterID, name, opt); err != nil {
 				log.ErrorR(req, err, nil)
@@ -398,8 +442,27 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 	name := vars["name"]
 	filterID := vars["filterID"]
 
-	codeID := "64d384f1-ea3b-445c-8fb8-aa453f96e58a"
-	vals, err := f.CodeListClient.GetValues(codeID)
+	fj, err := f.FilterClient.GetJobState(filterID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	versionURL, err := url.Parse(fj.Links.Version.HRef)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+	if err != nil {
+		log.Error(err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	vals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		return
@@ -407,7 +470,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 
 	var options []string
 	for _, val := range vals.Items {
-		options = append(options, val.ID)
+		options = append(options, val.Option)
 	}
 
 	if err := f.FilterClient.AddDimensionValues(filterID, name, options); err != nil {
@@ -482,29 +545,21 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 }
 
 func (f *Filter) getDimensionValues(filterID, name string) (values []string, labelIDMap map[string]string, err error) {
-	dim, err := f.FilterClient.GetDimension(filterID, name)
+	versionURL := "/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL)
 	if err != nil {
 		return
 	}
 
-	log.Debug("dimension", log.Data{"dimension": dim})
-
-	/*codeID := getCodeIDFromURI(dim.URI) // TODO: uncomment when real codeid becomes available
-	if codeID == "" {
-		err = errors.New("missing code id from uri")
-		return
-	}*/
-
-	codeID := "64d384f1-ea3b-445c-8fb8-aa453f96e58a"
-	allValues, err := f.CodeListClient.GetValues(codeID)
+	vals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name)
 	if err != nil {
 		return
 	}
 
 	labelIDMap = make(map[string]string)
-	for _, val := range allValues.Items {
+	for _, val := range vals.Items {
 		values = append(values, val.Label)
-		labelIDMap[val.Label] = val.ID
+		labelIDMap[val.Label] = val.Option
 	}
 
 	return
