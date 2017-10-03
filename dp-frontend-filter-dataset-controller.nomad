@@ -60,4 +60,57 @@ job "dp-frontend-filter-dataset-controller" {
       }
     }
   }
+  
+  group "publishing" {
+    count = "{{PUBLISHING_TASK_COUNT}}"
+
+    constraint {
+      attribute = "${node.class}"
+      value     = "publishing"
+    }
+
+    task "dp-frontend-filter-dataset-controller" {
+      driver = "exec"
+
+      artifact {
+        source = "s3::https://s3-eu-west-1.amazonaws.com/{{BUILD_BUCKET}}/dp-frontend-filter-dataset-controller/{{REVISION}}.tar.gz"
+      }
+
+      artifact {
+        source = "s3::https://s3-eu-west-1.amazonaws.com/{{DEPLOYMENT_BUCKET}}/dp-frontend-filter-dataset-controller/{{REVISION}}.tar.gz"
+      }
+
+      config {
+        command = "${NOMAD_TASK_DIR}/start-task"
+
+        args = [
+          "${NOMAD_TASK_DIR}/dp-frontend-filter-dataset-controller",
+        ]
+      }
+
+      service {
+        name = "dp-frontend-filter-dataset-controller"
+        port = "http"
+        tags = ["publishing"]
+      }
+
+      resources {
+        cpu    = "{{PUBLISHING_RESOURCE_CPU}}"
+        memory = "{{PUBLISHING_RESOURCE_MEM}}"
+
+        network {
+          port "http" {}
+        }
+      }
+
+      template {
+        source      = "${NOMAD_TASK_DIR}/vars-template"
+        destination = "${NOMAD_TASK_DIR}/vars"
+      }
+
+      vault {
+        policies = ["dp-frontend-filter-dataset-controller"]
+      }
+    }
+  }
 }
