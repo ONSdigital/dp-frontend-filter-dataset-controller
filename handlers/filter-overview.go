@@ -87,13 +87,6 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		})
 	}
 
-	filter, err := f.FilterClient.GetJobState(filterID)
-	if err != nil {
-		log.ErrorR(req, err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
 	dataset, err := f.DatasetClient.Get(datasetID)
 	if err != nil {
 		log.Error(err, nil)
@@ -114,7 +107,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreateFilterOverview(dimensions, filter, dataset, filterID, datasetID, ver.ReleaseDate)
+	p := mapper.CreateFilterOverview(dimensions, fj, dataset, filterID, datasetID, ver.ReleaseDate)
 
 	if latestURL.Path == versionURL.Path {
 		p.Data.IsLatestVersion = true

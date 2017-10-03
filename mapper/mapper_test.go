@@ -41,7 +41,6 @@ func TestUnitMapper(t *testing.T) {
 		So(fop.Data.Cancel.URL, ShouldEqual, "/")
 		So(fop.Breadcrumb, ShouldHaveLength, 2)
 		So(fop.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(fop.Breadcrumb[0].URI, ShouldEqual, filter.DatasetFilterID)
 		So(fop.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
 		So(fop.Metadata.Footer.Enabled, ShouldBeTrue)
 		So(fop.Metadata.Footer.Contact, ShouldEqual, dataset.Contacts[0].Name)
@@ -58,7 +57,6 @@ func TestUnitMapper(t *testing.T) {
 		So(pp.SearchDisabled, ShouldBeTrue)
 		So(pp.Breadcrumb, ShouldHaveLength, 3)
 		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(pp.Breadcrumb[0].URI, ShouldEqual, filter.DatasetFilterID)
 		So(pp.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
 		So(pp.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
 		So(pp.Breadcrumb[2].Title, ShouldEqual, "Preview")
@@ -113,7 +111,6 @@ func TestUnitMapper(t *testing.T) {
 
 		So(p.Breadcrumb, ShouldHaveLength, 3)
 		So(p.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(p.Breadcrumb[0].URI, ShouldEqual, filter.DatasetFilterID)
 		So(p.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
 		So(p.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
 		So(p.Breadcrumb[2].Title, ShouldEqual, "Time")
@@ -175,7 +172,6 @@ func TestUnitMapper(t *testing.T) {
 
 		So(p.Breadcrumb, ShouldHaveLength, 3)
 		So(p.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(p.Breadcrumb[0].URI, ShouldEqual, filter.DatasetFilterID)
 		So(p.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
 		So(p.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
 		So(p.Breadcrumb[2].Title, ShouldEqual, "Time")
@@ -220,11 +216,15 @@ func getTestDimensions() []filter.ModelDimension {
 
 func getTestFilter() filter.Model {
 	return filter.Model{
-		FilterID:        "12349876",
-		DatasetFilterID: "/filters/12345/editions/2016/versions/1",
-		Edition:         "12345",
-		Dataset:         "849209",
-		Version:         "2017",
+		FilterID: "12349876",
+		Edition:  "12345",
+		Dataset:  "849209",
+		Version:  "2017",
+		Links: filter.Links{
+			Version: filter.Link{
+				HRef: "/datasets/1234/editions/5678/versions/1",
+			},
+		},
 		Downloads: map[string]filter.Download{
 			"csv": {
 				Size: "362783",

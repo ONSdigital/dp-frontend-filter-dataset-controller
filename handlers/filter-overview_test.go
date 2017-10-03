@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ONSdigital/go-ns/clients/dataset"
+	dataset "github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
@@ -21,10 +21,9 @@ func TestUnitFilterOverview(t *testing.T) {
 		Convey("test FilterOverview can successfully load a page", func() {
 			mockFilterClient := NewMockFilterClient(mockCtrl)
 			mockFilterClient.EXPECT().GetDimensions("12345").Return([]filter.Dimension{filter.Dimension{Name: "Day"}, filter.Dimension{Name: "Goods and Services"}}, nil)
-			mockCodeListClient := NewMockCodelistClient(mockCtrl)
 			mockFilterClient.EXPECT().GetDimensionOptions("12345", "Day").Return([]filter.DimensionOption{}, nil)
 			mockFilterClient.EXPECT().GetDimensionOptions("12345", "Goods and Services").Return([]filter.DimensionOption{}, nil)
-			mockFilterClient.EXPECT().GetJobState("12345").Return(filter.Model{DatasetFilterID: "/datasets/12345/editions/2016/versions/1"}, nil)
+			mockFilterClient.EXPECT().GetJobState("12345").Return(filter.Model{Links: filter.Links{Version: filter.Link{HRef: "/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"}}}, nil)
 			mockDatasetClient := NewMockDatasetClient(mockCtrl)
 			mockDatasetClient.EXPECT().GetDimensions("95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1").Return(dataset.Dimensions{Items: []dataset.Dimension{{ID: "geography"}}}, nil)
 			mockDatasetClient.EXPECT().GetOptions("95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1", "geography")
@@ -37,7 +36,7 @@ func TestUnitFilterOverview(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, mockCodeListClient, nil, nil)
+			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil)
 			router.Path("/filters/{filterID}/dimensions").HandlerFunc(f.FilterOverview)
 
 			router.ServeHTTP(w, req)
