@@ -101,9 +101,14 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 		Title: "Filter this dataset",
 	})
 
+	var name string
+	if len(dst.Contacts) > 0 {
+		name = dst.Contacts[0].Name
+	}
+
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dst.Contacts[0].Name,
+		Contact:     name,
 		ReleaseDate: releaseDate,
 		NextRelease: dst.NextRelease,
 		DatasetID:   datasetID,
@@ -242,9 +247,14 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 	p.Data.FiltersAmount = len(selectedListValues)
 
+	var contactName string
+	if len(dst.Contacts) > 0 {
+		contactName = dst.Contacts[0].Name
+	}
+
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dst.Contacts[0].Name,
+		Contact:     contactName,
 		ReleaseDate: releaseDate,
 		NextRelease: dst.NextRelease,
 		DatasetID:   datasetID,
@@ -365,9 +375,14 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 	p.Data.RangeData.EndLabel = "End"
 	p.Data.RangeData.URL = fmt.Sprintf("/filters/%s/dimensions/%s/range", filter.FilterID, name)
 
+	var contactName string
+	if len(dst.Contacts) > 0 {
+		contactName = dst.Contacts[0].Name
+	}
+
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dst.Contacts[0].Name,
+		Contact:     contactName,
 		ReleaseDate: releaseDate,
 		NextRelease: dst.NextRelease,
 		DatasetID:   datasetID,
@@ -402,9 +417,14 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	p.Data.FilterID = filterID
 
+	var contactName string
+	if len(dst.Contacts) > 0 {
+		contactName = dst.Contacts[0].Name
+	}
+
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dst.Contacts[0].Name,
+		Contact:     contactName,
 		ReleaseDate: releaseDate,
 		NextRelease: dst.NextRelease,
 		DatasetID:   datasetID,
@@ -542,9 +562,14 @@ func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Pare
 	p.Data.SaveAndReturn.URL = curPath + "/update"
 	p.Data.Cancel.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
 
+	var contactName string
+	if len(dst.Contacts) > 0 {
+		contactName = dst.Contacts[0].Name
+	}
+
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dst.Contacts[0].Name,
+		Contact:     contactName,
 		ReleaseDate: releaseDate,
 		NextRelease: dst.NextRelease,
 		DatasetID:   datasetID,
