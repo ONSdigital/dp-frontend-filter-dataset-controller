@@ -31,6 +31,8 @@ type DatasetClient interface {
 	GetEditions(id string) (m []dataset.Edition, err error)
 	GetVersions(id, edition string) (m []dataset.Version, err error)
 	GetVersion(id, edition, version string) (m dataset.Version, err error)
+	GetDimensions(id, edition, version string) (m dataset.Dimensions, err error)
+	GetOptions(id, edition, version, dimension string) (m dataset.Options, err error)
 }
 
 // CodelistClient contains methods expected for a codelist client

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"sync"
@@ -27,7 +28,7 @@ func (f *Filter) HierarchyRemoveAll(w http.ResponseWriter, req *http.Request) {
 	log.Debug("name", log.Data{"name": name})
 
 	if name == "CPI" {
-		name = "goods-and-services"
+		name = "aggregate"
 	}
 
 	if err := f.FilterClient.RemoveDimension(filterID, name); err != nil {
@@ -66,7 +67,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 	pathSubs := pathReg.FindStringSubmatch(curPath)
 
 	hierarchyPath := pathSubs[1]
-	hierarchyPath = strings.Replace(hierarchyPath, "goods-and-services", "CPI", -1)
+	hierarchyPath = strings.Replace(hierarchyPath, "aggregate", "CPI", -1)
 
 	var redirectURI string
 	if len(req.Form["save-and-return"]) > 0 {
@@ -80,7 +81,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if name == "CPI" {
-		name = "goods-and-services"
+		name = "aggregate"
 	}
 
 	if len(req.Form["add-all"]) > 0 {
@@ -186,7 +187,7 @@ func (f *Filter) HierarchyRemove(w http.ResponseWriter, req *http.Request) {
 	option := vars["option"]
 
 	if name == "CPI" {
-		name = "goods-and-services"
+		name = "aggregate"
 	}
 
 	if err := f.FilterClient.RemoveDimensionValue(filterID, name, option); err != nil {
@@ -222,7 +223,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	hierarchyPath := pathsubs[1]
 
 	// TODO: This will need to be removed when the hierarchy is updated
-	hierarchyPath = strings.Replace(hierarchyPath, "goods-and-services", "CPI", -1)
+	hierarchyPath = strings.Replace(hierarchyPath, "aggregate", "CPI", -1)
 
 	h, err := f.HierarchyClient.GetHierarchy(hierarchyPath)
 	if err != nil {
@@ -239,7 +240,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if dimensionType == "CPI" {
-		dimensionType = "goods-and-services"
+		dimensionType = "aggregate"
 	}
 
 	selectedValues, err := f.FilterClient.GetDimensionOptions(filterID, dimensionType)
@@ -270,9 +271,20 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	//versionURL := fil.DatasetFilterID
-	versionURL := "/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL)
+	fj, err := f.FilterClient.GetJobState(filterID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	versionURL, err := url.Parse(fj.Links.Version.HRef)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)

@@ -21,18 +21,13 @@ func TestUnitFilterOverview(t *testing.T) {
 		Convey("test FilterOverview can successfully load a page", func() {
 			mockFilterClient := NewMockFilterClient(mockCtrl)
 			mockFilterClient.EXPECT().GetDimensions("12345").Return([]filter.Dimension{filter.Dimension{Name: "Day"}, filter.Dimension{Name: "Goods and Services"}}, nil)
-			mockCodeListClient := NewMockCodelistClient(mockCtrl)
-			mockCodeListClient.EXPECT().GetIDNameMap("64d384f1-ea3b-445c-8fb8-aa453f96e58a").Return(map[string]string{
-				"1234567": "Monday",
-			}, nil)
-			mockCodeListClient.EXPECT().GetIDNameMap("e44de4c4-d39e-4e2f-942b-3ca10584d078").Return(map[string]string{
-				"678910": "Travel",
-			}, nil)
 			mockFilterClient.EXPECT().GetDimensionOptions("12345", "Day").Return([]filter.DimensionOption{}, nil)
 			mockFilterClient.EXPECT().GetDimensionOptions("12345", "Goods and Services").Return([]filter.DimensionOption{}, nil)
-			mockFilterClient.EXPECT().GetJobState("12345").Return(filter.Model{DatasetFilterID: "/datasets/12345/editions/2016/versions/1"}, nil)
+			mockFilterClient.EXPECT().GetJobState("12345").Return(filter.Model{Links: filter.Links{Version: filter.Link{HRef: "/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"}}}, nil)
 			mockDatasetClient := NewMockDatasetClient(mockCtrl)
-			mockDatasetClient.EXPECT().Get("95c4669b-3ae9-4ba7-b690-87e890a1c67c").Return(dataset.Model{}, nil)
+			mockDatasetClient.EXPECT().GetDimensions("95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1").Return(dataset.Dimensions{Items: []dataset.Dimension{{ID: "geography"}}}, nil)
+			mockDatasetClient.EXPECT().GetOptions("95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1", "geography")
+			mockDatasetClient.EXPECT().Get("95c4669b-3ae9-4ba7-b690-87e890a1c67c").Return(dataset.Model{Contacts: []dataset.Contact{{Name: "Matt"}}}, nil)
 			mockDatasetClient.EXPECT().GetVersion("95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1").Return(dataset.Version{}, nil)
 			mockRenderer := NewMockRenderer(mockCtrl)
 			mockRenderer.EXPECT().Do("dataset-filter/filter-overview", gomock.Any()).Return([]byte("some-bytes"), nil)
@@ -41,7 +36,7 @@ func TestUnitFilterOverview(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, mockCodeListClient, nil, nil)
+			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil)
 			router.Path("/filters/{filterID}/dimensions").HandlerFunc(f.FilterOverview)
 
 			router.ServeHTTP(w, req)

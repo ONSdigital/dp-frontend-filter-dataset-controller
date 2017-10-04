@@ -2,7 +2,6 @@ package dates
 
 import (
 	"fmt"
-	"regexp"
 	"sort"
 	"time"
 )
@@ -27,15 +26,11 @@ func (p TimeSlice) Swap(i, j int) {
 func ConvertToReadable(dates []string) ([]time.Time, error) {
 	var readableDates []time.Time
 	for _, val := range dates {
-		myrReg := regexp.MustCompile(`^(\d{4})\.(\d{1}|\d{2})$`)
-		myrSubs := myrReg.FindStringSubmatch(val)
-		if len(myrSubs) == 3 {
-			date, err := time.Parse("01-02-2006", fmt.Sprintf("%02s-01-%s", myrSubs[2], myrSubs[1]))
-			if err != nil {
-				return readableDates, err
-			}
-			readableDates = append(readableDates, date)
+		date, err := time.Parse("Jan-06", val)
+		if err != nil {
+			return readableDates, err
 		}
+		readableDates = append(readableDates, date)
 	}
 
 	return readableDates, nil
@@ -59,7 +54,7 @@ func Sort(dates []time.Time) TimeSlice {
 func ConvertToCoded(dates []time.Time) []string {
 	var codedDates []string
 	for _, date := range dates {
-		codedDates = append(codedDates, fmt.Sprintf("%d.%02d", date.Year(), date.Month()))
+		codedDates = append(codedDates, date.Format("Jan-06"))
 	}
 
 	return codedDates

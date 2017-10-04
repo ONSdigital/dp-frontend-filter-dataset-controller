@@ -3,7 +3,6 @@ package mapper
 import (
 	"testing"
 
-	"github.com/ONSdigital/go-ns/clients/codelist"
 	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -42,10 +41,9 @@ func TestUnitMapper(t *testing.T) {
 		So(fop.Data.Cancel.URL, ShouldEqual, "/")
 		So(fop.Breadcrumb, ShouldHaveLength, 2)
 		So(fop.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(fop.Breadcrumb[0].URI, ShouldEqual, filter.DatasetFilterID)
 		So(fop.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
 		So(fop.Metadata.Footer.Enabled, ShouldBeTrue)
-		So(fop.Metadata.Footer.Contact, ShouldEqual, dataset.Contact.Name)
+		So(fop.Metadata.Footer.Contact, ShouldEqual, dataset.Contacts[0].Name)
 		So(fop.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")
 		So(fop.Metadata.Footer.DatasetID, ShouldEqual, "12345")
 	})
@@ -59,13 +57,12 @@ func TestUnitMapper(t *testing.T) {
 		So(pp.SearchDisabled, ShouldBeTrue)
 		So(pp.Breadcrumb, ShouldHaveLength, 3)
 		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(pp.Breadcrumb[0].URI, ShouldEqual, filter.DatasetFilterID)
 		So(pp.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
 		So(pp.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
 		So(pp.Breadcrumb[2].Title, ShouldEqual, "Preview")
 		So(pp.Data.FilterID, ShouldEqual, filter.FilterID)
 		So(pp.Metadata.Footer.Enabled, ShouldBeTrue)
-		So(pp.Metadata.Footer.Contact, ShouldEqual, dataset.Contact.Name)
+		So(pp.Metadata.Footer.Contact, ShouldEqual, dataset.Contacts[0].Name)
 		So(pp.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")
 		So(pp.Metadata.Footer.DatasetID, ShouldEqual, "12345")
 		So(pp.Data.Downloads[0].Extension, ShouldEqual, "csv")
@@ -79,6 +76,22 @@ func TestUnitMapper(t *testing.T) {
 	})
 
 	Convey("test CreateListSelector page correctly maps to listSelector frontend model", t, func() {
+		allValues := dataset.Options{
+			Items: []dataset.Option{
+				{
+					Label:  "Feb-10",
+					Option: "abcdefg",
+				},
+				{
+					Label:  "Mar-10",
+					Option: "38jd83ik",
+				},
+				{
+					Label:  "Apr-10",
+					Option: "13984094",
+				},
+			},
+		}
 		dataset := getTestDataset()
 		selectedValues := []filter.DimensionOption{
 			{
@@ -90,23 +103,6 @@ func TestUnitMapper(t *testing.T) {
 		}
 
 		filter := getTestFilter()
-		allValues := codelist.DimensionValues{
-			Items: []codelist.Item{
-				{
-					Label: "2010.02",
-					ID:    "abcdefg",
-				},
-				{
-					Label: "2010.03",
-					ID:    "38jd83ik",
-				},
-				{
-					Label: "2010.04",
-					ID:    "13984094",
-				},
-			},
-			NumberOfResults: 1,
-		}
 
 		p := CreateListSelectorPage("time", selectedValues, allValues, filter, dataset, "12345", "11-11-1992")
 		So(p.Data.Title, ShouldEqual, "Time")
@@ -115,7 +111,6 @@ func TestUnitMapper(t *testing.T) {
 
 		So(p.Breadcrumb, ShouldHaveLength, 3)
 		So(p.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(p.Breadcrumb[0].URI, ShouldEqual, filter.DatasetFilterID)
 		So(p.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
 		So(p.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
 		So(p.Breadcrumb[2].Title, ShouldEqual, "Time")
@@ -135,12 +130,29 @@ func TestUnitMapper(t *testing.T) {
 		So(p.Data.RangeData.Values[2].IsSelected, ShouldBeFalse)
 		So(p.Data.FiltersAmount, ShouldEqual, 2)
 		So(p.Metadata.Footer.Enabled, ShouldBeTrue)
-		So(p.Metadata.Footer.Contact, ShouldEqual, dataset.Contact.Name)
+		So(p.Metadata.Footer.Contact, ShouldEqual, dataset.Contacts[0].Name)
 		So(p.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")
 		So(p.Metadata.Footer.DatasetID, ShouldEqual, "12345")
 	})
 
 	Convey("test CreateRangeSelectorPage successfully maps to a rangeSelector page model", t, func() {
+
+		allValues := dataset.Options{
+			Items: []dataset.Option{
+				{
+					Label:  "Feb-10",
+					Option: "abcdefg",
+				},
+				{
+					Label:  "Mar-10",
+					Option: "38jd83ik",
+				},
+				{
+					Label:  "Apr-10",
+					Option: "13984094",
+				},
+			},
+		}
 		dataset := getTestDataset()
 		selectedValues := []filter.DimensionOption{
 			{
@@ -152,23 +164,6 @@ func TestUnitMapper(t *testing.T) {
 		}
 
 		filter := getTestFilter()
-		allValues := codelist.DimensionValues{
-			Items: []codelist.Item{
-				{
-					Label: "2010.02",
-					ID:    "abcdefg",
-				},
-				{
-					Label: "2010.03",
-					ID:    "38jd83ik",
-				},
-				{
-					Label: "2010.04",
-					ID:    "13984094",
-				},
-			},
-			NumberOfResults: 1,
-		}
 
 		p := CreateRangeSelectorPage("time", selectedValues, allValues, filter, dataset, "12345", "11-11-1992")
 		So(p.Data.Title, ShouldEqual, "Time")
@@ -177,7 +172,6 @@ func TestUnitMapper(t *testing.T) {
 
 		So(p.Breadcrumb, ShouldHaveLength, 3)
 		So(p.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(p.Breadcrumb[0].URI, ShouldEqual, filter.DatasetFilterID)
 		So(p.Breadcrumb[1].Title, ShouldEqual, "Filter this dataset")
 		So(p.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
 		So(p.Breadcrumb[2].Title, ShouldEqual, "Time")
@@ -189,7 +183,7 @@ func TestUnitMapper(t *testing.T) {
 		So(p.Data.RangeData.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/range")
 		So(p.Data.RemoveAll.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/remove-all")
 		So(p.Metadata.Footer.Enabled, ShouldBeTrue)
-		So(p.Metadata.Footer.Contact, ShouldEqual, dataset.Contact.Name)
+		So(p.Metadata.Footer.Contact, ShouldEqual, dataset.Contacts[0].Name)
 		So(p.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")
 		So(p.Metadata.Footer.DatasetID, ShouldEqual, "12345")
 	})
@@ -222,11 +216,15 @@ func getTestDimensions() []filter.ModelDimension {
 
 func getTestFilter() filter.Model {
 	return filter.Model{
-		FilterID:        "12349876",
-		DatasetFilterID: "/filters/12345/editions/2016/versions/1",
-		Edition:         "12345",
-		Dataset:         "849209",
-		Version:         "2017",
+		FilterID: "12349876",
+		Edition:  "12345",
+		Dataset:  "849209",
+		Version:  "2017",
+		Links: filter.Links{
+			Version: filter.Link{
+				HRef: "/datasets/1234/editions/5678/versions/1",
+			},
+		},
 		Downloads: map[string]filter.Download{
 			"csv": {
 				Size: "362783",
@@ -243,10 +241,12 @@ func getTestFilter() filter.Model {
 func getTestDataset() dataset.Model {
 	return dataset.Model{
 		NextRelease: "17 January 2018",
-		Contact: dataset.Contact{
-			Name:      "Matt Rout",
-			Telephone: "07984593234",
-			Email:     "matt@gmail.com",
+		Contacts: []dataset.Contact{
+			{
+				Name:      "Matt Rout",
+				Telephone: "07984593234",
+				Email:     "matt@gmail.com",
+			},
 		},
 		Title: "Small Area Population Estimates",
 	}

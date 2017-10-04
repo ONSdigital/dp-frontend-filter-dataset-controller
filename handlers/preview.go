@@ -43,23 +43,23 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	if fil.State == "created" {
 		fil.State = "submitted"
 
-		f.FilterClient.RemoveDimension(filterID, "time")
-		f.FilterClient.RemoveDimension(filterID, "goods-and-services")
-
-		f.FilterClient.AddDimension(filterID, "Time")
-		f.FilterClient.AddDimension(filterID, "Geography")
-		f.FilterClient.AddDimension(filterID, "Aggregate")
-
-		f.FilterClient.AddDimensionValues(filterID, "Time", []string{"Jan-96", "Feb-96", "Feb-97", "Feb-98", "Mar-02", "Jun-08", "Dec-10", "Nov-11"})
-		f.FilterClient.AddDimensionValue(filterID, "Geography", "K02000001")
-		f.FilterClient.AddDimensionValues(filterID, "Aggregate", []string{"cpi1dim1G10100", "cpi1dim1G20100"})
-
 		f.FilterClient.UpdateJob(fil)
 	}
 
-	// versionURL := filter.
-	versionURL := "/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL)
+	fj, err := f.FilterClient.GetJobState(filterID)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	versionURL, err := url.Parse(fj.Links.Version.HRef)
+	if err != nil {
+		log.ErrorR(req, err, nil)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 	if err != nil {
 		log.Error(err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -88,11 +88,11 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 
 	p := mapper.CreatePreviewPage(dimensions, fil, dataset, filterID, datasetID, ver.ReleaseDate)
 
-	if latestURL.Path == versionURL {
+	if latestURL.Path == versionURL.Path {
 		p.Data.IsLatestVersion = true
 	}
 
-	p.Data.LatestVersion.DatasetLandingPageURL = versionURL
+	p.Data.LatestVersion.DatasetLandingPageURL = versionURL.Path
 	p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterID)
 
 	if fil.State != "completed" {

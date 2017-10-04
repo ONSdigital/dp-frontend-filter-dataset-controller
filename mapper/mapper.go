@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/rangeSelector"
-	"github.com/ONSdigital/go-ns/clients/codelist"
 	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	hierarchyClient "github.com/ONSdigital/go-ns/clients/hierarchy"
@@ -27,7 +27,7 @@ var dimensionTitleTranslator = map[string]string{
 	"month":              "Month",
 	"time":               "Time",
 	"goods-and-services": "Goods and Services",
-	"CPI":                "Goods and Services", // This is temporary until the codelist api is updated
+	"aggregate":          "Goods and Services",
 }
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
@@ -48,16 +48,14 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 		}
 
 		if d.Name == "time" {
-			var selectedDates []string
-			for _, val := range d.Values {
-				selectedDates = append(selectedDates, val)
+			times, err := dates.ConvertToReadable(d.Values)
+			if err != nil {
+				log.Error(err, nil)
 			}
 
-			selectedDats, _ := dates.ConvertToReadable(selectedDates)
-			selectedDats = dates.Sort(selectedDats)
-
-			for _, ac := range selectedDats {
-				fod.AddedCategories = append(fod.AddedCategories, dates.ConvertToMonthYear(ac))
+			times = dates.Sort(times)
+			for _, time := range times {
+				fod.AddedCategories = append(fod.AddedCategories, time.Format("January 2006"))
 			}
 		} else {
 			for _, ac := range d.Values {
@@ -65,7 +63,11 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 			}
 		}
 
-		fod.Link.URL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, d.Name)
+		if d.Name == "aggregate" {
+			fod.Link.URL = fmt.Sprintf("/filters/%s/dimensions/%s?selectorType=list", filterID, d.Name)
+		} else {
+			fod.Link.URL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, d.Name)
+		}
 
 		if len(fod.AddedCategories) > 0 {
 			fod.Link.Label = "Filter"
@@ -86,9 +88,14 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 	p.Data.ClearAll.URL = fmt.Sprintf("/filters/%s/dimensions/clear-all", filterID)
 	p.SearchDisabled = true
 
+	versionURL, err := url.Parse(filter.Links.Version.HRef)
+	if err != nil {
+		log.Error(err, nil)
+	}
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
-		URI:   filter.DatasetFilterID,
+		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter this dataset",
@@ -96,7 +103,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dst.Contact.Name,
+		Contact:     dst.Contacts[0].Name,
 		ReleaseDate: releaseDate,
 		NextRelease: dst.NextRelease,
 		DatasetID:   datasetID,
@@ -107,16 +114,21 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 
 // CreateListSelectorPage maps items from API responses to form the model for a
 // dimension list selector page
-func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dst dataset.Model, datasetID, releaseDate string) listSelector.Page {
+func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.Model, datasetID, releaseDate string) listSelector.Page {
 	var p listSelector.Page
 
 	p.SearchDisabled = true
 	p.FilterID = filter.FilterID
 	p.Data.Title = dimensionTitleTranslator[name]
 
+	versionURL, err := url.Parse(filter.Links.Version.HRef)
+	if err != nil {
+		log.Error(err, nil)
+	}
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
-		URI:   filter.DatasetFilterID,
+		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter this dataset",
@@ -146,7 +158,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 	p.Data.RemoveAll.URL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all?selectorType=list", filter.FilterID, name)
 
-	lookup := getIDNameLookup(allValues.Items)
+	lookup := getIDNameLookup(allValues)
 
 	var selectedListValues, selectedListIDs []string
 	for _, opt := range selectedValues {
@@ -158,8 +170,8 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 	valueIDmap := make(map[string]string)
 	for _, val := range allValues.Items {
 		allListValues = append(allListValues, val.Label)
-		allListIDs = append(allListIDs, val.ID)
-		valueIDmap[val.Label] = val.ID
+		allListIDs = append(allListIDs, val.Option)
+		valueIDmap[val.Label] = val.Option
 	}
 
 	if name == "time" {
@@ -179,9 +191,9 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 		for _, val := range selectedDats {
 			p.Data.FiltersAdded = append(p.Data.FiltersAdded, listSelector.Filter{
-				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s?selectorType=list", filter.FilterID, name, valueIDmap[fmt.Sprintf("%d.%02d", val.Year(), val.Month())]),
+				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s?selectorType=list", filter.FilterID, name, valueIDmap[val.Format("Jan-06")]),
 				Label:     dates.ConvertToMonthYear(val),
-				ID:        valueIDmap[fmt.Sprintf("%d.%02d", val.Year(), val.Month())],
+				ID:        valueIDmap[val.Format("Jan-06")],
 			})
 		}
 
@@ -195,11 +207,33 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 			p.Data.RangeData.Values = append(p.Data.RangeData.Values, listSelector.Value{
 				Label:      dates.ConvertToMonthYear(val),
-				ID:         valueIDmap[fmt.Sprintf("%d.%02d", val.Year(), val.Month())],
+				ID:         valueIDmap[val.Format("Jan-06")],
 				IsSelected: isSelected,
 			})
 		}
 
+	} else {
+		for _, val := range allListValues {
+			var isSelected bool
+			for _, sval := range selectedListValues {
+				if sval == val {
+					isSelected = true
+				}
+			}
+			p.Data.RangeData.Values = append(p.Data.RangeData.Values, listSelector.Value{
+				Label:      val,
+				ID:         valueIDmap[val],
+				IsSelected: isSelected,
+			})
+		}
+
+		for _, val := range selectedListValues {
+			p.Data.FiltersAdded = append(p.Data.FiltersAdded, listSelector.Filter{
+				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s?selectorType=list", filter.FilterID, name, valueIDmap[val]),
+				Label:     val,
+				ID:        valueIDmap[val],
+			})
+		}
 	}
 
 	if len(allListValues) == len(selectedListValues) {
@@ -210,7 +244,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dst.Contact.Name,
+		Contact:     dst.Contacts[0].Name,
 		ReleaseDate: releaseDate,
 		NextRelease: dst.NextRelease,
 		DatasetID:   datasetID,
@@ -221,14 +255,19 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 // CreateRangeSelectorPage maps items from API responses to form a dimension range
 // selector page model
-func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOption, allValues codelist.DimensionValues, filter filter.Model, dst dataset.Model, datasetID, releaseDate string) rangeSelector.Page {
+func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.Model, datasetID, releaseDate string) rangeSelector.Page {
 	var p rangeSelector.Page
 
 	p.SearchDisabled = true
 
+	versionURL, err := url.Parse(filter.Links.Version.HRef)
+	if err != nil {
+		log.Error(err, nil)
+	}
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
-		URI:   filter.DatasetFilterID,
+		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter this dataset",
@@ -264,9 +303,9 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 	var selectedRangeValues, selectedRangeIDs []string
 	for _, opt := range selectedValues {
 		for _, val := range allValues.Items {
-			if val.ID == opt.Option {
+			if val.Option == opt.Option {
 				selectedRangeValues = append(selectedRangeValues, val.Label)
-				selectedRangeIDs = append(selectedRangeIDs, val.ID)
+				selectedRangeIDs = append(selectedRangeIDs, val.Option)
 			}
 		}
 	}
@@ -328,7 +367,7 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dst.Contact.Name,
+		Contact:     dst.Contacts[0].Name,
 		ReleaseDate: releaseDate,
 		NextRelease: dst.NextRelease,
 		DatasetID:   datasetID,
@@ -344,9 +383,14 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	p.SearchDisabled = true
 
+	versionURL, err := url.Parse(filter.Links.Version.HRef)
+	if err != nil {
+		log.Error(err, nil)
+	}
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
-		URI:   filter.DatasetFilterID,
+		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter this dataset",
@@ -360,7 +404,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dst.Contact.Name,
+		Contact:     dst.Contacts[0].Name,
 		ReleaseDate: releaseDate,
 		NextRelease: dst.NextRelease,
 		DatasetID:   datasetID,
@@ -386,18 +430,18 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 	return p
 }
 
-func getNameIDLookup(vals []codelist.Item) map[string]string {
+func getNameIDLookup(vals dataset.Options) map[string]string {
 	lookup := make(map[string]string)
-	for _, val := range vals {
-		lookup[val.Name] = val.ID
+	for _, val := range vals.Items {
+		lookup[val.Label] = val.Option
 	}
 	return lookup
 }
 
-func getIDNameLookup(vals []codelist.Item) map[string]string {
+func getIDNameLookup(vals dataset.Options) map[string]string {
 	lookup := make(map[string]string)
-	for _, val := range vals {
-		lookup[val.ID] = val.Label
+	for _, val := range vals.Items {
+		lookup[val.Option] = val.Label
 	}
 	return lookup
 }
@@ -415,9 +459,14 @@ func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Pare
 
 	p.SearchDisabled = true
 
+	versionURL, err := url.Parse(f.Links.Version.HRef)
+	if err != nil {
+		log.Error(err, nil)
+	}
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
-		URI:   f.DatasetFilterID,
+		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter this dataset",
@@ -495,7 +544,7 @@ func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Pare
 
 	p.Metadata.Footer = model.Footer{
 		Enabled:     true,
-		Contact:     dst.Contact.Name,
+		Contact:     dst.Contacts[0].Name,
 		ReleaseDate: releaseDate,
 		NextRelease: dst.NextRelease,
 		DatasetID:   datasetID,
