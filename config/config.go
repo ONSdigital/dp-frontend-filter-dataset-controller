@@ -1,6 +1,8 @@
 package config
 
-import "os"
+import (
+	"os"
+)
 
 // Config represents service configuration for dp-frontend-filter-dataset-controller
 type Config struct {

@@ -18,6 +18,8 @@ func main() {
 	log.Namespace = "dp-frontend-filter-dataset-controller"
 	cfg := config.Get()
 
+	log.Debug("got service configuration", log.Data{"config": cfg})
+
 	r := mux.NewRouter()
 
 	rend, fc, dc, clc, hc := routes.Init(r)
@@ -41,6 +43,16 @@ func main() {
 
 	for {
 		healthcheck.MonitorExternal(fc, dc, clc, hc, rend)
+
+		log.Debug("conducting service healthcheck", log.Data{
+			"services": []string{
+				"filter-api",
+				"dataset-api",
+				"code-list-api",
+				"hierarchy-api",
+				"renderer",
+			},
+		})
 
 		timer := time.NewTimer(time.Second * 60)
 

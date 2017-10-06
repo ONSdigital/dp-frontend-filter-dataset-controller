@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
+
+	"github.com/ONSdigital/go-ns/clients/clientlog"
+	"github.com/ONSdigital/go-ns/rhttp"
 )
+
+const service = "code-list-api"
 
 // ErrInvalidCodelistAPIResponse is returned when the codelist api does not respond
 // with a valid status
@@ -16,6 +20,7 @@ type ErrInvalidCodelistAPIResponse struct {
 	uri          string
 }
 
+// Error should be called by the user to print out the stringified version of the error
 func (e ErrInvalidCodelistAPIResponse) Error() string {
 	return fmt.Sprintf("invalid response from codelist api - should be: %d, got: %d, path: %s",
 		e.expectedCode,
@@ -28,14 +33,14 @@ var _ error = ErrInvalidCodelistAPIResponse{}
 
 // Client is a codelist api client which can be used to make requests to the server
 type Client struct {
-	cli *http.Client
+	cli *rhttp.Client
 	url string
 }
 
 // New creates a new instance of Client with a given filter api url
 func New(codelistAPIURL string) *Client {
 	return &Client{
-		cli: &http.Client{Timeout: 5 * time.Second},
+		cli: rhttp.DefaultClient,
 		url: codelistAPIURL,
 	}
 }
@@ -44,19 +49,22 @@ func New(codelistAPIURL string) *Client {
 func (c *Client) Healthcheck() (string, error) {
 	resp, err := c.cli.Get(c.url + "/healthcheck")
 	if err != nil {
-		return "code-list-api", err
+		return service, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "code-list-api", &ErrInvalidCodelistAPIResponse{http.StatusOK, resp.StatusCode, "/healthcheck"}
+		return service, &ErrInvalidCodelistAPIResponse{http.StatusOK, resp.StatusCode, "/healthcheck"}
 	}
 
-	return "", nil
+	return service, nil
 }
 
 // GetValues returns dimension values from the codelist api
 func (c *Client) GetValues(id string) (vals DimensionValues, err error) {
 	uri := fmt.Sprintf("%s/code-lists/%s/codes", c.url, id)
+
+	clientlog.Do("retrieving codes from codelist", service, uri, "GET")
+
 	resp, err := c.cli.Get(uri)
 	if err != nil {
 		return

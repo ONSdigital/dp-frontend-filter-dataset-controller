@@ -39,34 +39,40 @@
 			"revisionTime": "2017-09-08T08:49:08Z"
 		},
 		{
-			"checksumSHA1": "69d0SN73mCOiO1fhExC6wwTe8eM=",
+			"checksumSHA1": "tMm0NuJsdrKdxHdHlLlCuVBAOJ0=",
+			"path": "github.com/ONSdigital/go-ns/clients/clientlog",
+			"revision": "194325b301389dd24c9e2aac6aadafe3083e332f",
+			"revisionTime": "2017-10-05T08:35:02Z"
+		},
+		{
+			"checksumSHA1": "RMYS9FidFHOtgfzh693dyZhGQQw=",
 			"path": "github.com/ONSdigital/go-ns/clients/codelist",
-			"revision": "dec05ff04cd8db3795e754674fc4bea91bfb6103",
-			"revisionTime": "2017-08-25T14:03:29Z"
+			"revision": "194325b301389dd24c9e2aac6aadafe3083e332f",
+			"revisionTime": "2017-10-05T08:35:02Z"
 		},
 		{
-			"checksumSHA1": "wS0lnWSzNIT8KANTZgWT5gC4VgM=",
+			"checksumSHA1": "5Jz3X0qQmyUY6DKiHgtHIS9+SF0=",
 			"path": "github.com/ONSdigital/go-ns/clients/dataset",
-			"revision": "76be3910cc79807d234ffce7fc0abc8909e54ab6",
-			"revisionTime": "2017-09-18T10:29:06Z"
+			"revision": "194325b301389dd24c9e2aac6aadafe3083e332f",
+			"revisionTime": "2017-10-05T08:35:02Z"
 		},
 		{
-			"checksumSHA1": "1y/LdVtDtWMf4g/L9SJfMSv6ONc=",
+			"checksumSHA1": "ES5ii7/H/fGUDyDEM5Gj31q0Lno=",
 			"path": "github.com/ONSdigital/go-ns/clients/filter",
-			"revision": "76be3910cc79807d234ffce7fc0abc8909e54ab6",
-			"revisionTime": "2017-09-18T10:29:06Z"
+			"revision": "194325b301389dd24c9e2aac6aadafe3083e332f",
+			"revisionTime": "2017-10-05T08:35:02Z"
 		},
 		{
-			"checksumSHA1": "z9+CybPTi4In8GFS6tsE9b/JYjY=",
+			"checksumSHA1": "+H6TX2yo4WhNr4q5LzoagEwG2LU=",
 			"path": "github.com/ONSdigital/go-ns/clients/hierarchy",
-			"revision": "dec05ff04cd8db3795e754674fc4bea91bfb6103",
-			"revisionTime": "2017-08-25T14:03:29Z"
+			"revision": "194325b301389dd24c9e2aac6aadafe3083e332f",
+			"revisionTime": "2017-10-05T08:35:02Z"
 		},
 		{
-			"checksumSHA1": "aTU91+aUWHT6ub08bY2D3DEOMHc=",
+			"checksumSHA1": "BVqJTAcHzVzGM8CNXwaLEbTw4XU=",
 			"path": "github.com/ONSdigital/go-ns/clients/renderer",
-			"revision": "dec05ff04cd8db3795e754674fc4bea91bfb6103",
-			"revisionTime": "2017-08-25T14:03:29Z"
+			"revision": "194325b301389dd24c9e2aac6aadafe3083e332f",
+			"revisionTime": "2017-10-05T08:35:02Z"
 		},
 		{
 			"checksumSHA1": "J9OiPnhPHFPhQ+R+dq6LFj+dTxE=",

@@ -5,28 +5,34 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/ONSdigital/go-ns/clients/clientlog"
+	"github.com/ONSdigital/go-ns/rhttp"
 )
 
-// ErrInvalidRendererResponse is returned when the renderer service does not respons
+const service = "renderer"
+
+// ErrInvalidRendererResponse is returned when the renderer service does not respond
 // with a status 200
 type ErrInvalidRendererResponse struct {
 	responseCode int
 }
 
+// Error should be called by the user to print out the stringified version of the error
 func (e ErrInvalidRendererResponse) Error() string {
 	return fmt.Sprintf("invalid response from renderer service - status %d", e.responseCode)
 }
 
-// Renderer represents a template renderer for dp-frontend-filter-dataset-controller
+// Renderer represents a renderer client to interact with the dp-frontend-renderer
 type Renderer struct {
-	client *http.Client
+	client *rhttp.Client
 	url    string
 }
 
 // New creates an instance of renderer with a default client
 func New(url string) *Renderer {
 	return &Renderer{
-		client: &http.Client{},
+		client: rhttp.DefaultClient,
 		url:    url,
 	}
 }
@@ -35,14 +41,14 @@ func New(url string) *Renderer {
 func (r *Renderer) Healthcheck() (string, error) {
 	resp, err := r.client.Get(r.url + "/healthcheck")
 	if err != nil {
-		return "renderer", err
+		return service, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "renderer", ErrInvalidRendererResponse{resp.StatusCode}
+		return service, ErrInvalidRendererResponse{resp.StatusCode}
 	}
 
-	return "", nil
+	return service, nil
 }
 
 // Do sends a request to the renderer service to render a given template
@@ -53,7 +59,11 @@ func (r *Renderer) Do(path string, b []byte) ([]byte, error) {
 		b = []byte(`{}`)
 	}
 
-	req, err := http.NewRequest("POST", r.url+"/"+path, bytes.NewBuffer(b))
+	uri := r.url + "/" + path
+
+	clientlog.Do(fmt.Sprintf("rendering template: %s", path), service, uri, "POST")
+
+	req, err := http.NewRequest("POST", uri, bytes.NewBuffer(b))
 	if err != nil {
 		return nil, err
 	}
