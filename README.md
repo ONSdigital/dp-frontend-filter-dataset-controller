@@ -1,7 +1,7 @@
 dp-frontend-filter-dataset-controller
 ==================
 
-An HTTP service for the controlling of data relevant to a particular dataset.
+An HTTP service for the controlling of data relevant to the filtering of a particular dataset.
 
 ### Configuration
 
@@ -13,8 +13,6 @@ An HTTP service for the controlling of data relevant to a particular dataset.
 | FILTER_API_URL       | http://localhost:22100  | The URL of the filter api
 | DATASET_API_URL      | http://localhost:22000  | The URL of the dataset api
 | HIERARCHY_API_URL    | http://localhost:22600  | The URL of the hierarchy api
-
-
 
 ### Licence
 
