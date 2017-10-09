@@ -35,7 +35,7 @@ var dimensionTitleTranslator = map[string]string{
 func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterID, datasetID, releaseDate string) filterOverview.Page {
 	var p filterOverview.Page
 
-	log.Debug("mapping api response models into filter overview page model", nil)
+	log.Debug("mapping api response models into filter overview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
 
 	p.FilterID = filterID
 	p.Metadata.Title = "Filter Options"
@@ -124,7 +124,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.Model, datasetID, releaseDate string) listSelector.Page {
 	var p listSelector.Page
 
-	log.Debug("mapping api response models to list selector page model", nil)
+	log.Debug("mapping api response models to list selector page model", log.Data{"filterID": filter.FilterID, "datasetID": datasetID})
 
 	p.SearchDisabled = true
 	p.FilterID = filter.FilterID
@@ -273,7 +273,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.Model, datasetID, releaseDate string) rangeSelector.Page {
 	var p rangeSelector.Page
 
-	log.Debug("mapping api response models to range selector page model", nil)
+	log.Debug("mapping api response models to range selector page model", log.Data{"filterID": filter.FilterID, "datasetID": datasetID})
 
 	p.SearchDisabled = true
 
@@ -405,7 +405,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 	var p previewPage.Page
 	p.Metadata.Title = "Preview and Download"
 
-	log.Debug("mapping api responses to preview page model", nil)
+	log.Debug("mapping api responses to preview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
 
 	p.SearchDisabled = true
 
@@ -481,7 +481,7 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Parent, dst dataset.Model, f filter.Model, curPath, dimensionTitle, datasetID, releaseDate string) hierarchy.Page {
 	var p hierarchy.Page
 
-	log.Debug("mapping api response models to hierarchy page", nil)
+	log.Debug("mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
 
 	var title string
 	if len(parents) == 0 {

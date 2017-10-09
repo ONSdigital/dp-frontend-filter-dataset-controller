@@ -39,7 +39,7 @@ func Get() *Config {
 		cfg.CodeListAPIURL = v
 	}
 	if v := os.Getenv("DATASET_API_URL"); len(v) > 0 {
-		cfg.CodeListAPIURL = v
+		cfg.DatasetAPIURL = v
 	}
 	if v := os.Getenv("HIERARCHY_API_URL"); len(v) > 0 {
 		cfg.HierarchyAPIURL = v
