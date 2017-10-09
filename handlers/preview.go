@@ -35,7 +35,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 
 	fil, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -48,40 +48,40 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 
 	fj, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	versionURL, err := url.Parse(fj.Links.Version.HRef)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 	if err != nil {
-		log.Error(err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	dataset, err := f.DatasetClient.Get(datasetID)
 	if err != nil {
-		log.Error(err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
 	if err != nil {
-		log.Error(err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	latestURL, err := url.Parse(dataset.Links.LatestVersion.URL)
 	if err != nil {
-		log.Error(err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -101,20 +101,20 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 
 	body, err := json.Marshal(p)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	b, err := f.Renderer.Do("dataset-filter/preview-page", body)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if _, err := w.Write(b); err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

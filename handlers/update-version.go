@@ -14,21 +14,21 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	/*oldJob, err := f.FilterClient.GetJobState(filterID)
-	if err != nil {
-		log.ErrorR(req, err, nil)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}*/
-
-	dims, err := f.FilterClient.GetDimensions(filterID)
+	oldJob, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	newFilterID, err := f.FilterClient.CreateJob("6fffa821-a453-45cb-bee2-0d9de249ae42")
+	dims, err := f.FilterClient.GetDimensions(filterID)
+	if err != nil {
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	newFilterID, err := f.FilterClient.CreateJob(oldJob.InstanceID)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -37,14 +37,14 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 
 	for _, dim := range dims {
 		if err := f.FilterClient.AddDimension(newFilterID, dim.Name); err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		dimValues, err := f.FilterClient.GetDimensionOptions(filterID, dim.Name)
 		if err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -55,7 +55,7 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 		}
 
 		if err := f.FilterClient.AddDimensionValues(newFilterID, dim.Name, vals); err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

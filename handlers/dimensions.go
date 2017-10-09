@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"regexp"
 	"sync"
 	"time"
 
@@ -32,21 +31,21 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 
 	fj, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	versionURL, err := url.Parse(fj.Links.Version.HRef)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	idNameMap, err := f.getIDNameMap(versionURL.Path, name)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -64,7 +63,7 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 
 		readbleDates, err := dates.ConvertToReadable(codedDates)
 		if err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -83,7 +82,7 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 
 	b, err := json.Marshal(lids)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -103,6 +102,8 @@ func (f *Filter) getIDNameMap(versionURL, dimension string) (map[string]string, 
 		return nil, err
 	}
 
+	log.Debug("creating an option-label map from dataset dimensions", log.Data{"version-url": versionURL, "options": opts})
+
 	for _, opt := range opts.Items {
 		idNameMap[opt.Option] = opt.Label
 	}
@@ -118,27 +119,27 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 
 	opts, err := f.FilterClient.GetDimensionOptions(filterID, name)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	fj, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	versionURL, err := url.Parse(fj.Links.Version.HRef)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	idNameMap, err := f.getIDNameMap(versionURL.Path, name)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -156,7 +157,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 
 		readbleDates, err := dates.ConvertToReadable(codedDates)
 		if err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -175,7 +176,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 
 	b, err := json.Marshal(lids)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -194,58 +195,58 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		//url := fmt.Sprintf("/filters/%s/hierarchies/%s", filterID, name)
 		url := fmt.Sprintf("/filters/%s/dimensions/%s?selectorType=list", filterID, name)
 		http.Redirect(w, req, url, 302)
-	} */
+	} */ // TODO: uncomment when hierarchy api is completed
 
 	filter, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	selectedValues, err := f.FilterClient.GetDimensionOptions(filterID, name)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	fj, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	versionURL, err := url.Parse(fj.Links.Version.HRef)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 	if err != nil {
-		log.Error(err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	dataset, err := f.DatasetClient.Get(datasetID)
 	if err != nil {
-		log.Error(err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
 	if err != nil {
-		log.Error(err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, name)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -264,14 +265,14 @@ func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name st
 
 	b, err := json.Marshal(p)
 	if err != nil {
-		log.Error(err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	templateBytes, err := f.Renderer.Do("dataset-filter/range-selector", b)
 	if err != nil {
-		log.Error(err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -286,14 +287,14 @@ func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name str
 
 	b, err := json.Marshal(p)
 	if err != nil {
-		log.Error(err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	templateBytes, err := f.Renderer.Do("dataset-filter/list-selector", b)
 	if err != nil {
-		log.Error(err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -322,7 +323,7 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 	filterID := vars["filterID"]
 
 	if err := req.ParseForm(); err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -330,7 +331,7 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 	var r Range
 
 	if err := f.val.Validate(req, &r); err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		if _, ok := err.(validator.ErrFormValidationFailed); ok {
 			errs := err.(validator.ErrFormValidationFailed).GetFieldErrors()
 			log.Debug("field errors", log.Data{"errs": errs})
@@ -364,7 +365,7 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 
 	values, labelIDMap, err := f.getDimensionValues(filterID, name)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -372,7 +373,7 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 	if name == "time" {
 		dats, err := dates.ConvertToReadable(values)
 		if err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -387,7 +388,7 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 
 		start, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s %s", r.StartMonth, r.StartYear))
 		if err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 			w.WriteHeader(http.StatusInternalServerError)
 			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
 			http.Redirect(w, req, redirectURL, 302)
@@ -395,14 +396,14 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 
 		end, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s %s", r.EndMonth, r.EndYear))
 		if err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 			w.WriteHeader(http.StatusInternalServerError)
 			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
 			http.Redirect(w, req, redirectURL, 302)
 		}
 
 		if end.Before(start) {
-			log.Info("end date before start date", log.Data{"start": start, "end": end})
+			log.Info("end date before start date", log.Data{"start": start, "end": end, "setting-response-status": http.StatusInternalServerError})
 			w.WriteHeader(http.StatusInternalServerError)
 			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
 			http.Redirect(w, req, redirectURL, 302)
@@ -419,7 +420,8 @@ func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
 		log.InfoR(req, "options", log.Data{"options": options, "values": values})
 		for _, opt := range options {
 			if err := f.FilterClient.AddDimensionValue(filterID, name, opt); err != nil {
-				log.ErrorR(req, err, nil)
+				log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 		}
@@ -444,27 +446,27 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 
 	fj, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	versionURL, err := url.Parse(fj.Links.Version.HRef)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 	if err != nil {
-		log.Error(err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	vals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		return
 	}
 
@@ -474,7 +476,8 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 	}
 
 	if err := f.FilterClient.AddDimensionValues(filterID, name, options); err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -488,7 +491,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 	filterID := vars["filterID"]
 
 	if err := req.ParseForm(); err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -514,7 +517,9 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 	go func() {
 		opts, err := f.FilterClient.GetDimensionOptions(filterID, name)
 		if err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
 		for _, opt := range opts {
@@ -583,11 +588,15 @@ func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
 	selectorType := req.URL.Query().Get("selectorType")
 
 	if err := f.FilterClient.RemoveDimension(filterID, name); err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	if err := f.FilterClient.AddDimension(filterID, name); err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
@@ -606,7 +615,9 @@ func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
 	selectorType := req.URL.Query().Get("selectorType")
 
 	if err := f.FilterClient.RemoveDimensionValue(filterID, name, option); err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
@@ -614,16 +625,4 @@ func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
 		redirectURL = redirectURL + "?selectorType=list"
 	}
 	http.Redirect(w, req, redirectURL, 302)
-}
-
-func getCodeIDFromURI(uri string) string {
-	codeReg := regexp.MustCompile(`^\/code-lists\/(.+)\/codes$`)
-	subs := codeReg.FindStringSubmatch(uri)
-
-	if len(subs) == 2 {
-		return subs[1]
-	}
-
-	log.Info("could not extract codeID from uri", nil)
-	return ""
 }
