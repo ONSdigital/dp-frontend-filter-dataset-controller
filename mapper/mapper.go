@@ -124,7 +124,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.Model, datasetID, releaseDate string) listSelector.Page {
 	var p listSelector.Page
 
-	log.Debug("mapping api response models to list selector page model", log.Data{"filterID": filter.FilterID, "datasetID": datasetID})
+	log.Debug("mapping api response models to list selector page model", log.Data{"filterID": filter.FilterID, "datasetID": datasetID, "dimension": name})
 
 	p.SearchDisabled = true
 	p.FilterID = filter.FilterID
@@ -273,7 +273,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.Model, datasetID, releaseDate string) rangeSelector.Page {
 	var p rangeSelector.Page
 
-	log.Debug("mapping api response models to range selector page model", log.Data{"filterID": filter.FilterID, "datasetID": datasetID})
+	log.Debug("mapping api response models to range selector page model", log.Data{"filterID": filter.FilterID, "datasetID": datasetID, "dimension": name})
 
 	p.SearchDisabled = true
 
@@ -481,7 +481,7 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Parent, dst dataset.Model, f filter.Model, curPath, dimensionTitle, datasetID, releaseDate string) hierarchy.Page {
 	var p hierarchy.Page
 
-	log.Debug("mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
+	log.Debug("mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "dimension": dimensionTitle})
 
 	var title string
 	if len(parents) == 0 {
