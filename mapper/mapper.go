@@ -42,8 +42,6 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 	p.Metadata.Title = "Filter Options"
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
 
-	log.Debug("dom", log.Data{"domain": p.TaxonomyDomain})
-
 	disableButton := true
 
 	for _, d := range dimensions {
