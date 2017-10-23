@@ -3,6 +3,7 @@ package mapper
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 
@@ -39,6 +40,9 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 
 	p.FilterID = filterID
 	p.Metadata.Title = "Filter Options"
+	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+
+	log.Debug("dom", log.Data{"domain": p.TaxonomyDomain})
 
 	disableButton := true
 
@@ -130,6 +134,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 	p.FilterID = filter.FilterID
 	p.Data.Title = dimensionTitleTranslator[name]
 	p.Metadata.Title = dimensionTitleTranslator[name]
+	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
@@ -276,6 +281,7 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 	log.Debug("mapping api response models to range selector page model", log.Data{"filterID": filter.FilterID, "datasetID": datasetID, "dimension": name})
 
 	p.SearchDisabled = true
+	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
@@ -408,6 +414,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 	log.Debug("mapping api responses to preview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
 
 	p.SearchDisabled = true
+	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
@@ -491,6 +498,7 @@ func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Pare
 	}
 
 	p.SearchDisabled = true
+	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
