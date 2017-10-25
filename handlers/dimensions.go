@@ -533,6 +533,8 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 		wg.Done()
 	}()
 
+	wg.Wait()
+
 	for k := range req.Form {
 		if k == ":uri" || k == "save-and-return" {
 			continue
@@ -543,8 +545,6 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 	}
-
-	wg.Wait()
 
 	http.Redirect(w, req, redirectURL, 302)
 }

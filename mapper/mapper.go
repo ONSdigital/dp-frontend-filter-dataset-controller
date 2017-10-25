@@ -14,6 +14,7 @@ import (
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/rangeSelector"
+	timeModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time"
 	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	hierarchyClient "github.com/ONSdigital/go-ns/clients/hierarchy"
@@ -480,6 +481,147 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 		lookup[val.Option] = val.Label
 	}
 	return lookup
+}
+
+// CreateTimePage will create a time selector page based on api response models
+func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, datasetID string) (timeModel.Page, error) {
+	var p timeModel.Page
+
+	p.FilterID = f.FilterID
+	p.SearchDisabled = true
+	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+
+	versionURL, err := url.Parse(f.Links.Version.HRef)
+	if err != nil {
+		return p, err
+	}
+
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: d.Title,
+		URI:   versionURL.Path,
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: "Filter this dataset",
+		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: "Time",
+	})
+
+	p.Metadata.Title = "Time"
+
+	lookup := getNameIDLookup(allVals)
+
+	var allTimes []string
+	for _, val := range allVals.Items {
+		allTimes = append(allTimes, val.Label)
+	}
+
+	times, err := dates.ConvertToReadable(allTimes)
+	if err != nil {
+		return p, err
+	}
+
+	times = dates.Sort(times)
+
+	p.Data.FirstTime = timeModel.Value{
+		Option: lookup[times[0].Format("Jan-06")],
+		Month:  times[0].Month().String(),
+		Year:   fmt.Sprintf("%d", times[0].Year()),
+	}
+
+	p.Data.LatestTime = timeModel.Value{
+		Option: lookup[times[len(times)-1].Format("Jan-06")],
+		Month:  times[len(times)-1].Month().String(),
+		Year:   fmt.Sprintf("%d", times[len(times)-1].Year()),
+	}
+
+	firstYear := times[0].Year()
+	lastYear := times[len(times)-1].Year()
+	diffYears := lastYear - firstYear
+
+	p.Data.Years = append(p.Data.Years, "Select")
+	for i := 0; i < diffYears+1; i++ {
+		p.Data.Years = append(p.Data.Years, fmt.Sprintf("%d", firstYear+i))
+	}
+
+	p.Data.Months = append(p.Data.Months, "Select")
+	for i := 0; i < 12; i++ {
+		p.Data.Months = append(p.Data.Months, time.Month(i+1).String())
+	}
+
+	// Reverse times so latest is first
+	for i, j := 0, len(times)-1; i < j; i, j = i+1, j-1 {
+		times[i], times[j] = times[j], times[i]
+	}
+
+	for _, val := range times {
+		var isSelected bool
+		for _, selVal := range selVals {
+			if val.Format("Jan-06") == selVal.Option {
+				isSelected = true
+			}
+		}
+
+		p.Data.Values = append(p.Data.Values, timeModel.Value{
+			Option:     lookup[val.Format("Jan-06")],
+			Month:      val.Month().String(),
+			Year:       fmt.Sprintf("%d", val.Year()),
+			IsSelected: isSelected,
+		})
+	}
+
+	p.Data.FormAction = timeModel.Link{
+		URL: fmt.Sprintf("/filters/%s/dimensions/time/update", f.FilterID),
+	}
+
+	var contactName string
+	if len(d.Contacts) > 0 {
+		contactName = d.Contacts[0].Name
+	}
+
+	p.Metadata.Footer = model.Footer{
+		Enabled:     true,
+		Contact:     contactName,
+		ReleaseDate: v.ReleaseDate,
+		NextRelease: d.NextRelease,
+		DatasetID:   datasetID,
+	}
+
+	if len(selVals) == 1 && p.Data.Values[0].IsSelected {
+		p.Data.CheckedRadio = "latest"
+	} else if len(selVals) == 1 {
+		p.Data.CheckedRadio = "single"
+	} else if len(selVals) == 0 {
+		p.Data.CheckedRadio = ""
+	} else if len(selVals) == len(allVals.Items) {
+		p.Data.CheckedRadio = "list"
+	} else {
+		p.Data.CheckedRadio = "range"
+
+		for i, val := range p.Data.Values {
+			if val.IsSelected {
+
+				for j := i; j < len(p.Data.Values); j++ {
+					if p.Data.Values[j].IsSelected {
+						continue
+					} else {
+						for k := j; k < len(p.Data.Values); k++ {
+							if p.Data.Values[k].IsSelected {
+								p.Data.CheckedRadio = "list"
+								break
+							}
+						}
+					}
+				}
+
+			}
+		}
+	}
+
+	log.Debug("checked", log.Data{"p": p.Data.CheckedRadio})
+
+	return p, nil
 }
 
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
