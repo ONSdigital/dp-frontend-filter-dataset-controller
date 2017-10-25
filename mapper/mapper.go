@@ -188,66 +188,26 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 		valueIDmap[val.Label] = val.Option
 	}
 
-	if name == "time" {
-		dats, err := dates.ConvertToReadable(allListValues)
-		if err != nil {
-			log.Error(err, nil)
-		}
-
-		dats = dates.Sort(dats)
-
-		selectedDats, err := dates.ConvertToReadable(selectedListValues)
-		if err != nil {
-			log.Error(err, nil)
-		}
-
-		selectedDats = dates.Sort(selectedDats)
-
-		for _, val := range selectedDats {
-			p.Data.FiltersAdded = append(p.Data.FiltersAdded, listSelector.Filter{
-				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s?selectorType=list", filter.FilterID, name, valueIDmap[val.Format("Jan-06")]),
-				Label:     dates.ConvertToMonthYear(val),
-				ID:        valueIDmap[val.Format("Jan-06")],
-			})
-		}
-
-		for _, val := range dats {
-			var isSelected bool
-			for _, selDat := range selectedDats {
-				if selDat.Equal(val) {
-					isSelected = true
-				}
+	for _, val := range allListValues {
+		var isSelected bool
+		for _, sval := range selectedListValues {
+			if sval == val {
+				isSelected = true
 			}
-
-			p.Data.RangeData.Values = append(p.Data.RangeData.Values, listSelector.Value{
-				Label:      dates.ConvertToMonthYear(val),
-				ID:         valueIDmap[val.Format("Jan-06")],
-				IsSelected: isSelected,
-			})
 		}
+		p.Data.RangeData.Values = append(p.Data.RangeData.Values, listSelector.Value{
+			Label:      val,
+			ID:         valueIDmap[val],
+			IsSelected: isSelected,
+		})
+	}
 
-	} else {
-		for _, val := range allListValues {
-			var isSelected bool
-			for _, sval := range selectedListValues {
-				if sval == val {
-					isSelected = true
-				}
-			}
-			p.Data.RangeData.Values = append(p.Data.RangeData.Values, listSelector.Value{
-				Label:      val,
-				ID:         valueIDmap[val],
-				IsSelected: isSelected,
-			})
-		}
-
-		for _, val := range selectedListValues {
-			p.Data.FiltersAdded = append(p.Data.FiltersAdded, listSelector.Filter{
-				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s?selectorType=list", filter.FilterID, name, valueIDmap[val]),
-				Label:     val,
-				ID:        valueIDmap[val],
-			})
-		}
+	for _, val := range selectedListValues {
+		p.Data.FiltersAdded = append(p.Data.FiltersAdded, listSelector.Filter{
+			RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s?selectorType=list", filter.FilterID, name, valueIDmap[val]),
+			Label:     val,
+			ID:        valueIDmap[val],
+		})
 	}
 
 	if len(allListValues) == len(selectedListValues) {
@@ -337,47 +297,6 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 
 	for _, val := range allValues.Items {
 		p.Data.RangeData.Values = append(p.Data.RangeData.Values, val.Label)
-	}
-
-	if name == "time" {
-		selectedDats, err := dates.ConvertToReadable(selectedRangeValues)
-		if err != nil {
-			log.Error(err, nil)
-		}
-
-		timeIDLookup := make(map[time.Time]string)
-		for i, dat := range selectedDats {
-			timeIDLookup[dat] = selectedRangeIDs[i]
-		}
-
-		selectedDats = dates.Sort(selectedDats)
-
-		for _, val := range selectedDats {
-			p.Data.FiltersAdded = append(p.Data.FiltersAdded, rangeSelector.Filter{
-				RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s", filter.FilterID, name, timeIDLookup[val]),
-				Label:     dates.ConvertToMonthYear(val),
-				ID:        timeIDLookup[val],
-			})
-		}
-
-		allDats, err := dates.ConvertToReadable(p.Data.RangeData.Values)
-		if err != nil {
-			log.Error(err, nil)
-		}
-
-		allDats = dates.Sort(allDats)
-
-		firstYear := allDats[0].Year()
-		lastYear := allDats[len(allDats)-1].Year()
-		diffYears := lastYear - firstYear
-
-		for i := 0; i < diffYears+1; i++ {
-			p.Data.DateRangeData.YearValues = append(p.Data.DateRangeData.YearValues, fmt.Sprintf("%d", firstYear+i))
-		}
-
-		for i := 0; i < 12; i++ {
-			p.Data.DateRangeData.MonthValues = append(p.Data.DateRangeData.MonthValues, time.Month(i+1).String())
-		}
 	}
 
 	p.Data.RangeData.URL = fmt.Sprintf("/filters/%s/dimensions/%s/range", filter.FilterID, name)
