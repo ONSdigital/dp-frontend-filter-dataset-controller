@@ -76,7 +76,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 		if len(fod.AddedCategories) > 0 {
 			fod.Link.Label = "Filter"
 		} else {
-			fod.Link.Label = "Please select"
+			fod.Link.Label = "Add at least one"
 		}
 
 		fod.Filter = dimensionTitleTranslator[d.Name]
@@ -102,7 +102,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: "Filter this dataset",
+		Title: "Filter options",
 	})
 
 	var name string
@@ -144,7 +144,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: "Filter this dataset",
+		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -291,7 +291,7 @@ func CreateRangeSelectorPage(name string, selectedValues []filter.DimensionOptio
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: "Filter this dataset",
+		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -424,7 +424,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: "Filter this dataset",
+		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", filterID),
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -508,7 +508,7 @@ func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Pare
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: "Filter this dataset",
+		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
 	for i, par := range parents {
