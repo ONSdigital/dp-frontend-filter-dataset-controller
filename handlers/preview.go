@@ -13,6 +13,29 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Submit handles the submitting of a filter job through the filter API
+func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	filterID := vars["filterID"]
+
+	fil, err := f.FilterClient.GetJobState(filterID)
+	if err != nil {
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	fil.State = "submitted"
+
+	if err := f.FilterClient.UpdateJob(fil); err != nil {
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, req, fmt.Sprintf("/filters/%s", filterID), 302)
+}
+
 // PreviewPage controls the rendering of the preview and download page
 func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
@@ -31,19 +54,6 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 			Name:   "CPI",
 			Values: []string{"0.23", "0.48", "0.593", "0.38", "0.349", "0.389"},
 		},
-	}
-
-	fil, err := f.FilterClient.GetJobState(filterID)
-	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if fil.State == "created" {
-		fil.State = "submitted"
-
-		f.FilterClient.UpdateJob(fil)
 	}
 
 	fj, err := f.FilterClient.GetJobState(filterID)
@@ -86,7 +96,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreatePreviewPage(dimensions, fil, dataset, filterID, datasetID, ver.ReleaseDate)
+	p := mapper.CreatePreviewPage(dimensions, fj, dataset, filterID, datasetID, ver.ReleaseDate)
 
 	if latestURL.Path == versionURL.Path {
 		p.Data.IsLatestVersion = true
@@ -95,7 +105,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	p.Data.LatestVersion.DatasetLandingPageURL = versionURL.Path
 	p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterID)
 
-	if fil.State != "completed" {
+	if fj.State != "completed" {
 		p.IsContentLoaded = false
 	}
 
