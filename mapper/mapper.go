@@ -406,6 +406,8 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, datasetID string) (timeModel.Page, error) {
 	var p timeModel.Page
 
+	log.Debug("mapping api responses to time page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
+
 	p.FilterID = f.FilterID
 	p.SearchDisabled = true
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
@@ -537,8 +539,6 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 			}
 		}
 	}
-
-	log.Debug("checked", log.Data{"p": p.Data.CheckedRadio})
 
 	return p, nil
 }
