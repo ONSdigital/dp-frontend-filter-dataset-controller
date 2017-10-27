@@ -513,6 +513,12 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 		p.Data.CheckedRadio = "latest"
 	} else if len(selVals) == 1 {
 		p.Data.CheckedRadio = "single"
+		date, err := time.Parse("Jan-06", selVals[0].Option)
+		if err != nil {
+			log.Error(err, nil)
+		}
+		p.Data.SelectedStartMonth = date.Month().String()
+		p.Data.SelectedStartYear = fmt.Sprintf("%d", date.Year())
 	} else if len(selVals) == 0 {
 		p.Data.CheckedRadio = ""
 	} else if len(selVals) == len(allVals.Items) {
@@ -522,7 +528,6 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 
 		for i, val := range p.Data.Values {
 			if val.IsSelected {
-
 				for j := i; j < len(p.Data.Values); j++ {
 					if p.Data.Values[j].IsSelected {
 						continue
@@ -535,9 +540,27 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 						}
 					}
 				}
-
 			}
 		}
+	}
+
+	if p.Data.CheckedRadio == "range" {
+		var selOptions []string
+		for _, val := range selVals {
+			selOptions = append(selOptions, val.Option)
+		}
+
+		selDates, err := dates.ConvertToReadable(selOptions)
+		if err != nil {
+			log.Error(err, nil)
+		}
+
+		selDates = dates.Sort(selDates)
+
+		p.Data.SelectedStartMonth = selDates[0].Month().String()
+		p.Data.SelectedStartYear = fmt.Sprintf("%d", selDates[0].Year())
+		p.Data.SelectedEndMonth = selDates[len(selDates)-1].Month().String()
+		p.Data.SelectedEndYear = fmt.Sprintf("%d", selDates[len(selDates)-1].Year())
 	}
 
 	return p, nil

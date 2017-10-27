@@ -24,6 +24,7 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 	if err := f.FilterClient.AddDimension(filterID, "time"); err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
