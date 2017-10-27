@@ -39,6 +39,12 @@
 			"revisionTime": "2017-09-08T08:49:08Z"
 		},
 		{
+			"checksumSHA1": "bUMCWuOI3j72aKOLOZIi0NlF9oo=",
+			"path": "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time",
+			"revision": "30fcf42e91e161487a12ae2c26611001b36c5ad2",
+			"revisionTime": "2017-10-26T09:20:50Z"
+		},
+		{
 			"checksumSHA1": "zgQXB6EtoNdvUCvMjxA6U9cfDDI=",
 			"path": "github.com/ONSdigital/go-ns/clients/clientlog",
 			"revision": "cea7003259c9767d3bfb84af8c93fdc76f329880",
