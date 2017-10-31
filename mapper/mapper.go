@@ -331,7 +331,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	log.Debug("mapping api responses to preview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
 
-	p.SearchDisabled = true
+	p.SearchDisabled = false
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
