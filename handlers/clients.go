@@ -14,14 +14,15 @@ type FilterClient interface {
 	GetDimensions(filterID string) (dims []filter.Dimension, err error)
 	GetDimensionOptions(filterID, name string) (fdv []filter.DimensionOption, err error)
 	GetJobState(filterID string) (f filter.Model, err error)
+	GetOutput(filterOutputID string) (f filter.Model, err error)
 	GetDimension(filterID, name string) (dim filter.Dimension, err error)
 	AddDimensionValue(filterID, name, value string) error
 	RemoveDimensionValue(filterID, name, value string) error
 	RemoveDimension(filterID, name string) (err error)
 	AddDimension(filterID, name string) (err error)
 	AddDimensionValues(filterID, name string, options []string) error
-	UpdateJob(m filter.Model) error
-	CreateJob(string) (string, error)
+	UpdateJob(m filter.Model, doSubmit bool) (filter.Model, error)
+	CreateJob(string, []string) (string, error)
 }
 
 // DatasetClient is an interface with methods required for a dataset client

@@ -351,7 +351,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 		Title: "Preview",
 	})
 
-	p.Data.FilterID = filterID
+	p.Data.FilterID = filter.Links.FilterBlueprint.ID
 
 	var contactName string
 	if len(dst.Contacts) > 0 {

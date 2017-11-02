@@ -28,7 +28,7 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	newFilterID, err := f.FilterClient.CreateJob(oldJob.InstanceID)
+	newFilterID, err := f.FilterClient.CreateJob(oldJob.InstanceID, []string{})
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)

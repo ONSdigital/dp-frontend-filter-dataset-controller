@@ -25,15 +25,16 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fil.State = "submitted"
-
-	if err := f.FilterClient.UpdateJob(fil); err != nil {
+	mdl, err := f.FilterClient.UpdateJob(fil, true)
+	if err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, req, fmt.Sprintf("/filters/%s", filterID), 302)
+	filterOutputID := mdl.Links.FilterOutputs.ID
+
+	http.Redirect(w, req, fmt.Sprintf("/filter-outputs/%s", filterOutputID), 302)
 }
 
 // PreviewPage controls the rendering of the preview and download page
@@ -56,7 +57,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		},
 	}
 
-	fj, err := f.FilterClient.GetJobState(filterID)
+	fj, err := f.FilterClient.GetOutput(filterID)
 	if err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
