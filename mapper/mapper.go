@@ -68,11 +68,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 			}
 		}
 
-		if d.Name == "aggregate" {
-			fod.Link.URL = fmt.Sprintf("/filters/%s/dimensions/%s?selectorType=list", filterID, d.Name)
-		} else {
-			fod.Link.URL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, d.Name)
-		}
+		fod.Link.URL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, d.Name)
 
 		if len(fod.AddedCategories) > 0 {
 			fod.Link.Label = "Filter"
@@ -567,14 +563,16 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 }
 
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
-func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Parent, dst dataset.Model, f filter.Model, curPath, dimensionTitle, datasetID, releaseDate string) hierarchy.Page {
+func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, name, curPath, datasetID, releaseDate string) hierarchy.Page {
 	var p hierarchy.Page
 
-	log.Debug("mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "dimension": dimensionTitle})
+	log.Debug("mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "label": h.Label})
+
+	p.Data.DimensionName = dimensionTitleTranslator[name]
 
 	var title string
-	if len(parents) == 0 {
-		title = dimensionTitleTranslator[dimensionTitle]
+	if len(h.Breadcrumbs) == 0 {
+		title = dimensionTitleTranslator[name]
 	} else {
 		title = h.Label
 	}
@@ -595,18 +593,24 @@ func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Pare
 		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
-	for i, par := range parents {
-		var breadrumbTitle string
-		if i != 0 {
-			breadrumbTitle = par.Label
-		} else {
-			breadrumbTitle = dimensionTitleTranslator[dimensionTitle]
+	if len(h.Breadcrumbs) > 0 {
+		for i := len(h.Breadcrumbs); i <= 0; i-- {
+			breadcrumb := h.Breadcrumbs[i]
+
+			var url string
+			if breadcrumb.Links.Self.ID != "" {
+				url = fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, breadcrumb.Links.Self.ID)
+			} else {
+				url = fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name)
+			}
+
+			p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+				Title: breadcrumb.Label,
+				URI:   url,
+			})
 		}
-		p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-			Title: breadrumbTitle,
-			URI:   fmt.Sprintf("/filters/%s%s", f.FilterID, par.URL),
-		})
 	}
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: title,
 	})
@@ -614,14 +618,18 @@ func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Pare
 	p.FilterID = f.FilterID
 	p.Data.Title = title
 	p.Metadata.Title = title
-	if len(parents) > 0 {
-		if len(parents) == 1 {
-			p.Data.Parent = dimensionTitleTranslator[dimensionTitle]
+
+	if len(h.Breadcrumbs) > 0 {
+		if len(h.Breadcrumbs) == 1 {
+			p.Data.Parent = dimensionTitleTranslator[name]
+			p.Data.GoBack = hierarchy.Link{
+				URL: fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name),
+			}
 		} else {
-			p.Data.Parent = parents[len(parents)-1].Label
-		}
-		p.Data.GoBack = hierarchy.Link{
-			URL: fmt.Sprintf("/filters/%s%s", f.FilterID, parents[len(parents)-1].URL),
+			p.Data.Parent = h.Breadcrumbs[0].Label
+			p.Data.GoBack = hierarchy.Link{
+				URL: fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, h.Breadcrumbs[0].Links.Self.ID),
+			}
 		}
 	}
 
@@ -629,34 +637,29 @@ func CreateHierarchyPage(h hierarchyClient.Model, parents []hierarchyClient.Pare
 	p.Data.AddAllFilters.URL = curPath + "/add-all"
 	p.Data.RemoveAll.URL = curPath + "/remove-all"
 
-	for _, dim := range f.Dimensions {
-		if dim.Name == dimensionTitle {
-			for i, val := range dim.Values {
-				p.Data.FiltersAdded = append(p.Data.FiltersAdded, hierarchy.Filter{
-					Label:     val,
-					RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, dim.IDs[i]),
-					ID:        dim.IDs[i],
-				})
-			}
-		}
+	idLabelMap := getIDNameLookup(allVals)
+
+	for _, val := range selVals {
+		p.Data.FiltersAdded = append(p.Data.FiltersAdded, hierarchy.Filter{
+			Label:     idLabelMap[val.Option],
+			RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, val.Option),
+			ID:        val.Option,
+		})
 	}
 
 	for _, child := range h.Children {
 		var selected bool
-		for _, dim := range f.Dimensions {
-			if dim.Name == dimensionTitle {
-				for _, id := range dim.IDs {
-					if id == child.ID {
-						selected = true
-					}
-				}
+		for _, val := range selVals {
+			if val.Option == child.Links.Self.ID {
+				selected = true
 			}
 		}
+
 		p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
 			Label:    child.Label,
-			ID:       child.ID,
+			ID:       child.Links.Self.ID,
 			SubNum:   strconv.Itoa(child.NumberofChildren),
-			SubURL:   fmt.Sprintf("redirect:/filters/%s%s", f.FilterID, child.URL),
+			SubURL:   fmt.Sprintf("redirect:/filters/%s/dimensions/%s/%s", f.FilterID, name, child.Links.Self.ID),
 			Selected: selected,
 		})
 
