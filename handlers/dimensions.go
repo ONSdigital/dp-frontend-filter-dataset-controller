@@ -191,15 +191,17 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 	name := vars["name"]
 	filterID := vars["filterID"]
 
-	if name == "aggregate" {
-		f.Hierarchy(w, req)
-		return
-	}
-
 	filter, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
+	// then the dimension should be populated as a hierarchy
+	if _, err = f.HierarchyClient.GetRoot(filter.InstanceID, name); err == nil {
+		f.Hierarchy(w, req)
 		return
 	}
 
