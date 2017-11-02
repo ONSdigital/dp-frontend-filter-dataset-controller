@@ -191,11 +191,10 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 	name := vars["name"]
 	filterID := vars["filterID"]
 
-	/*	if name == "aggregate" || name == "CPI" {
-		//url := fmt.Sprintf("/filters/%s/hierarchies/%s", filterID, name)
-		url := fmt.Sprintf("/filters/%s/dimensions/%s?selectorType=list", filterID, name)
-		http.Redirect(w, req, url, 302)
-	} */ // TODO: uncomment when hierarchy api is completed
+	if name == "aggregate" {
+		f.Hierarchy(w, req)
+		return
+	}
 
 	filter, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
