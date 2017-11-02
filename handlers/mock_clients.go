@@ -71,16 +71,16 @@ func (_mr *MockFilterClientMockRecorder) AddDimensionValues(arg0, arg1, arg2 int
 }
 
 // CreateJob mocks base method
-func (_m *MockFilterClient) CreateJob(_param0 string) (string, error) {
-	ret := _m.ctrl.Call(_m, "CreateJob", _param0)
+func (_m *MockFilterClient) CreateJob(_param0 string, _param1 []string) (string, error) {
+	ret := _m.ctrl.Call(_m, "CreateJob", _param0, _param1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateJob indicates an expected call of CreateJob
-func (_mr *MockFilterClientMockRecorder) CreateJob(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateJob", arg0)
+func (_mr *MockFilterClientMockRecorder) CreateJob(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateJob", arg0, arg1)
 }
 
 // GetDimension mocks base method
@@ -135,6 +135,19 @@ func (_mr *MockFilterClientMockRecorder) GetJobState(arg0 interface{}) *gomock.C
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetJobState", arg0)
 }
 
+// GetOutput mocks base method
+func (_m *MockFilterClient) GetOutput(_param0 string) (filter.Model, error) {
+	ret := _m.ctrl.Call(_m, "GetOutput", _param0)
+	ret0, _ := ret[0].(filter.Model)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOutput indicates an expected call of GetOutput
+func (_mr *MockFilterClientMockRecorder) GetOutput(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetOutput", arg0)
+}
+
 // Healthcheck mocks base method
 func (_m *MockFilterClient) Healthcheck() (string, error) {
 	ret := _m.ctrl.Call(_m, "Healthcheck")
@@ -173,15 +186,16 @@ func (_mr *MockFilterClientMockRecorder) RemoveDimensionValue(arg0, arg1, arg2 i
 }
 
 // UpdateJob mocks base method
-func (_m *MockFilterClient) UpdateJob(_param0 filter.Model) error {
-	ret := _m.ctrl.Call(_m, "UpdateJob", _param0)
-	ret0, _ := ret[0].(error)
-	return ret0
+func (_m *MockFilterClient) UpdateJob(_param0 filter.Model, _param1 bool) (filter.Model, error) {
+	ret := _m.ctrl.Call(_m, "UpdateJob", _param0, _param1)
+	ret0, _ := ret[0].(filter.Model)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateJob indicates an expected call of UpdateJob
-func (_mr *MockFilterClientMockRecorder) UpdateJob(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "UpdateJob", arg0)
+func (_mr *MockFilterClientMockRecorder) UpdateJob(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "UpdateJob", arg0, arg1)
 }
 
 // MockDatasetClient is a mock of DatasetClient interface
