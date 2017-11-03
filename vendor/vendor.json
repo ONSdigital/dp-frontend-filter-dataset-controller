@@ -69,10 +69,10 @@
 			"revisionTime": "2017-10-09T12:09:44Z"
 		},
 		{
-			"checksumSHA1": "RPp4ZjUnh7gz7liW2vr52UfONyg=",
+			"checksumSHA1": "B9EZKCpOc9HSP6kJJC2q0voNAfs=",
 			"path": "github.com/ONSdigital/go-ns/clients/hierarchy",
-			"revision": "a1bd0a85bf8904441aa027164380a31c6583cec4",
-			"revisionTime": "2017-10-23T12:32:27Z"
+			"revision": "23ebb89ff9dfbcfec46d947702b1c9177fa1bb66",
+			"revisionTime": "2017-11-03T10:51:58Z"
 		},
 		{
 			"checksumSHA1": "SE6Kslx9U8YhbeNOSQ5n0vvkuYI=",
