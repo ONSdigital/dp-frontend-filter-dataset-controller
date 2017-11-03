@@ -12,7 +12,7 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/go-ns/clients/filter"
-	hierarchy "github.com/ONSdigital/go-ns/clients/hierarchy"
+	"github.com/ONSdigital/go-ns/clients/hierarchy"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
