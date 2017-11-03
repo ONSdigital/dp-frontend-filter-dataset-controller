@@ -594,7 +594,7 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
 	if len(h.Breadcrumbs) > 0 {
-		for i := len(h.Breadcrumbs); i <= 0; i-- {
+		for i := len(h.Breadcrumbs) - 1; i >= 0; i-- {
 			breadcrumb := h.Breadcrumbs[i]
 
 			var url string
