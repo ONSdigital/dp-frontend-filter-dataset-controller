@@ -17,33 +17,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// HierarchyRemoveAll allows the removing of all selected values in a hierarchy
-func (f *Filter) HierarchyRemoveAll(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-
-	filterID := vars["filterID"]
-	name := vars["name"]
-	code := vars["code"]
-
-	if err := f.FilterClient.RemoveDimension(filterID, name); err != nil {
-		log.ErrorR(req, err, nil)
-	}
-
-	if err := f.FilterClient.AddDimension(filterID, name); err != nil {
-		log.ErrorR(req, err, nil)
-	}
-
-	var redirectURI string
-	if len(code) > 0 {
-		redirectURI = fmt.Sprintf("/filters/%s/dimensions/%s/%s", filterID, name, code)
-	} else {
-		redirectURI = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-	}
-
-	http.Redirect(w, req, redirectURI, 302)
-}
-
-// HierarchyUpdate ...
+// HierarchyUpdate controls the updating of a hierarchy job
 func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 
@@ -186,29 +160,6 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 			log.ErrorR(req, err, nil)
 		}
 	}
-
-	http.Redirect(w, req, redirectURI, 302)
-}
-
-// HierarchyRemove removes a single value from a hierarchy
-func (f *Filter) HierarchyRemove(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-
-	filterID := vars["filterID"]
-	name := vars["name"]
-	option := vars["option"]
-
-	if err := f.FilterClient.RemoveDimensionValue(filterID, name, option); err != nil {
-		log.ErrorR(req, err, nil)
-		return
-	}
-
-	curPath := req.URL.Path
-
-	pathReg := regexp.MustCompile(`^(\/filters\/.+\/hierarchies\/.+)\/remove\/.+$`)
-	pathSubs := pathReg.FindStringSubmatch(curPath)
-
-	redirectURI := pathSubs[1]
 
 	http.Redirect(w, req, redirectURI, 302)
 }
