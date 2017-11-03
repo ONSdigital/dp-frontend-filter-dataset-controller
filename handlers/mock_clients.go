@@ -70,17 +70,17 @@ func (_mr *MockFilterClientMockRecorder) AddDimensionValues(arg0, arg1, arg2 int
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddDimensionValues", arg0, arg1, arg2)
 }
 
-// CreateJob mocks base method
-func (_m *MockFilterClient) CreateJob(_param0 string, _param1 []string) (string, error) {
-	ret := _m.ctrl.Call(_m, "CreateJob", _param0, _param1)
+// CreateBlueprint mocks base method
+func (_m *MockFilterClient) CreateBlueprint(_param0 string, _param1 []string) (string, error) {
+	ret := _m.ctrl.Call(_m, "CreateBlueprint", _param0, _param1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateJob indicates an expected call of CreateJob
-func (_mr *MockFilterClientMockRecorder) CreateJob(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateJob", arg0, arg1)
+// CreateBlueprint indicates an expected call of CreateBlueprint
+func (_mr *MockFilterClientMockRecorder) CreateBlueprint(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateBlueprint", arg0, arg1)
 }
 
 // GetDimension mocks base method
@@ -185,17 +185,17 @@ func (_mr *MockFilterClientMockRecorder) RemoveDimensionValue(arg0, arg1, arg2 i
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveDimensionValue", arg0, arg1, arg2)
 }
 
-// UpdateJob mocks base method
-func (_m *MockFilterClient) UpdateJob(_param0 filter.Model, _param1 bool) (filter.Model, error) {
-	ret := _m.ctrl.Call(_m, "UpdateJob", _param0, _param1)
+// UpdateBlueprint mocks base method
+func (_m *MockFilterClient) UpdateBlueprint(_param0 filter.Model, _param1 bool) (filter.Model, error) {
+	ret := _m.ctrl.Call(_m, "UpdateBlueprint", _param0, _param1)
 	ret0, _ := ret[0].(filter.Model)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// UpdateJob indicates an expected call of UpdateJob
-func (_mr *MockFilterClientMockRecorder) UpdateJob(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "UpdateJob", arg0, arg1)
+// UpdateBlueprint indicates an expected call of UpdateBlueprint
+func (_mr *MockFilterClientMockRecorder) UpdateBlueprint(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "UpdateBlueprint", arg0, arg1)
 }
 
 // MockDatasetClient is a mock of DatasetClient interface

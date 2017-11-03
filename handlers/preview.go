@@ -25,7 +25,7 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	mdl, err := f.FilterClient.UpdateJob(fil, true)
+	mdl, err := f.FilterClient.UpdateBlueprint(fil, true)
 	if err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
