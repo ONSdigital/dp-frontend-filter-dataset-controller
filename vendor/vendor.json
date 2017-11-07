@@ -15,10 +15,10 @@
 			"revisionTime": "2017-09-18T14:39:20Z"
 		},
 		{
-			"checksumSHA1": "LIctl/UiTCCoBj2/PN/iK/OFOG0=",
+			"checksumSHA1": "ohl+vTwFS7rzrSwF76vtG+Jk9NM=",
 			"path": "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/hierarchy",
-			"revision": "6e8f6da58fb44e177821771ae820b9a07d625082",
-			"revisionTime": "2017-09-08T08:49:08Z"
+			"revision": "d5005a8cb73c03ca98004c4021a99f2b05906a20",
+			"revisionTime": "2017-10-30T09:01:34Z"
 		},
 		{
 			"checksumSHA1": "ZEVw5TIha5cGVEQplEIrIhNpc40=",
@@ -69,10 +69,10 @@
 			"revisionTime": "2017-11-03T10:07:44Z"
 		},
 		{
-			"checksumSHA1": "66kXpwY5iAH8+9UHWqg7E5KFX94=",
+			"checksumSHA1": "dY+XQl0AiMc8aoBnLkkMxF2aQNQ=",
 			"path": "github.com/ONSdigital/go-ns/clients/hierarchy",
-			"revision": "cea7003259c9767d3bfb84af8c93fdc76f329880",
-			"revisionTime": "2017-10-09T08:31:24Z"
+			"revision": "e3a42e9c5849311f91e91bba75c1570d0d74939e",
+			"revisionTime": "2017-11-06T14:30:02Z"
 		},
 		{
 			"checksumSHA1": "SE6Kslx9U8YhbeNOSQ5n0vvkuYI=",

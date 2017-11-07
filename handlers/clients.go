@@ -46,7 +46,8 @@ type CodelistClient interface {
 // HierarchyClient contains methods expected for a heirarchy client
 type HierarchyClient interface {
 	healthcheck.Client
-	GetHierarchy(path string) (h hierarchy.Model, err error)
+	GetRoot(instanceID, name string) (hierarchy.Model, error)
+	GetChild(instanceID, name, code string) (hierarchy.Model, error)
 }
 
 // Renderer provides an interface for a service template renderer

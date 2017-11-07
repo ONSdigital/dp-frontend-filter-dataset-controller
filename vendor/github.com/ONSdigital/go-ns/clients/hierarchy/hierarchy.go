@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/go-ns/clients/clientlog"
+	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/rhttp"
 )
 
@@ -59,20 +60,41 @@ func (c *Client) Healthcheck() (string, error) {
 	return service, nil
 }
 
-// GetHierarchy returns the hierarchy for the requested path
-func (c *Client) GetHierarchy(path string) (m Model, err error) {
-	uri := fmt.Sprintf("%s/hierarchies/%s", c.url, path)
+// GetRoot returns the root hierarchy response from the hierarchy API
+func (c *Client) GetRoot(instanceID, name string) (m Model, err error) {
+	path := fmt.Sprintf("/hierarchies/%s/%s", instanceID, name)
 
-	clientlog.Do("retrieving hierarchy", service, uri)
+	clientlog.Do("retrieving hierarchy", service, path, log.Data{
+		"method":      "GET",
+		"instance_id": instanceID,
+		"dimension":   name,
+	})
 
-	resp, err := c.cli.Get(uri)
+	return c.getHierarchy(path)
+}
+
+// GetChild returns a child of a given hierarchy and code
+func (c *Client) GetChild(instanceID, name, code string) (m Model, err error) {
+	path := fmt.Sprintf("/hierarchies/%s/%s/%s", instanceID, name, code)
+
+	clientlog.Do("retrieving hierarchy", service, path, log.Data{
+		"method":      "GET",
+		"instance_id": instanceID,
+		"dimension":   name,
+		"code":        code,
+	})
+
+	return c.getHierarchy(path)
+}
+
+func (c *Client) getHierarchy(path string) (m Model, err error) {
+	resp, err := c.cli.Get(c.url + path)
 	if err != nil {
 		return
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		err = &ErrInvalidHierarchyAPIResponse{http.StatusOK, resp.StatusCode, uri}
-		return
+		return m, &ErrInvalidHierarchyAPIResponse{http.StatusOK, resp.StatusCode, path}
 	}
 
 	b, err := ioutil.ReadAll(resp.Body)
