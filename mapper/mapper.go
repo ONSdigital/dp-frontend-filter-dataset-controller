@@ -577,6 +577,12 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 		title = h.Label
 	}
 
+	if p.Data.DimensionName == "Goods and Services" {
+		p.Type = "type"
+	} else {
+		p.Type = "area"
+	}
+
 	p.SearchDisabled = true
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
 
