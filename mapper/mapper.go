@@ -349,6 +349,10 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	p.Data.FilterID = filter.Links.FilterBlueprint.ID
 
+	p.Data.DatasetTitle = dst.Title
+	p.Data.DatasetID = datasetID
+	p.Data.ReleaseDate = releaseDate
+
 	var contactName string
 	if len(dst.Contacts) > 0 {
 		contactName = dst.Contacts[0].Name

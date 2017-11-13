@@ -107,7 +107,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterID)
 
 	if fj.State != "completed" {
-		p.IsContentLoaded = false
+		p.IsContentLoaded = true
 	}
 
 	body, err := json.Marshal(p)
