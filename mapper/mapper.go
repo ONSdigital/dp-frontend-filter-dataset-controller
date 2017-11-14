@@ -32,6 +32,10 @@ var dimensionTitleTranslator = map[string]string{
 	"aggregate":          "Goods and Services",
 }
 
+var hierarchyBrowseLookup = map[string]string{
+	"geography": "area",
+}
+
 // CreateFilterOverview maps data items from API responses to form a filter overview
 // front end page model
 func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterID, datasetID, releaseDate string) filterOverview.Page {
@@ -583,6 +587,11 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 		title = dimensionTitleTranslator[name]
 	} else {
 		title = h.Label
+	}
+
+	var ok bool
+	if p.Type, ok = hierarchyBrowseLookup[name]; !ok {
+		p.Type = "type"
 	}
 
 	p.SearchDisabled = true
