@@ -345,7 +345,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter options",
-		URI:   fmt.Sprintf("/filters/%s/dimensions", filterID),
+		URI:   fmt.Sprintf("/filters/%s/dimensions", filter.Links.FilterBlueprint.ID),
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Preview",

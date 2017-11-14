@@ -112,7 +112,7 @@ func TestUnitMapper(t *testing.T) {
 		So(p.Breadcrumb, ShouldHaveLength, 3)
 		So(p.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
 		So(p.Breadcrumb[1].Title, ShouldEqual, "Filter options")
-		So(p.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
+		So(p.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.Links.FilterBlueprint.ID+"/dimensions")
 		So(p.Breadcrumb[2].Title, ShouldEqual, "Time")
 		So(p.Data.AddFromRange.Label, ShouldEqual, "add time range")
 		So(p.Data.AddFromRange.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time")
@@ -223,6 +223,9 @@ func getTestFilter() filter.Model {
 		Links: filter.Links{
 			Version: filter.Link{
 				HRef: "/datasets/1234/editions/5678/versions/1",
+			},
+			FilterBlueprint: filter.Link{
+				ID: "12349876",
 			},
 		},
 		Downloads: map[string]filter.Download{
