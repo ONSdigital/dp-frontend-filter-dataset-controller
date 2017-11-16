@@ -200,6 +200,11 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if len(allValues.Items) <= 20 {
+		f.DimensionSelector(w, req)
+		return
+	}
+
 	selValues, err := f.FilterClient.GetDimensionOptions(filterID, "time")
 	if err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})

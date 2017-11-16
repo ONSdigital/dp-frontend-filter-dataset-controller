@@ -120,7 +120,7 @@ func TestUnitMapper(t *testing.T) {
 		So(p.Data.Cancel.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
 		So(p.Data.AddAllInRange.Label, ShouldEqual, "All times")
 		So(p.Data.RangeData.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/list")
-		So(p.Data.RemoveAll.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/remove-all?selectorType=list")
+		So(p.Data.RemoveAll.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/remove-all")
 		So(p.Data.RangeData.Values, ShouldHaveLength, 3)
 		So(p.Data.RangeData.Values[0].Label, ShouldEqual, "Feb-10")
 		So(p.Data.RangeData.Values[0].IsSelected, ShouldBeFalse)
@@ -129,59 +129,6 @@ func TestUnitMapper(t *testing.T) {
 		So(p.Data.RangeData.Values[2].Label, ShouldEqual, "Apr-10")
 		So(p.Data.RangeData.Values[2].IsSelected, ShouldBeFalse)
 		So(p.Data.FiltersAmount, ShouldEqual, 2)
-		So(p.Metadata.Footer.Enabled, ShouldBeTrue)
-		So(p.Metadata.Footer.Contact, ShouldEqual, dataset.Contacts[0].Name)
-		So(p.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")
-		So(p.Metadata.Footer.DatasetID, ShouldEqual, "12345")
-	})
-
-	Convey("test CreateRangeSelectorPage successfully maps to a rangeSelector page model", t, func() {
-
-		allValues := dataset.Options{
-			Items: []dataset.Option{
-				{
-					Label:  "Feb-10",
-					Option: "abcdefg",
-				},
-				{
-					Label:  "Mar-10",
-					Option: "38jd83ik",
-				},
-				{
-					Label:  "Apr-10",
-					Option: "13984094",
-				},
-			},
-		}
-		dataset := getTestDataset()
-		selectedValues := []filter.DimensionOption{
-			{
-				Option: "38jd83ik",
-			},
-			{
-				Option: "bcdefg",
-			},
-		}
-
-		filter := getTestFilter()
-
-		p := CreateRangeSelectorPage("time", selectedValues, allValues, filter, dataset, "12345", "11-11-1992")
-		So(p.Data.Title, ShouldEqual, "Time")
-		So(p.SearchDisabled, ShouldBeTrue)
-		So(p.FilterID, ShouldEqual, filter.FilterID)
-
-		So(p.Breadcrumb, ShouldHaveLength, 3)
-		So(p.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(p.Breadcrumb[1].Title, ShouldEqual, "Filter options")
-		So(p.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
-		So(p.Breadcrumb[2].Title, ShouldEqual, "Time")
-		So(p.Data.AddFromList.Label, ShouldEqual, "Add time range")
-		So(p.Data.AddFromList.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time?selectorType=list")
-		So(p.Data.SaveAndReturn.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
-		So(p.Data.Cancel.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
-		So(p.Data.AddAllInRange.Label, ShouldEqual, "All times")
-		So(p.Data.RangeData.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/range")
-		So(p.Data.RemoveAll.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/remove-all")
 		So(p.Metadata.Footer.Enabled, ShouldBeTrue)
 		So(p.Metadata.Footer.Contact, ShouldEqual, dataset.Contacts[0].Name)
 		So(p.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")

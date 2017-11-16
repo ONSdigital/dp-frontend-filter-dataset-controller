@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
-	"time"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
@@ -14,7 +13,6 @@ import (
 	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/log"
-	"github.com/ONSdigital/go-ns/validator"
 	"github.com/gorilla/mux"
 )
 
@@ -198,13 +196,6 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
-	// then the dimension should be populated as a hierarchy
-	if _, err = f.HierarchyClient.GetRoot(filter.InstanceID, name); err == nil {
-		f.Hierarchy(w, req)
-		return
-	}
-
 	selectedValues, err := f.FilterClient.GetDimensionOptions(filterID, name)
 	if err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
@@ -252,33 +243,14 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	selectorType := req.URL.Query().Get("selectorType")
-	if selectorType == "list" {
-		f.listSelector(w, req, name, selectedValues, allValues, filter, dataset, datasetID, ver.ReleaseDate)
-	} else {
-		f.rangeSelector(w, req, name, selectedValues, allValues, filter, dataset, datasetID, ver.ReleaseDate)
-	}
-}
-
-func (f *Filter) rangeSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.Model, datasetID, releaseDate string) {
-
-	p := mapper.CreateRangeSelectorPage(name, selectedValues, allValues, filter, dataset, datasetID, releaseDate)
-
-	b, err := json.Marshal(p)
-	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+	// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
+	// then the dimension should be populated as a hierarchy
+	if _, err = f.HierarchyClient.GetRoot(filter.InstanceID, name); err == nil && len(allValues.Items) > 20 {
+		f.Hierarchy(w, req)
 		return
 	}
 
-	templateBytes, err := f.Renderer.Do("dataset-filter/range-selector", b)
-	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Write(templateBytes)
+	f.listSelector(w, req, name, selectedValues, allValues, fj, dataset, datasetID, ver.ReleaseDate)
 }
 
 // ListSelector controls the render of the age selector list template
@@ -301,135 +273,6 @@ func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name str
 	}
 
 	w.Write(templateBytes)
-}
-
-// Range represents range labels in the range selector page
-type Range struct {
-	AddAll         string `schema:"add-all"`
-	AddAllRange    string `schema:"add-all-range"`
-	End            string `schema:"end"`
-	EndMonth       string `schema:"end-month"`
-	EndYear        string `schema:"end-year"`
-	RemoveAllRange string `schema:"remove-all-range"`
-	Start          string `schema:"start"`
-	StartMonth     string `schema:"start-month"`
-	StartYear      string `schema:"start-year"`
-	SaveAndReturn  string `schema:"save-and-return"`
-}
-
-// AddRange will add a range of values to a filter job
-func (f *Filter) AddRange(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	name := vars["name"]
-	filterID := vars["filterID"]
-
-	if err := req.ParseForm(); err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	var r Range
-
-	if err := f.val.Validate(req, &r); err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		if _, ok := err.(validator.ErrFormValidationFailed); ok {
-			errs := err.(validator.ErrFormValidationFailed).GetFieldErrors()
-			log.Debug("field errors", log.Data{"errs": errs})
-		}
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	var redirectURL string
-	if len(r.SaveAndReturn) > 0 {
-		redirectURL = fmt.Sprintf("/filters/%s/dimensions", filterID)
-	} else {
-		redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-	}
-
-	if len(r.AddAll) > 0 {
-		f.addAll(w, req, redirectURL)
-		return
-	}
-
-	if len(req.Form["add-all-range"]) > 0 {
-		f.addAll(w, req, redirectURL)
-		return
-	}
-
-	if len(req.Form["remove-all-range"]) > 0 {
-		redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all", filterID, name)
-		http.Redirect(w, req, redirectURL, 302)
-		return
-	}
-
-	values, labelIDMap, err := f.getDimensionValues(filterID, name)
-	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if name == "time" {
-		dats, err := dates.ConvertToReadable(values)
-		if err != nil {
-			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		dats = dates.Sort(dats)
-
-		if r.Start == "select" {
-			r.Start = dates.ConvertToMonthYear(dats[0])
-		}
-		if r.End == "select" {
-			r.End = dates.ConvertToMonthYear(dats[len(dats)-1])
-		}
-
-		start, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s %s", r.StartMonth, r.StartYear))
-		if err != nil {
-			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-			w.WriteHeader(http.StatusInternalServerError)
-			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-			http.Redirect(w, req, redirectURL, 302)
-		}
-
-		end, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s %s", r.EndMonth, r.EndYear))
-		if err != nil {
-			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-			w.WriteHeader(http.StatusInternalServerError)
-			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-			http.Redirect(w, req, redirectURL, 302)
-		}
-
-		if end.Before(start) {
-			log.Info("end date before start date", log.Data{"start": start, "end": end, "setting-response-status": http.StatusInternalServerError})
-			w.WriteHeader(http.StatusInternalServerError)
-			redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-			http.Redirect(w, req, redirectURL, 302)
-		}
-
-		values = dates.ConvertToCoded(dats)
-		var options []string
-		for i, dat := range dats {
-			if dat.Equal(start) || dat.After(start) && dat.Before(end) || dat.Equal(end) {
-				options = append(options, labelIDMap[values[i]])
-			}
-		}
-
-		log.InfoR(req, "options", log.Data{"options": options, "values": values})
-		for _, opt := range options {
-			if err := f.FilterClient.AddDimensionValue(filterID, name, opt); err != nil {
-				log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-		}
-
-	}
-
-	http.Redirect(w, req, redirectURL, 302)
 }
 
 // DimensionAddAll will add all dimension values to a basket
@@ -500,13 +343,13 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 	redirectURL := fmt.Sprintf("/filters/%s/dimensions", filterID)
 
 	if len(req.Form["add-all"]) > 0 {
-		redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s?selectorType=list", filterID, name)
+		redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
 		f.addAll(w, req, redirectURL)
 		return
 	}
 
 	if len(req.Form["remove-all"]) > 0 {
-		redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all?selectorType=list", filterID, name)
+		redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all", filterID, name)
 		http.Redirect(w, req, redirectURL, 302)
 		return
 	}
@@ -586,7 +429,6 @@ func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
-	selectorType := req.URL.Query().Get("selectorType")
 
 	if err := f.FilterClient.RemoveDimension(filterID, name); err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
@@ -601,9 +443,6 @@ func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
 	}
 
 	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-	if selectorType == "list" {
-		redirectURL = redirectURL + "?selectorType=list"
-	}
 	http.Redirect(w, req, redirectURL, 302)
 }
 
@@ -613,7 +452,6 @@ func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
 	name := vars["name"]
 	filterID := vars["filterID"]
 	option := vars["option"]
-	selectorType := req.URL.Query().Get("selectorType")
 
 	if err := f.FilterClient.RemoveDimensionValue(filterID, name, option); err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
@@ -622,8 +460,5 @@ func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
 	}
 
 	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-	if selectorType == "list" {
-		redirectURL = redirectURL + "?selectorType=list"
-	}
 	http.Redirect(w, req, redirectURL, 302)
 }
