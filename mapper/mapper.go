@@ -161,7 +161,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 		URI:   fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: dimensionTitleTranslator[name],
+		Title: pageTitle,
 	})
 
 	p.Data.AddFromRange = listSelector.Link{
