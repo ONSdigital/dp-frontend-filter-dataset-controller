@@ -593,6 +593,23 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 		})
 	}
 
+	if h.HasData && len(h.Breadcrumbs) == 0 {
+		var selected bool
+		for _, val := range selVals {
+			if val.Option == h.Links.Self.ID {
+				selected = true
+			}
+		}
+
+		p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
+			Label:    h.Label,
+			ID:       h.Links.Self.ID,
+			SubNum:   "0",
+			SubURL:   "",
+			Selected: selected,
+		})
+	}
+
 	for _, child := range h.Children {
 		var selected bool
 		for _, val := range selVals {
