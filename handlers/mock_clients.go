@@ -148,6 +148,19 @@ func (_mr *MockFilterClientMockRecorder) GetOutput(arg0 interface{}) *gomock.Cal
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetOutput", arg0)
 }
 
+// GetPreview mocks base method
+func (_m *MockFilterClient) GetPreview(_param0 string) (filter.Preview, error) {
+	ret := _m.ctrl.Call(_m, "GetPreview", _param0)
+	ret0, _ := ret[0].(filter.Preview)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPreview indicates an expected call of GetPreview
+func (_mr *MockFilterClientMockRecorder) GetPreview(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetPreview", arg0)
+}
+
 // Healthcheck mocks base method
 func (_m *MockFilterClient) Healthcheck() (string, error) {
 	ret := _m.ctrl.Call(_m, "Healthcheck")
@@ -397,17 +410,30 @@ func (_m *MockHierarchyClient) EXPECT() *MockHierarchyClientMockRecorder {
 	return _m.recorder
 }
 
-// GetHierarchy mocks base method
-func (_m *MockHierarchyClient) GetHierarchy(_param0 string) (hierarchy.Model, error) {
-	ret := _m.ctrl.Call(_m, "GetHierarchy", _param0)
+// GetChild mocks base method
+func (_m *MockHierarchyClient) GetChild(_param0 string, _param1 string, _param2 string) (hierarchy.Model, error) {
+	ret := _m.ctrl.Call(_m, "GetChild", _param0, _param1, _param2)
 	ret0, _ := ret[0].(hierarchy.Model)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetHierarchy indicates an expected call of GetHierarchy
-func (_mr *MockHierarchyClientMockRecorder) GetHierarchy(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetHierarchy", arg0)
+// GetChild indicates an expected call of GetChild
+func (_mr *MockHierarchyClientMockRecorder) GetChild(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetChild", arg0, arg1, arg2)
+}
+
+// GetRoot mocks base method
+func (_m *MockHierarchyClient) GetRoot(_param0 string, _param1 string) (hierarchy.Model, error) {
+	ret := _m.ctrl.Call(_m, "GetRoot", _param0, _param1)
+	ret0, _ := ret[0].(hierarchy.Model)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRoot indicates an expected call of GetRoot
+func (_mr *MockHierarchyClientMockRecorder) GetRoot(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRoot", arg0, arg1)
 }
 
 // Healthcheck mocks base method

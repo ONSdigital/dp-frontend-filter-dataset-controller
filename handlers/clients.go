@@ -23,6 +23,7 @@ type FilterClient interface {
 	AddDimensionValues(filterID, name string, options []string) error
 	UpdateBlueprint(m filter.Model, doSubmit bool) (filter.Model, error)
 	CreateBlueprint(string, []string) (string, error)
+	GetPreview(string) (filter.Preview, error)
 }
 
 // DatasetClient is an interface with methods required for a dataset client

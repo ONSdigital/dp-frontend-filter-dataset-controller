@@ -309,8 +309,6 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 		p.NoDimensionData = true
 	}
 
-	p.IsContentLoaded = true
-
 	return p
 }
 

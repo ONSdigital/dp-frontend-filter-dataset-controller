@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
@@ -40,28 +42,37 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 // PreviewPage controls the rendering of the preview and download page
 func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
-	filterID := vars["filterID"]
+	filterOutputID := vars["filterOutputID"]
 
-	dimensions := []filter.ModelDimension{
-		{
-			Name:   "Time",
-			Values: []string{"January 2017", "January 2016", "January 2015", "January 2014", "January 2013", "January 2012"},
-		},
-		{
-			Name:   "Goods and Services",
-			Values: []string{"Clothing", "Education", "Aviation", "12", "11", "10"},
-		},
-		{
-			Name:   "CPI",
-			Values: []string{"0.23", "0.48", "0.593", "0.38", "0.349", "0.389"},
-		},
-	}
-
-	fj, err := f.FilterClient.GetOutput(filterID)
+	fj, err := f.FilterClient.GetOutput(filterOutputID)
 	if err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+
+	filterID := fj.Links.FilterBlueprint.ID
+	prev, err := f.FilterClient.GetPreview(filterID)
+	if err != nil {
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	var dimensions []filter.ModelDimension
+	for _, header := range prev.Headers {
+		dimensions = append(dimensions, filter.ModelDimension{Name: header})
+	}
+
+	for rowN, row := range prev.Rows {
+		if rowN >= 10 {
+			break
+		}
+		for i, val := range row {
+			if i < len(dimensions) {
+				dimensions[i].Values = append(dimensions[i].Values, val)
+			}
+		}
 	}
 
 	versionURL, err := url.Parse(fj.Links.Version.HRef)
@@ -97,17 +108,46 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreatePreviewPage(dimensions, fj, dataset, filterID, datasetID, ver.ReleaseDate)
+	p := mapper.CreatePreviewPage(dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate)
 
 	if latestURL.Path == versionURL.Path {
 		p.Data.IsLatestVersion = true
 	}
 
-	p.Data.LatestVersion.DatasetLandingPageURL = versionURL.Path
-	p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterID)
+	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
+	if err != nil {
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	if fj.State != "completed" {
-		p.IsContentLoaded = false
+	for _, dim := range dims.Items {
+		opts, err := f.DatasetClient.GetOptions(datasetID, edition, version, dim.ID)
+		if err != nil {
+			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if len(opts.Items) == 1 {
+			p.Data.SingleValueDimensions = append(p.Data.SingleValueDimensions, previewPage.Dimension{
+				Name:   strings.Title(dim.ID),
+				Values: []string{opts.Items[0].Label},
+			})
+		}
+	}
+
+	p.Data.LatestVersion.DatasetLandingPageURL = versionURL.Path
+	p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterOutputID)
+
+	if len(p.Data.Dimensions) > 0 {
+		p.IsPreviewLoaded = true
+	}
+
+	for _, d := range p.Data.Downloads {
+		if d.Extension == "xls" && len(d.Size) > 0 {
+			p.IsDownloadLoaded = true
+		}
 	}
 
 	body, err := json.Marshal(p)

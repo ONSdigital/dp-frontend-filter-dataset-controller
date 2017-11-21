@@ -65,9 +65,15 @@ func TestUnitMapper(t *testing.T) {
 		So(pp.Metadata.Footer.Contact, ShouldEqual, dataset.Contacts[0].Name)
 		So(pp.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")
 		So(pp.Metadata.Footer.DatasetID, ShouldEqual, "12345")
-		So(pp.Data.Downloads[0].Extension, ShouldEqual, "csv")
-		So(pp.Data.Downloads[0].Size, ShouldEqual, "362783")
-		So(pp.Data.Downloads[0].URI, ShouldEqual, "/")
+		if pp.Data.Downloads[0].Extension == "csv" {
+			So(pp.Data.Downloads[0].Extension, ShouldEqual, "csv")
+			So(pp.Data.Downloads[0].Size, ShouldEqual, "362783")
+			So(pp.Data.Downloads[0].URI, ShouldEqual, "/")
+		} else {
+			So(pp.Data.Downloads[0].Extension, ShouldEqual, "xls")
+			So(pp.Data.Downloads[0].Size, ShouldEqual, "373929")
+			So(pp.Data.Downloads[0].URI, ShouldEqual, "/")
+		}
 
 		for i, dim := range pp.Data.Dimensions {
 			So(dim.Values, ShouldResemble, dimensions[i].Values)
