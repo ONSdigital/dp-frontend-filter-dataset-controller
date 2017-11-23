@@ -51,8 +51,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	filterID := fj.Links.FilterBlueprint.ID
-	prev, err := f.FilterClient.GetPreview(filterID)
+	prev, err := f.FilterClient.GetPreview(filterOutputID)
 	if err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
