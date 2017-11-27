@@ -201,6 +201,7 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if len(allValues.Items) <= 20 {
+		mux.Vars(req)["name"] = "time"
 		f.DimensionSelector(w, req)
 		return
 	}

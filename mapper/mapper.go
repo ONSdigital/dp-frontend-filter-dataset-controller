@@ -60,6 +60,9 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 			times, err := dates.ConvertToReadable(d.Values)
 			if err != nil {
 				log.Error(err, nil)
+				for _, ac := range d.Values {
+					fod.AddedCategories = append(fod.AddedCategories, ac)
+				}
 			}
 
 			times = dates.Sort(times)
@@ -308,8 +311,6 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 	if p.Data.Dimensions == nil {
 		p.NoDimensionData = true
 	}
-
-	p.IsContentLoaded = true
 
 	return p
 }

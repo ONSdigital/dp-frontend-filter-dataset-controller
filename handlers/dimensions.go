@@ -379,15 +379,17 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 
 	wg.Wait()
 
+	var options []string
 	for k := range req.Form {
 		if k == ":uri" || k == "save-and-return" {
 			continue
 		}
 
-		if err := f.FilterClient.AddDimensionValue(filterID, name, k); err != nil {
-			log.TraceR(req, err.Error(), nil)
-			continue
-		}
+		options = append(options, k)
+	}
+
+	if err := f.FilterClient.AddDimensionValues(filterID, name, options); err != nil {
+		log.TraceR(req, err.Error(), nil)
 	}
 
 	http.Redirect(w, req, redirectURL, 302)
