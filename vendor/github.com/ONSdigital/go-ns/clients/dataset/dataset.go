@@ -7,11 +7,17 @@ import (
 	"net/http"
 	"sort"
 
+	"bytes"
 	"github.com/ONSdigital/go-ns/clients/clientlog"
+	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/rhttp"
+	"github.com/pkg/errors"
 )
 
-const service = "dataset-api"
+const (
+	service         = "dataset-api"
+	authTokenHeader = "Internal-Token"
+)
 
 // ErrInvalidDatasetAPIResponse is returned when the dataset api does not respond
 // with a valid status
@@ -34,8 +40,9 @@ var _ error = ErrInvalidDatasetAPIResponse{}
 
 // Client is a dataset api client which can be used to make requests to the server
 type Client struct {
-	cli *rhttp.Client
-	url string
+	cli           *rhttp.Client
+	url           string
+	internalToken string
 }
 
 // New creates a new instance of Client with a given filter api url
@@ -43,6 +50,17 @@ func New(datasetAPIURL string) *Client {
 	return &Client{
 		cli: rhttp.DefaultClient,
 		url: datasetAPIURL,
+	}
+}
+
+// SetInternalToken will set an internal token to use for the dataset api
+func (c *Client) SetInternalToken(token string) {
+	c.internalToken = token
+}
+
+func (c *Client) setInternalTokenHeader(req *http.Request) {
+	if len(c.internalToken) > 0 {
+		req.Header.Set("Internal-token", c.internalToken)
 	}
 }
 
@@ -66,7 +84,60 @@ func (c *Client) Get(id string) (m Model, err error) {
 
 	clientlog.Do("retrieving dataset", service, uri)
 
-	resp, err := c.cli.Get(uri)
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return
+	}
+	c.setInternalTokenHeader(req)
+
+	resp, err := c.cli.Do(req)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		err = &ErrInvalidDatasetAPIResponse{http.StatusOK, resp.StatusCode, uri}
+		return
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	var body map[string]interface{}
+	if err = json.Unmarshal(b, &body); err != nil {
+		return
+	}
+
+	// TODO: Authentication will sort this problem out for us. Currently
+	// the shape of the response body is different if you are authenticated
+	// so return the "next" item only
+	if next, ok := body["next"]; ok && len(c.internalToken) > 0 {
+		b, err = json.Marshal(next)
+		if err != nil {
+			return
+		}
+	}
+
+	err = json.Unmarshal(b, &m)
+	return
+}
+
+// GetEdition retrieves a single edition document from a given datasetID and edition label
+func (c *Client) GetEdition(datasetID, edition string) (m Edition, err error) {
+	uri := fmt.Sprintf("%s/datasets/%s/editions/%s", c.url, datasetID, edition)
+
+	clientlog.Do("retrieving dataset editions", service, uri)
+
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return
+	}
+	c.setInternalTokenHeader(req)
+
+	resp, err := c.cli.Do(req)
 	if err != nil {
 		return
 	}
@@ -92,7 +163,13 @@ func (c *Client) GetEditions(id string) (m []Edition, err error) {
 
 	clientlog.Do("retrieving dataset editions", service, uri)
 
-	resp, err := c.cli.Get(uri)
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return
+	}
+	c.setInternalTokenHeader(req)
+
+	resp, err := c.cli.Do(req)
 	if err != nil {
 		return
 	}
@@ -122,7 +199,13 @@ func (c *Client) GetVersions(id, edition string) (m []Version, err error) {
 
 	clientlog.Do("retrieving dataset versions", service, uri)
 
-	resp, err := c.cli.Get(uri)
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return
+	}
+	c.setInternalTokenHeader(req)
+
+	resp, err := c.cli.Do(req)
 	if err != nil {
 		return
 	}
@@ -153,7 +236,13 @@ func (c *Client) GetVersion(id, edition, version string) (m Version, err error) 
 
 	clientlog.Do("retrieving dataset version", service, uri)
 
-	resp, err := c.cli.Get(uri)
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return
+	}
+	c.setInternalTokenHeader(req)
+
+	resp, err := c.cli.Do(req)
 	if err != nil {
 		return
 	}
@@ -173,13 +262,54 @@ func (c *Client) GetVersion(id, edition, version string) (m Version, err error) 
 	return
 }
 
+// PutVersionDownloads add the given downloads to the specified dataset version
+func (c *Client) PutVersionDownloads(datasetID string, edition string, version string, downloadList map[string]Download) error {
+	uri := fmt.Sprintf("%s/datasets/%s/editions/%s/versions/%s/downloads", c.url, datasetID, edition, version)
+	clientlog.Do("updating version downloads", service, uri)
+
+	b, err := json.Marshal(downloadList)
+	if err != nil {
+		return errors.Wrap(err, "error while attempting to marshall version")
+	}
+
+	req, err := http.NewRequest(http.MethodPut, uri, bytes.NewBuffer(b))
+	if err != nil {
+		return errors.Wrap(err, "error while attempting to create http request")
+	}
+
+	if c.internalToken == "" {
+		log.Info("no authentication provided, sending request without auth token header", nil)
+	} else {
+		log.Info("setting configured request authentication token header", nil)
+		req.Header.Set(authTokenHeader, c.internalToken)
+	}
+
+	resp, err := c.cli.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "http client returned error while attempting to make request")
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.Errorf("incorrect http status, expected: %d, actual: %d, uri: %s", http.StatusOK, resp.StatusCode, uri)
+	}
+	return nil
+}
+
 // GetDimensions will return a versions dimensions
 func (c *Client) GetDimensions(id, edition, version string) (m Dimensions, err error) {
 	uri := fmt.Sprintf("%s/datasets/%s/editions/%s/versions/%s/dimensions", c.url, id, edition, version)
 
 	clientlog.Do("retrieving dataset version dimensions", service, uri)
 
-	resp, err := c.cli.Get(uri)
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return
+	}
+	c.setInternalTokenHeader(req)
+
+	resp, err := c.cli.Do(req)
 	if err != nil {
 		return
 	}
@@ -210,7 +340,13 @@ func (c *Client) GetOptions(id, edition, version, dimension string) (m Options, 
 
 	clientlog.Do("retrieving options for dimension", service, uri)
 
-	resp, err := c.cli.Get(uri)
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return
+	}
+	c.setInternalTokenHeader(req)
+
+	resp, err := c.cli.Do(req)
 	if err != nil {
 		return
 	}
