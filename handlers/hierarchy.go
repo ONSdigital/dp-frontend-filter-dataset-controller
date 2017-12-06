@@ -68,6 +68,13 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			h, err = f.HierarchyClient.GetChild(fil.InstanceID, name, code)
 		} else {
 			h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
+
+			// We include the value on the root as a selectable item, so append
+			// the value on the root to the child to see if it has been removed by
+			// the user
+			h.Children = append(h.Children, hierarchy.Child{
+				Links: h.Links,
+			})
 		}
 		if err != nil {
 			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
