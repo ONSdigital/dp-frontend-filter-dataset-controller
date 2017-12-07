@@ -63,10 +63,10 @@
 			"revisionTime": "2017-10-09T08:31:24Z"
 		},
 		{
-			"checksumSHA1": "RT/tcIJ16uYo9Te61asnvpORHZ8=",
+			"checksumSHA1": "4RDJIDyBh1de+Ea9xFJBE/HIrIU=",
 			"path": "github.com/ONSdigital/go-ns/clients/dataset",
-			"revision": "c16c717abc7588bca883d56591b7b0301c5aa2a9",
-			"revisionTime": "2017-11-15T09:03:19Z"
+			"revision": "346c09ef11b6fd9a6eb4e269d8b47aa4c9530694",
+			"revisionTime": "2017-12-06T15:01:50Z"
 		},
 		{
 			"checksumSHA1": "14UTvxZ+UDwGqWbmO4jmojzzIUM=",
@@ -181,6 +181,12 @@
 			"path": "github.com/mgutz/ansi",
 			"revision": "9520e82c474b0a04dd04f8a40959027271bab992",
 			"revisionTime": "2017-02-06T15:57:36Z"
+		},
+		{
+			"checksumSHA1": "rJab1YdNhQooDiBWNnt7TLWPyBU=",
+			"path": "github.com/pkg/errors",
+			"revision": "f15c970de5b76fac0b59abb32d62c17cc7bed265",
+			"revisionTime": "2017-10-18T19:55:50Z"
 		},
 		{
 			"checksumSHA1": "AikWjAOvWHSJ8G1iU+wNReZnyCk=",
