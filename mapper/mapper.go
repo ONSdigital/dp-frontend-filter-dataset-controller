@@ -340,6 +340,29 @@ func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals d
 	log.Debug("mapping api responses to age page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
 
 	p.FilterID = f.FilterID
+	p.SearchDisabled = true
+	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+
+	versionURL, err := url.Parse(f.Links.Version.HRef)
+	if err != nil {
+		return p, err
+	}
+
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: d.Title,
+		URI:   versionURL.Path,
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: "Filter this dataset",
+		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: "Age",
+	})
+
+	p.Metadata.Title = "Age"
+
+	p.Data.FormAction.URL = fmt.Sprintf("/filters/%s/dimensions/age/update", f.FilterID)
 
 	var ages []int
 	labelIDs := getNameIDLookup(allVals)
@@ -350,6 +373,7 @@ func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals d
 				p.Data.Oldest = age.Label
 			} else {
 				p.Data.HasAllAges = true
+				p.Data.AllAgesOption = age.Option
 			}
 			continue
 		}

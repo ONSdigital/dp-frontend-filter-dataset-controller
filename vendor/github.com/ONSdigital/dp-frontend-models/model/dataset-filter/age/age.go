@@ -19,6 +19,7 @@ type Data struct {
 	CheckedRadio  string  `json:"checked_radio"`
 	FormAction    Link    `json:"form_action"`
 	HasAllAges    bool    `json:"has_all_ages"`
+	AllAgesOption string  `json:"all_ages_option"`
 }
 
 // Value represents a single age value

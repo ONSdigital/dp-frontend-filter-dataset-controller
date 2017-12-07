@@ -37,8 +37,15 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	log.Debug("form", log.Data{"form": req.Form})
+
 	if len(req.Form.Get("add-all")) > 0 {
 		http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/time/add-all", filterID), 302)
+		return
+	}
+
+	if len(req.Form.Get("remove-all")) > 0 {
+		http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/time/remove-all", filterID), 302)
 		return
 	}
 
@@ -145,14 +152,7 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 		}
 	}
 
-	log.InfoR(req, "options", log.Data{"options": options, "values": values})
-	for _, opt := range options {
-		if err := f.FilterClient.AddDimensionValue(filterID, "time", opt); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return f.FilterClient.AddDimensionValues(filterID, "time", options)
 }
 
 // Time specifically handles the data for the time dimension page
