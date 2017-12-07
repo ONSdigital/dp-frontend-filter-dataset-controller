@@ -44,6 +44,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 	log.Debug("mapping api response models into filter overview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
 
 	p.FilterID = filterID
+	p.Data.DatasetTitle = dst.Title
 	p.Metadata.Title = "Filter Options"
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
 
@@ -146,6 +147,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 	p.SearchDisabled = true
 	p.FilterID = filter.FilterID
+	p.Data.DatasetTitle = dst.Title
 	p.Data.Title = pageTitle
 	p.Metadata.Title = pageTitle
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
@@ -341,6 +343,7 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 		p.Data.Type = "month"
 	}
 
+	p.Data.DatasetTitle = d.Title
 	p.FilterID = f.FilterID
 	p.SearchDisabled = true
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
@@ -510,7 +513,7 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 	if pageTitle, ok = dimensionTitleTranslator[name]; !ok {
 		pageTitle = strings.Title(name)
 	}
-
+	p.Data.DatasetTitle = dst.Title
 	p.Data.DimensionName = pageTitle
 
 	var title string
