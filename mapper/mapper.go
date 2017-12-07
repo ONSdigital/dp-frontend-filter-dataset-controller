@@ -115,19 +115,6 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 		Title: "Filter options",
 	})
 
-	var name string
-	if len(dst.Contacts) > 0 {
-		name = dst.Contacts[0].Name
-	}
-
-	p.Metadata.Footer = model.Footer{
-		Enabled:     true,
-		Contact:     name,
-		ReleaseDate: releaseDate,
-		NextRelease: dst.NextRelease,
-		DatasetID:   datasetID,
-	}
-
 	return p
 }
 
@@ -231,19 +218,6 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 	p.Data.FiltersAmount = len(selectedListValues)
 
-	var contactName string
-	if len(dst.Contacts) > 0 {
-		contactName = dst.Contacts[0].Name
-	}
-
-	p.Metadata.Footer = model.Footer{
-		Enabled:     true,
-		Contact:     contactName,
-		ReleaseDate: releaseDate,
-		NextRelease: dst.NextRelease,
-		DatasetID:   datasetID,
-	}
-
 	return p
 }
 
@@ -279,19 +253,6 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 	p.Data.DatasetTitle = dst.Title
 	p.Data.DatasetID = datasetID
 	p.Data.ReleaseDate = releaseDate
-
-	var contactName string
-	if len(dst.Contacts) > 0 {
-		contactName = dst.Contacts[0].Name
-	}
-
-	p.Metadata.Footer = model.Footer{
-		Enabled:     true,
-		Contact:     contactName,
-		ReleaseDate: releaseDate,
-		NextRelease: dst.NextRelease,
-		DatasetID:   datasetID,
-	}
 
 	for ext, d := range filter.Downloads {
 		p.Data.Downloads = append(p.Data.Downloads, previewPage.Download{
@@ -427,19 +388,6 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 
 	p.Data.FormAction = timeModel.Link{
 		URL: fmt.Sprintf("/filters/%s/dimensions/time/update", f.FilterID),
-	}
-
-	var contactName string
-	if len(d.Contacts) > 0 {
-		contactName = d.Contacts[0].Name
-	}
-
-	p.Metadata.Footer = model.Footer{
-		Enabled:     true,
-		Contact:     contactName,
-		ReleaseDate: v.ReleaseDate,
-		NextRelease: d.NextRelease,
-		DatasetID:   datasetID,
 	}
 
 	if len(selVals) == 1 && p.Data.Values[0].IsSelected {
@@ -632,19 +580,6 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 	//p.Data.Metadata = hierarchy.Metadata(met)
 	p.Data.SaveAndReturn.URL = curPath + "/update"
 	p.Data.Cancel.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
-
-	var contactName string
-	if len(dst.Contacts) > 0 {
-		contactName = dst.Contacts[0].Name
-	}
-
-	p.Metadata.Footer = model.Footer{
-		Enabled:     true,
-		Contact:     contactName,
-		ReleaseDate: releaseDate,
-		NextRelease: dst.NextRelease,
-		DatasetID:   datasetID,
-	}
 
 	return p
 }
