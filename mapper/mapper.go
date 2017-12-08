@@ -46,6 +46,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 	p.FilterID = filterID
 	p.Metadata.Title = "Filter Options"
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+	p.ShowFeedbackForm = false
 
 	disableButton := true
 
@@ -136,6 +137,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 	p.Data.Title = pageTitle
 	p.Metadata.Title = pageTitle
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+	p.ShowFeedbackForm = false
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
@@ -230,6 +232,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	p.SearchDisabled = false
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+	p.ShowFeedbackForm = true
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
