@@ -3,10 +3,16 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "VQMD7iWcIW9cv7W1+ouzUon3OAo=",
+			"checksumSHA1": "vE8Q5SmiWEfLFQLZhGGn7IvDYdc=",
 			"path": "github.com/ONSdigital/dp-frontend-models/model",
-			"revision": "ee9872e6e3ac1d06162869349052bbcfc3fcaa13",
-			"revisionTime": "2017-10-05T07:32:47Z"
+			"revision": "fc7563805b8e92cc9f36da19410d4aab7586e3b2",
+			"revisionTime": "2017-12-07T11:08:14Z"
+		},
+		{
+			"checksumSHA1": "4HqfcBn97KejGsi17+7HiYKDosw=",
+			"path": "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/age",
+			"revision": "61ae74395c11b344de9590abfa54dcb7a2557c3c",
+			"revisionTime": "2017-12-07T09:23:34Z"
 		},
 		{
 			"checksumSHA1": "WFzDhLFdAQv2xOSf1cfT5ao2Aqs=",
@@ -57,10 +63,10 @@
 			"revisionTime": "2017-10-09T08:31:24Z"
 		},
 		{
-			"checksumSHA1": "RT/tcIJ16uYo9Te61asnvpORHZ8=",
+			"checksumSHA1": "4RDJIDyBh1de+Ea9xFJBE/HIrIU=",
 			"path": "github.com/ONSdigital/go-ns/clients/dataset",
-			"revision": "c16c717abc7588bca883d56591b7b0301c5aa2a9",
-			"revisionTime": "2017-11-15T09:03:19Z"
+			"revision": "346c09ef11b6fd9a6eb4e269d8b47aa4c9530694",
+			"revisionTime": "2017-12-06T15:01:50Z"
 		},
 		{
 			"checksumSHA1": "14UTvxZ+UDwGqWbmO4jmojzzIUM=",
@@ -175,6 +181,12 @@
 			"path": "github.com/mgutz/ansi",
 			"revision": "9520e82c474b0a04dd04f8a40959027271bab992",
 			"revisionTime": "2017-02-06T15:57:36Z"
+		},
+		{
+			"checksumSHA1": "rJab1YdNhQooDiBWNnt7TLWPyBU=",
+			"path": "github.com/pkg/errors",
+			"revision": "f15c970de5b76fac0b59abb32d62c17cc7bed265",
+			"revisionTime": "2017-10-18T19:55:50Z"
 		},
 		{
 			"checksumSHA1": "AikWjAOvWHSJ8G1iU+wNReZnyCk=",
