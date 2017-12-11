@@ -136,7 +136,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 	p.SearchDisabled = true
 	p.FilterID = filter.FilterID
-	p.Data.DatasetTitle = dst.Title
+	p.DatasetTitle = dst.Title
 	p.Data.Title = pageTitle
 	p.Metadata.Title = pageTitle
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
@@ -254,7 +254,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	p.Data.FilterID = filter.Links.FilterBlueprint.ID
 
-	p.Data.DatasetTitle = dst.Title
+	p.DatasetTitle = dst.Title
 	p.Data.DatasetID = datasetID
 	p.Data.ReleaseDate = releaseDate
 
@@ -324,6 +324,7 @@ func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals d
 	})
 
 	p.Metadata.Title = "Age"
+	p.DatasetTitle = d.Title
 
 	p.Data.FormAction.URL = fmt.Sprintf("/filters/%s/dimensions/age/update", f.FilterID)
 
@@ -580,7 +581,7 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 	if pageTitle, ok = dimensionTitleTranslator[name]; !ok {
 		pageTitle = strings.Title(name)
 	}
-	p.Data.DatasetTitle = dst.Title
+	p.DatasetTitle = dst.Title
 	p.Data.DimensionName = pageTitle
 
 	var title string
