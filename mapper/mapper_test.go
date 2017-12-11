@@ -42,10 +42,6 @@ func TestUnitMapper(t *testing.T) {
 		So(fop.Breadcrumb, ShouldHaveLength, 2)
 		So(fop.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
 		So(fop.Breadcrumb[1].Title, ShouldEqual, "Filter options")
-		So(fop.Metadata.Footer.Enabled, ShouldBeTrue)
-		So(fop.Metadata.Footer.Contact, ShouldEqual, dataset.Contacts[0].Name)
-		So(fop.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")
-		So(fop.Metadata.Footer.DatasetID, ShouldEqual, "12345")
 	})
 
 	Convey("test CreatePreviewPage correctly maps to previewPage frontend model", t, func() {
@@ -61,10 +57,6 @@ func TestUnitMapper(t *testing.T) {
 		So(pp.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
 		So(pp.Breadcrumb[2].Title, ShouldEqual, "Preview")
 		So(pp.Data.FilterID, ShouldEqual, filter.Links.FilterBlueprint.ID)
-		So(pp.Metadata.Footer.Enabled, ShouldBeTrue)
-		So(pp.Metadata.Footer.Contact, ShouldEqual, dataset.Contacts[0].Name)
-		So(pp.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")
-		So(pp.Metadata.Footer.DatasetID, ShouldEqual, "12345")
 		if pp.Data.Downloads[0].Extension == "csv" {
 			So(pp.Data.Downloads[0].Extension, ShouldEqual, "csv")
 			So(pp.Data.Downloads[0].Size, ShouldEqual, "362783")
@@ -135,10 +127,6 @@ func TestUnitMapper(t *testing.T) {
 		So(p.Data.RangeData.Values[2].Label, ShouldEqual, "Apr-10")
 		So(p.Data.RangeData.Values[2].IsSelected, ShouldBeFalse)
 		So(p.Data.FiltersAmount, ShouldEqual, 2)
-		So(p.Metadata.Footer.Enabled, ShouldBeTrue)
-		So(p.Metadata.Footer.Contact, ShouldEqual, dataset.Contacts[0].Name)
-		So(p.Metadata.Footer.ReleaseDate, ShouldEqual, "11-11-1992")
-		So(p.Metadata.Footer.DatasetID, ShouldEqual, "12345")
 	})
 }
 

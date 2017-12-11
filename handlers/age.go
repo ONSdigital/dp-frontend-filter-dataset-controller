@@ -5,27 +5,28 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"time"
+	"strconv"
+	"strings"
 
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
 
-// UpdateTime will update the time filter based on the radio selected filters by the user
-func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
+func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	if err := f.FilterClient.RemoveDimension(filterID, "time"); err != nil {
+	log.Debug("updating age", nil)
+
+	if err := f.FilterClient.RemoveDimension(filterID, "age"); err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if err := f.FilterClient.AddDimension(filterID, "time"); err != nil {
+	if err := f.FilterClient.AddDimension(filterID, "age"); err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -37,33 +38,29 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Debug("form", log.Data{"form": req.Form})
-
 	if len(req.Form.Get("add-all")) > 0 {
-		http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/time/add-all", filterID), 302)
+		http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/age/add-all", filterID), 302)
 		return
 	}
 
 	if len(req.Form.Get("remove-all")) > 0 {
-		http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/time/remove-all", filterID), 302)
+		http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/age/remove-all", filterID), 302)
 		return
 	}
 
-	switch req.Form.Get("time-selection") {
-	case "latest":
-		if err := f.FilterClient.AddDimensionValue(filterID, "time", req.Form.Get("latest-option")); err != nil {
-			log.ErrorR(req, err, nil)
-		}
-	case "single":
-		if err := f.addSingleTime(filterID, req); err != nil {
+	log.Debug("age-selection", log.Data{"age": req.Form.Get("age-selection")})
+
+	switch req.Form.Get("age-selection") {
+	case "all":
+		if err := f.FilterClient.AddDimensionValue(filterID, "age", req.Form.Get("all-ages-option")); err != nil {
 			log.ErrorR(req, err, nil)
 		}
 	case "range":
-		if err := f.addTimeRange(filterID, req); err != nil {
+		if err := f.addAgeRange(filterID, req); err != nil {
 			log.ErrorR(req, err, nil)
 		}
 	case "list":
-		if err := f.addTimeList(filterID, req); err != nil {
+		if err := f.addAgeList(filterID, req); err != nil {
 			log.ErrorR(req, err, nil)
 		}
 	}
@@ -72,39 +69,29 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, redirectURL, 302)
 }
 
-func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
-	month := req.Form.Get("month-single")
-	year := req.Form.Get("year-single")
-
-	date, err := time.Parse("January 2006", fmt.Sprintf("%s %s", month, year))
+func (f *Filter) addAgeList(filterID string, req *http.Request) error {
+	opts, err := f.FilterClient.GetDimensionOptions(filterID, "age")
 	if err != nil {
 		return err
 	}
 
-	return f.FilterClient.AddDimensionValue(filterID, "time", date.Format("Jan-06"))
-}
-
-func (f *Filter) addTimeList(filterID string, req *http.Request) error {
-	opts, err := f.FilterClient.GetDimensionOptions(filterID, "time")
-	if err != nil {
-		return err
-	}
-
-	// Remove any unselected times
+	// Remove any unselected ages
 	for _, opt := range opts {
 		if _, ok := req.Form[opt.Option]; !ok {
-			if err := f.FilterClient.RemoveDimensionValue(filterID, "time", opt.Option); err != nil {
+			if err := f.FilterClient.RemoveDimensionValue(filterID, "age", opt.Option); err != nil {
 				log.ErrorR(req, err, nil)
 			}
 		}
 	}
 
 	for k := range req.Form {
-		if _, err := time.Parse("Jan-06", k); err != nil {
-			continue
+		if _, err := strconv.Atoi(k); err != nil {
+			if !strings.Contains(k, "+") {
+				continue
+			}
 		}
 
-		if err := f.FilterClient.AddDimensionValue(filterID, "time", k); err != nil {
+		if err := f.FilterClient.AddDimensionValue(filterID, "age", k); err != nil {
 			log.TraceR(req, err.Error(), nil)
 			continue
 		}
@@ -113,50 +100,35 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	return nil
 }
 
-func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
-	startMonth := req.Form.Get("start-month")
-	startYear := req.Form.Get("start-year")
-	endMonth := req.Form.Get("end-month")
-	endYear := req.Form.Get("end-year")
+func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
+	youngest := req.Form.Get("youngest")
+	oldest := req.Form.Get("oldest")
 
-	values, labelIDMap, err := f.getDimensionValues(filterID, "time")
+	values, labelIDMap, err := f.getDimensionValues(filterID, "age")
 	if err != nil {
 		return err
 	}
 
-	dats, err := dates.ConvertToReadable(values)
-	if err != nil {
-		return err
-	}
-	dats = dates.Sort(dats)
-
-	start, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s %s", startMonth, startYear))
-	if err != nil {
-		return err
-	}
-
-	end, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s %s", endMonth, endYear))
-	if err != nil {
-		return err
-	}
-
-	if end.Before(start) {
-		return fmt.Errorf("start date: %s before end date: %s", start.String(), end.String())
-	}
-
-	values = dates.ConvertToCoded(dats)
+	var isInRange bool
 	var options []string
-	for i, dat := range dats {
-		if dat.Equal(start) || dat.After(start) && dat.Before(end) || dat.Equal(end) {
-			options = append(options, labelIDMap[values[i]])
+	for _, age := range values {
+		if youngest == age {
+			isInRange = true
+		}
+
+		if isInRange {
+			options = append(options, labelIDMap[age])
+		}
+
+		if oldest == age {
+			isInRange = false
 		}
 	}
 
-	return f.FilterClient.AddDimensionValues(filterID, "time", options)
+	return f.FilterClient.AddDimensionValues(filterID, "age", options)
 }
 
-// Time specifically handles the data for the time dimension page
-func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
+func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
@@ -193,7 +165,7 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, "time")
+	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, "age")
 	if err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
@@ -201,19 +173,19 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if len(allValues.Items) <= 20 {
-		mux.Vars(req)["name"] = "time"
+		mux.Vars(req)["name"] = "age"
 		f.DimensionSelector(w, req)
 		return
 	}
 
-	selValues, err := f.FilterClient.GetDimensionOptions(filterID, "time")
+	selValues, err := f.FilterClient.GetDimensionOptions(filterID, "age")
 	if err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	p, err := mapper.CreateTimePage(fj, dataset, ver, allValues, selValues, datasetID)
+	p, err := mapper.CreateAgePage(fj, dataset, ver, allValues, selValues, datasetID)
 	if err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
@@ -227,7 +199,7 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	templateBytes, err := f.Renderer.Do("dataset-filter/time", b)
+	templateBytes, err := f.Renderer.Do("dataset-filter/age", b)
 	if err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)

@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-models/model"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/age"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/hierarchy"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
@@ -116,19 +118,6 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 		Title: "Filter options",
 	})
 
-	var name string
-	if len(dst.Contacts) > 0 {
-		name = dst.Contacts[0].Name
-	}
-
-	p.Metadata.Footer = model.Footer{
-		Enabled:     true,
-		Contact:     name,
-		ReleaseDate: releaseDate,
-		NextRelease: dst.NextRelease,
-		DatasetID:   datasetID,
-	}
-
 	return p
 }
 
@@ -233,19 +222,6 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 	p.Data.FiltersAmount = len(selectedListValues)
 
-	var contactName string
-	if len(dst.Contacts) > 0 {
-		contactName = dst.Contacts[0].Name
-	}
-
-	p.Metadata.Footer = model.Footer{
-		Enabled:     true,
-		Contact:     contactName,
-		ReleaseDate: releaseDate,
-		NextRelease: dst.NextRelease,
-		DatasetID:   datasetID,
-	}
-
 	return p
 }
 
@@ -281,19 +257,6 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 	p.Data.DatasetTitle = dst.Title
 	p.Data.DatasetID = datasetID
 	p.Data.ReleaseDate = releaseDate
-
-	var contactName string
-	if len(dst.Contacts) > 0 {
-		contactName = dst.Contacts[0].Name
-	}
-
-	p.Metadata.Footer = model.Footer{
-		Enabled:     true,
-		Contact:     contactName,
-		ReleaseDate: releaseDate,
-		NextRelease: dst.NextRelease,
-		DatasetID:   datasetID,
-	}
 
 	for ext, d := range filter.Downloads {
 		p.Data.Downloads = append(p.Data.Downloads, previewPage.Download{
@@ -331,6 +294,123 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 		lookup[val.Option] = val.Label
 	}
 	return lookup
+}
+
+// CreateAgePage creates an age selector page based on api responses
+func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, datasetID string) (age.Page, error) {
+	var p age.Page
+
+	log.Debug("mapping api responses to age page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
+
+	p.FilterID = f.FilterID
+	p.SearchDisabled = true
+	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+
+	versionURL, err := url.Parse(f.Links.Version.HRef)
+	if err != nil {
+		return p, err
+	}
+
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: d.Title,
+		URI:   versionURL.Path,
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: "Filter this dataset",
+		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: "Age",
+	})
+
+	p.Metadata.Title = "Age"
+
+	p.Data.FormAction.URL = fmt.Sprintf("/filters/%s/dimensions/age/update", f.FilterID)
+
+	var ages []int
+	labelIDs := getNameIDLookup(allVals)
+	for _, age := range allVals.Items {
+		ageInt, err := strconv.Atoi(age.Label)
+		if err != nil {
+			if strings.Contains(age.Label, "+") {
+				p.Data.Oldest = age.Label
+			} else {
+				p.Data.HasAllAges = true
+				p.Data.AllAgesOption = age.Option
+			}
+			continue
+		}
+		ages = append(ages, ageInt)
+	}
+
+	sort.Ints(ages)
+
+	for _, ageVal := range ages {
+		var isSelected bool
+		ageString := strconv.Itoa(ageVal)
+		for _, selVal := range selVals {
+			if selVal.Option == labelIDs[ageString] {
+				isSelected = true
+			}
+		}
+
+		p.Data.Ages = append(p.Data.Ages, age.Value{
+			Option:     labelIDs[ageString],
+			Label:      ageString,
+			IsSelected: isSelected,
+		})
+	}
+
+	p.Data.Youngest = strconv.Itoa(ages[0])
+
+	if len(p.Data.Oldest) > 0 {
+		var isSelected bool
+		for _, selVal := range selVals {
+			if selVal.Option == labelIDs[p.Data.Oldest] {
+				isSelected = true
+			}
+		}
+
+		p.Data.Ages = append(p.Data.Ages, age.Value{
+			Option:     labelIDs[p.Data.Oldest],
+			Label:      p.Data.Oldest,
+			IsSelected: isSelected,
+		})
+	} else {
+		p.Data.Oldest = strconv.Itoa(ages[len(ages)-1])
+	}
+
+	p.Data.CheckedRadio = "range"
+
+	for i, val := range p.Data.Ages {
+		if val.IsSelected {
+			for j := i; j < len(p.Data.Ages); j++ {
+				if p.Data.Ages[j].IsSelected {
+					continue
+				} else {
+					for k := j; k < len(p.Data.Ages); k++ {
+						if p.Data.Ages[k].IsSelected {
+							p.Data.CheckedRadio = "list"
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if p.Data.CheckedRadio == "range" {
+		for _, val := range p.Data.Ages {
+			if val.IsSelected {
+				if len(p.Data.FirstSelected) == 0 {
+					p.Data.FirstSelected = val.Label
+				}
+				p.Data.LastSelected = val.Label
+			}
+		}
+	}
+
+	return p, nil
 }
 
 // CreateTimePage will create a time selector page based on api response models
@@ -430,19 +510,6 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 
 	p.Data.FormAction = timeModel.Link{
 		URL: fmt.Sprintf("/filters/%s/dimensions/time/update", f.FilterID),
-	}
-
-	var contactName string
-	if len(d.Contacts) > 0 {
-		contactName = d.Contacts[0].Name
-	}
-
-	p.Metadata.Footer = model.Footer{
-		Enabled:     true,
-		Contact:     contactName,
-		ReleaseDate: v.ReleaseDate,
-		NextRelease: d.NextRelease,
-		DatasetID:   datasetID,
 	}
 
 	if len(selVals) == 1 && p.Data.Values[0].IsSelected {
@@ -635,19 +702,6 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 	//p.Data.Metadata = hierarchy.Metadata(met)
 	p.Data.SaveAndReturn.URL = curPath + "/update"
 	p.Data.Cancel.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
-
-	var contactName string
-	if len(dst.Contacts) > 0 {
-		contactName = dst.Contacts[0].Name
-	}
-
-	p.Metadata.Footer = model.Footer{
-		Enabled:     true,
-		Contact:     contactName,
-		ReleaseDate: releaseDate,
-		NextRelease: dst.NextRelease,
-		DatasetID:   datasetID,
-	}
 
 	return p
 }

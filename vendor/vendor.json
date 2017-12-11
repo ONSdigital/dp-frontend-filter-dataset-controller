@@ -3,10 +3,16 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "VQMD7iWcIW9cv7W1+ouzUon3OAo=",
+			"checksumSHA1": "vE8Q5SmiWEfLFQLZhGGn7IvDYdc=",
 			"path": "github.com/ONSdigital/dp-frontend-models/model",
-			"revision": "3a71a5405fa658d174dae37f0df48b41d611aedd",
-			"revisionTime": "2017-12-04T13:52:13Z"
+			"revision": "fc7563805b8e92cc9f36da19410d4aab7586e3b2",
+			"revisionTime": "2017-12-07T11:08:14Z"
+		},
+		{
+			"checksumSHA1": "4HqfcBn97KejGsi17+7HiYKDosw=",
+			"path": "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/age",
+			"revision": "61ae74395c11b344de9590abfa54dcb7a2557c3c",
+			"revisionTime": "2017-12-07T09:23:34Z"
 		},
 		{
 			"checksumSHA1": "KK1EqJ7DWl3ps+7lqxDNm82aHjg=",
