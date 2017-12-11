@@ -46,7 +46,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 	log.Debug("mapping api response models into filter overview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
 
 	p.FilterID = filterID
-	p.Data.DatasetTitle = dst.Title
+	p.DatasetTitle = dst.Title
 	p.Metadata.Title = "Filter Options"
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
 
