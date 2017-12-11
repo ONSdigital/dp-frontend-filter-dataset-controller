@@ -423,7 +423,7 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 		p.Data.Type = "month"
 	}
 
-	p.Data.DatasetTitle = d.Title
+	p.DatasetTitle = d.Title
 	p.FilterID = f.FilterID
 	p.SearchDisabled = true
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
