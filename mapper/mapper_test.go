@@ -133,7 +133,7 @@ func TestUnitMapper(t *testing.T) {
 			So(p.ShowFeedbackForm, ShouldEqual, false)
 		})
 
-		Convey("correctly orders the age values into ascending numeric order", func() {
+		Convey("correctly orders the time values into ascending numeric order", func() {
 			p := CreateListSelectorPage("time", []filter.DimensionOption{}, dataset.Options{
 				Items: []dataset.Option{
 					{
