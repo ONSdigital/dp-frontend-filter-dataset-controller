@@ -188,12 +188,31 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 		selectedListIDs = append(selectedListIDs, opt.Option)
 	}
 
-	var allListValues, allListIDs []string
+	var allListValues []string
 	valueIDmap := make(map[string]string)
 	for _, val := range allValues.Items {
 		allListValues = append(allListValues, val.Label)
-		allListIDs = append(allListIDs, val.Option)
 		valueIDmap[val.Label] = val.Option
+	}
+
+	if name == "time" || name == "age" {
+		isValid := true
+		var intVals []int
+		for _, val := range allListValues {
+			intVal, err := strconv.Atoi(val)
+			if err != nil {
+				isValid = false
+				break
+			}
+			intVals = append(intVals, intVal)
+		}
+
+		if isValid {
+			sort.Ints(intVals)
+			for i, val := range intVals {
+				allListValues[i] = strconv.Itoa(val)
+			}
+		}
 	}
 
 	for _, val := range allListValues {

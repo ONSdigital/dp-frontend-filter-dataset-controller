@@ -75,61 +75,89 @@ func TestUnitMapper(t *testing.T) {
 		}
 	})
 
-	Convey("test CreateListSelector page correctly maps to listSelector frontend model", t, func() {
-		allValues := dataset.Options{
-			Items: []dataset.Option{
-				{
-					Label:  "Feb-10",
-					Option: "abcdefg",
+	Convey("test CreateListSelector page... ", t, func() {
+		Convey("correctly maps to listSelector frontend model", func() {
+			allValues := dataset.Options{
+				Items: []dataset.Option{
+					{
+						Label:  "Feb-10",
+						Option: "abcdefg",
+					},
+					{
+						Label:  "Mar-10",
+						Option: "38jd83ik",
+					},
+					{
+						Label:  "Apr-10",
+						Option: "13984094",
+					},
 				},
+			}
+			dataset := getTestDataset()
+			selectedValues := []filter.DimensionOption{
 				{
-					Label:  "Mar-10",
 					Option: "38jd83ik",
 				},
 				{
-					Label:  "Apr-10",
-					Option: "13984094",
+					Option: "bcdefg",
 				},
-			},
-		}
-		dataset := getTestDataset()
-		selectedValues := []filter.DimensionOption{
-			{
-				Option: "38jd83ik",
-			},
-			{
-				Option: "bcdefg",
-			},
-		}
+			}
 
-		filter := getTestFilter()
+			filter := getTestFilter()
 
-		p := CreateListSelectorPage("time", selectedValues, allValues, filter, dataset, "12345", "11-11-1992")
-		So(p.Data.Title, ShouldEqual, "Time")
-		So(p.SearchDisabled, ShouldBeTrue)
-		So(p.FilterID, ShouldEqual, filter.FilterID)
+			p := CreateListSelectorPage("time", selectedValues, allValues, filter, dataset, "12345", "11-11-1992")
+			So(p.Data.Title, ShouldEqual, "Time")
+			So(p.SearchDisabled, ShouldBeTrue)
+			So(p.FilterID, ShouldEqual, filter.FilterID)
 
-		So(p.Breadcrumb, ShouldHaveLength, 3)
-		So(p.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(p.Breadcrumb[1].Title, ShouldEqual, "Filter options")
-		So(p.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.Links.FilterBlueprint.ID+"/dimensions")
-		So(p.Breadcrumb[2].Title, ShouldEqual, "Time")
-		So(p.Data.AddFromRange.Label, ShouldEqual, "add time range")
-		So(p.Data.AddFromRange.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time")
-		So(p.Data.SaveAndReturn.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
-		So(p.Data.Cancel.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
-		So(p.Data.AddAllInRange.Label, ShouldEqual, "All times")
-		So(p.Data.RangeData.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/list")
-		So(p.Data.RemoveAll.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/remove-all")
-		So(p.Data.RangeData.Values, ShouldHaveLength, 3)
-		So(p.Data.RangeData.Values[0].Label, ShouldEqual, "Feb-10")
-		So(p.Data.RangeData.Values[0].IsSelected, ShouldBeFalse)
-		So(p.Data.RangeData.Values[1].Label, ShouldEqual, "Mar-10")
-		So(p.Data.RangeData.Values[1].IsSelected, ShouldBeTrue)
-		So(p.Data.RangeData.Values[2].Label, ShouldEqual, "Apr-10")
-		So(p.Data.RangeData.Values[2].IsSelected, ShouldBeFalse)
-		So(p.Data.FiltersAmount, ShouldEqual, 2)
-		So(p.ShowFeedbackForm, ShouldEqual, false)
+			So(p.Breadcrumb, ShouldHaveLength, 3)
+			So(p.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
+			So(p.Breadcrumb[1].Title, ShouldEqual, "Filter options")
+			So(p.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.Links.FilterBlueprint.ID+"/dimensions")
+			So(p.Breadcrumb[2].Title, ShouldEqual, "Time")
+			So(p.Data.AddFromRange.Label, ShouldEqual, "add time range")
+			So(p.Data.AddFromRange.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time")
+			So(p.Data.SaveAndReturn.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
+			So(p.Data.Cancel.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
+			So(p.Data.AddAllInRange.Label, ShouldEqual, "All times")
+			So(p.Data.RangeData.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/list")
+			So(p.Data.RemoveAll.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/remove-all")
+			So(p.Data.RangeData.Values, ShouldHaveLength, 3)
+			So(p.Data.RangeData.Values[0].Label, ShouldEqual, "Feb-10")
+			So(p.Data.RangeData.Values[0].IsSelected, ShouldBeFalse)
+			So(p.Data.RangeData.Values[1].Label, ShouldEqual, "Mar-10")
+			So(p.Data.RangeData.Values[1].IsSelected, ShouldBeTrue)
+			So(p.Data.RangeData.Values[2].Label, ShouldEqual, "Apr-10")
+			So(p.Data.RangeData.Values[2].IsSelected, ShouldBeFalse)
+			So(p.Data.FiltersAmount, ShouldEqual, 2)
+			So(p.ShowFeedbackForm, ShouldEqual, false)
+		})
+
+		Convey("correctly orders the age values into ascending numeric order", func() {
+			p := CreateListSelectorPage("time", []filter.DimensionOption{}, dataset.Options{
+				Items: []dataset.Option{
+					{
+						Label: "2013",
+					},
+					{
+						Label: "2010",
+					},
+					{
+						Label: "2009",
+					},
+					{
+						Label: "2017",
+					},
+				},
+			}, filter.Model{}, dataset.Model{}, "1234", "today")
+
+			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
+
+			So(p.Data.RangeData.Values[0].Label, ShouldEqual, "2009")
+			So(p.Data.RangeData.Values[1].Label, ShouldEqual, "2010")
+			So(p.Data.RangeData.Values[2].Label, ShouldEqual, "2013")
+			So(p.Data.RangeData.Values[3].Label, ShouldEqual, "2017")
+		})
 	})
 }
 
