@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -107,6 +108,22 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 	values, labelIDMap, err := f.getDimensionValues(filterID, "age")
 	if err != nil {
 		return err
+	}
+
+	var intValues []int
+	for _, val := range values {
+		intVal, err := strconv.Atoi(val)
+		if err != nil {
+			break
+		}
+
+		intValues = append(intValues, intVal)
+	}
+
+	sort.Ints(intValues)
+
+	for i, val := range intValues {
+		values[i] = strconv.Itoa(val)
 	}
 
 	var isInRange bool

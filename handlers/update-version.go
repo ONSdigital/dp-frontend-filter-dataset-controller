@@ -3,7 +3,9 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
@@ -28,7 +30,47 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	newFilterID, err := f.FilterClient.CreateBlueprint(oldJob.InstanceID, []string{})
+	versionURL, err := url.Parse(oldJob.Links.Version.HRef)
+	if err != nil {
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	datasetID, _, _, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+	if err != nil {
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	dst, err := f.DatasetClient.Get(datasetID)
+	if err != nil {
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	latestVersionURL, err := url.Parse(dst.Links.LatestVersion.URL)
+	if err != nil {
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	_, edition, version, err := helpers.ExtractDatasetInfoFromPath(latestVersionURL.Path)
+	if err != nil {
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	latestVersion, err := f.DatasetClient.GetVersion(datasetID, edition, version)
+	if err != nil {
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	newFilterID, err := f.FilterClient.CreateBlueprint(latestVersion.ID, []string{})
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		w.WriteHeader(http.StatusInternalServerError)

@@ -77,6 +77,23 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 			for _, ac := range d.Values {
 				fod.AddedCategories = append(fod.AddedCategories, ac)
 			}
+
+			if d.Name == "age" {
+				var ages []int
+				for _, a := range fod.AddedCategories {
+					age, err := strconv.Atoi(a)
+					if err != nil {
+						continue
+					}
+
+					ages = append(ages, age)
+				}
+
+				sort.Ints(ages)
+				for i, age := range ages {
+					fod.AddedCategories[i] = strconv.Itoa(age)
+				}
+			}
 		}
 
 		fod.Link.URL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, d.Name)
