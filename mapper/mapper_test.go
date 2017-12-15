@@ -153,10 +153,10 @@ func TestUnitMapper(t *testing.T) {
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
-			So(p.Data.RangeData.Values[0].Label, ShouldEqual, "2009")
-			So(p.Data.RangeData.Values[1].Label, ShouldEqual, "2010")
-			So(p.Data.RangeData.Values[2].Label, ShouldEqual, "2013")
-			So(p.Data.RangeData.Values[3].Label, ShouldEqual, "2017")
+			So(p.Data.RangeData.Values[0].Label, ShouldEqual, "2017")
+			So(p.Data.RangeData.Values[1].Label, ShouldEqual, "2013")
+			So(p.Data.RangeData.Values[2].Label, ShouldEqual, "2010")
+			So(p.Data.RangeData.Values[3].Label, ShouldEqual, "2009")
 		})
 	})
 }

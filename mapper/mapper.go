@@ -209,6 +209,9 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 		if isValid {
 			sort.Ints(intVals)
+			if name == "time" {
+				intVals = reverseInts(intVals)
+			}
 			for i, val := range intVals {
 				allListValues[i] = strconv.Itoa(val)
 			}
@@ -727,4 +730,11 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 	p.Data.Cancel.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
 
 	return p
+}
+
+func reverseInts(input []int) []int {
+	if len(input) == 0 {
+		return input
+	}
+	return append(reverseInts(input[1:]), input[0])
 }
