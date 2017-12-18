@@ -115,7 +115,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		p.Data.IsLatestVersion = true
 	}
 
-	p.Data.LatestVersion.DatasetLandingPageURL = versionURL.Path
+	p.Data.LatestVersion.DatasetLandingPageURL = latestURL.Path
 	p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterID)
 
 	b, err := json.Marshal(p)

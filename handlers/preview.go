@@ -136,7 +136,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	p.Data.LatestVersion.DatasetLandingPageURL = versionURL.Path
+	p.Data.LatestVersion.DatasetLandingPageURL = latestURL.Path
 	p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterOutputID)
 
 	if len(p.Data.Dimensions) > 0 {

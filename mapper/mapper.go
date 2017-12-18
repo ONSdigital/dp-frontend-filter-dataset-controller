@@ -358,7 +358,7 @@ func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals d
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: "Filter this dataset",
+		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
