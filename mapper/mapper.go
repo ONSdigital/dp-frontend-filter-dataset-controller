@@ -50,6 +50,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 	p.Metadata.Title = "Filter Options"
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
 	p.ShowFeedbackForm = false
+	p.DatasetId = datasetID
 
 	disableButton := true
 
@@ -159,6 +160,7 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 	p.Metadata.Title = pageTitle
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
 	p.ShowFeedbackForm = false
+	p.DatasetId = datasetID
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
@@ -299,6 +301,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 	p.DatasetTitle = dst.Title
 	p.Data.DatasetID = datasetID
 	p.Data.ReleaseDate = releaseDate
+	p.DatasetId = datasetID
 
 	for ext, d := range filter.Downloads {
 		p.Data.Downloads = append(p.Data.Downloads, previewPage.Download{
@@ -347,6 +350,7 @@ func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals d
 	p.FilterID = f.FilterID
 	p.SearchDisabled = true
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+	p.DatasetId = datasetID
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
@@ -470,6 +474,7 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 	p.FilterID = f.FilterID
 	p.SearchDisabled = true
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+	p.DatasetId = datasetID
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
@@ -625,6 +630,7 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 	}
 	p.DatasetTitle = dst.Title
 	p.Data.DimensionName = pageTitle
+	p.DatasetId = datasetID
 
 	var title string
 	if len(h.Breadcrumbs) == 0 {
