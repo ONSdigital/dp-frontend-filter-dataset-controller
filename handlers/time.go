@@ -99,15 +99,17 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 		}
 	}
 
+	var options []string
 	for k := range req.Form {
 		if _, err := time.Parse("Jan-06", k); err != nil {
 			continue
 		}
 
-		if err := f.FilterClient.AddDimensionValue(filterID, "time", k); err != nil {
-			log.TraceR(req, err.Error(), nil)
-			continue
-		}
+		options = append(options, k)
+	}
+
+	if err := f.FilterClient.AddDimensionValues(filterID, "time", options); err != nil {
+		log.TraceR(req, err.Error(), nil)
 	}
 
 	return nil
