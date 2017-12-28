@@ -1,15 +1,18 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
+	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
@@ -113,12 +116,32 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		p.Data.IsLatestVersion = true
 	}
 
+	metadata, err := f.DatasetClient.GetVersionMetadata(datasetID, edition, version)
+	if err != nil {
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
 	if err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	size, err := f.getMetadataTextSize(datasetID, edition, version, metadata, dims)
+	if err != nil {
+		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	p.Data.Downloads = append(p.Data.Downloads, previewPage.Download{
+		Extension: "txt",
+		Size:      strconv.Itoa(size),
+		URI:       fmt.Sprintf("/datasets/%s/editions/%s/versions/%s/metadata.txt", datasetID, edition, version),
+	})
 
 	for _, dim := range dims.Items {
 		opts, err := f.DatasetClient.GetOptions(datasetID, edition, version, dim.ID)
@@ -168,4 +191,20 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+func (f *Filter) getMetadataTextSize(datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.Dimensions) (int, error) {
+	var b bytes.Buffer
+
+	b.WriteString(metadata.String())
+	b.WriteString("Dimensions:\n")
+	for _, dimension := range dimensions.Items {
+		options, err := f.DatasetClient.GetOptions(datasetID, edition, version, dimension.ID)
+		if err != nil {
+			return 0, err
+		}
+
+		b.WriteString(options.String())
+	}
+	return len(b.Bytes()), nil
 }

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ONSdigital/dp-frontend-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/age"
@@ -302,6 +303,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 	p.Data.DatasetID = datasetID
 	p.Data.ReleaseDate = releaseDate
 	p.DatasetId = datasetID
+	_, p.Data.Edition, _, _ = helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 
 	for ext, d := range filter.Downloads {
 		p.Data.Downloads = append(p.Data.Downloads, previewPage.Download{
