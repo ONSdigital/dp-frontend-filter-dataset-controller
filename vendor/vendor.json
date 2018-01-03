@@ -3,6 +3,12 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "bTEnJshSpFGH6Wx/QQch4hqzOPs=",
+			"path": "github.com/ONSdigital/dp-frontend-dataset-controller/helpers",
+			"revision": "1a931cf26ef3ede2ebb90f2785021fee0441222f",
+			"revisionTime": "2017-12-20T15:25:36Z"
+		},
+		{
 			"checksumSHA1": "xSwBSbK1fgyi9yAltxaWMKCLySA=",
 			"path": "github.com/ONSdigital/dp-frontend-models/model",
 			"revision": "8c34009d7446b1199dabb5df55086bc053416f99",
@@ -229,6 +235,12 @@
 			"path": "github.com/smartystreets/goconvey/convey/reporting",
 			"revision": "9e8dc3f972df6c8fcc0375ef492c24d0bb204857",
 			"revisionTime": "2017-06-02T16:46:21Z"
+		},
+		{
+			"checksumSHA1": "GtamqiJoL7PGHsN454AoffBFMa8=",
+			"path": "golang.org/x/net/context",
+			"revision": "a8b9294777976932365dabb6640cf1468d95c70f",
+			"revisionTime": "2017-11-29T19:21:16Z"
 		},
 		{
 			"checksumSHA1": "tY+5thYxjKDUQyQXYcBqogmMS5U=",
