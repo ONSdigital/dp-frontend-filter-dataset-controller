@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -17,8 +18,6 @@ import (
 func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
-
-	log.Debug("updating age", nil)
 
 	if err := f.FilterClient.RemoveDimension(filterID, "age"); err != nil {
 		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
@@ -84,6 +83,7 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 		}
 	}
 
+	var options []string
 	for k := range req.Form {
 		if _, err := strconv.Atoi(k); err != nil {
 			if !strings.Contains(k, "+") {
@@ -91,10 +91,12 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 			}
 		}
 
-		if err := f.FilterClient.AddDimensionValue(filterID, "age", k); err != nil {
-			log.TraceR(req, err.Error(), nil)
-			continue
-		}
+		options = append(options, k)
+
+	}
+
+	if err := f.FilterClient.AddDimensionValues(filterID, "age", options); err != nil {
+		log.TraceR(req, err.Error(), nil)
 	}
 
 	return nil
@@ -107,6 +109,22 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 	values, labelIDMap, err := f.getDimensionValues(filterID, "age")
 	if err != nil {
 		return err
+	}
+
+	var intValues []int
+	for _, val := range values {
+		intVal, err := strconv.Atoi(val)
+		if err != nil {
+			break
+		}
+
+		intValues = append(intValues, intVal)
+	}
+
+	sort.Ints(intValues)
+
+	for i, val := range intValues {
+		values[i] = strconv.Itoa(val)
 	}
 
 	var isInRange bool

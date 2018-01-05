@@ -3,10 +3,16 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "vE8Q5SmiWEfLFQLZhGGn7IvDYdc=",
+			"checksumSHA1": "bTEnJshSpFGH6Wx/QQch4hqzOPs=",
+			"path": "github.com/ONSdigital/dp-frontend-dataset-controller/helpers",
+			"revision": "1a931cf26ef3ede2ebb90f2785021fee0441222f",
+			"revisionTime": "2017-12-20T15:25:36Z"
+		},
+		{
+			"checksumSHA1": "xSwBSbK1fgyi9yAltxaWMKCLySA=",
 			"path": "github.com/ONSdigital/dp-frontend-models/model",
-			"revision": "fc7563805b8e92cc9f36da19410d4aab7586e3b2",
-			"revisionTime": "2017-12-07T11:08:14Z"
+			"revision": "8c34009d7446b1199dabb5df55086bc053416f99",
+			"revisionTime": "2017-12-20T14:28:15Z"
 		},
 		{
 			"checksumSHA1": "4HqfcBn97KejGsi17+7HiYKDosw=",
@@ -17,26 +23,26 @@
 		{
 			"checksumSHA1": "WFzDhLFdAQv2xOSf1cfT5ao2Aqs=",
 			"path": "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview",
-			"revision": "bb3aa88cefc1b32f0c431d6773407983fc69e6bb",
-			"revisionTime": "2017-09-18T14:39:20Z"
+			"revision": "754451bf05e79fb16edb24024381a28bc75ab182",
+			"revisionTime": "2017-12-08T12:08:51Z"
 		},
 		{
-			"checksumSHA1": "ohl+vTwFS7rzrSwF76vtG+Jk9NM=",
+			"checksumSHA1": "zNdo/FSyzMdMGbm9z7AKDRrhUL8=",
 			"path": "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/hierarchy",
-			"revision": "d5005a8cb73c03ca98004c4021a99f2b05906a20",
-			"revisionTime": "2017-10-30T09:01:34Z"
+			"revision": "754451bf05e79fb16edb24024381a28bc75ab182",
+			"revisionTime": "2017-12-08T12:08:51Z"
 		},
 		{
 			"checksumSHA1": "ZEVw5TIha5cGVEQplEIrIhNpc40=",
 			"path": "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector",
-			"revision": "6e8f6da58fb44e177821771ae820b9a07d625082",
-			"revisionTime": "2017-09-08T08:49:08Z"
+			"revision": "754451bf05e79fb16edb24024381a28bc75ab182",
+			"revisionTime": "2017-12-08T12:08:51Z"
 		},
 		{
-			"checksumSHA1": "CD1y5Z16SnUZlRR7nMXvoQdrx4s=",
+			"checksumSHA1": "AOeUigZrxry1XMj7+yQQLpYL8lE=",
 			"path": "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage",
-			"revision": "a007763f4350fd0352d0c25b9ac7d9b3d62e46be",
-			"revisionTime": "2017-11-20T13:41:23Z"
+			"revision": "cb4e58dfd37eb1aa358e2b0e096aa74e1d0f07dd",
+			"revisionTime": "2017-12-28T08:15:36Z"
 		},
 		{
 			"checksumSHA1": "SoY8FqCX3h81+IizLi5lWsFydmU=",
@@ -47,8 +53,14 @@
 		{
 			"checksumSHA1": "UcgCMRZLH31hF9KcFhrKQXx/tFA=",
 			"path": "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time",
-			"revision": "c4e2fa5f4b28c2546abe87712a698cbc2033548f",
-			"revisionTime": "2017-11-14T11:29:23Z"
+			"revision": "754451bf05e79fb16edb24024381a28bc75ab182",
+			"revisionTime": "2017-12-08T12:08:51Z"
+		},
+		{
+			"checksumSHA1": "5QDQu8FLAG3BCoL4X5OqpJz83xE=",
+			"path": "github.com/ONSdigital/dp-frontend-models/model/datasetLandingPageFilterable",
+			"revision": "3a71a5405fa658d174dae37f0df48b41d611aedd",
+			"revisionTime": "2017-12-04T13:52:13Z"
 		},
 		{
 			"checksumSHA1": "zgQXB6EtoNdvUCvMjxA6U9cfDDI=",
@@ -63,10 +75,10 @@
 			"revisionTime": "2017-10-09T08:31:24Z"
 		},
 		{
-			"checksumSHA1": "4RDJIDyBh1de+Ea9xFJBE/HIrIU=",
+			"checksumSHA1": "l2pQ44jnzQWTi2wyBVWkhbAyGhQ=",
 			"path": "github.com/ONSdigital/go-ns/clients/dataset",
-			"revision": "346c09ef11b6fd9a6eb4e269d8b47aa4c9530694",
-			"revisionTime": "2017-12-06T15:01:50Z"
+			"revision": "5a0e762287386a7035095e07d74353f08f532a0a",
+			"revisionTime": "2017-12-21T14:28:47Z"
 		},
 		{
 			"checksumSHA1": "14UTvxZ+UDwGqWbmO4jmojzzIUM=",
@@ -129,10 +141,10 @@
 			"revisionTime": "2017-07-17T12:56:40Z"
 		},
 		{
-			"checksumSHA1": "ST3iiJ6vhtfZDnujuW/HGXQCtZM=",
+			"checksumSHA1": "/5JpULDw51Em+1+OJHcfDkbw/e0=",
 			"path": "github.com/golang/mock/gomock",
-			"revision": "9e3cfa9279f269a4c4d703dacd64b05184cec28e",
-			"revisionTime": "2017-06-14T19:52:02Z"
+			"revision": "f67f7081ddcd0f92a20c1d58e7cd8b23253d15c7",
+			"revisionTime": "2017-12-07T01:11:52Z"
 		},
 		{
 			"checksumSHA1": "yIkYzW7bzAD81zHyuCNmEj4+oxQ=",
@@ -223,6 +235,12 @@
 			"path": "github.com/smartystreets/goconvey/convey/reporting",
 			"revision": "9e8dc3f972df6c8fcc0375ef492c24d0bb204857",
 			"revisionTime": "2017-06-02T16:46:21Z"
+		},
+		{
+			"checksumSHA1": "GtamqiJoL7PGHsN454AoffBFMa8=",
+			"path": "golang.org/x/net/context",
+			"revision": "a8b9294777976932365dabb6640cf1468d95c70f",
+			"revisionTime": "2017-11-29T19:21:16Z"
 		},
 		{
 			"checksumSHA1": "tY+5thYxjKDUQyQXYcBqogmMS5U=",

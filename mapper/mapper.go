@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ONSdigital/dp-frontend-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/age"
@@ -46,8 +47,11 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 	log.Debug("mapping api response models into filter overview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
 
 	p.FilterID = filterID
+	p.DatasetTitle = dst.Title
 	p.Metadata.Title = "Filter Options"
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+	p.ShowFeedbackForm = false
+	p.DatasetId = datasetID
 
 	disableButton := true
 
@@ -74,6 +78,23 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 		} else {
 			for _, ac := range d.Values {
 				fod.AddedCategories = append(fod.AddedCategories, ac)
+			}
+
+			if d.Name == "age" {
+				var ages []int
+				for _, a := range fod.AddedCategories {
+					age, err := strconv.Atoi(a)
+					if err != nil {
+						continue
+					}
+
+					ages = append(ages, age)
+				}
+
+				sort.Ints(ages)
+				for i, age := range ages {
+					fod.AddedCategories[i] = strconv.Itoa(age)
+				}
 			}
 		}
 
@@ -135,9 +156,12 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 	p.SearchDisabled = true
 	p.FilterID = filter.FilterID
+	p.DatasetTitle = dst.Title
 	p.Data.Title = pageTitle
 	p.Metadata.Title = pageTitle
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+	p.ShowFeedbackForm = false
+	p.DatasetId = datasetID
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
@@ -184,12 +208,34 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 		selectedListIDs = append(selectedListIDs, opt.Option)
 	}
 
-	var allListValues, allListIDs []string
+	var allListValues []string
 	valueIDmap := make(map[string]string)
 	for _, val := range allValues.Items {
 		allListValues = append(allListValues, val.Label)
-		allListIDs = append(allListIDs, val.Option)
 		valueIDmap[val.Label] = val.Option
+	}
+
+	if name == "time" || name == "age" {
+		isValid := true
+		var intVals []int
+		for _, val := range allListValues {
+			intVal, err := strconv.Atoi(val)
+			if err != nil {
+				isValid = false
+				break
+			}
+			intVals = append(intVals, intVal)
+		}
+
+		if isValid {
+			sort.Ints(intVals)
+			if name == "time" {
+				intVals = reverseInts(intVals)
+			}
+			for i, val := range intVals {
+				allListValues[i] = strconv.Itoa(val)
+			}
+		}
 	}
 
 	for _, val := range allListValues {
@@ -232,6 +278,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	p.SearchDisabled = false
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+	p.ShowFeedbackForm = true
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
@@ -252,9 +299,11 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	p.Data.FilterID = filter.Links.FilterBlueprint.ID
 
-	p.Data.DatasetTitle = dst.Title
+	p.DatasetTitle = dst.Title
 	p.Data.DatasetID = datasetID
 	p.Data.ReleaseDate = releaseDate
+	p.DatasetId = datasetID
+	_, p.Data.Edition, _, _ = helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 
 	for ext, d := range filter.Downloads {
 		p.Data.Downloads = append(p.Data.Downloads, previewPage.Download{
@@ -303,6 +352,7 @@ func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals d
 	p.FilterID = f.FilterID
 	p.SearchDisabled = true
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+	p.DatasetId = datasetID
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
@@ -314,7 +364,7 @@ func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals d
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: "Filter this dataset",
+		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -322,6 +372,7 @@ func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals d
 	})
 
 	p.Metadata.Title = "Age"
+	p.DatasetTitle = d.Title
 
 	p.Data.FormAction.URL = fmt.Sprintf("/filters/%s/dimensions/age/update", f.FilterID)
 
@@ -421,9 +472,11 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 		p.Data.Type = "month"
 	}
 
+	p.DatasetTitle = d.Title
 	p.FilterID = f.FilterID
 	p.SearchDisabled = true
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
+	p.DatasetId = datasetID
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
@@ -577,8 +630,9 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 	if pageTitle, ok = dimensionTitleTranslator[name]; !ok {
 		pageTitle = strings.Title(name)
 	}
-
+	p.DatasetTitle = dst.Title
 	p.Data.DimensionName = pageTitle
+	p.DatasetId = datasetID
 
 	var title string
 	if len(h.Breadcrumbs) == 0 {
@@ -701,4 +755,11 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 	p.Data.Cancel.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
 
 	return p
+}
+
+func reverseInts(input []int) []int {
+	if len(input) == 0 {
+		return input
+	}
+	return append(reverseInts(input[1:]), input[0])
 }
