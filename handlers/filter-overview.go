@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
+	"unicode"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
@@ -69,7 +71,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		dimensionIDNameLookup[dim.ID] = idNameLookup
 	}
 
-	var dimensions []filter.ModelDimension
+	var dimensions FilterModelDimensions
 	for _, dim := range dims {
 		var vals []filter.DimensionOption
 		vals, err = f.FilterClient.GetDimensionOptions(filterID, dim.Name)
@@ -88,6 +90,8 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 			Values: values,
 		})
 	}
+
+	sort.Sort(dimensions)
 
 	dataset, err := f.DatasetClient.Get(datasetID)
 	if err != nil {
@@ -163,4 +167,38 @@ func (f *Filter) FilterOverviewClearAll(w http.ResponseWriter, req *http.Request
 	redirectURL := fmt.Sprintf("/filters/%s/dimensions", filterID)
 
 	http.Redirect(w, req, redirectURL, 302)
+}
+
+// FilterModelDimensions represents a list of dimensions
+type FilterModelDimensions []filter.ModelDimension
+
+func (d FilterModelDimensions) Len() int      { return len(d) }
+func (d FilterModelDimensions) Swap(i, j int) { d[i], d[j] = d[j], d[i] }
+func (d FilterModelDimensions) Less(i, j int) bool {
+	iRunes := []rune(d[i].Name)
+	jRunes := []rune(d[j].Name)
+
+	max := len(iRunes)
+	if max > len(jRunes) {
+		max = len(jRunes)
+	}
+
+	for idx := 0; idx < max; idx++ {
+		ir := iRunes[idx]
+		jr := jRunes[idx]
+
+		lir := unicode.ToLower(ir)
+		ljr := unicode.ToLower(jr)
+
+		if lir != ljr {
+			return lir < ljr
+		}
+
+		// the lowercase runes are the same, so compare the original
+		if ir != jr {
+			return ir < jr
+		}
+	}
+
+	return false
 }
