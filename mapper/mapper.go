@@ -283,6 +283,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	p.SearchDisabled = false
 	p.ShowFeedbackForm = true
+	p.ReleaseDate = releaseDate
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
@@ -305,7 +306,6 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	p.DatasetTitle = dst.Title
 	p.Data.DatasetID = datasetID
-	p.Data.ReleaseDate = releaseDate
 	p.DatasetId = datasetID
 	_, p.Data.Edition, _, _ = helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 
