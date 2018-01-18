@@ -7,17 +7,19 @@ type Filter struct {
 	DatasetClient   DatasetClient
 	CodeListClient  CodelistClient
 	HierarchyClient HierarchyClient
+	SearchClient    SearchClient
 	val             Validator
 }
 
 // NewFilter creates a new instance of Filter
-func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, clc CodelistClient, hc HierarchyClient, val Validator) *Filter {
+func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, clc CodelistClient, hc HierarchyClient, sc SearchClient, val Validator) *Filter {
 	return &Filter{
 		Renderer:        r,
 		FilterClient:    fc,
 		DatasetClient:   dc,
 		CodeListClient:  clc,
 		HierarchyClient: hc,
+		SearchClient:    sc,
 		val:             val,
 	}
 }

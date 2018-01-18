@@ -21,6 +21,7 @@ import (
 	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	hierarchyClient "github.com/ONSdigital/go-ns/clients/hierarchy"
+	"github.com/ONSdigital/go-ns/clients/search"
 	"github.com/ONSdigital/go-ns/log"
 )
 
@@ -623,6 +624,105 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 	return p, nil
 }
 
+// CreateHierarchySearchPage ...
+func CreateHierarchySearchPage(items []search.Item, dst dataset.Model, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query string) hierarchy.Page {
+	var p hierarchy.Page
+	SetTaxonomyDomain(&p.Page)
+
+	log.Debug("mapping api response models to hierarchy search page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "name": name})
+
+	var ok bool
+	var pageTitle string
+	if pageTitle, ok = dimensionTitleTranslator[name]; !ok {
+		pageTitle = strings.Title(name)
+	}
+	p.DatasetTitle = dst.Title
+	p.Data.DimensionName = pageTitle
+	p.DatasetId = datasetID
+	p.Data.IsSearchResults = true
+	p.Data.Query = query
+
+	title := pageTitle
+
+	if p.Type, ok = hierarchyBrowseLookup[name]; !ok {
+		p.Type = "type"
+	}
+
+	p.SearchDisabled = true
+
+	p.Data.SearchURL = fmt.Sprintf("/filters/%s/dimensions/%s/search", f.FilterID, name)
+
+	versionURL, err := url.Parse(f.Links.Version.HRef)
+	if err != nil {
+		log.Error(err, nil)
+	}
+
+	p.Data.LandingPageURL = versionURL.Path + "#id-dimensions"
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: dst.Title,
+		URI:   versionURL.Path,
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: "Filter options",
+		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: title,
+		URI:   fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: "Search results",
+	})
+
+	p.FilterID = f.FilterID
+	p.Data.Title = title
+	p.Metadata.Title = title
+
+	p.Data.GoBack.URL = referrer
+
+	p.Data.AddAllFilters.URL = curPath + "/add-all"
+	p.Data.RemoveAll.URL = curPath + "/remove-all"
+
+	idLabelMap := getIDNameLookup(allVals)
+
+	for _, val := range selVals {
+		p.Data.FiltersAdded = append(p.Data.FiltersAdded, hierarchy.Filter{
+			Label:     idLabelMap[val.Option],
+			RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, val.Option),
+			ID:        val.Option,
+		})
+	}
+
+	if len(items) == 0 {
+		p.Data.IsSearchError = true
+	} else {
+
+		for _, item := range items {
+			var selected bool
+			for _, val := range selVals {
+				if val.Option == item.Code {
+					selected = true
+				}
+			}
+
+			p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
+				Label:    item.Label,
+				ID:       item.Code,
+				SubNum:   strconv.Itoa(item.NumberOfChildren),
+				SubURL:   fmt.Sprintf("redirect:/filters/%s/dimensions/%s/%s", f.FilterID, name, item.Code),
+				Selected: selected,
+			})
+
+		}
+
+	}
+
+	p.Data.SaveAndReturn.URL = fmt.Sprintf("/filters/%s/dimensions/%s/search/update", f.FilterID, name)
+	p.Data.Cancel.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
+
+	return p
+}
+
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
 func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, name, curPath, datasetID, releaseDate string) hierarchy.Page {
 	var p hierarchy.Page
@@ -651,6 +751,8 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 	}
 
 	p.SearchDisabled = true
+
+	p.Data.SearchURL = fmt.Sprintf("/filters/%s/dimensions/%s/search", f.FilterID, name)
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
@@ -754,7 +856,6 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 
 	}
 
-	//p.Data.Metadata = hierarchy.Metadata(met)
 	p.Data.SaveAndReturn.URL = curPath + "/update"
 	p.Data.Cancel.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
 

@@ -10,6 +10,7 @@ import (
 	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/clients/hierarchy"
 	"github.com/ONSdigital/go-ns/clients/renderer"
+	"github.com/ONSdigital/go-ns/clients/search"
 	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/validator"
@@ -17,7 +18,7 @@ import (
 )
 
 // Init initialises routes for the service
-func Init(r *mux.Router) (*renderer.Renderer, *filter.Client, *dataset.Client, *codelist.Client, *hierarchy.Client) {
+func Init(r *mux.Router) (*renderer.Renderer, *filter.Client, *dataset.Client, *codelist.Client, *hierarchy.Client, *search.Client) {
 	cfg := config.Get()
 
 	fi, err := os.Open("rules.json")
@@ -36,7 +37,8 @@ func Init(r *mux.Router) (*renderer.Renderer, *filter.Client, *dataset.Client, *
 	dc := dataset.New(cfg.DatasetAPIURL)
 	clc := codelist.New(cfg.CodeListAPIURL)
 	hc := hierarchy.New(cfg.HierarchyAPIURL)
-	filter := handlers.NewFilter(rend, fc, dc, clc, hc, v)
+	sc := search.New(cfg.SearchAPIURL)
+	filter := handlers.NewFilter(rend, fc, dc, clc, hc, sc, v)
 
 	r.Path("/healthcheck").HandlerFunc(healthcheck.Do)
 
@@ -51,6 +53,9 @@ func Init(r *mux.Router) (*renderer.Renderer, *filter.Client, *dataset.Client, *
 
 	r.Path("/filters/{filterID}/dimensions/age").Methods("GET").HandlerFunc(filter.Age)
 	r.Path("/filters/{filterID}/dimensions/age/update").Methods("POST").HandlerFunc(filter.UpdateAge)
+
+	r.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(filter.Search)
+	r.Path("/filters/{filterID}/dimensions/{name}/search/update").HandlerFunc(filter.SearchUpdate)
 
 	r.Path("/filters/{filterID}/dimensions/{name}").Methods("GET").HandlerFunc(filter.DimensionSelector)
 	r.Path("/filters/{filterID}/dimensions/{name}/remove-all").HandlerFunc(filter.DimensionRemoveAll)
@@ -67,5 +72,5 @@ func Init(r *mux.Router) (*renderer.Renderer, *filter.Client, *dataset.Client, *
 
 	r.Path("/filters/{filterID}/use-latest-version").HandlerFunc(filter.UseLatest)
 
-	return rend, fc, dc, clc, hc
+	return rend, fc, dc, clc, hc, sc
 }

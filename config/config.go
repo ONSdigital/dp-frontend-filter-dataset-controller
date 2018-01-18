@@ -12,6 +12,7 @@ type Config struct {
 	DatasetAPIURL   string
 	CodeListAPIURL  string
 	HierarchyAPIURL string
+	SearchAPIURL    string
 }
 
 // Get returns the default config with any modifications through environment
@@ -24,6 +25,7 @@ func Get() *Config {
 		FilterAPIURL:    "http://localhost:22100",
 		DatasetAPIURL:   "http://localhost:22000",
 		HierarchyAPIURL: "http://localhost:22600",
+		SearchAPIURL:    "http://localhost:23100",
 	}
 
 	if v := os.Getenv("BIND_ADDR"); len(v) > 0 {
@@ -42,6 +44,9 @@ func Get() *Config {
 		cfg.DatasetAPIURL = v
 	}
 	if v := os.Getenv("HIERARCHY_API_URL"); len(v) > 0 {
+		cfg.HierarchyAPIURL = v
+	}
+	if v := os.Getenv("SEARCH_API_URL"); len(v) > 0 {
 		cfg.HierarchyAPIURL = v
 	}
 

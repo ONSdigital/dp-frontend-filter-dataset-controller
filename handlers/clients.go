@@ -5,6 +5,7 @@ import (
 	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/clients/hierarchy"
+	"github.com/ONSdigital/go-ns/clients/search"
 	"github.com/ONSdigital/go-ns/healthcheck"
 )
 
@@ -50,6 +51,13 @@ type HierarchyClient interface {
 	healthcheck.Client
 	GetRoot(instanceID, name string) (hierarchy.Model, error)
 	GetChild(instanceID, name, code string) (hierarchy.Model, error)
+}
+
+// SearchClient contains methods expected for a search client
+type SearchClient interface {
+	healthcheck.Client
+	SetInternalToken(token string)
+	Dimension(datasetID, edition, version, name, query string, params ...int) (m *search.Model, err error)
 }
 
 // Renderer provides an interface for a service template renderer

@@ -22,7 +22,7 @@ func main() {
 
 	r := mux.NewRouter()
 
-	rend, fc, dc, clc, hc := routes.Init(r)
+	rend, fc, dc, clc, hc, sc := routes.Init(r)
 
 	s := server.New(cfg.BindAddr, r)
 	s.HandleOSSignals = false
@@ -42,7 +42,7 @@ func main() {
 	signal.Notify(stop, os.Interrupt, os.Kill)
 
 	for {
-		healthcheck.MonitorExternal(fc, dc, clc, hc, rend)
+		healthcheck.MonitorExternal(fc, dc, clc, hc, sc, rend)
 
 		log.Debug("conducting service healthcheck", log.Data{
 			"services": []string{
@@ -50,6 +50,7 @@ func main() {
 				"dataset-api",
 				"code-list-api",
 				"hierarchy-api",
+				"search-api",
 				"renderer",
 			},
 		})
