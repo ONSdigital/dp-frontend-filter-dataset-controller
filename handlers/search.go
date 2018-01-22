@@ -32,6 +32,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 	selVals, err := f.FilterClient.GetDimensionOptions(filterID, name)
 	if err != nil {
 		setStatusCode(req, w, err)
+		return
 	}
 
 	versionURL, err := url.Parse(fil.Links.Version.HRef)
@@ -65,6 +66,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 	searchRes, err := f.SearchClient.Dimension(datasetID, edition, version, name, q)
 	if err != nil {
 		setStatusCode(req, w, err)
+		return
 	}
 
 	p := mapper.CreateHierarchySearchPage(searchRes.Items, d, fil, selVals, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"))
@@ -84,6 +86,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 	w.Write(templateBytes)
 }
 
+// SearchUpdate will update a dimension based on selected search resultss
 func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 	if err := req.ParseForm(); err != nil {
 		log.ErrorR(req, err, nil)
