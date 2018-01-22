@@ -9,6 +9,12 @@ import (
 	"github.com/ONSdigital/go-ns/healthcheck"
 )
 
+// ClientError implements error interface with additional code method
+type ClientError interface {
+	error
+	Code() int
+}
+
 // FilterClient contains the methods expected for a filter client
 type FilterClient interface {
 	healthcheck.Client
@@ -57,7 +63,7 @@ type HierarchyClient interface {
 type SearchClient interface {
 	healthcheck.Client
 	SetInternalToken(token string)
-	Dimension(datasetID, edition, version, name, query string, params ...int) (m *search.Model, err error)
+	Dimension(datasetID, edition, version, name, query string, params ...search.Config) (m *search.Model, err error)
 }
 
 // Renderer provides an interface for a service template renderer

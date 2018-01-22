@@ -23,35 +23,30 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	dims, err := f.FilterClient.GetDimensions(filterID)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	fj, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	versionURL, err := url.Parse(fj.Links.Version.HRef)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	datasetDimensions, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
@@ -60,8 +55,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		idNameLookup := make(map[string]string)
 		options, err := f.DatasetClient.GetOptions(datasetID, edition, version, dim.ID)
 		if err != nil {
-			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-			w.WriteHeader(http.StatusInternalServerError)
+			setStatusCode(req, w, err)
 			return
 		}
 
@@ -76,8 +70,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		var vals []filter.DimensionOption
 		vals, err = f.FilterClient.GetDimensionOptions(filterID, dim.Name)
 		if err != nil {
-			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-			w.WriteHeader(http.StatusInternalServerError)
+			setStatusCode(req, w, err)
 			return
 		}
 		var values []string
@@ -95,21 +88,18 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	dataset, err := f.DatasetClient.Get(datasetID)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	latestURL, err := url.Parse(dataset.Links.LatestVersion.URL)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
@@ -124,15 +114,13 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	b, err := json.Marshal(p)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	templateBytes, err := f.Renderer.Do("dataset-filter/filter-overview", b)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
@@ -152,14 +140,12 @@ func (f *Filter) FilterOverviewClearAll(w http.ResponseWriter, req *http.Request
 
 	for _, dim := range dims {
 		if err := f.FilterClient.RemoveDimension(filterID, dim.Name); err != nil {
-			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-			w.WriteHeader(http.StatusInternalServerError)
+			setStatusCode(req, w, err)
 			return
 		}
 
 		if err := f.FilterClient.AddDimension(filterID, dim.Name); err != nil {
-			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-			w.WriteHeader(http.StatusInternalServerError)
+			setStatusCode(req, w, err)
 			return
 		}
 	}

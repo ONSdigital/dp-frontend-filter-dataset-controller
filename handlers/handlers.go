@@ -1,5 +1,11 @@
 package handlers
 
+import (
+	"net/http"
+
+	"github.com/ONSdigital/go-ns/log"
+)
+
 // Filter represents the handlers for Filtering
 type Filter struct {
 	Renderer        Renderer
@@ -22,4 +28,15 @@ func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, clc CodelistClient
 		SearchClient:    sc,
 		val:             val,
 	}
+}
+
+func setStatusCode(req *http.Request, w http.ResponseWriter, err error) {
+	status := http.StatusInternalServerError
+	if err, ok := err.(ClientError); ok {
+		if err.Code() == http.StatusNotFound {
+			status = err.Code()
+		}
+	}
+	log.ErrorR(req, err, log.Data{"setting-response-status": status})
+	w.WriteHeader(status)
 }
