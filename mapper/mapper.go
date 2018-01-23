@@ -106,9 +106,9 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 		fod.Link.URL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, d.Name)
 
 		if len(fod.AddedCategories) > 0 {
-			fod.Link.Label = "Filter"
+			fod.Link.Label = "Edit"
 		} else {
-			fod.Link.Label = "Add at least one"
+			fod.Link.Label = "Add"
 		}
 
 		var ok bool
@@ -118,7 +118,6 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 		}
 
 		fod.Filter = title
-
 		p.Data.Dimensions = append(p.Data.Dimensions, fod)
 	}
 
@@ -284,6 +283,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	p.SearchDisabled = false
 	p.ShowFeedbackForm = true
+	p.ReleaseDate = releaseDate
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
@@ -306,7 +306,6 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 
 	p.DatasetTitle = dst.Title
 	p.Data.DatasetID = datasetID
-	p.Data.ReleaseDate = releaseDate
 	p.DatasetId = datasetID
 	_, p.Data.Edition, _, _ = helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 
