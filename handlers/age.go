@@ -20,20 +20,17 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 	filterID := vars["filterID"]
 
 	if err := f.FilterClient.RemoveDimension(filterID, "age"); err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	if err := f.FilterClient.AddDimension(filterID, "age"); err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	if err := req.ParseForm(); err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
@@ -152,41 +149,35 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 
 	fj, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	versionURL, err := url.Parse(fj.Links.Version.HRef)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	dataset, err := f.DatasetClient.Get(datasetID)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, "age")
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
@@ -198,35 +189,30 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 
 	selValues, err := f.FilterClient.GetDimensionOptions(filterID, "age")
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	p, err := mapper.CreateAgePage(fj, dataset, ver, allValues, selValues, datasetID)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	b, err := json.Marshal(p)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	templateBytes, err := f.Renderer.Do("dataset-filter/age", b)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	if _, err := w.Write(templateBytes); err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 

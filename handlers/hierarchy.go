@@ -43,8 +43,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 
 	fil, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
@@ -77,8 +76,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			})
 		}
 		if err != nil {
-			log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-			w.WriteHeader(http.StatusInternalServerError)
+			setStatusCode(req, w, err)
 			return
 		}
 
@@ -133,8 +131,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 		h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
 	}
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
@@ -157,8 +154,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 		h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
 	}
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
@@ -179,8 +175,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 
 	fil, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
@@ -191,48 +186,41 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
 	}
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	selVals, err := f.FilterClient.GetDimensionOptions(filterID, name)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	versionURL, err := url.Parse(fil.Links.Version.HRef)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	d, err := f.DatasetClient.Get(datasetID)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	allVals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
@@ -240,15 +228,13 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 
 	b, err := json.Marshal(p)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	templateBytes, err := f.Renderer.Do("dataset-filter/hierarchy", b)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
