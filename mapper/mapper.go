@@ -274,12 +274,12 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 }
 
 // CreatePreviewPage maps data items from API responses to create a preview page
-func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterID, datasetID, releaseDate string) previewPage.Page {
+func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterOutputID, datasetID, releaseDate string) previewPage.Page {
 	var p previewPage.Page
 	p.Metadata.Title = "Preview and Download"
 	SetTaxonomyDomain(&p.Page)
 
-	log.Debug("mapping api responses to preview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
+	log.Debug("mapping api responses to preview page model", log.Data{"filterOutputID": filterOutputID, "datasetID": datasetID})
 
 	p.SearchDisabled = false
 	p.ShowFeedbackForm = true
@@ -303,6 +303,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 	})
 
 	p.Data.FilterID = filter.Links.FilterBlueprint.ID
+	p.Data.FilterOutputID = filterOutputID
 
 	p.DatasetTitle = dst.Title
 	p.Data.DatasetID = datasetID

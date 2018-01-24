@@ -40,6 +40,7 @@ func Init(r *mux.Router) (*renderer.Renderer, *filter.Client, *dataset.Client, *
 
 	r.Path("/healthcheck").HandlerFunc(healthcheck.Do)
 
+	r.Path("/filter-outputs/{filterOutputID}.json").Methods("GET").HandlerFunc(filter.GetFilterJob)
 	r.Path("/filter-outputs/{filterOutputID}").Methods("GET").HandlerFunc(filter.PreviewPage)
 
 	r.Path("/filters/{filterID}/submit").Methods("POST").HandlerFunc(filter.Submit)
