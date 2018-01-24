@@ -134,8 +134,16 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 		log.Error(err, nil)
 	}
 
+	p.IsInFilterBreadcrumb = true
+
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
+		URI:   fmt.Sprintf("/datasets/%s/editions", dst.ID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: edition,
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -172,8 +180,16 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 		log.Error(err, nil)
 	}
 
+	p.IsInFilterBreadcrumb = true
+
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
+		URI:   fmt.Sprintf("/datasets/%s/editions", dst.ID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: edition,
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -290,8 +306,16 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 		log.Error(err, nil)
 	}
 
+	p.IsInFilterBreadcrumb = true
+
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
+		URI:   fmt.Sprintf("/datasets/%s/editions", dst.ID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: edition,
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -363,8 +387,16 @@ func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals d
 		return p, err
 	}
 
+	p.IsInFilterBreadcrumb = true
+
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: d.Title,
+		URI:   fmt.Sprintf("/datasets/%s/editions", d.ID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: edition,
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -487,12 +519,20 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 		return p, err
 	}
 
+	p.IsInFilterBreadcrumb = true
+
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: d.Title,
+		URI:   fmt.Sprintf("/datasets/%s/editions", d.ID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: edition,
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: "Filter this dataset",
+		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -657,8 +697,16 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 		log.Error(err, nil)
 	}
 
+	p.IsInFilterBreadcrumb = true
+
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
+		URI:   fmt.Sprintf("/datasets/%s/editions", dst.ID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: edition,
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
