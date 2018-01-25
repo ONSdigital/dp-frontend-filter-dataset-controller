@@ -39,6 +39,12 @@ var hierarchyBrowseLookup = map[string]string{
 	"geography": "area",
 }
 
+var topLevelGeographies = map[string]bool{
+	"K02000001": true,
+	"K03000001": true,
+	"K04000001": true,
+}
+
 // SetTaxonomyDomain will set the taxonomy domain for a given pages
 func SetTaxonomyDomain(p *model.Page) {
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
@@ -665,21 +671,51 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
-	if len(h.Breadcrumbs) > 0 {
-		for i := len(h.Breadcrumbs) - 1; i >= 0; i-- {
-			breadcrumb := h.Breadcrumbs[i]
 
-			var url string
-			if breadcrumb.Links.Self.ID != "" {
-				url = fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, breadcrumb.Links.Self.ID)
-			} else {
-				url = fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name)
+	if len(h.Breadcrumbs) > 0 {
+		if name == "geography" {
+			p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+				Title: "Geographic Areas",
+				URI:   fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, "geography"),
+			})
+
+			if !topLevelGeographies[h.Links.Code.ID] {
+				for i := len(h.Breadcrumbs) - 1; i >= 0; i-- {
+					breadcrumb := h.Breadcrumbs[i]
+
+					if !topLevelGeographies[breadcrumb.Links.Self.ID] {
+						var url string
+						if breadcrumb.Links.Self.ID != "" {
+							url = fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, breadcrumb.Links.Self.ID)
+						} else {
+							url = fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name)
+						}
+
+						p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+							Title: breadcrumb.Label,
+							URI:   url,
+						})
+					}
+				}
+			}
+		} else {
+
+			for i := len(h.Breadcrumbs) - 1; i >= 0; i-- {
+				breadcrumb := h.Breadcrumbs[i]
+
+				var url string
+				if breadcrumb.Links.Self.ID != "" {
+					url = fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, breadcrumb.Links.Self.ID)
+				} else {
+					url = fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name)
+				}
+
+				p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+					Title: breadcrumb.Label,
+					URI:   url,
+				})
 			}
 
-			p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-				Title: breadcrumb.Label,
-				URI:   url,
-			})
 		}
 	}
 
@@ -692,7 +728,7 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 	p.Metadata.Title = title
 
 	if len(h.Breadcrumbs) > 0 {
-		if len(h.Breadcrumbs) == 1 {
+		if len(h.Breadcrumbs) == 1 || topLevelGeographies[h.Breadcrumbs[0].Links.Code.ID] && name == "geography" {
 			p.Data.Parent = pageTitle
 			p.Data.GoBack = hierarchy.Link{
 				URL: fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name),
