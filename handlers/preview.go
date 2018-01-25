@@ -182,15 +182,13 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 
 	prev, err := f.FilterClient.GetOutput(filterOutputID)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
 	b, err := json.Marshal(prev)
 	if err != nil {
-		log.ErrorR(req, err, log.Data{"setting-response-status": http.StatusInternalServerError})
-		w.WriteHeader(http.StatusInternalServerError)
+		setStatusCode(req, w, err)
 		return
 	}
 
