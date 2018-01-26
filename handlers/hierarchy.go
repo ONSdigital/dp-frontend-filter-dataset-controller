@@ -262,6 +262,8 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 
 }
 
+// Flatten the geography hierarchy - please note this will only work for this particular hierarchy,
+// need helper functions for other geog hierarchies too.
 func (f *Filter) flattenGeographyTopLevel(instanceID string) (h hierarchy.Model, err error) {
 	root, err := f.HierarchyClient.GetRoot(instanceID, "geography")
 	if err != nil {
