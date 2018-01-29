@@ -66,7 +66,11 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		if len(code) > 0 {
 			h, err = f.HierarchyClient.GetChild(fil.InstanceID, name, code)
 		} else {
-			h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
+			if name == "geography" {
+				h, err = f.flattenGeographyTopLevel(fil.InstanceID)
+			} else {
+				h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
+			}
 
 			// We include the value on the root as a selectable item, so append
 			// the value on the root to the child to see if it has been removed by
@@ -100,6 +104,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		wg.Done()
 	}()
 
+	var options []string
 	for k := range req.Form {
 		if k == "save-and-return" || k == ":uri" {
 			continue
@@ -112,10 +117,11 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		if err := f.FilterClient.AddDimensionValue(filterID, name, k); err != nil {
-			log.TraceR(req, err.Error(), nil)
-			continue
-		}
+		options = append(options, k)
+	}
+
+	if err := f.FilterClient.AddDimensionValues(filterID, name, options); err != nil {
+		log.TraceR(req, err.Error(), nil)
 	}
 
 	http.Redirect(w, req, redirectURI, 302)
@@ -128,17 +134,23 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 	if len(code) > 0 {
 		h, err = f.HierarchyClient.GetChild(fil.InstanceID, name, code)
 	} else {
-		h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
+		if name == "geography" {
+			h, err = f.flattenGeographyTopLevel(fil.InstanceID)
+		} else {
+			h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
+		}
 	}
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
+	var options []string
 	for _, child := range h.Children {
-		if err := f.FilterClient.AddDimensionValue(fil.FilterID, name, child.Links.Self.ID); err != nil {
-			log.ErrorR(req, err, nil)
-		}
+		options = append(options, child.Links.Self.ID)
+	}
+	if err := f.FilterClient.AddDimensionValues(fil.FilterID, name, options); err != nil {
+		log.ErrorR(req, err, nil)
 	}
 
 	http.Redirect(w, req, redirectURI, 302)
@@ -151,7 +163,11 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 	if len(code) > 0 {
 		h, err = f.HierarchyClient.GetChild(fil.InstanceID, name, code)
 	} else {
-		h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
+		if name == "geography" {
+			h, err = f.flattenGeographyTopLevel(fil.InstanceID)
+		} else {
+			h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
+		}
 	}
 	if err != nil {
 		setStatusCode(req, w, err)
@@ -183,7 +199,11 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	if len(code) > 0 {
 		h, err = f.HierarchyClient.GetChild(fil.InstanceID, name, code)
 	} else {
-		h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
+		if name == "geography" {
+			h, err = f.flattenGeographyTopLevel(fil.InstanceID)
+		} else {
+			h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
+		}
 	}
 	if err != nil {
 		setStatusCode(req, w, err)
@@ -240,4 +260,88 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 
 	w.Write(templateBytes)
 
+}
+
+// Flatten the geography hierarchy - please note this will only work for this particular hierarchy,
+// need helper functions for other geog hierarchies too.
+func (f *Filter) flattenGeographyTopLevel(instanceID string) (h hierarchy.Model, err error) {
+	root, err := f.HierarchyClient.GetRoot(instanceID, "geography")
+	if err != nil {
+		return
+	}
+
+	if root.HasData {
+		h.Label = root.Label
+		h.Links = root.Links
+		h.HasData = root.HasData
+	}
+
+	h.Children = make([]hierarchy.Child, 6)
+
+	for _, val := range root.Children {
+		// K03000001 Great Britain
+		if val.Links.Code.ID == "K03000001" {
+			h.Children[0].Label = val.Label
+			h.Children[0].Links = val.Links
+			h.Children[0].HasData = false
+
+			if val.HasData {
+				child, err := f.HierarchyClient.GetChild(instanceID, "geography", val.Links.Code.ID)
+				if err != nil {
+					return h, err
+				}
+
+				for _, childVal := range child.Children {
+					// K04000001 England and Wales
+					if childVal.Links.Code.ID == "K04000001" {
+						h.Children[1].Label = childVal.Label
+						h.Children[1].Links = childVal.Links
+						h.Children[1].HasData = false
+
+						if childVal.HasData {
+							grandChild, err := f.HierarchyClient.GetChild(instanceID, "geography", childVal.Links.Code.ID)
+							if err != nil {
+								return h, err
+							}
+
+							for _, grandChildVal := range grandChild.Children {
+								// E92000001 England
+								if grandChildVal.Links.Code.ID == "E92000001" {
+									h.Children[2].Label = grandChildVal.Label
+									h.Children[2].Links = grandChildVal.Links
+									h.Children[2].HasData = grandChildVal.HasData
+									h.Children[2].NumberofChildren = grandChildVal.NumberofChildren
+								}
+
+								// W92000004 Wales
+								if grandChildVal.Links.Code.ID == "W92000004" {
+									h.Children[5].Label = grandChildVal.Label
+									h.Children[5].Links = grandChildVal.Links
+									h.Children[5].HasData = grandChildVal.HasData
+									h.Children[5].NumberofChildren = grandChildVal.NumberofChildren
+								}
+							}
+						}
+					}
+
+					// S92000003 Scotland
+					if childVal.Links.Code.ID == "S92000003" {
+						h.Children[4].Label = childVal.Label
+						h.Children[4].Links = childVal.Links
+						h.Children[4].HasData = childVal.HasData
+						h.Children[4].NumberofChildren = childVal.NumberofChildren
+					}
+				}
+			}
+		}
+		// N92000002 Northern Ireland
+		if val.Links.Code.ID == "N92000002" {
+			h.Children[3].Label = val.Label
+			h.Children[3].HasData = val.HasData
+			h.Children[3].Links = val.Links
+			h.Children[3].NumberofChildren = val.NumberofChildren
+		}
+	}
+
+	return h, err
 }
