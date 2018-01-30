@@ -689,7 +689,7 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 	return p, nil
 }
 
-// CreateHierarchySearchPage ...
+// CreateHierarchySearchPage forms a search page based on various api response models
 func CreateHierarchySearchPage(items []search.Item, dst dataset.Model, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query string) hierarchy.Page {
 	var p hierarchy.Page
 	SetTaxonomyDomain(&p.Page)
@@ -708,6 +708,8 @@ func CreateHierarchySearchPage(items []search.Item, dst dataset.Model, f filter.
 	p.Data.Query = query
 
 	title := pageTitle
+
+	p.IsInFilterBreadcrumb = true
 
 	if p.Type, ok = hierarchyBrowseLookup[name]; !ok {
 		p.Type = "type"

@@ -119,7 +119,8 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 
 	searchRes, err := f.SearchClient.Dimension(datasetID, edition, version, name, q)
 	if err != nil {
-		setStatusCode(req, w, err)
+		log.ErrorR(req, err, nil)
+		http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions", filterID), 302)
 		return
 	}
 
