@@ -244,7 +244,13 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreateHierarchyPage(h, d, fil, selVals, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate)
+	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
+	if err != nil {
+		setStatusCode(req, w, err)
+		return
+	}
+
+	p := mapper.CreateHierarchyPage(h, d, fil, selVals, allVals, dims, name, req.URL.Path, datasetID, ver.ReleaseDate)
 
 	b, err := json.Marshal(p)
 	if err != nil {

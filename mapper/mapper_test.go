@@ -104,7 +104,7 @@ func TestUnitMapper(t *testing.T) {
 					},
 				},
 			}
-			dataset := getTestDataset()
+			d := getTestDataset()
 			selectedValues := []filter.DimensionOption{
 				{
 					Option: "38jd83ik",
@@ -116,13 +116,13 @@ func TestUnitMapper(t *testing.T) {
 
 			filter := getTestFilter()
 
-			p := CreateListSelectorPage("time", selectedValues, allValues, filter, dataset, "12345", "11-11-1992")
+			p := CreateListSelectorPage("time", selectedValues, allValues, filter, d, dataset.Dimensions{}, "12345", "11-11-1992")
 			So(p.Data.Title, ShouldEqual, "Time")
 			So(p.SearchDisabled, ShouldBeTrue)
 			So(p.FilterID, ShouldEqual, filter.FilterID)
 
 			So(p.Breadcrumb, ShouldHaveLength, 4)
-			So(p.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
+			So(p.Breadcrumb[0].Title, ShouldEqual, d.Title)
 			So(p.Breadcrumb[1].Title, ShouldEqual, "5678")
 			So(p.Breadcrumb[2].Title, ShouldEqual, "Filter options")
 			So(p.Breadcrumb[2].URI, ShouldEqual, "/filters/"+filter.Links.FilterBlueprint.ID+"/dimensions")
@@ -161,7 +161,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "2017",
 					},
 				},
-			}, filter.Model{}, dataset.Model{}, "1234", "today")
+			}, filter.Model{}, dataset.Model{}, dataset.Dimensions{}, "1234", "today")
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
