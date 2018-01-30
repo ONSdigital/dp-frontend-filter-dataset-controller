@@ -231,13 +231,19 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	f.listSelector(w, req, name, selectedValues, allValues, fj, dataset, datasetID, ver.ReleaseDate)
+	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
+	if err != nil {
+		setStatusCode(req, w, err)
+		return
+	}
+
+	f.listSelector(w, req, name, selectedValues, allValues, fj, dataset, dims, datasetID, ver.ReleaseDate)
 }
 
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
-func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.Model, datasetID, releaseDate string) {
-	p := mapper.CreateListSelectorPage(name, selectedValues, allValues, filter, dataset, datasetID, releaseDate)
+func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.Model, dims dataset.Dimensions, datasetID, releaseDate string) {
+	p := mapper.CreateListSelectorPage(name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate)
 
 	b, err := json.Marshal(p)
 	if err != nil {

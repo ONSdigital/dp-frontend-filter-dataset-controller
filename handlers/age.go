@@ -193,7 +193,13 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p, err := mapper.CreateAgePage(fj, dataset, ver, allValues, selValues, datasetID)
+	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
+	if err != nil {
+		setStatusCode(req, w, err)
+		return
+	}
+
+	p, err := mapper.CreateAgePage(fj, dataset, ver, allValues, selValues, dims, datasetID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return

@@ -176,6 +176,25 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	filterOutputID := vars["filterOutputID"]
+
+	prev, err := f.FilterClient.GetOutput(filterOutputID)
+	if err != nil {
+		setStatusCode(req, w, err)
+		return
+	}
+
+	b, err := json.Marshal(prev)
+	if err != nil {
+		setStatusCode(req, w, err)
+		return
+	}
+
+	w.Write(b)
+}
+
 func (f *Filter) getMetadataTextSize(datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.Dimensions) (int, error) {
 	var b bytes.Buffer
 
