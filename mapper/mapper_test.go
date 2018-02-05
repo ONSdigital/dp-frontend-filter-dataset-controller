@@ -48,9 +48,10 @@ func TestUnitMapper(t *testing.T) {
 		So(fop.Data.Dimensions[3].Link.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/age-range")
 		So(fop.Data.PreviewAndDownload.URL, ShouldEqual, "/filters/"+filter.FilterID)
 		So(fop.Data.Cancel.URL, ShouldEqual, "/")
-		So(fop.Breadcrumb, ShouldHaveLength, 2)
+		So(fop.Breadcrumb, ShouldHaveLength, 3)
 		So(fop.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(fop.Breadcrumb[1].Title, ShouldEqual, "Filter options")
+		So(fop.Breadcrumb[1].Title, ShouldEqual, "5678")
+		So(fop.Breadcrumb[2].Title, ShouldEqual, "Filter options")
 		So(fop.ShowFeedbackForm, ShouldEqual, false)
 	})
 
@@ -61,11 +62,12 @@ func TestUnitMapper(t *testing.T) {
 
 		pp := CreatePreviewPage(dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992")
 		So(pp.SearchDisabled, ShouldBeFalse)
-		So(pp.Breadcrumb, ShouldHaveLength, 3)
+		So(pp.Breadcrumb, ShouldHaveLength, 4)
 		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-		So(pp.Breadcrumb[1].Title, ShouldEqual, "Filter options")
-		So(pp.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
-		So(pp.Breadcrumb[2].Title, ShouldEqual, "Preview")
+		So(pp.Breadcrumb[1].Title, ShouldEqual, "5678")
+		So(pp.Breadcrumb[2].Title, ShouldEqual, "Filter options")
+		So(pp.Breadcrumb[2].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
+		So(pp.Breadcrumb[3].Title, ShouldEqual, "Preview")
 		So(pp.Data.FilterID, ShouldEqual, filter.Links.FilterBlueprint.ID)
 		So(pp.ShowFeedbackForm, ShouldEqual, true)
 		if pp.Data.Downloads[0].Extension == "csv" {
@@ -102,7 +104,7 @@ func TestUnitMapper(t *testing.T) {
 					},
 				},
 			}
-			dataset := getTestDataset()
+			d := getTestDataset()
 			selectedValues := []filter.DimensionOption{
 				{
 					Option: "38jd83ik",
@@ -114,16 +116,17 @@ func TestUnitMapper(t *testing.T) {
 
 			filter := getTestFilter()
 
-			p := CreateListSelectorPage("time", selectedValues, allValues, filter, dataset, "12345", "11-11-1992")
+			p := CreateListSelectorPage("time", selectedValues, allValues, filter, d, dataset.Dimensions{}, "12345", "11-11-1992")
 			So(p.Data.Title, ShouldEqual, "Time")
 			So(p.SearchDisabled, ShouldBeTrue)
 			So(p.FilterID, ShouldEqual, filter.FilterID)
 
-			So(p.Breadcrumb, ShouldHaveLength, 3)
-			So(p.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
-			So(p.Breadcrumb[1].Title, ShouldEqual, "Filter options")
-			So(p.Breadcrumb[1].URI, ShouldEqual, "/filters/"+filter.Links.FilterBlueprint.ID+"/dimensions")
-			So(p.Breadcrumb[2].Title, ShouldEqual, "Time")
+			So(p.Breadcrumb, ShouldHaveLength, 4)
+			So(p.Breadcrumb[0].Title, ShouldEqual, d.Title)
+			So(p.Breadcrumb[1].Title, ShouldEqual, "5678")
+			So(p.Breadcrumb[2].Title, ShouldEqual, "Filter options")
+			So(p.Breadcrumb[2].URI, ShouldEqual, "/filters/"+filter.Links.FilterBlueprint.ID+"/dimensions")
+			So(p.Breadcrumb[3].Title, ShouldEqual, "Time")
 			So(p.Data.AddFromRange.Label, ShouldEqual, "add time range")
 			So(p.Data.AddFromRange.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time")
 			So(p.Data.SaveAndReturn.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
@@ -158,7 +161,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "2017",
 					},
 				},
-			}, filter.Model{}, dataset.Model{}, "1234", "today")
+			}, filter.Model{}, dataset.Model{}, dataset.Dimensions{}, "1234", "today")
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 

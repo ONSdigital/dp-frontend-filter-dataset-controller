@@ -39,6 +39,12 @@ var hierarchyBrowseLookup = map[string]string{
 	"geography": "area",
 }
 
+var topLevelGeographies = map[string]bool{
+	"K02000001": true,
+	"K03000001": true,
+	"K04000001": true,
+}
+
 // SetTaxonomyDomain will set the taxonomy domain for a given pages
 func SetTaxonomyDomain(p *model.Page) {
 	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
@@ -134,8 +140,16 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 		log.Error(err, nil)
 	}
 
+	p.IsInFilterBreadcrumb = true
+
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
+		URI:   fmt.Sprintf("/datasets/%s/editions", dst.ID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: edition,
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -147,7 +161,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 
 // CreateListSelectorPage maps items from API responses to form the model for a
 // dimension list selector page
-func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.Model, datasetID, releaseDate string) listSelector.Page {
+func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.Model, dims dataset.Dimensions, datasetID, releaseDate string) listSelector.Page {
 	var p listSelector.Page
 	SetTaxonomyDomain(&p.Page)
 
@@ -157,6 +171,12 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 	var pageTitle string
 	if pageTitle, ok = dimensionTitleTranslator[name]; !ok {
 		pageTitle = strings.Title(name)
+	}
+
+	for _, dim := range dims.Items {
+		if dim.ID == name {
+			p.Metadata.Description = dim.Description
+		}
 	}
 
 	p.SearchDisabled = true
@@ -172,8 +192,16 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 		log.Error(err, nil)
 	}
 
+	p.IsInFilterBreadcrumb = true
+
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
+		URI:   fmt.Sprintf("/datasets/%s/editions", dst.ID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: edition,
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -274,12 +302,12 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 }
 
 // CreatePreviewPage maps data items from API responses to create a preview page
-func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterID, datasetID, releaseDate string) previewPage.Page {
+func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterOutputID, datasetID, releaseDate string) previewPage.Page {
 	var p previewPage.Page
 	p.Metadata.Title = "Preview and Download"
 	SetTaxonomyDomain(&p.Page)
 
-	log.Debug("mapping api responses to preview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
+	log.Debug("mapping api responses to preview page model", log.Data{"filterOutputID": filterOutputID, "datasetID": datasetID})
 
 	p.SearchDisabled = false
 	p.ShowFeedbackForm = true
@@ -290,8 +318,16 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 		log.Error(err, nil)
 	}
 
+	p.IsInFilterBreadcrumb = true
+
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
+		URI:   fmt.Sprintf("/datasets/%s/editions", dst.ID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: edition,
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -303,6 +339,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 	})
 
 	p.Data.FilterID = filter.Links.FilterBlueprint.ID
+	p.Data.FilterOutputID = filterOutputID
 
 	p.DatasetTitle = dst.Title
 	p.Data.DatasetID = datasetID
@@ -348,11 +385,17 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 }
 
 // CreateAgePage creates an age selector page based on api responses
-func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, datasetID string) (age.Page, error) {
+func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.Dimensions, datasetID string) (age.Page, error) {
 	var p age.Page
 	SetTaxonomyDomain(&p.Page)
 
 	log.Debug("mapping api responses to age page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
+
+	for _, dim := range dims.Items {
+		if dim.ID == "age" {
+			p.Metadata.Description = dim.Description
+		}
+	}
 
 	p.FilterID = f.FilterID
 	p.SearchDisabled = true
@@ -363,8 +406,16 @@ func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals d
 		return p, err
 	}
 
+	p.IsInFilterBreadcrumb = true
+
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: d.Title,
+		URI:   fmt.Sprintf("/datasets/%s/editions", d.ID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: edition,
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -467,7 +518,7 @@ func CreateAgePage(f filter.Model, d dataset.Model, v dataset.Version, allVals d
 }
 
 // CreateTimePage will create a time selector page based on api response models
-func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, datasetID string) (timeModel.Page, error) {
+func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.Dimensions, datasetID string) (timeModel.Page, error) {
 	var p timeModel.Page
 	SetTaxonomyDomain(&p.Page)
 
@@ -482,17 +533,31 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 	p.SearchDisabled = true
 	p.DatasetId = datasetID
 
+	for _, dim := range dims.Items {
+		if dim.ID == "time" {
+			p.Metadata.Description = dim.Description
+		}
+	}
+
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
 		return p, err
 	}
 
+	p.IsInFilterBreadcrumb = true
+
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: d.Title,
+		URI:   fmt.Sprintf("/datasets/%s/editions", d.ID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: edition,
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-		Title: "Filter this dataset",
+		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
@@ -624,11 +689,17 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 }
 
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
-func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, name, curPath, datasetID, releaseDate string) hierarchy.Page {
+func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, dims dataset.Dimensions, name, curPath, datasetID, releaseDate string) hierarchy.Page {
 	var p hierarchy.Page
 	SetTaxonomyDomain(&p.Page)
 
 	log.Debug("mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "label": h.Label})
+
+	for _, dim := range dims.Items {
+		if dim.ID == name {
+			p.Metadata.Description = dim.Description
+		}
+	}
 
 	var ok bool
 	var pageTitle string
@@ -657,29 +728,67 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 		log.Error(err, nil)
 	}
 
+	p.IsInFilterBreadcrumb = true
+
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
+		URI:   fmt.Sprintf("/datasets/%s/editions", dst.ID),
+	})
+	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+		Title: edition,
 		URI:   versionURL.Path,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
-	if len(h.Breadcrumbs) > 0 {
-		for i := len(h.Breadcrumbs) - 1; i >= 0; i-- {
-			breadcrumb := h.Breadcrumbs[i]
 
-			var url string
-			if breadcrumb.Links.Self.ID != "" {
-				url = fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, breadcrumb.Links.Self.ID)
-			} else {
-				url = fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name)
+	if len(h.Breadcrumbs) > 0 {
+		if name == "geography" {
+			p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+				Title: "Geographic Areas",
+				URI:   fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, "geography"),
+			})
+
+			if !topLevelGeographies[h.Links.Code.ID] {
+				for i := len(h.Breadcrumbs) - 1; i >= 0; i-- {
+					breadcrumb := h.Breadcrumbs[i]
+
+					if !topLevelGeographies[breadcrumb.Links.Self.ID] {
+						var url string
+						if breadcrumb.Links.Self.ID != "" {
+							url = fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, breadcrumb.Links.Self.ID)
+						} else {
+							url = fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name)
+						}
+
+						p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+							Title: breadcrumb.Label,
+							URI:   url,
+						})
+					}
+				}
+			}
+		} else {
+
+			for i := len(h.Breadcrumbs) - 1; i >= 0; i-- {
+				breadcrumb := h.Breadcrumbs[i]
+
+				var url string
+				if breadcrumb.Links.Self.ID != "" {
+					url = fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, breadcrumb.Links.Self.ID)
+				} else {
+					url = fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name)
+				}
+
+				p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+					Title: breadcrumb.Label,
+					URI:   url,
+				})
 			}
 
-			p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
-				Title: breadcrumb.Label,
-				URI:   url,
-			})
 		}
 	}
 
@@ -692,7 +801,7 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 	p.Metadata.Title = title
 
 	if len(h.Breadcrumbs) > 0 {
-		if len(h.Breadcrumbs) == 1 {
+		if len(h.Breadcrumbs) == 1 || topLevelGeographies[h.Breadcrumbs[0].Links.Code.ID] && name == "geography" {
 			p.Data.Parent = pageTitle
 			p.Data.GoBack = hierarchy.Link{
 				URL: fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name),

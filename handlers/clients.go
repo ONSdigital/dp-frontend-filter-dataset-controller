@@ -8,6 +8,12 @@ import (
 	"github.com/ONSdigital/go-ns/healthcheck"
 )
 
+// ClientError implements error interface with additional code method
+type ClientError interface {
+	error
+	Code() int
+}
+
 // FilterClient contains the methods expected for a filter client
 type FilterClient interface {
 	healthcheck.Client
