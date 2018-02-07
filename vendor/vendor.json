@@ -123,6 +123,12 @@
 			"revisionTime": "2017-07-17T12:56:40Z"
 		},
 		{
+			"checksumSHA1": "eqT3lUe+1W+njYJOealHQ+LsXv0=",
+			"path": "github.com/ONSdigital/go-ns/rchttp",
+			"revision": "4e0856cfc45ba7e5055256151d29c1037ef51f88",
+			"revisionTime": "2018-02-07T11:04:46Z"
+		},
+		{
 			"checksumSHA1": "Ohl8JaJRUL+/Y+NTL8y97PZlFfs=",
 			"path": "github.com/ONSdigital/go-ns/rhttp",
 			"revision": "76be3910cc79807d234ffce7fc0abc8909e54ab6",
