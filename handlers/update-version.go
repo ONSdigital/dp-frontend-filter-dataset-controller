@@ -15,6 +15,8 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
+	datasetCfg := setAuthTokenIfRequired(req)
+
 	oldJob, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
@@ -38,7 +40,7 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dst, err := f.DatasetClient.Get(datasetID)
+	dst, err := f.DatasetClient.Get(datasetID, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -55,7 +57,7 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	latestVersion, err := f.DatasetClient.GetVersion(datasetID, edition, version)
+	latestVersion, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return

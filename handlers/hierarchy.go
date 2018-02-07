@@ -189,6 +189,8 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	name := vars["name"]
 	code := vars["code"]
 
+	datasetCfg := setAuthTokenIfRequired(req)
+
 	fil, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
@@ -227,24 +229,24 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	d, err := f.DatasetClient.Get(datasetID)
+	d, err := f.DatasetClient.Get(datasetID, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
-	if err != nil {
-		setStatusCode(req, w, err)
-		return
-	}
-
-	allVals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name)
+	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
+	allVals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name, datasetCfg...)
+	if err != nil {
+		setStatusCode(req, w, err)
+		return
+	}
+
+	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return

@@ -21,6 +21,8 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
+	datasetCfg := setAuthTokenIfRequired(req)
+
 	dims, err := f.FilterClient.GetDimensions(filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
@@ -44,7 +46,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	datasetDimensions, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
+	datasetDimensions, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -53,7 +55,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	dimensionIDNameLookup := make(map[string]map[string]string)
 	for _, dim := range datasetDimensions.Items {
 		idNameLookup := make(map[string]string)
-		options, err := f.DatasetClient.GetOptions(datasetID, edition, version, dim.ID)
+		options, err := f.DatasetClient.GetOptions(datasetID, edition, version, dim.ID, datasetCfg...)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -86,12 +88,12 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	sort.Sort(dimensions)
 
-	dataset, err := f.DatasetClient.Get(datasetID)
+	dataset, err := f.DatasetClient.Get(datasetID, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
+	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return

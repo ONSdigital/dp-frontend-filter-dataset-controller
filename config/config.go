@@ -6,12 +6,13 @@ import (
 
 // Config represents service configuration for dp-frontend-filter-dataset-controller
 type Config struct {
-	BindAddr        string
-	RendererURL     string
-	FilterAPIURL    string
-	DatasetAPIURL   string
-	CodeListAPIURL  string
-	HierarchyAPIURL string
+	BindAddr            string
+	RendererURL         string
+	FilterAPIURL        string
+	DatasetAPIURL       string
+	CodeListAPIURL      string
+	HierarchyAPIURL     string
+	DatasetAPIAuthToken string
 }
 
 // Get returns the default config with any modifications through environment
@@ -43,6 +44,9 @@ func Get() *Config {
 	}
 	if v := os.Getenv("HIERARCHY_API_URL"); len(v) > 0 {
 		cfg.HierarchyAPIURL = v
+	}
+	if v := os.Getenv("DATASET_API_AUTH_TOKEN"); len(v) > 0 {
+		cfg.DatasetAPIAuthToken = v
 	}
 
 	return cfg

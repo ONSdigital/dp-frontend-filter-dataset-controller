@@ -2,9 +2,13 @@ package handlers
 
 import (
 	"net/http"
+	"os"
 
+	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/go-ns/log"
 )
+
+var datasetAuthToken = os.Getenv("DATASET_API_AUTH_TOKEN")
 
 // Filter represents the handlers for Filtering
 type Filter struct {
@@ -37,4 +41,12 @@ func setStatusCode(req *http.Request, w http.ResponseWriter, err error) {
 	}
 	log.ErrorR(req, err, log.Data{"setting-response-status": status})
 	w.WriteHeader(status)
+}
+
+func setAuthTokenIfRequired(req *http.Request) []dataset.Config {
+	var datasetConfig []dataset.Config
+	if len(req.Header.Get("X-Florence-Token")) > 0 {
+		datasetConfig = append(datasetConfig, dataset.Config{InternalToken: datasetAuthToken})
+	}
+	return datasetConfig
 }

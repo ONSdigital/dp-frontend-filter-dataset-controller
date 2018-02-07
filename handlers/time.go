@@ -118,7 +118,7 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 	endMonth := req.Form.Get("end-month")
 	endYear := req.Form.Get("end-year")
 
-	values, labelIDMap, err := f.getDimensionValues(filterID, "time")
+	values, labelIDMap, err := f.getDimensionValues(filterID, "time", setAuthTokenIfRequired(req))
 	if err != nil {
 		return err
 	}
@@ -159,6 +159,8 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
+	datasetCfg := setAuthTokenIfRequired(req)
+
 	fj, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
@@ -176,18 +178,18 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.DatasetClient.Get(datasetID)
+	dataset, err := f.DatasetClient.Get(datasetID, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
+	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, "time")
+	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, "time", datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -205,7 +207,7 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return

@@ -35,13 +35,13 @@ type FilterClient interface {
 // DatasetClient is an interface with methods required for a dataset client
 type DatasetClient interface {
 	healthcheck.Client
-	Get(id string) (m dataset.Model, err error)
-	GetEditions(id string) (m []dataset.Edition, err error)
-	GetVersions(id, edition string) (m []dataset.Version, err error)
-	GetVersion(id, edition, version string) (m dataset.Version, err error)
-	GetDimensions(id, edition, version string) (m dataset.Dimensions, err error)
-	GetOptions(id, edition, version, dimension string) (m dataset.Options, err error)
-	GetVersionMetadata(id, edition, version string) (m dataset.Metadata, err error)
+	Get(id string, cfg ...dataset.Config) (m dataset.Model, err error)
+	GetEditions(id string, cfg ...dataset.Config) (m []dataset.Edition, err error)
+	GetVersions(id, edition string, cfg ...dataset.Config) (m []dataset.Version, err error)
+	GetVersion(id, edition, version string, cfg ...dataset.Config) (m dataset.Version, err error)
+	GetDimensions(id, edition, version string, cfg ...dataset.Config) (m dataset.Dimensions, err error)
+	GetOptions(id, edition, version, dimension string, cfg ...dataset.Config) (m dataset.Options, err error)
+	GetVersionMetadata(id, edition, version string, cfg ...dataset.Config) (m dataset.Metadata, err error)
 }
 
 // CodelistClient contains methods expected for a codelist client

@@ -39,7 +39,7 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 		return
 	}
 
-	idNameMap, err := f.getIDNameMap(versionURL.Path, name)
+	idNameMap, err := f.getIDNameMap(versionURL.Path, name, setAuthTokenIfRequired(req))
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -83,14 +83,14 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 	w.Write(b)
 }
 
-func (f *Filter) getIDNameMap(versionURL, dimension string) (map[string]string, error) {
+func (f *Filter) getIDNameMap(versionURL, dimension string, cfg []dataset.Config) (map[string]string, error) {
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL)
 	if err != nil {
 		return nil, err
 	}
 
 	idNameMap := make(map[string]string)
-	opts, err := f.DatasetClient.GetOptions(datasetID, edition, version, dimension)
+	opts, err := f.DatasetClient.GetOptions(datasetID, edition, version, dimension, cfg...)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 		setStatusCode(req, w, err)
 		return
 	}
-	idNameMap, err := f.getIDNameMap(versionURL.Path, name)
+	idNameMap, err := f.getIDNameMap(versionURL.Path, name, setAuthTokenIfRequired(req))
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -185,6 +185,8 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	datasetCfg := setAuthTokenIfRequired(req)
+
 	selectedValues, err := f.FilterClient.GetDimensionOptions(filterID, name)
 	if err != nil {
 		setStatusCode(req, w, err)
@@ -208,18 +210,18 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.DatasetClient.Get(datasetID)
+	dataset, err := f.DatasetClient.Get(datasetID, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
+	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, name)
+	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, name, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -232,7 +234,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -274,6 +276,8 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 	name := vars["name"]
 	filterID := vars["filterID"]
 
+	datasetCfg := setAuthTokenIfRequired(req)
+
 	fj, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
@@ -291,7 +295,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 		return
 	}
 
-	vals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name)
+	vals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -375,7 +379,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, redirectURL, 302)
 }
 
-func (f *Filter) getDimensionValues(filterID, name string) (values []string, labelIDMap map[string]string, err error) {
+func (f *Filter) getDimensionValues(filterID, name string, cfg []dataset.Config) (values []string, labelIDMap map[string]string, err error) {
 	fj, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
 		return
@@ -391,7 +395,7 @@ func (f *Filter) getDimensionValues(filterID, name string) (values []string, lab
 		return
 	}
 
-	vals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name)
+	vals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name, cfg...)
 	if err != nil {
 		return
 	}

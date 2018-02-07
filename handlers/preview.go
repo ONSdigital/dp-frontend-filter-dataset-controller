@@ -44,6 +44,8 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterOutputID := vars["filterOutputID"]
 
+	datasetCfg := setAuthTokenIfRequired(req)
+
 	fj, err := f.FilterClient.GetOutput(filterOutputID)
 	if err != nil {
 		setStatusCode(req, w, err)
@@ -83,12 +85,12 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.DatasetClient.Get(datasetID)
+	dataset, err := f.DatasetClient.Get(datasetID, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
+	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -106,19 +108,19 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		p.Data.IsLatestVersion = true
 	}
 
-	metadata, err := f.DatasetClient.GetVersionMetadata(datasetID, edition, version)
+	metadata, err := f.DatasetClient.GetVersionMetadata(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	size, err := f.getMetadataTextSize(datasetID, edition, version, metadata, dims)
+	size, err := f.getMetadataTextSize(datasetID, edition, version, metadata, dims, datasetCfg)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -131,7 +133,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	})
 
 	for _, dim := range dims.Items {
-		opts, err := f.DatasetClient.GetOptions(datasetID, edition, version, dim.ID)
+		opts, err := f.DatasetClient.GetOptions(datasetID, edition, version, dim.ID, datasetCfg...)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -195,13 +197,13 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 	w.Write(b)
 }
 
-func (f *Filter) getMetadataTextSize(datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.Dimensions) (int, error) {
+func (f *Filter) getMetadataTextSize(datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.Dimensions, cfg []dataset.Config) (int, error) {
 	var b bytes.Buffer
 
 	b.WriteString(metadata.String())
 	b.WriteString("Dimensions:\n")
 	for _, dimension := range dimensions.Items {
-		options, err := f.DatasetClient.GetOptions(datasetID, edition, version, dimension.ID)
+		options, err := f.DatasetClient.GetOptions(datasetID, edition, version, dimension.ID, cfg...)
 		if err != nil {
 			return 0, err
 		}

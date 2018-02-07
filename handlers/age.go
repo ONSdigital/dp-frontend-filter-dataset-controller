@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// UpdateAge is a handler which will update age values on a filter job
 func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
@@ -103,7 +104,7 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 	youngest := req.Form.Get("youngest")
 	oldest := req.Form.Get("oldest")
 
-	values, labelIDMap, err := f.getDimensionValues(filterID, "age")
+	values, labelIDMap, err := f.getDimensionValues(filterID, "age", setAuthTokenIfRequired(req))
 	if err != nil {
 		return err
 	}
@@ -147,6 +148,8 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
+	datasetCfg := setAuthTokenIfRequired(req)
+
 	fj, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
@@ -164,18 +167,18 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.DatasetClient.Get(datasetID)
+	dataset, err := f.DatasetClient.Get(datasetID, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
+	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, "age")
+	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, "age", datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -193,7 +196,7 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
