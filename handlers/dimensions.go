@@ -27,7 +27,9 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 	name := vars["name"]
 	filterID := vars["filterID"]
 
-	fj, err := f.FilterClient.GetJobState(filterID)
+	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+
+	fj, err := f.FilterClient.GetJobState(filterID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -39,7 +41,7 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 		return
 	}
 
-	idNameMap, err := f.getIDNameMap(versionURL.Path, name, setAuthTokenIfRequired(req))
+	idNameMap, err := f.getIDNameMap(versionURL.Path, name, datasetCfg)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -110,13 +112,15 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 	name := vars["name"]
 	filterID := vars["filterID"]
 
-	opts, err := f.FilterClient.GetDimensionOptions(filterID, name)
+	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+
+	opts, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	fj, err := f.FilterClient.GetJobState(filterID)
+	fj, err := f.FilterClient.GetJobState(filterID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -127,7 +131,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 		setStatusCode(req, w, err)
 		return
 	}
-	idNameMap, err := f.getIDNameMap(versionURL.Path, name, setAuthTokenIfRequired(req))
+	idNameMap, err := f.getIDNameMap(versionURL.Path, name, datasetCfg)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -179,21 +183,21 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 	name := vars["name"]
 	filterID := vars["filterID"]
 
-	filter, err := f.FilterClient.GetJobState(filterID)
+	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+
+	filter, err := f.FilterClient.GetJobState(filterID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	datasetCfg := setAuthTokenIfRequired(req)
-
-	selectedValues, err := f.FilterClient.GetDimensionOptions(filterID, name)
+	selectedValues, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	fj, err := f.FilterClient.GetJobState(filterID)
+	fj, err := f.FilterClient.GetJobState(filterID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -276,7 +280,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 	name := vars["name"]
 	filterID := vars["filterID"]
 
-	datasetCfg := setAuthTokenIfRequired(req)
+	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
 
 	fj, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
@@ -306,7 +310,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 		options = append(options, val.Option)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(filterID, name, options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(filterID, name, options, filterCfg...); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
@@ -319,6 +323,8 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
+
+	_, filterCfg := setAuthTokenIfRequired(req)
 
 	if err := req.ParseForm(); err != nil {
 		setStatusCode(req, w, err)
@@ -344,7 +350,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 
 	// concurrently remove any fields that have been deselected
 	go func() {
-		opts, err := f.FilterClient.GetDimensionOptions(filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -352,7 +358,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 
 		for _, opt := range opts {
 			if _, ok := req.Form[opt.Option]; !ok {
-				if err := f.FilterClient.RemoveDimensionValue(filterID, name, opt.Option); err != nil {
+				if err := f.FilterClient.RemoveDimensionValue(filterID, name, opt.Option, filterCfg...); err != nil {
 					log.ErrorR(req, err, nil)
 				}
 			}
@@ -372,15 +378,15 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 		options = append(options, k)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(filterID, name, options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(filterID, name, options, filterCfg...); err != nil {
 		log.TraceR(req, err.Error(), nil)
 	}
 
 	http.Redirect(w, req, redirectURL, 302)
 }
 
-func (f *Filter) getDimensionValues(filterID, name string, cfg []dataset.Config) (values []string, labelIDMap map[string]string, err error) {
-	fj, err := f.FilterClient.GetJobState(filterID)
+func (f *Filter) getDimensionValues(filterID, name string, cfg []dataset.Config, filterCfg []filter.Config) (values []string, labelIDMap map[string]string, err error) {
+	fj, err := f.FilterClient.GetJobState(filterID, filterCfg...)
 	if err != nil {
 		return
 	}
@@ -416,12 +422,14 @@ func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
 	name := vars["name"]
 	filterID := vars["filterID"]
 
-	if err := f.FilterClient.RemoveDimension(filterID, name); err != nil {
+	_, filterCfg := setAuthTokenIfRequired(req)
+
+	if err := f.FilterClient.RemoveDimension(filterID, name, filterCfg...); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	if err := f.FilterClient.AddDimension(filterID, name); err != nil {
+	if err := f.FilterClient.AddDimension(filterID, name, filterCfg...); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
@@ -437,7 +445,9 @@ func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
 	filterID := vars["filterID"]
 	option := vars["option"]
 
-	if err := f.FilterClient.RemoveDimensionValue(filterID, name, option); err != nil {
+	_, filterCfg := setAuthTokenIfRequired(req)
+
+	if err := f.FilterClient.RemoveDimensionValue(filterID, name, option, filterCfg...); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}

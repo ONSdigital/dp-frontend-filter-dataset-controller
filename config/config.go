@@ -19,12 +19,13 @@ type Config struct {
 // variables
 func Get() *Config {
 	cfg := &Config{
-		BindAddr:        ":20001",
-		RendererURL:     "http://localhost:20010",
-		CodeListAPIURL:  "http://localhost:22400",
-		FilterAPIURL:    "http://localhost:22100",
-		DatasetAPIURL:   "http://localhost:22000",
-		HierarchyAPIURL: "http://localhost:22600",
+		BindAddr:            ":20001",
+		RendererURL:         "http://localhost:20010",
+		CodeListAPIURL:      "http://localhost:22400",
+		FilterAPIURL:        "http://localhost:22100",
+		DatasetAPIURL:       "http://localhost:22000",
+		HierarchyAPIURL:     "http://localhost:22600",
+		DatasetAPIAuthToken: "FD0108EA-825D-411C-9B1D-41EF7727F465",
 	}
 
 	if v := os.Getenv("BIND_ADDR"); len(v) > 0 {

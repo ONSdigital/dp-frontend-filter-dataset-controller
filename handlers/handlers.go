@@ -2,13 +2,12 @@ package handlers
 
 import (
 	"net/http"
-	"os"
 
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/go-ns/clients/dataset"
+	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/log"
 )
-
-var datasetAuthToken = os.Getenv("DATASET_API_AUTH_TOKEN")
 
 // Filter represents the handlers for Filtering
 type Filter struct {
@@ -43,10 +42,13 @@ func setStatusCode(req *http.Request, w http.ResponseWriter, err error) {
 	w.WriteHeader(status)
 }
 
-func setAuthTokenIfRequired(req *http.Request) []dataset.Config {
+func setAuthTokenIfRequired(req *http.Request) ([]dataset.Config, []filter.Config) {
 	var datasetConfig []dataset.Config
+	var filterConfig []filter.Config
 	if len(req.Header.Get("X-Florence-Token")) > 0 {
-		datasetConfig = append(datasetConfig, dataset.Config{InternalToken: datasetAuthToken})
+		cfg := config.Get()
+		datasetConfig = append(datasetConfig, dataset.Config{InternalToken: cfg.DatasetAPIAuthToken})
+		filterConfig = append(filterConfig, filter.Config{InternalToken: cfg.DatasetAPIAuthToken})
 	}
-	return datasetConfig
+	return datasetConfig, filterConfig
 }

@@ -22,13 +22,15 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	fil, err := f.FilterClient.GetJobState(filterID)
+	_, filterCfg := setAuthTokenIfRequired(req)
+
+	fil, err := f.FilterClient.GetJobState(filterID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	mdl, err := f.FilterClient.UpdateBlueprint(fil, true)
+	mdl, err := f.FilterClient.UpdateBlueprint(fil, true, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -44,15 +46,15 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterOutputID := vars["filterOutputID"]
 
-	datasetCfg := setAuthTokenIfRequired(req)
+	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
 
-	fj, err := f.FilterClient.GetOutput(filterOutputID)
+	fj, err := f.FilterClient.GetOutput(filterOutputID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	prev, err := f.FilterClient.GetPreview(filterOutputID)
+	prev, err := f.FilterClient.GetPreview(filterOutputID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -182,7 +184,9 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterOutputID := vars["filterOutputID"]
 
-	prev, err := f.FilterClient.GetOutput(filterOutputID)
+	_, filterCfg := setAuthTokenIfRequired(req)
+
+	prev, err := f.FilterClient.GetOutput(filterOutputID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return

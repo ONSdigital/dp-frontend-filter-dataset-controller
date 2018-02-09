@@ -19,12 +19,14 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	if err := f.FilterClient.RemoveDimension(filterID, "time"); err != nil {
+	_, filterCfg := setAuthTokenIfRequired(req)
+
+	if err := f.FilterClient.RemoveDimension(filterID, "time", filterCfg...); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	if err := f.FilterClient.AddDimension(filterID, "time"); err != nil {
+	if err := f.FilterClient.AddDimension(filterID, "time", filterCfg...); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
@@ -48,7 +50,7 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 
 	switch req.Form.Get("time-selection") {
 	case "latest":
-		if err := f.FilterClient.AddDimensionValue(filterID, "time", req.Form.Get("latest-option")); err != nil {
+		if err := f.FilterClient.AddDimensionValue(filterID, "time", req.Form.Get("latest-option"), filterCfg...); err != nil {
 			log.ErrorR(req, err, nil)
 		}
 	case "single":
@@ -73,16 +75,20 @@ func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
 	month := req.Form.Get("month-single")
 	year := req.Form.Get("year-single")
 
+	_, filterCfg := setAuthTokenIfRequired(req)
+
 	date, err := time.Parse("January 2006", fmt.Sprintf("%s %s", month, year))
 	if err != nil {
 		return err
 	}
 
-	return f.FilterClient.AddDimensionValue(filterID, "time", date.Format("Jan-06"))
+	return f.FilterClient.AddDimensionValue(filterID, "time", date.Format("Jan-06"), filterCfg...)
 }
 
 func (f *Filter) addTimeList(filterID string, req *http.Request) error {
-	opts, err := f.FilterClient.GetDimensionOptions(filterID, "time")
+	_, filterCfg := setAuthTokenIfRequired(req)
+
+	opts, err := f.FilterClient.GetDimensionOptions(filterID, "time", filterCfg...)
 	if err != nil {
 		return err
 	}
@@ -90,7 +96,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	// Remove any unselected times
 	for _, opt := range opts {
 		if _, ok := req.Form[opt.Option]; !ok {
-			if err := f.FilterClient.RemoveDimensionValue(filterID, "time", opt.Option); err != nil {
+			if err := f.FilterClient.RemoveDimensionValue(filterID, "time", opt.Option, filterCfg...); err != nil {
 				log.ErrorR(req, err, nil)
 			}
 		}
@@ -105,7 +111,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 		options = append(options, k)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(filterID, "time", options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(filterID, "time", options, filterCfg...); err != nil {
 		log.TraceR(req, err.Error(), nil)
 	}
 
@@ -118,7 +124,9 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 	endMonth := req.Form.Get("end-month")
 	endYear := req.Form.Get("end-year")
 
-	values, labelIDMap, err := f.getDimensionValues(filterID, "time", setAuthTokenIfRequired(req))
+	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+
+	values, labelIDMap, err := f.getDimensionValues(filterID, "time", datasetCfg, filterCfg)
 	if err != nil {
 		return err
 	}
@@ -151,7 +159,7 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 		}
 	}
 
-	return f.FilterClient.AddDimensionValues(filterID, "time", options)
+	return f.FilterClient.AddDimensionValues(filterID, "time", options, filterCfg...)
 }
 
 // Time specifically handles the data for the time dimension page
@@ -159,9 +167,9 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	datasetCfg := setAuthTokenIfRequired(req)
+	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
 
-	fj, err := f.FilterClient.GetJobState(filterID)
+	fj, err := f.FilterClient.GetJobState(filterID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -201,7 +209,7 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	selValues, err := f.FilterClient.GetDimensionOptions(filterID, "time")
+	selValues, err := f.FilterClient.GetDimensionOptions(filterID, "time", filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return

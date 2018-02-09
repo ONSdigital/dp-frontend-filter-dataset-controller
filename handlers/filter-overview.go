@@ -21,15 +21,15 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	datasetCfg := setAuthTokenIfRequired(req)
+	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
 
-	dims, err := f.FilterClient.GetDimensions(filterID)
+	dims, err := f.FilterClient.GetDimensions(filterID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	fj, err := f.FilterClient.GetJobState(filterID)
+	fj, err := f.FilterClient.GetJobState(filterID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -70,7 +70,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	var dimensions FilterModelDimensions
 	for _, dim := range dims {
 		var vals []filter.DimensionOption
-		vals, err = f.FilterClient.GetDimensionOptions(filterID, dim.Name)
+		vals, err = f.FilterClient.GetDimensionOptions(filterID, dim.Name, filterCfg...)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -135,19 +135,21 @@ func (f *Filter) FilterOverviewClearAll(w http.ResponseWriter, req *http.Request
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	dims, err := f.FilterClient.GetDimensions(filterID)
+	_, filterCfg := setAuthTokenIfRequired(req)
+
+	dims, err := f.FilterClient.GetDimensions(filterID, filterCfg...)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		return
 	}
 
 	for _, dim := range dims {
-		if err := f.FilterClient.RemoveDimension(filterID, dim.Name); err != nil {
+		if err := f.FilterClient.RemoveDimension(filterID, dim.Name, filterCfg...); err != nil {
 			setStatusCode(req, w, err)
 			return
 		}
 
-		if err := f.FilterClient.AddDimension(filterID, dim.Name); err != nil {
+		if err := f.FilterClient.AddDimension(filterID, dim.Name, filterCfg...); err != nil {
 			setStatusCode(req, w, err)
 			return
 		}

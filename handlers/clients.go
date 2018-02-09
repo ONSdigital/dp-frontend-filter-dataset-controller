@@ -17,19 +17,19 @@ type ClientError interface {
 // FilterClient contains the methods expected for a filter client
 type FilterClient interface {
 	healthcheck.Client
-	GetDimensions(filterID string) (dims []filter.Dimension, err error)
-	GetDimensionOptions(filterID, name string) (fdv []filter.DimensionOption, err error)
-	GetJobState(filterID string) (f filter.Model, err error)
-	GetOutput(filterOutputID string) (f filter.Model, err error)
-	GetDimension(filterID, name string) (dim filter.Dimension, err error)
-	AddDimensionValue(filterID, name, value string) error
-	RemoveDimensionValue(filterID, name, value string) error
-	RemoveDimension(filterID, name string) (err error)
-	AddDimension(filterID, name string) (err error)
-	AddDimensionValues(filterID, name string, options []string) error
-	UpdateBlueprint(m filter.Model, doSubmit bool) (filter.Model, error)
-	CreateBlueprint(string, []string) (string, error)
-	GetPreview(string) (filter.Preview, error)
+	GetDimensions(filterID string, cfg ...filter.Config) (dims []filter.Dimension, err error)
+	GetDimensionOptions(filterID, name string, cfg ...filter.Config) (fdv []filter.DimensionOption, err error)
+	GetJobState(filterID string, cfg ...filter.Config) (f filter.Model, err error)
+	GetOutput(filterOutputID string, cfg ...filter.Config) (f filter.Model, err error)
+	GetDimension(filterID, name string, cfg ...filter.Config) (dim filter.Dimension, err error)
+	AddDimensionValue(filterID, name, value string, cfg ...filter.Config) error
+	RemoveDimensionValue(filterID, name, value string, cfg ...filter.Config) error
+	RemoveDimension(filterID, name string, cfg ...filter.Config) (err error)
+	AddDimension(filterID, name string, cfg ...filter.Config) (err error)
+	AddDimensionValues(filterID, name string, options []string, cfg ...filter.Config) error
+	UpdateBlueprint(m filter.Model, doSubmit bool, cfg ...filter.Config) (filter.Model, error)
+	CreateBlueprint(string, []string, ...filter.Config) (string, error)
+	GetPreview(string, ...filter.Config) (filter.Preview, error)
 }
 
 // DatasetClient is an interface with methods required for a dataset client
