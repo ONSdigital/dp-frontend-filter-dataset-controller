@@ -946,6 +946,7 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 			SubNum:   "0",
 			SubURL:   "",
 			Selected: selected,
+			HasData:  true,
 		})
 	}
 
@@ -956,13 +957,13 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 				selected = true
 			}
 		}
-
 		p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
 			Label:    child.Label,
 			ID:       child.Links.Self.ID,
 			SubNum:   strconv.Itoa(child.NumberofChildren),
 			SubURL:   fmt.Sprintf("redirect:/filters/%s/dimensions/%s/%s", f.FilterID, name, child.Links.Self.ID),
 			Selected: selected,
+			HasData:  child.HasData,
 		})
 
 	}
