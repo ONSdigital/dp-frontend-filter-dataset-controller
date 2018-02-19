@@ -778,6 +778,7 @@ func CreateHierarchySearchPage(items []search.Item, dst dataset.Model, f filter.
 				SubNum:   strconv.Itoa(item.NumberOfChildren),
 				SubURL:   fmt.Sprintf("redirect:/filters/%s/dimensions/%s/%s", f.FilterID, name, item.Code),
 				Selected: selected,
+				HasData:  item.HasData,
 			})
 
 		}
