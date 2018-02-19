@@ -130,7 +130,13 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	searchRes, err := f.SearchClient.Dimension(datasetID, edition, version, name, q)
+	var searchConfig []search.Config
+	if len(req.Header.Get("X-Florence-Token")) > 0 {
+		cfg := config.Get()
+		searchConfig = append(searchConfig, search.Config{InternalToken: cfg.SearchAPIAuthToken})
+	}
+
+	searchRes, err := f.SearchClient.Dimension(datasetID, edition, version, name, q, searchConfig...)
 	if err != nil {
 		log.ErrorR(req, err, nil)
 		http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions", filterID), 302)
