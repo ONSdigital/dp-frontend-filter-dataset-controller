@@ -74,7 +74,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	searchRes, err := f.SearchClient.Dimension(datasetID, edition, version, name, q)
+	searchRes, err := f.SearchClient.Dimension(datasetID, edition, version, name, q, searchConfig...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
