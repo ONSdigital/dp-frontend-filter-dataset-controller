@@ -60,6 +60,8 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	filterID := fj.Links.FilterBlueprint.ID
+
 	var dimensions []filter.ModelDimension
 	for _, header := range prev.Headers {
 		dimensions = append(dimensions, filter.ModelDimension{Name: header})
@@ -150,7 +152,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	}
 
 	p.Data.LatestVersion.DatasetLandingPageURL = latestURL.Path
-	p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterOutputID)
+	p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterID)
 
 	if len(p.Data.Dimensions) > 0 {
 		p.IsPreviewLoaded = true
