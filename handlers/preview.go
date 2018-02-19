@@ -43,7 +43,6 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterOutputID := vars["filterOutputID"]
-	filterID := vars["filterID"]
 
 	fj, err := f.FilterClient.GetOutput(filterOutputID)
 	if err != nil {
@@ -56,6 +55,8 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		setStatusCode(req, w, err)
 		return
 	}
+
+	filterID := fj.Links.FilterBlueprint.ID
 
 	var dimensions []filter.ModelDimension
 	for _, header := range prev.Headers {
