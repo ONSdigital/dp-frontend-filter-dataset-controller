@@ -15,13 +15,15 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
+	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+
 	oldJob, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	dims, err := f.FilterClient.GetDimensions(filterID)
+	dims, err := f.FilterClient.GetDimensions(filterID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -38,7 +40,7 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dst, err := f.DatasetClient.Get(datasetID)
+	dst, err := f.DatasetClient.Get(datasetID, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -55,25 +57,25 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	latestVersion, err := f.DatasetClient.GetVersion(datasetID, edition, version)
+	latestVersion, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	newFilterID, err := f.FilterClient.CreateBlueprint(latestVersion.ID, []string{})
+	newFilterID, err := f.FilterClient.CreateBlueprint(latestVersion.ID, []string{}, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
 	for _, dim := range dims {
-		if err := f.FilterClient.AddDimension(newFilterID, dim.Name); err != nil {
+		if err := f.FilterClient.AddDimension(newFilterID, dim.Name, filterCfg...); err != nil {
 			setStatusCode(req, w, err)
 			return
 		}
 
-		dimValues, err := f.FilterClient.GetDimensionOptions(filterID, dim.Name)
+		dimValues, err := f.FilterClient.GetDimensionOptions(filterID, dim.Name, filterCfg...)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -84,7 +86,7 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 			vals = append(vals, val.Option)
 		}
 
-		if err := f.FilterClient.AddDimensionValues(newFilterID, dim.Name, vals); err != nil {
+		if err := f.FilterClient.AddDimensionValues(newFilterID, dim.Name, vals, filterCfg...); err != nil {
 			setStatusCode(req, w, err)
 			return
 		}

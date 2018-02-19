@@ -6,26 +6,28 @@ import (
 
 // Config represents service configuration for dp-frontend-filter-dataset-controller
 type Config struct {
-	BindAddr        string
-	RendererURL     string
-	FilterAPIURL    string
-	DatasetAPIURL   string
-	CodeListAPIURL  string
-	HierarchyAPIURL string
-	SearchAPIURL    string
+	BindAddr            string
+	RendererURL         string
+	FilterAPIURL        string
+	DatasetAPIURL       string
+	CodeListAPIURL      string
+	HierarchyAPIURL     string
+	DatasetAPIAuthToken string
+	SearchAPIURL        string
 }
 
 // Get returns the default config with any modifications through environment
 // variables
 func Get() *Config {
 	cfg := &Config{
-		BindAddr:        ":20001",
-		RendererURL:     "http://localhost:20010",
-		CodeListAPIURL:  "http://localhost:22400",
-		FilterAPIURL:    "http://localhost:22100",
-		DatasetAPIURL:   "http://localhost:22000",
-		HierarchyAPIURL: "http://localhost:22600",
-		SearchAPIURL:    "http://localhost:23100",
+		BindAddr:            ":20001",
+		RendererURL:         "http://localhost:20010",
+		CodeListAPIURL:      "http://localhost:22400",
+		FilterAPIURL:        "http://localhost:22100",
+		DatasetAPIURL:       "http://localhost:22000",
+		HierarchyAPIURL:     "http://localhost:22600",
+		DatasetAPIAuthToken: "FD0108EA-825D-411C-9B1D-41EF7727F465",
+		SearchAPIURL:        "http://localhost:23100",
 	}
 
 	if v := os.Getenv("BIND_ADDR"); len(v) > 0 {
@@ -47,7 +49,10 @@ func Get() *Config {
 		cfg.HierarchyAPIURL = v
 	}
 	if v := os.Getenv("SEARCH_API_URL"); len(v) > 0 {
-		cfg.HierarchyAPIURL = v
+		cfg.SearchAPIURL = v
+	}
+	if v := os.Getenv("DATASET_API_AUTH_TOKEN"); len(v) > 0 {
+		cfg.DatasetAPIAuthToken = v
 	}
 
 	return cfg

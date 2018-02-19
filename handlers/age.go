@@ -15,16 +15,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// UpdateAge is a handler which will update age values on a filter job
 func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	if err := f.FilterClient.RemoveDimension(filterID, "age"); err != nil {
+	_, filterConfig := setAuthTokenIfRequired(req)
+
+	if err := f.FilterClient.RemoveDimension(filterID, "age", filterConfig...); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	if err := f.FilterClient.AddDimension(filterID, "age"); err != nil {
+	if err := f.FilterClient.AddDimension(filterID, "age", filterConfig...); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
@@ -48,7 +51,7 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 
 	switch req.Form.Get("age-selection") {
 	case "all":
-		if err := f.FilterClient.AddDimensionValue(filterID, "age", req.Form.Get("all-ages-option")); err != nil {
+		if err := f.FilterClient.AddDimensionValue(filterID, "age", req.Form.Get("all-ages-option"), filterConfig...); err != nil {
 			log.ErrorR(req, err, nil)
 		}
 	case "range":
@@ -66,7 +69,9 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 }
 
 func (f *Filter) addAgeList(filterID string, req *http.Request) error {
-	opts, err := f.FilterClient.GetDimensionOptions(filterID, "age")
+	_, filterCfg := setAuthTokenIfRequired(req)
+
+	opts, err := f.FilterClient.GetDimensionOptions(filterID, "age", filterCfg...)
 	if err != nil {
 		return err
 	}
@@ -74,7 +79,7 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 	// Remove any unselected ages
 	for _, opt := range opts {
 		if _, ok := req.Form[opt.Option]; !ok {
-			if err := f.FilterClient.RemoveDimensionValue(filterID, "age", opt.Option); err != nil {
+			if err := f.FilterClient.RemoveDimensionValue(filterID, "age", opt.Option, filterCfg...); err != nil {
 				log.ErrorR(req, err, nil)
 			}
 		}
@@ -92,7 +97,7 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 
 	}
 
-	if err := f.FilterClient.AddDimensionValues(filterID, "age", options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(filterID, "age", options, filterCfg...); err != nil {
 		log.TraceR(req, err.Error(), nil)
 	}
 
@@ -103,7 +108,9 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 	youngest := req.Form.Get("youngest")
 	oldest := req.Form.Get("oldest")
 
-	values, labelIDMap, err := f.getDimensionValues(filterID, "age")
+	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+
+	values, labelIDMap, err := f.getDimensionValues(filterID, "age", datasetCfg, filterCfg)
 	if err != nil {
 		return err
 	}
@@ -140,14 +147,16 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 		}
 	}
 
-	return f.FilterClient.AddDimensionValues(filterID, "age", options)
+	return f.FilterClient.AddDimensionValues(filterID, "age", options, filterCfg...)
 }
 
 func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	fj, err := f.FilterClient.GetJobState(filterID)
+	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+
+	fj, err := f.FilterClient.GetJobState(filterID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -164,18 +173,18 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.DatasetClient.Get(datasetID)
+	dataset, err := f.DatasetClient.Get(datasetID, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
+	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, "age")
+	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, "age", datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -187,13 +196,13 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	selValues, err := f.FilterClient.GetDimensionOptions(filterID, "age")
+	selValues, err := f.FilterClient.GetDimensionOptions(filterID, "age", filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return

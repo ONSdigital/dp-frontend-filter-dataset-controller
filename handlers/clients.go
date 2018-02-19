@@ -18,31 +18,31 @@ type ClientError interface {
 // FilterClient contains the methods expected for a filter client
 type FilterClient interface {
 	healthcheck.Client
-	GetDimensions(filterID string) (dims []filter.Dimension, err error)
-	GetDimensionOptions(filterID, name string) (fdv []filter.DimensionOption, err error)
-	GetJobState(filterID string) (f filter.Model, err error)
-	GetOutput(filterOutputID string) (f filter.Model, err error)
-	GetDimension(filterID, name string) (dim filter.Dimension, err error)
-	AddDimensionValue(filterID, name, value string) error
-	RemoveDimensionValue(filterID, name, value string) error
-	RemoveDimension(filterID, name string) (err error)
-	AddDimension(filterID, name string) (err error)
-	AddDimensionValues(filterID, name string, options []string) error
-	UpdateBlueprint(m filter.Model, doSubmit bool) (filter.Model, error)
-	CreateBlueprint(string, []string) (string, error)
-	GetPreview(string) (filter.Preview, error)
+	GetDimensions(filterID string, cfg ...filter.Config) (dims []filter.Dimension, err error)
+	GetDimensionOptions(filterID, name string, cfg ...filter.Config) (fdv []filter.DimensionOption, err error)
+	GetJobState(filterID string, cfg ...filter.Config) (f filter.Model, err error)
+	GetOutput(filterOutputID string, cfg ...filter.Config) (f filter.Model, err error)
+	GetDimension(filterID, name string, cfg ...filter.Config) (dim filter.Dimension, err error)
+	AddDimensionValue(filterID, name, value string, cfg ...filter.Config) error
+	RemoveDimensionValue(filterID, name, value string, cfg ...filter.Config) error
+	RemoveDimension(filterID, name string, cfg ...filter.Config) (err error)
+	AddDimension(filterID, name string, cfg ...filter.Config) (err error)
+	AddDimensionValues(filterID, name string, options []string, cfg ...filter.Config) error
+	UpdateBlueprint(m filter.Model, doSubmit bool, cfg ...filter.Config) (filter.Model, error)
+	CreateBlueprint(string, []string, ...filter.Config) (string, error)
+	GetPreview(string, ...filter.Config) (filter.Preview, error)
 }
 
 // DatasetClient is an interface with methods required for a dataset client
 type DatasetClient interface {
 	healthcheck.Client
-	Get(id string) (m dataset.Model, err error)
-	GetEditions(id string) (m []dataset.Edition, err error)
-	GetVersions(id, edition string) (m []dataset.Version, err error)
-	GetVersion(id, edition, version string) (m dataset.Version, err error)
-	GetDimensions(id, edition, version string) (m dataset.Dimensions, err error)
-	GetOptions(id, edition, version, dimension string) (m dataset.Options, err error)
-	GetVersionMetadata(id, edition, version string) (m dataset.Metadata, err error)
+	Get(id string, cfg ...dataset.Config) (m dataset.Model, err error)
+	GetEditions(id string, cfg ...dataset.Config) (m []dataset.Edition, err error)
+	GetVersions(id, edition string, cfg ...dataset.Config) (m []dataset.Version, err error)
+	GetVersion(id, edition, version string, cfg ...dataset.Config) (m dataset.Version, err error)
+	GetDimensions(id, edition, version string, cfg ...dataset.Config) (m dataset.Dimensions, err error)
+	GetOptions(id, edition, version, dimension string, cfg ...dataset.Config) (m dataset.Options, err error)
+	GetVersionMetadata(id, edition, version string, cfg ...dataset.Config) (m dataset.Metadata, err error)
 }
 
 // CodelistClient contains methods expected for a codelist client
