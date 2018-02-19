@@ -9,6 +9,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ONSdigital/go-ns/clients/search"
+
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/go-ns/log"
@@ -24,6 +27,12 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 	q := url.QueryEscape(req.URL.Query().Get("q"))
 
 	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+
+	var searchConfig []search.Config
+	if len(req.Header.Get("X-Florence-Token")) > 0 {
+		cfg := config.Get()
+		searchConfig = append(searchConfig, search.Config{InternalToken: cfg.SearchAPIAuthToken})
+	}
 
 	fil, err := f.FilterClient.GetJobState(filterID, filterCfg...)
 	if err != nil {

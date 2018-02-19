@@ -13,6 +13,7 @@ type Config struct {
 	CodeListAPIURL      string
 	HierarchyAPIURL     string
 	DatasetAPIAuthToken string
+	SearchAPIAuthToken  string
 	SearchAPIURL        string
 }
 
@@ -27,6 +28,7 @@ func Get() *Config {
 		DatasetAPIURL:       "http://localhost:22000",
 		HierarchyAPIURL:     "http://localhost:22600",
 		DatasetAPIAuthToken: "FD0108EA-825D-411C-9B1D-41EF7727F465",
+		SearchAPIAuthToken:  "SD0108EA-825D-411C-45J3-41EF7727F123",
 		SearchAPIURL:        "http://localhost:23100",
 	}
 
@@ -53,6 +55,9 @@ func Get() *Config {
 	}
 	if v := os.Getenv("DATASET_API_AUTH_TOKEN"); len(v) > 0 {
 		cfg.DatasetAPIAuthToken = v
+	}
+	if v := os.Getenv("SEARCH_API_AUTH_TOKEN"); len(v) > 0 {
+		cfg.SearchAPIAuthToken = v
 	}
 
 	return cfg
