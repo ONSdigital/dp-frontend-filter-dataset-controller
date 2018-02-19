@@ -294,7 +294,7 @@ func (f *Filter) flattenGeographyTopLevel(instanceID string) (h hierarchy.Model,
 		if val.Links.Code.ID == "K03000001" {
 			h.Children[0].Label = val.Label
 			h.Children[0].Links = val.Links
-			h.Children[0].HasData = false
+			h.Children[0].HasData = true
 
 			if val.HasData {
 				child, err := f.HierarchyClient.GetChild(instanceID, "geography", val.Links.Code.ID)
@@ -307,7 +307,7 @@ func (f *Filter) flattenGeographyTopLevel(instanceID string) (h hierarchy.Model,
 					if childVal.Links.Code.ID == "K04000001" {
 						h.Children[1].Label = childVal.Label
 						h.Children[1].Links = childVal.Links
-						h.Children[1].HasData = false
+						h.Children[1].HasData = true
 
 						if childVal.HasData {
 							grandChild, err := f.HierarchyClient.GetChild(instanceID, "geography", childVal.Links.Code.ID)
