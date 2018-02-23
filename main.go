@@ -9,9 +9,11 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/routes"
 	"github.com/ONSdigital/go-ns/healthcheck"
+	"github.com/ONSdigital/go-ns/identity"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
 )
 
 func main() {
@@ -22,9 +24,11 @@ func main() {
 
 	r := mux.NewRouter()
 
-	rend, fc, dc, clc, hc := routes.Init(r)
+	alice := alice.New(identity.Handler(true)).Then(r)
 
-	s := server.New(cfg.BindAddr, r)
+	rend, fc, dc, clc, hc, sc := routes.Init(r)
+
+	s := server.New(cfg.BindAddr, alice)
 	s.HandleOSSignals = false
 
 	log.Debug("listening...", log.Data{
@@ -42,7 +46,7 @@ func main() {
 	signal.Notify(stop, os.Interrupt, os.Kill)
 
 	for {
-		healthcheck.MonitorExternal(fc, dc, clc, hc, rend)
+		healthcheck.MonitorExternal(fc, dc, clc, hc, sc, rend)
 
 		log.Debug("conducting service healthcheck", log.Data{
 			"services": []string{
@@ -50,6 +54,7 @@ func main() {
 				"dataset-api",
 				"code-list-api",
 				"hierarchy-api",
+				"search-api",
 				"renderer",
 			},
 		})

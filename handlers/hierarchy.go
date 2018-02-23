@@ -25,6 +25,8 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 	name := vars["name"]
 	code := vars["code"]
 
+	_, filterCfg := setAuthTokenIfRequired(req)
+
 	if err := req.ParseForm(); err != nil {
 		log.ErrorR(req, err, nil)
 		return
@@ -41,7 +43,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	fil, err := f.FilterClient.GetJobState(filterID)
+	fil, err := f.FilterClient.GetJobState(filterID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -84,7 +86,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		opts, err := f.FilterClient.GetDimensionOptions(filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
 		if err != nil {
 			log.ErrorR(req, err, nil)
 		}
@@ -93,7 +95,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			for _, opt := range opts {
 				if opt.Option == hv.Links.Self.ID {
 					if _, ok := req.Form[hv.Links.Self.ID]; !ok {
-						if err := f.FilterClient.RemoveDimensionValue(filterID, name, hv.Links.Self.ID); err != nil {
+						if err := f.FilterClient.RemoveDimensionValue(filterID, name, hv.Links.Self.ID, filterCfg...); err != nil {
 							log.ErrorR(req, err, nil)
 						}
 					}
@@ -116,7 +118,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		if err := f.FilterClient.AddDimensionValue(filterID, name, k); err != nil {
+		if err := f.FilterClient.AddDimensionValue(filterID, name, k, filterCfg...); err != nil {
 			log.TraceR(req, err.Error(), nil)
 		}
 	}
@@ -125,6 +127,8 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 }
 
 func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI string) {
+
+	_, filterCfg := setAuthTokenIfRequired(req)
 
 	var h hierarchy.Model
 	var err error
@@ -146,7 +150,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 	for _, child := range h.Children {
 		options = append(options, child.Links.Self.ID)
 	}
-	if err := f.FilterClient.AddDimensionValues(fil.FilterID, name, options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(fil.FilterID, name, options, filterCfg...); err != nil {
 		log.ErrorR(req, err, nil)
 	}
 
@@ -154,6 +158,8 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 }
 
 func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI string) {
+
+	_, filterCfg := setAuthTokenIfRequired(req)
 
 	var h hierarchy.Model
 	var err error
@@ -172,7 +178,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 	}
 
 	for _, child := range h.Children {
-		if err := f.FilterClient.RemoveDimensionValue(fil.FilterID, name, child.Links.Self.ID); err != nil {
+		if err := f.FilterClient.RemoveDimensionValue(fil.FilterID, name, child.Links.Self.ID, filterCfg...); err != nil {
 			log.ErrorR(req, err, nil)
 		}
 	}
@@ -185,6 +191,8 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	filterID := vars["filterID"]
 	name := vars["name"]
 	code := vars["code"]
+
+	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
 
 	fil, err := f.FilterClient.GetJobState(filterID)
 	if err != nil {
@@ -207,7 +215,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	selVals, err := f.FilterClient.GetDimensionOptions(filterID, name)
+	selVals, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -224,24 +232,24 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	d, err := f.DatasetClient.Get(datasetID)
+	d, err := f.DatasetClient.Get(datasetID, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version)
-	if err != nil {
-		setStatusCode(req, w, err)
-		return
-	}
-
-	allVals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name)
+	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version)
+	allVals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name, datasetCfg...)
+	if err != nil {
+		setStatusCode(req, w, err)
+		return
+	}
+
+	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -286,7 +294,7 @@ func (f *Filter) flattenGeographyTopLevel(instanceID string) (h hierarchy.Model,
 		if val.Links.Code.ID == "K03000001" {
 			h.Children[0].Label = val.Label
 			h.Children[0].Links = val.Links
-			h.Children[0].HasData = false
+			h.Children[0].HasData = true
 
 			if val.HasData {
 				child, err := f.HierarchyClient.GetChild(instanceID, "geography", val.Links.Code.ID)
@@ -299,7 +307,7 @@ func (f *Filter) flattenGeographyTopLevel(instanceID string) (h hierarchy.Model,
 					if childVal.Links.Code.ID == "K04000001" {
 						h.Children[1].Label = childVal.Label
 						h.Children[1].Links = childVal.Links
-						h.Children[1].HasData = false
+						h.Children[1].HasData = true
 
 						if childVal.HasData {
 							grandChild, err := f.HierarchyClient.GetChild(instanceID, "geography", childVal.Links.Code.ID)
