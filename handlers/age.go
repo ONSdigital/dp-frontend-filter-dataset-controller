@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -47,7 +48,7 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Debug("age-selection", log.Data{"age": req.Form.Get("age-selection")})
+	log.InfoR(req, "age-selection", log.Data{"age": req.Form.Get("age-selection")})
 
 	switch req.Form.Get("age-selection") {
 	case "all":
@@ -108,6 +109,13 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 	youngest := req.Form.Get("youngest")
 	oldest := req.Form.Get("oldest")
 
+	reg := regexp.MustCompile(`\d+\+`)
+
+	oldestHasPlus := reg.MatchString(oldest)
+	if oldestHasPlus {
+		oldest = strings.Trim(oldest, "+")
+	}
+
 	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
 
 	values, labelIDMap, err := f.getDimensionValues(filterID, "age", datasetCfg, filterCfg)
@@ -119,7 +127,14 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 	for _, val := range values {
 		intVal, err := strconv.Atoi(val)
 		if err != nil {
-			break
+			hasPlus := reg.MatchString(val)
+			if hasPlus {
+				val = strings.Trim(oldest, "+")
+				intVal, err = strconv.Atoi(val)
+				if err != nil {
+					break
+				}
+			}
 		}
 
 		intValues = append(intValues, intVal)
@@ -133,7 +148,11 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 
 	var isInRange bool
 	var options []string
-	for _, age := range values {
+	for i, age := range values {
+		if i == len(values)-1 && oldestHasPlus {
+			age = age + "+"
+		}
+
 		if youngest == age {
 			isInRange = true
 		}
