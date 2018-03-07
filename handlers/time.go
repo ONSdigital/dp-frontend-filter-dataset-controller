@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"time"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
@@ -13,6 +14,8 @@ import (
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
+
+var acceptedReg = regexp.MustCompile(`^\w{3}-\d{2}$`)
 
 // UpdateTime will update the time filter based on the radio selected filters by the user
 func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
@@ -35,8 +38,6 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 		setStatusCode(req, w, err)
 		return
 	}
-
-	log.Debug("form", log.Data{"form": req.Form})
 
 	if len(req.Form.Get("add-all")) > 0 {
 		http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/time/add-all", filterID), 302)
@@ -203,7 +204,7 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if len(allValues.Items) <= 20 {
+	if len(allValues.Items) <= 20 || !acceptedReg.MatchString(allValues.Items[0].Option) {
 		mux.Vars(req)["name"] = "time"
 		f.DimensionSelector(w, req)
 		return
