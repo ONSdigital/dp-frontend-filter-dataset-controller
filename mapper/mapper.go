@@ -25,17 +25,6 @@ import (
 	"github.com/ONSdigital/go-ns/log"
 )
 
-var dimensionTitleTranslator = map[string]string{
-	"geography":          "Geographic Areas",
-	"year":               "Year",
-	"age-range":          "Age",
-	"sex":                "Sex",
-	"month":              "Month",
-	"time":               "Time",
-	"goods-and-services": "Goods and Services",
-	"aggregate":          "Goods and Services",
-}
-
 var hierarchyBrowseLookup = map[string]string{
 	"geography": "area",
 }
@@ -53,7 +42,7 @@ func SetTaxonomyDomain(p *model.Page) {
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
 // front end page model
-func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterID, datasetID, releaseDate string) filterOverview.Page {
+func CreateFilterOverview(dimensions []filter.ModelDimension, datasetDims dataset.Items, filter filter.Model, dst dataset.Model, filterID, datasetID, releaseDate string) filterOverview.Page {
 	var p filterOverview.Page
 	SetTaxonomyDomain(&p.Page)
 
@@ -92,6 +81,16 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 				fod.AddedCategories = append(fod.AddedCategories, ac)
 			}
 
+			for _, dim := range datasetDims {
+				if dim.ID == d.Name {
+					if len(dim.Label) > 0 {
+						fod.Filter = strings.Title(dim.Label)
+					} else {
+						fod.Filter = strings.Title(dim.ID)
+					}
+				}
+			}
+
 			if d.Name == "age" {
 				var ages []int
 				for _, a := range fod.AddedCategories {
@@ -118,13 +117,6 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, filter filter.Mode
 			fod.Link.Label = "Add"
 		}
 
-		var ok bool
-		var title string
-		if title, ok = dimensionTitleTranslator[d.Name]; !ok {
-			title = strings.Title(d.Name)
-		}
-
-		fod.Filter = title
 		p.Data.Dimensions = append(p.Data.Dimensions, fod)
 	}
 
@@ -168,15 +160,14 @@ func CreateListSelectorPage(name string, selectedValues []filter.DimensionOption
 
 	log.Debug("mapping api response models to list selector page model", log.Data{"filterID": filter.FilterID, "datasetID": datasetID, "dimension": name})
 
-	var ok bool
-	var pageTitle string
-	if pageTitle, ok = dimensionTitleTranslator[name]; !ok {
-		pageTitle = strings.Title(name)
-	}
+	pageTitle := strings.Title(name)
 
 	for _, dim := range dims.Items {
 		if dim.ID == name {
 			p.Metadata.Description = dim.Description
+			if len(dim.Label) > 0 {
+				pageTitle = strings.Title(dim.Label)
+			}
 		}
 	}
 
@@ -690,16 +681,17 @@ func CreateTimePage(f filter.Model, d dataset.Model, v dataset.Version, allVals 
 }
 
 // CreateHierarchySearchPage forms a search page based on various api response models
-func CreateHierarchySearchPage(items []search.Item, dst dataset.Model, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query string) hierarchy.Page {
+func CreateHierarchySearchPage(items []search.Item, dst dataset.Model, f filter.Model, selVals []filter.DimensionOption, dims []dataset.Dimension, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query string) hierarchy.Page {
 	var p hierarchy.Page
 	SetTaxonomyDomain(&p.Page)
 
 	log.Debug("mapping api response models to hierarchy search page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "name": name})
 
-	var ok bool
-	var pageTitle string
-	if pageTitle, ok = dimensionTitleTranslator[name]; !ok {
-		pageTitle = strings.Title(name)
+	pageTitle := strings.Title(name)
+	for _, dim := range dims {
+		if dim.ID == name && len(dim.Label) > 0 {
+			pageTitle = strings.Title(dim.Label)
+		}
 	}
 	p.DatasetTitle = dst.Title
 	p.Data.DimensionName = pageTitle
@@ -710,7 +702,7 @@ func CreateHierarchySearchPage(items []search.Item, dst dataset.Model, f filter.
 	title := pageTitle
 
 	p.IsInFilterBreadcrumb = true
-
+	var ok bool
 	if p.Type, ok = hierarchyBrowseLookup[name]; !ok {
 		p.Type = "type"
 	}
@@ -798,17 +790,16 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 
 	log.Debug("mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "label": h.Label})
 
+	pageTitle := strings.Title(name)
 	for _, dim := range dims.Items {
 		if dim.ID == name {
 			p.Metadata.Description = dim.Description
+			if len(dim.Label) > 0 {
+				pageTitle = strings.Title(dim.Label)
+			}
 		}
 	}
 
-	var ok bool
-	var pageTitle string
-	if pageTitle, ok = dimensionTitleTranslator[name]; !ok {
-		pageTitle = strings.Title(name)
-	}
 	p.DatasetTitle = dst.Title
 	p.Data.DimensionName = pageTitle
 	p.DatasetId = datasetID
@@ -820,6 +811,7 @@ func CreateHierarchyPage(h hierarchyClient.Model, dst dataset.Model, f filter.Mo
 		title = h.Label
 	}
 
+	var ok bool
 	if p.Type, ok = hierarchyBrowseLookup[name]; !ok {
 		p.Type = "type"
 	}
