@@ -64,6 +64,7 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, datasetDims datase
 		}
 
 		if d.Name == "time" {
+			fod.Filter = "Time"
 			times, err := dates.ConvertToReadable(d.Values)
 			if err != nil {
 				log.Error(err, nil)
@@ -90,7 +91,6 @@ func CreateFilterOverview(dimensions []filter.ModelDimension, datasetDims datase
 					}
 				}
 			}
-
 			if d.Name == "age" {
 				var ages []int
 				for _, a := range fod.AddedCategories {

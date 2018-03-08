@@ -105,7 +105,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreateFilterOverview(dimensions, ver.Dimensions, fj, dataset, filterID, datasetID, ver.ReleaseDate)
+	p := mapper.CreateFilterOverview(dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate)
 
 	if latestURL.Path == versionURL.Path {
 		p.Data.IsLatestVersion = true
