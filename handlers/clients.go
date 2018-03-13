@@ -29,7 +29,7 @@ type FilterClient interface {
 	AddDimension(filterID, name string, cfg ...filter.Config) (err error)
 	AddDimensionValues(filterID, name string, options []string, cfg ...filter.Config) error
 	UpdateBlueprint(m filter.Model, doSubmit bool, cfg ...filter.Config) (filter.Model, error)
-	CreateBlueprint(string, []string, ...filter.Config) (string, error)
+	CreateBlueprint(string, string, string, []string, ...filter.Config) (string, error)
 	GetPreview(string, ...filter.Config) (filter.Preview, error)
 }
 
