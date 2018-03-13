@@ -57,13 +57,7 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	latestVersion, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
-	if err != nil {
-		setStatusCode(req, w, err)
-		return
-	}
-
-	newFilterID, err := f.FilterClient.CreateBlueprint(latestVersion.ID, []string{}, filterCfg...)
+	newFilterID, err := f.FilterClient.CreateBlueprint(datasetID, edition, version, []string{}, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
