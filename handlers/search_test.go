@@ -45,6 +45,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetDimensionOptions(filterID, name).Return([]filter.DimensionOption{}, nil)
 			mdc.EXPECT().Get(datasetID).Return(dataset.Model{}, nil)
 			mdc.EXPECT().GetVersion(datasetID, edition, version).Return(dataset.Version{}, nil)
+			mdc.EXPECT().GetDimensions(datasetID, edition, version).Return(dataset.Dimensions{}, nil)
 			mdc.EXPECT().GetOptions(datasetID, edition, version, name).Return(dataset.Options{}, nil)
 			msc.EXPECT().Dimension(datasetID, edition, version, name, query).Return(&search.Model{}, nil)
 			mrc.EXPECT().Do("dataset-filter/hierarchy", gomock.Any()).Return([]byte(expectedHTML), nil)
@@ -252,6 +253,7 @@ func TestUnitSearch(t *testing.T) {
 			mdc.EXPECT().GetVersion(datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetOptions(datasetID, edition, version, name).Return(dataset.Options{}, nil)
 			msc.EXPECT().Dimension(datasetID, edition, version, name, query).Return(&search.Model{}, nil)
+			mdc.EXPECT().GetDimensions(datasetID, edition, version).Return(dataset.Dimensions{}, nil)
 			mrc.EXPECT().Do("dataset-filter/hierarchy", gomock.Any()).Return([]byte(expectedHTML), errors.New("renderer error"))
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)

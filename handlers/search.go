@@ -80,7 +80,13 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreateHierarchySearchPage(searchRes.Items, d, fil, selVals, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"))
+	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
+	if err != nil {
+		setStatusCode(req, w, err)
+		return
+	}
+
+	p := mapper.CreateHierarchySearchPage(searchRes.Items, d, fil, selVals, dims.Items, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"))
 
 	b, err := json.Marshal(p)
 	if err != nil {

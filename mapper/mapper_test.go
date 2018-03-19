@@ -20,10 +20,11 @@ func TestUnitMapper(t *testing.T) {
 
 	Convey("test CreateFilterOverview correctly maps item to filterOverview page model", t, func() {
 		dimensions := getTestDimensions()
+		datasetDimension := getTestDatasetDimensions()
 		filter := getTestFilter()
-		dataset := getTestDataset()
+		dst := getTestDataset()
 
-		fop := CreateFilterOverview(dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992")
+		fop := CreateFilterOverview(dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992")
 		So(fop.FilterID, ShouldEqual, filter.FilterID)
 		So(fop.SearchDisabled, ShouldBeTrue)
 		So(fop.Data.Dimensions, ShouldHaveLength, 5)
@@ -49,7 +50,7 @@ func TestUnitMapper(t *testing.T) {
 		So(fop.Data.PreviewAndDownload.URL, ShouldEqual, "/filters/"+filter.FilterID)
 		So(fop.Data.Cancel.URL, ShouldEqual, "/")
 		So(fop.Breadcrumb, ShouldHaveLength, 3)
-		So(fop.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
+		So(fop.Breadcrumb[0].Title, ShouldEqual, dst.Title)
 		So(fop.Breadcrumb[1].Title, ShouldEqual, "5678")
 		So(fop.Breadcrumb[2].Title, ShouldEqual, "Filter options")
 		So(fop.ShowFeedbackForm, ShouldEqual, false)
@@ -194,6 +195,28 @@ func getTestDimensions() []filter.ModelDimension {
 		{
 			Name:   "time",
 			Values: []string{"2002.10", "2009.08", "1996.08"},
+		},
+	}
+}
+
+func getTestDatasetDimensions() []dataset.Dimension {
+	return []dataset.Dimension{
+		{
+			ID: "year",
+		},
+		{
+			ID:    "geography",
+			Label: "Geographic Areas",
+		},
+		{
+			ID: "sex",
+		},
+		{
+			ID:    "age-range",
+			Label: "Age",
+		},
+		{
+			ID: "time",
 		},
 	}
 }
