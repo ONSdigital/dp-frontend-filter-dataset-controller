@@ -223,10 +223,10 @@ func getTestDatasetDimensions() []dataset.Dimension {
 
 func getTestFilter() filter.Model {
 	return filter.Model{
-		FilterID: "12349876",
-		Edition:  "12345",
-		Dataset:  "849209",
-		Version:  "2017",
+		FilterID:  "12349876",
+		Edition:   "12345",
+		DatasetID: "849209",
+		Version:   "2017",
 		Links: filter.Links{
 			Version: filter.Link{
 				HRef: "/datasets/1234/editions/5678/versions/1",
