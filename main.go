@@ -9,11 +9,9 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/routes"
 	"github.com/ONSdigital/go-ns/healthcheck"
-	"github.com/ONSdigital/go-ns/identity"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/gorilla/mux"
-	"github.com/justinas/alice"
 )
 
 func main() {
@@ -24,11 +22,9 @@ func main() {
 
 	r := mux.NewRouter()
 
-	alice := alice.New(identity.Handler(true)).Then(r)
-
 	rend, fc, dc, clc, hc, sc := routes.Init(r)
 
-	s := server.New(cfg.BindAddr, alice)
+	s := server.New(cfg.BindAddr, r)
 	s.HandleOSSignals = false
 
 	log.Debug("listening...", log.Data{
