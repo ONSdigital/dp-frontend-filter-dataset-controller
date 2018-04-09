@@ -31,7 +31,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 	var searchConfig []search.Config
 	if len(req.Header.Get("X-Florence-Token")) > 0 {
 		cfg := config.Get()
-		searchConfig = append(searchConfig, search.Config{InternalToken: cfg.SearchAPIAuthToken})
+		searchConfig = append(searchConfig, search.Config{InternalToken: cfg.SearchAPIAuthToken, FlorenceToken: req.Header.Get("X-Florence-Token")})
 	}
 
 	fil, err := f.FilterClient.GetJobState(filterID, filterCfg...)
@@ -139,7 +139,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 	var searchConfig []search.Config
 	if len(req.Header.Get("X-Florence-Token")) > 0 {
 		cfg := config.Get()
-		searchConfig = append(searchConfig, search.Config{InternalToken: cfg.SearchAPIAuthToken})
+		searchConfig = append(searchConfig, search.Config{InternalToken: cfg.SearchAPIAuthToken, FlorenceToken: req.Header.Get("X-Florence-Token")})
 	}
 
 	searchRes, err := f.SearchClient.Dimension(datasetID, edition, version, name, q, searchConfig...)

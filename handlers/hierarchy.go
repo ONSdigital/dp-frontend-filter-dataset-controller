@@ -194,7 +194,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 
 	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
 
-	fil, err := f.FilterClient.GetJobState(filterID)
+	fil, err := f.FilterClient.GetJobState(filterID, filterCfg...)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
