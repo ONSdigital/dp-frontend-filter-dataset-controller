@@ -41,6 +41,10 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, fmt.Sprintf("/filter-outputs/%s", filterOutputID), 302)
 }
 
+func even(number int) bool {
+	return number%2 == 0
+}
+
 // PreviewPage controls the rendering of the preview and download page
 func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
@@ -63,17 +67,21 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	filterID := fj.Links.FilterBlueprint.ID
 
 	var dimensions []filter.ModelDimension
-	for _, header := range prev.Headers {
-		dimensions = append(dimensions, filter.ModelDimension{Name: header})
+	for i, header := range prev.Headers {
+		if even(i) {
+			dimensions = append(dimensions, filter.ModelDimension{Name: header})
+		}
 	}
 
 	for rowN, row := range prev.Rows {
 		if rowN >= 10 {
 			break
 		}
+		dimN := 0
 		for i, val := range row {
-			if i < len(dimensions) {
-				dimensions[i].Values = append(dimensions[i].Values, val)
+			if dimN < len(dimensions) && even(i) {
+				dimensions[dimN].Values = append(dimensions[dimN].Values, val)
+				dimN++
 			}
 		}
 	}
