@@ -162,6 +162,16 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		if d.Extension == "xls" && len(d.Size) > 0 {
 			p.IsDownloadLoaded = true
 		}
+
+		if len(f.downloadServiceURL) > 0 {
+			downloadURL, err := url.Parse(d.URI)
+			if err != nil {
+				setStatusCode(req, w, err)
+				return
+			}
+
+			d.URI = f.downloadServiceURL + downloadURL.Path
+		}
 	}
 
 	body, err := json.Marshal(p)

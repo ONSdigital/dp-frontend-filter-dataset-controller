@@ -16,6 +16,7 @@ type Config struct {
 	FilterAPIAuthToken  string
 	SearchAPIAuthToken  string
 	SearchAPIURL        string
+	DownloadServiceURL  string
 }
 
 // Get returns the default config with any modifications through environment
@@ -32,6 +33,7 @@ func Get() *Config {
 		FilterAPIAuthToken:  "FD0108EA-825D-411C-9B1D-41EF7727F465",
 		SearchAPIAuthToken:  "SD0108EA-825D-411C-45J3-41EF7727F123",
 		SearchAPIURL:        "http://localhost:23100",
+		DownloadServiceURL:  "http://localhost:23600",
 	}
 
 	if v := os.Getenv("BIND_ADDR"); len(v) > 0 {
@@ -63,6 +65,9 @@ func Get() *Config {
 	}
 	if v := os.Getenv("FILTER_API_AUTH_TOKEN"); len(v) > 0 {
 		cfg.FilterAPIAuthToken = v
+	}
+	if v := os.Getenv("DOWNLOAD_SERVICE_URL"); len(v) > 0 {
+		cfg.DownloadServiceURL = v
 	}
 
 	return cfg
