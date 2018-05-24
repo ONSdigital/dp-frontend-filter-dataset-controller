@@ -8,7 +8,6 @@ import (
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/routes"
-	"github.com/ONSdigital/go-ns/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/gorilla/mux"
@@ -22,7 +21,7 @@ func main() {
 
 	r := mux.NewRouter()
 
-	rend, fc, dc, clc, hc, sc := routes.Init(r)
+	routes.Init(r)
 
 	s := server.New(cfg.BindAddr, r)
 	s.HandleOSSignals = false
@@ -41,34 +40,12 @@ func main() {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, os.Kill)
 
-	for {
-		healthcheck.MonitorExternal(fc, dc, clc, hc, sc, rend)
+	<-stop
 
-		log.Debug("conducting service healthcheck", log.Data{
-			"services": []string{
-				"filter-api",
-				"dataset-api",
-				"code-list-api",
-				"hierarchy-api",
-				"search-api",
-				"renderer",
-			},
-		})
-
-		timer := time.NewTimer(time.Second * 60)
-
-		select {
-		case <-timer.C:
-			continue
-		case <-stop:
-			log.Info("shutting service down gracefully", nil)
-			timer.Stop()
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			defer cancel()
-			if err := s.Server.Shutdown(ctx); err != nil {
-				log.Error(err, nil)
-			}
-			return
-		}
+	log.Info("shutting service down gracefully", nil)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := s.Server.Shutdown(ctx); err != nil {
+		log.Error(err, nil)
 	}
 }

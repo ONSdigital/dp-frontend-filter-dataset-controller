@@ -304,6 +304,7 @@ func CreatePreviewPage(dimensions []filter.ModelDimension, filter filter.Model, 
 	p.SearchDisabled = false
 	p.ShowFeedbackForm = true
 	p.ReleaseDate = releaseDate
+	p.Data.UnitOfMeasurement = dst.UnitOfMeasure
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
