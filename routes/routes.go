@@ -11,14 +11,14 @@ import (
 	"github.com/ONSdigital/go-ns/clients/hierarchy"
 	"github.com/ONSdigital/go-ns/clients/renderer"
 	"github.com/ONSdigital/go-ns/clients/search"
-	"github.com/ONSdigital/go-ns/healthcheck"
+	"github.com/ONSdigital/go-ns/handlers/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/validator"
 	"github.com/gorilla/mux"
 )
 
 // Init initialises routes for the service
-func Init(r *mux.Router) (*renderer.Renderer, *filter.Client, *dataset.Client, *codelist.Client, *hierarchy.Client, *search.Client) {
+func Init(r *mux.Router) {
 	cfg := config.Get()
 
 	fi, err := os.Open("rules.json")
@@ -40,7 +40,7 @@ func Init(r *mux.Router) (*renderer.Renderer, *filter.Client, *dataset.Client, *
 	sc := search.New(cfg.SearchAPIURL)
 	filter := handlers.NewFilter(rend, fc, dc, clc, hc, sc, v)
 
-	r.StrictSlash(true).Path("/healthcheck").HandlerFunc(healthcheck.Do)
+	r.StrictSlash(true).Path("/healthcheck").HandlerFunc(healthcheck.Handler)
 
 	r.Path("/filter-outputs/{filterOutputID}.json").Methods("GET").HandlerFunc(filter.GetFilterJob)
 	r.StrictSlash(true).Path("/filter-outputs/{filterOutputID}").Methods("GET").HandlerFunc(filter.PreviewPage)
@@ -72,6 +72,4 @@ func Init(r *mux.Router) (*renderer.Renderer, *filter.Client, *dataset.Client, *
 	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/{name}/{code}").Methods("GET").HandlerFunc(filter.Hierarchy)
 
 	r.StrictSlash(true).Path("/filters/{filterID}/use-latest-version").HandlerFunc(filter.UseLatest)
-
-	return rend, fc, dc, clc, hc, sc
 }
