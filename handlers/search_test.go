@@ -48,7 +48,7 @@ func TestUnitSearch(t *testing.T) {
 			mdc.EXPECT().GetVersion(ctx, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetDimensions(ctx, datasetID, edition, version).Return(dataset.Dimensions{}, nil)
 			mdc.EXPECT().GetOptions(ctx, datasetID, edition, version, name).Return(dataset.Options{}, nil)
-			msc.EXPECT().Dimension(datasetID, edition, version, name, query).Return(&search.Model{}, nil)
+			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query).Return(&search.Model{}, nil)
 			mrc.EXPECT().Do("dataset-filter/hierarchy", gomock.Any()).Return([]byte(expectedHTML), nil)
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
@@ -221,7 +221,7 @@ func TestUnitSearch(t *testing.T) {
 			mdc.EXPECT().Get(ctx, datasetID).Return(dataset.Model{}, nil)
 			mdc.EXPECT().GetVersion(ctx, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetOptions(ctx, datasetID, edition, version, name).Return(dataset.Options{}, nil)
-			msc.EXPECT().Dimension(datasetID, edition, version, name, query).Return(&search.Model{}, errors.New("search api error"))
+			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query).Return(&search.Model{}, errors.New("search api error"))
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
 			w := httptest.NewRecorder()
@@ -253,7 +253,7 @@ func TestUnitSearch(t *testing.T) {
 			mdc.EXPECT().Get(ctx, datasetID).Return(dataset.Model{}, nil)
 			mdc.EXPECT().GetVersion(ctx, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetOptions(ctx, datasetID, edition, version, name).Return(dataset.Options{}, nil)
-			msc.EXPECT().Dimension(datasetID, edition, version, name, query).Return(&search.Model{}, nil)
+			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query).Return(&search.Model{}, nil)
 			mdc.EXPECT().GetDimensions(ctx, datasetID, edition, version).Return(dataset.Dimensions{}, nil)
 			mrc.EXPECT().Do("dataset-filter/hierarchy", gomock.Any()).Return([]byte(expectedHTML), errors.New("renderer error"))
 

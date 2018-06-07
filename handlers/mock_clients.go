@@ -540,9 +540,9 @@ func (m *MockSearchClient) EXPECT() *MockSearchClientMockRecorder {
 }
 
 // Dimension mocks base method
-func (m *MockSearchClient) Dimension(arg0, arg1, arg2, arg3, arg4 string, arg5 ...search.Config) (*search.Model, error) {
-	varargs := []interface{}{arg0, arg1, arg2, arg3, arg4}
-	for _, a := range arg5 {
+func (m *MockSearchClient) Dimension(arg0 context.Context, arg1, arg2, arg3, arg4, arg5 string, arg6 ...search.Config) (*search.Model, error) {
+	varargs := []interface{}{arg0, arg1, arg2, arg3, arg4, arg5}
+	for _, a := range arg6 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Dimension", varargs...)
@@ -552,8 +552,8 @@ func (m *MockSearchClient) Dimension(arg0, arg1, arg2, arg3, arg4 string, arg5 .
 }
 
 // Dimension indicates an expected call of Dimension
-func (mr *MockSearchClientMockRecorder) Dimension(arg0, arg1, arg2, arg3, arg4 interface{}, arg5 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1, arg2, arg3, arg4}, arg5...)
+func (mr *MockSearchClientMockRecorder) Dimension(arg0, arg1, arg2, arg3, arg4, arg5 interface{}, arg6 ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{arg0, arg1, arg2, arg3, arg4, arg5}, arg6...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dimension", reflect.TypeOf((*MockSearchClient)(nil).Dimension), varargs...)
 }
 
@@ -568,14 +568,4 @@ func (m *MockSearchClient) Healthcheck() (string, error) {
 // Healthcheck indicates an expected call of Healthcheck
 func (mr *MockSearchClientMockRecorder) Healthcheck() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Healthcheck", reflect.TypeOf((*MockSearchClient)(nil).Healthcheck))
-}
-
-// SetInternalToken mocks base method
-func (m *MockSearchClient) SetInternalToken(arg0 string) {
-	m.ctrl.Call(m, "SetInternalToken", arg0)
-}
-
-// SetInternalToken indicates an expected call of SetInternalToken
-func (mr *MockSearchClientMockRecorder) SetInternalToken(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetInternalToken", reflect.TypeOf((*MockSearchClient)(nil).SetInternalToken), arg0)
 }

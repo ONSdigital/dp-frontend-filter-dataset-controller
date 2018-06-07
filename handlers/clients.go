@@ -64,8 +64,7 @@ type HierarchyClient interface {
 // SearchClient contains methods expected for a search client
 type SearchClient interface {
 	healthcheck.Client
-	SetInternalToken(token string)
-	Dimension(datasetID, edition, version, name, query string, params ...search.Config) (m *search.Model, err error)
+	Dimension(ctx context.Context, datasetID, edition, version, name, query string, params ...search.Config) (m *search.Model, err error)
 }
 
 // Renderer provides an interface for a service template renderer
