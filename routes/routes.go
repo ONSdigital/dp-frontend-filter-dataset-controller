@@ -35,8 +35,8 @@ func Init(r *mux.Router) {
 	}
 
 	rend := renderer.New(cfg.RendererURL)
-	fc := filter.New(cfg.FilterAPIURL)
-	dc := dataset.New(cfg.DatasetAPIURL)
+	fc := filter.New(cfg.FilterAPIURL, "", "")
+	dc := dataset.NewAPIClient(cfg.DatasetAPIURL, "", "")
 	clc := codelist.New(cfg.CodeListAPIURL)
 	hc := hierarchy.New(cfg.HierarchyAPIURL)
 	sc := search.New(cfg.SearchAPIURL)

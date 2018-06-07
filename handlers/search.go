@@ -26,7 +26,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 	name := vars["name"]
 	q := url.QueryEscape(req.URL.Query().Get("q"))
 
-	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
 	var searchConfig []search.Config
 	if len(req.Header.Get("X-Florence-Token")) > 0 {
@@ -34,13 +34,13 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 		searchConfig = append(searchConfig, search.Config{InternalToken: cfg.SearchAPIAuthToken, FlorenceToken: req.Header.Get("X-Florence-Token")})
 	}
 
-	fil, err := f.FilterClient.GetJobState(filterID, filterCfg...)
+	fil, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	selVals, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
+	selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, name)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -57,18 +57,18 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	d, err := f.DatasetClient.Get(datasetID, datasetCfg...)
+	d, err := f.DatasetClient.Get(req.Context(), datasetID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
+	ver, err := f.DatasetClient.GetVersion(req.Context(), datasetID, edition, version)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	allVals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name, datasetCfg...)
+	allVals, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, name)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -80,7 +80,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -118,9 +118,9 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 
 	redirectURI := fmt.Sprintf("/filters/%s/dimensions", filterID)
 
-	_, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	fil, err := f.FilterClient.GetJobState(filterID, filterCfg...)
+	fil, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -155,7 +155,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 		for _, item := range searchRes.Items {
 			options = append(options, item.Code)
 		}
-		if err := f.FilterClient.AddDimensionValues(filterID, name, options, filterCfg...); err != nil {
+		if err := f.FilterClient.AddDimensionValues(req.Context(), filterID, name, options); err != nil {
 			setStatusCode(req, w, err)
 			return
 		}
@@ -164,7 +164,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 
 	if len(req.Form["remove-all"]) > 0 {
 		for _, item := range searchRes.Items {
-			if err := f.FilterClient.RemoveDimensionValue(filterID, name, item.Code, filterCfg...); err != nil {
+			if err := f.FilterClient.RemoveDimensionValue(req.Context(), filterID, name, item.Code); err != nil {
 				setStatusCode(req, w, err)
 			}
 		}
@@ -177,7 +177,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 
 	go func() {
 
-		opts, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
+		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, name)
 		if err != nil {
 			log.ErrorCtx(ctx, err, nil)
 		}
@@ -186,7 +186,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 			for _, opt := range opts {
 				if opt.Option == item.Code {
 					if _, ok := req.Form[item.Code]; !ok {
-						if err := f.FilterClient.RemoveDimensionValue(filterID, name, item.Code, filterCfg...); err != nil {
+						if err := f.FilterClient.RemoveDimensionValue(req.Context(), filterID, name, item.Code); err != nil {
 							log.ErrorCtx(ctx, err, nil)
 						}
 					}
@@ -209,7 +209,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		if err := f.FilterClient.AddDimensionValue(filterID, name, k, filterCfg...); err != nil {
+		if err := f.FilterClient.AddDimensionValue(req.Context(), filterID, name, k); err != nil {
 			log.InfoCtx(ctx, err.Error(), nil)
 			continue
 		}

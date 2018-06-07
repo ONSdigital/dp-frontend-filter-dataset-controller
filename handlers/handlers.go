@@ -3,9 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
-	"github.com/ONSdigital/go-ns/clients/dataset"
-	"github.com/ONSdigital/go-ns/clients/filter"
+	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/go-ns/log"
 )
 
@@ -46,14 +44,10 @@ func setStatusCode(req *http.Request, w http.ResponseWriter, err error) {
 	w.WriteHeader(status)
 }
 
-func setAuthTokenIfRequired(req *http.Request) ([]dataset.Config, []filter.Config) {
-	var datasetConfig []dataset.Config
-	var filterConfig []filter.Config
-	florenceToken := req.Header.Get("X-Florence-Token")
-	if len(florenceToken) > 0 {
-		cfg := config.Get()
-		datasetConfig = append(datasetConfig, dataset.Config{InternalToken: cfg.DatasetAPIAuthToken, FlorenceToken: florenceToken})
-		filterConfig = append(filterConfig, filter.Config{InternalToken: cfg.FilterAPIAuthToken, FlorenceToken: florenceToken})
+func forwardFlorenceTokenIfRequired(req *http.Request) *http.Request {
+	if len(req.Header.Get(common.FlorenceHeaderKey)) > 0 {
+		ctx := common.SetFlorenceIdentity(req.Context(), req.Header.Get(common.FlorenceHeaderKey))
+		return req.WithContext(ctx)
 	}
-	return datasetConfig, filterConfig
+	return req
 }

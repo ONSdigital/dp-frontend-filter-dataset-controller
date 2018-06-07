@@ -25,7 +25,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 	name := vars["name"]
 	code := vars["code"]
 
-	_, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 	ctx := req.Context()
 
 	if err := req.ParseForm(); err != nil {
@@ -44,7 +44,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	fil, err := f.FilterClient.GetJobState(filterID, filterCfg...)
+	fil, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -87,7 +87,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		opts, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
+		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, name)
 		if err != nil {
 			log.ErrorCtx(ctx, err, nil)
 		}
@@ -96,7 +96,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			for _, opt := range opts {
 				if opt.Option == hv.Links.Self.ID {
 					if _, ok := req.Form[hv.Links.Self.ID]; !ok {
-						if err := f.FilterClient.RemoveDimensionValue(filterID, name, hv.Links.Self.ID, filterCfg...); err != nil {
+						if err := f.FilterClient.RemoveDimensionValue(req.Context(), filterID, name, hv.Links.Self.ID); err != nil {
 							log.ErrorCtx(ctx, err, nil)
 						}
 					}
@@ -119,7 +119,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		if err := f.FilterClient.AddDimensionValue(filterID, name, k, filterCfg...); err != nil {
+		if err := f.FilterClient.AddDimensionValue(req.Context(), filterID, name, k); err != nil {
 			log.InfoCtx(ctx, err.Error(), nil)
 		}
 	}
@@ -129,7 +129,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 
 func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI string) {
 
-	_, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 	ctx := req.Context()
 
 	var h hierarchy.Model
@@ -152,7 +152,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 	for _, child := range h.Children {
 		options = append(options, child.Links.Self.ID)
 	}
-	if err := f.FilterClient.AddDimensionValues(fil.FilterID, name, options, filterCfg...); err != nil {
+	if err := f.FilterClient.AddDimensionValues(req.Context(), fil.FilterID, name, options); err != nil {
 		log.ErrorCtx(ctx, err, nil)
 	}
 
@@ -161,7 +161,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 
 func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI string) {
 
-	_, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 	ctx := req.Context()
 
 	var h hierarchy.Model
@@ -181,7 +181,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 	}
 
 	for _, child := range h.Children {
-		if err := f.FilterClient.RemoveDimensionValue(fil.FilterID, name, child.Links.Self.ID, filterCfg...); err != nil {
+		if err := f.FilterClient.RemoveDimensionValue(req.Context(), fil.FilterID, name, child.Links.Self.ID); err != nil {
 			log.ErrorCtx(ctx, err, nil)
 		}
 	}
@@ -195,9 +195,9 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	name := vars["name"]
 	code := vars["code"]
 
-	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	fil, err := f.FilterClient.GetJobState(filterID, filterCfg...)
+	fil, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -218,7 +218,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	selVals, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
+	selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, name)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -235,24 +235,24 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	d, err := f.DatasetClient.Get(datasetID, datasetCfg...)
+	d, err := f.DatasetClient.Get(req.Context(), datasetID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
-	if err != nil {
-		setStatusCode(req, w, err)
-		return
-	}
-
-	allVals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name, datasetCfg...)
+	ver, err := f.DatasetClient.GetVersion(req.Context(), datasetID, edition, version)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
+	allVals, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, name)
+	if err != nil {
+		setStatusCode(req, w, err)
+		return
+	}
+
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
