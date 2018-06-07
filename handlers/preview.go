@@ -158,9 +158,20 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		p.IsPreviewLoaded = true
 	}
 
-	for _, d := range p.Data.Downloads {
+	for i, d := range p.Data.Downloads {
 		if d.Extension == "xls" && len(d.Size) > 0 {
 			p.IsDownloadLoaded = true
+		}
+
+		if len(f.downloadServiceURL) > 0 {
+			downloadURL, err := url.Parse(d.URI)
+			if err != nil {
+				setStatusCode(req, w, err)
+				return
+			}
+
+			d.URI = f.downloadServiceURL + downloadURL.Path
+			p.Data.Downloads[i] = d
 		}
 	}
 
@@ -182,6 +193,8 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// GetFilterJob returns the filter output json to the client to form preview
+// for AJAX request
 func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterOutputID := vars["filterOutputID"]
@@ -192,6 +205,17 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
+	}
+
+	for k, download := range prev.Downloads {
+		downloadURL, err := url.Parse(download.URL)
+		if err != nil {
+			setStatusCode(req, w, err)
+			return
+		}
+
+		download.URL = f.downloadServiceURL + downloadURL.Path
+		prev.Downloads[k] = download
 	}
 
 	b, err := json.Marshal(prev)
