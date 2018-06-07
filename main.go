@@ -16,8 +16,9 @@ import (
 func main() {
 	log.Namespace = "dp-frontend-filter-dataset-controller"
 	cfg := config.Get()
+	ctx := context.Background()
 
-	log.Debug("got service configuration", log.Data{"config": cfg})
+	log.InfoCtx(ctx, "got service configuration", log.Data{"config": cfg})
 
 	r := mux.NewRouter()
 
@@ -26,13 +27,13 @@ func main() {
 	s := server.New(cfg.BindAddr, r)
 	s.HandleOSSignals = false
 
-	log.Debug("listening...", log.Data{
+	log.InfoCtx(ctx, "listening...", log.Data{
 		"bind_address": cfg.BindAddr,
 	})
 
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
-			log.Error(err, nil)
+			log.ErrorCtx(ctx, err, nil)
 			return
 		}
 	}()
@@ -42,10 +43,10 @@ func main() {
 
 	<-stop
 
-	log.Info("shutting service down gracefully", nil)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	log.InfoCtx(ctx, "shutting service down gracefully", nil)
 	defer cancel()
 	if err := s.Server.Shutdown(ctx); err != nil {
-		log.Error(err, nil)
+		log.ErrorCtx(ctx, err, nil)
 	}
 }

@@ -21,6 +21,7 @@ var acceptedReg = regexp.MustCompile(`^\w{3}-\d{2}$`)
 func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
+	ctx := req.Context()
 
 	_, filterCfg := setAuthTokenIfRequired(req)
 
@@ -52,19 +53,19 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 	switch req.Form.Get("time-selection") {
 	case "latest":
 		if err := f.FilterClient.AddDimensionValue(filterID, "time", req.Form.Get("latest-option"), filterCfg...); err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorCtx(ctx, err, nil)
 		}
 	case "single":
 		if err := f.addSingleTime(filterID, req); err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorCtx(ctx, err, nil)
 		}
 	case "range":
 		if err := f.addTimeRange(filterID, req); err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorCtx(ctx, err, nil)
 		}
 	case "list":
 		if err := f.addTimeList(filterID, req); err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorCtx(ctx, err, nil)
 		}
 	}
 
@@ -87,6 +88,7 @@ func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
 }
 
 func (f *Filter) addTimeList(filterID string, req *http.Request) error {
+	ctx := req.Context()
 	_, filterCfg := setAuthTokenIfRequired(req)
 
 	opts, err := f.FilterClient.GetDimensionOptions(filterID, "time", filterCfg...)
@@ -98,7 +100,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	for _, opt := range opts {
 		if _, ok := req.Form[opt.Option]; !ok {
 			if err := f.FilterClient.RemoveDimensionValue(filterID, "time", opt.Option, filterCfg...); err != nil {
-				log.ErrorR(req, err, nil)
+				log.ErrorCtx(ctx, err, nil)
 			}
 		}
 	}
@@ -113,7 +115,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	}
 
 	if err := f.FilterClient.AddDimensionValues(filterID, "time", options, filterCfg...); err != nil {
-		log.TraceR(req, err.Error(), nil)
+		log.TraceCtx(ctx, err.Error(), nil)
 	}
 
 	return nil
@@ -222,7 +224,7 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p, err := mapper.CreateTimePage(fj, dataset, ver, allValues, selValues, dims, datasetID)
+	p, err := mapper.CreateTimePage(req.Context(), fj, dataset, ver, allValues, selValues, dims, datasetID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return

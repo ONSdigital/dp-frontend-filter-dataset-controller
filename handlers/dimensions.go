@@ -97,8 +97,6 @@ func (f *Filter) getIDNameMap(versionURL, dimension string, cfg []dataset.Config
 		return nil, err
 	}
 
-	log.Debug("creating an option-label map from dataset dimensions", log.Data{"version-url": versionURL, "options": opts})
-
 	for _, opt := range opts.Items {
 		idNameMap[opt.Option] = opt.Label
 	}
@@ -249,7 +247,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.Model, dims dataset.Dimensions, datasetID, releaseDate string) {
-	p := mapper.CreateListSelectorPage(name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate)
+	p := mapper.CreateListSelectorPage(req.Context(), name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate)
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -322,6 +320,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
+	ctx := req.Context()
 
 	_, filterCfg := setAuthTokenIfRequired(req)
 
@@ -358,7 +357,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 		for _, opt := range opts {
 			if _, ok := req.Form[opt.Option]; !ok {
 				if err := f.FilterClient.RemoveDimensionValue(filterID, name, opt.Option, filterCfg...); err != nil {
-					log.ErrorR(req, err, nil)
+					log.ErrorCtx(ctx, err, nil)
 				}
 			}
 		}
@@ -378,7 +377,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if err := f.FilterClient.AddDimensionValues(filterID, name, options, filterCfg...); err != nil {
-		log.TraceR(req, err.Error(), nil)
+		log.InfoCtx(ctx, err.Error(), nil)
 	}
 
 	http.Redirect(w, req, redirectURL, 302)
@@ -414,12 +413,14 @@ func (f *Filter) getDimensionValues(filterID, name string, cfg []dataset.Config,
 	return
 }
 
-// DimensionRemoveAll ...
+// DimensionRemoveAll removes all options on a particular dimensions
 func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
-	log.Debug("attempting to remove all", nil)
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
+	ctx := req.Context()
+
+	log.InfoCtx(ctx, "attempting to remove all on dimension", log.Data{"dimension": name, "filterID": filterID})
 
 	_, filterCfg := setAuthTokenIfRequired(req)
 
@@ -437,7 +438,7 @@ func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, redirectURL, 302)
 }
 
-// DimensionRemoveOne ...
+// DimensionRemoveOne removes an individual option on a dimensions
 func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]

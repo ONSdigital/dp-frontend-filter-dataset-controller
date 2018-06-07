@@ -42,7 +42,7 @@ func setStatusCode(req *http.Request, w http.ResponseWriter, err error) {
 			status = err.Code()
 		}
 	}
-	log.ErrorR(req, err, log.Data{"setting-response-status": status})
+	log.ErrorCtx(req.Context(), err, log.Data{"setting-response-status": status})
 	w.WriteHeader(status)
 }
 

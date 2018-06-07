@@ -86,7 +86,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreateHierarchySearchPage(searchRes.Items, d, fil, selVals, dims.Items, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"))
+	p := mapper.CreateHierarchySearchPage(req.Context(), searchRes.Items, d, fil, selVals, dims.Items, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"))
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -105,8 +105,9 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 
 // SearchUpdate will update a dimension based on selected search resultss
 func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
 	if err := req.ParseForm(); err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorCtx(ctx, err, nil)
 		return
 	}
 
@@ -144,7 +145,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 
 	searchRes, err := f.SearchClient.Dimension(datasetID, edition, version, name, q, searchConfig...)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorCtx(ctx, err, nil)
 		http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions", filterID), 302)
 		return
 	}
@@ -178,7 +179,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 
 		opts, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
 		if err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorCtx(ctx, err, nil)
 		}
 
 		for _, item := range searchRes.Items {
@@ -186,7 +187,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 				if opt.Option == item.Code {
 					if _, ok := req.Form[item.Code]; !ok {
 						if err := f.FilterClient.RemoveDimensionValue(filterID, name, item.Code, filterCfg...); err != nil {
-							log.ErrorR(req, err, nil)
+							log.ErrorCtx(ctx, err, nil)
 						}
 					}
 				}
@@ -209,7 +210,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 		}
 
 		if err := f.FilterClient.AddDimensionValue(filterID, name, k, filterCfg...); err != nil {
-			log.TraceR(req, err.Error(), nil)
+			log.InfoCtx(ctx, err.Error(), nil)
 			continue
 		}
 	}

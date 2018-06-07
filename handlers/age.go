@@ -18,6 +18,7 @@ import (
 
 // UpdateAge is a handler which will update age values on a filter job
 func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
@@ -48,20 +49,20 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.InfoR(req, "age-selection", log.Data{"age": req.Form.Get("age-selection")})
+	log.InfoCtx(ctx, "age-selection", log.Data{"age": req.Form.Get("age-selection")})
 
 	switch req.Form.Get("age-selection") {
 	case "all":
 		if err := f.FilterClient.AddDimensionValue(filterID, "age", req.Form.Get("all-ages-option"), filterConfig...); err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorCtx(ctx, err, nil)
 		}
 	case "range":
 		if err := f.addAgeRange(filterID, req); err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorCtx(ctx, err, nil)
 		}
 	case "list":
 		if err := f.addAgeList(filterID, req); err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorCtx(ctx, err, nil)
 		}
 	}
 
@@ -71,6 +72,7 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 
 func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 	_, filterCfg := setAuthTokenIfRequired(req)
+	ctx := req.Context()
 
 	opts, err := f.FilterClient.GetDimensionOptions(filterID, "age", filterCfg...)
 	if err != nil {
@@ -81,7 +83,7 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 	for _, opt := range opts {
 		if _, ok := req.Form[opt.Option]; !ok {
 			if err := f.FilterClient.RemoveDimensionValue(filterID, "age", opt.Option, filterCfg...); err != nil {
-				log.ErrorR(req, err, nil)
+				log.ErrorCtx(ctx, err, nil)
 			}
 		}
 	}
@@ -99,7 +101,7 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 	}
 
 	if err := f.FilterClient.AddDimensionValues(filterID, "age", options, filterCfg...); err != nil {
-		log.TraceR(req, err.Error(), nil)
+		log.InfoCtx(ctx, err.Error(), nil)
 	}
 
 	return nil
@@ -227,7 +229,7 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p, err := mapper.CreateAgePage(fj, dataset, ver, allValues, selValues, dims, datasetID)
+	p, err := mapper.CreateAgePage(req.Context(), fj, dataset, ver, allValues, selValues, dims, datasetID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return

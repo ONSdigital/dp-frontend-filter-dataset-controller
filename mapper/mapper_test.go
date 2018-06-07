@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -11,6 +12,8 @@ import (
 )
 
 func TestUnitMapper(t *testing.T) {
+	ctx := context.Background()
+
 	Convey("test SetTaxonomyDomain adds the taxonomy domain to page model", t, func() {
 		os.Setenv("TAXONOMY_DOMAIN", "https://www.ons.gov.uk")
 		p := model.Page{}
@@ -24,7 +27,7 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dst := getTestDataset()
 
-		fop := CreateFilterOverview(dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992")
+		fop := CreateFilterOverview(ctx, dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992")
 		So(fop.FilterID, ShouldEqual, filter.FilterID)
 		So(fop.SearchDisabled, ShouldBeTrue)
 		So(fop.Data.Dimensions, ShouldHaveLength, 5)
@@ -61,7 +64,7 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dataset := getTestDataset()
 
-		pp := CreatePreviewPage(dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992")
+		pp := CreatePreviewPage(ctx, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992")
 		So(pp.SearchDisabled, ShouldBeFalse)
 		So(pp.Breadcrumb, ShouldHaveLength, 4)
 		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
@@ -117,7 +120,7 @@ func TestUnitMapper(t *testing.T) {
 
 			filter := getTestFilter()
 
-			p := CreateListSelectorPage("time", selectedValues, allValues, filter, d, dataset.Dimensions{}, "12345", "11-11-1992")
+			p := CreateListSelectorPage(ctx, "time", selectedValues, allValues, filter, d, dataset.Dimensions{}, "12345", "11-11-1992")
 			So(p.Data.Title, ShouldEqual, "Time")
 			So(p.SearchDisabled, ShouldBeTrue)
 			So(p.FilterID, ShouldEqual, filter.FilterID)
@@ -147,7 +150,7 @@ func TestUnitMapper(t *testing.T) {
 		})
 
 		Convey("correctly orders the time values into ascending numeric order", func() {
-			p := CreateListSelectorPage("time", []filter.DimensionOption{}, dataset.Options{
+			p := CreateListSelectorPage(ctx, "time", []filter.DimensionOption{}, dataset.Options{
 				Items: []dataset.Option{
 					{
 						Label: "2013",

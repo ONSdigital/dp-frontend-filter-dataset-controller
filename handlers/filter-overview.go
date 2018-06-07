@@ -105,7 +105,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreateFilterOverview(dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate)
+	p := mapper.CreateFilterOverview(req.Context(), dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate)
 
 	if latestURL.Path == versionURL.Path {
 		p.Data.IsLatestVersion = true
@@ -133,12 +133,13 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 func (f *Filter) FilterOverviewClearAll(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
+	ctx := req.Context()
 
 	_, filterCfg := setAuthTokenIfRequired(req)
 
 	dims, err := f.FilterClient.GetDimensions(filterID, filterCfg...)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorCtx(ctx, err, nil)
 		return
 	}
 

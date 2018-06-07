@@ -26,9 +26,10 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 	code := vars["code"]
 
 	_, filterCfg := setAuthTokenIfRequired(req)
+	ctx := req.Context()
 
 	if err := req.ParseForm(); err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorCtx(ctx, err, nil)
 		return
 	}
 
@@ -88,7 +89,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 
 		opts, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
 		if err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorCtx(ctx, err, nil)
 		}
 
 		for _, hv := range h.Children {
@@ -96,7 +97,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 				if opt.Option == hv.Links.Self.ID {
 					if _, ok := req.Form[hv.Links.Self.ID]; !ok {
 						if err := f.FilterClient.RemoveDimensionValue(filterID, name, hv.Links.Self.ID, filterCfg...); err != nil {
-							log.ErrorR(req, err, nil)
+							log.ErrorCtx(ctx, err, nil)
 						}
 					}
 				}
@@ -119,7 +120,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		}
 
 		if err := f.FilterClient.AddDimensionValue(filterID, name, k, filterCfg...); err != nil {
-			log.TraceR(req, err.Error(), nil)
+			log.InfoCtx(ctx, err.Error(), nil)
 		}
 	}
 
@@ -129,6 +130,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI string) {
 
 	_, filterCfg := setAuthTokenIfRequired(req)
+	ctx := req.Context()
 
 	var h hierarchy.Model
 	var err error
@@ -151,7 +153,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 		options = append(options, child.Links.Self.ID)
 	}
 	if err := f.FilterClient.AddDimensionValues(fil.FilterID, name, options, filterCfg...); err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorCtx(ctx, err, nil)
 	}
 
 	http.Redirect(w, req, redirectURI, 302)
@@ -160,6 +162,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI string) {
 
 	_, filterCfg := setAuthTokenIfRequired(req)
+	ctx := req.Context()
 
 	var h hierarchy.Model
 	var err error
@@ -179,7 +182,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 
 	for _, child := range h.Children {
 		if err := f.FilterClient.RemoveDimensionValue(fil.FilterID, name, child.Links.Self.ID, filterCfg...); err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorCtx(ctx, err, nil)
 		}
 	}
 
@@ -255,7 +258,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreateHierarchyPage(h, d, fil, selVals, allVals, dims, name, req.URL.Path, datasetID, ver.ReleaseDate)
+	p := mapper.CreateHierarchyPage(req.Context(), h, d, fil, selVals, allVals, dims, name, req.URL.Path, datasetID, ver.ReleaseDate)
 
 	b, err := json.Marshal(p)
 	if err != nil {
