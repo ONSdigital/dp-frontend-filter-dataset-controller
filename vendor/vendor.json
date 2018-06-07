@@ -105,10 +105,10 @@
 			"revisionTime": "2018-05-08T08:56:58Z"
 		},
 		{
-			"checksumSHA1": "J9OiPnhPHFPhQ+R+dq6LFj+dTxE=",
+			"checksumSHA1": "Vjyl/gfY0qx2lW9te3Ieb5HV3/s=",
 			"path": "github.com/ONSdigital/go-ns/handlers/requestID",
-			"revision": "0728a5717abea304f9fab56417680ce800d0e35e",
-			"revisionTime": "2017-07-17T12:56:40Z"
+			"revision": "138f9babe15ed0cb43911035169d49c3b2641257",
+			"revisionTime": "2018-06-06T13:55:30Z"
 		},
 		{
 			"checksumSHA1": "HgL/HLG5D1WNPb1lrb/hpywtm9o=",
