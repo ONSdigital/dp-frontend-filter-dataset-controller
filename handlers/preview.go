@@ -209,14 +209,16 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 	}
 
 	for k, download := range prev.Downloads {
-		downloadURL, err := url.Parse(download.URL)
-		if err != nil {
-			setStatusCode(req, w, err)
-			return
-		}
+		if len(download.URL) > 0 {
+			downloadURL, err := url.Parse(download.URL)
+			if err != nil {
+				setStatusCode(req, w, err)
+				return
+			}
 
-		download.URL = f.downloadServiceURL + downloadURL.Path
-		prev.Downloads[k] = download
+			download.URL = f.downloadServiceURL + downloadURL.Path
+			prev.Downloads[k] = download
+		}
 	}
 
 	b, err := json.Marshal(prev)
