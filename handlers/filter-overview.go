@@ -21,15 +21,15 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	dims, err := f.FilterClient.GetDimensions(filterID, filterCfg...)
+	dims, err := f.FilterClient.GetDimensions(req.Context(), filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	fj, err := f.FilterClient.GetJobState(filterID, filterCfg...)
+	fj, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -46,7 +46,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	datasetDimensions, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
+	datasetDimensions, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -55,7 +55,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	dimensionIDNameLookup := make(map[string]map[string]string)
 	for _, dim := range datasetDimensions.Items {
 		idNameLookup := make(map[string]string)
-		options, err := f.DatasetClient.GetOptions(datasetID, edition, version, dim.ID, datasetCfg...)
+		options, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, dim.ID)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -70,7 +70,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	var dimensions FilterModelDimensions
 	for _, dim := range dims {
 		var vals []filter.DimensionOption
-		vals, err = f.FilterClient.GetDimensionOptions(filterID, dim.Name, filterCfg...)
+		vals, err = f.FilterClient.GetDimensionOptions(req.Context(), filterID, dim.Name)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -88,12 +88,12 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	sort.Sort(dimensions)
 
-	dataset, err := f.DatasetClient.Get(datasetID, datasetCfg...)
+	dataset, err := f.DatasetClient.Get(req.Context(), datasetID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
+	ver, err := f.DatasetClient.GetVersion(req.Context(), datasetID, edition, version)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -105,7 +105,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreateFilterOverview(dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate)
+	p := mapper.CreateFilterOverview(req.Context(), dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate)
 
 	if latestURL.Path == versionURL.Path {
 		p.Data.IsLatestVersion = true
@@ -133,22 +133,23 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 func (f *Filter) FilterOverviewClearAll(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
+	ctx := req.Context()
 
-	_, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	dims, err := f.FilterClient.GetDimensions(filterID, filterCfg...)
+	dims, err := f.FilterClient.GetDimensions(req.Context(), filterID)
 	if err != nil {
-		log.ErrorR(req, err, nil)
+		log.ErrorCtx(ctx, err, nil)
 		return
 	}
 
 	for _, dim := range dims {
-		if err := f.FilterClient.RemoveDimension(filterID, dim.Name, filterCfg...); err != nil {
+		if err := f.FilterClient.RemoveDimension(req.Context(), filterID, dim.Name); err != nil {
 			setStatusCode(req, w, err)
 			return
 		}
 
-		if err := f.FilterClient.AddDimension(filterID, dim.Name, filterCfg...); err != nil {
+		if err := f.FilterClient.AddDimension(req.Context(), filterID, dim.Name); err != nil {
 			setStatusCode(req, w, err)
 			return
 		}

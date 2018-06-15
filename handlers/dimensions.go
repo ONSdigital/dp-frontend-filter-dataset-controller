@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -27,9 +28,9 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 	name := vars["name"]
 	filterID := vars["filterID"]
 
-	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	fj, err := f.FilterClient.GetJobState(filterID, filterCfg...)
+	fj, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -41,7 +42,7 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 		return
 	}
 
-	idNameMap, err := f.getIDNameMap(versionURL.Path, name, datasetCfg)
+	idNameMap, err := f.getIDNameMap(req.Context(), versionURL.Path, name)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -85,19 +86,17 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 	w.Write(b)
 }
 
-func (f *Filter) getIDNameMap(versionURL, dimension string, cfg []dataset.Config) (map[string]string, error) {
+func (f *Filter) getIDNameMap(ctx context.Context, versionURL, dimension string) (map[string]string, error) {
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL)
 	if err != nil {
 		return nil, err
 	}
 
 	idNameMap := make(map[string]string)
-	opts, err := f.DatasetClient.GetOptions(datasetID, edition, version, dimension, cfg...)
+	opts, err := f.DatasetClient.GetOptions(ctx, datasetID, edition, version, dimension)
 	if err != nil {
 		return nil, err
 	}
-
-	log.Debug("creating an option-label map from dataset dimensions", log.Data{"version-url": versionURL, "options": opts})
 
 	for _, opt := range opts.Items {
 		idNameMap[opt.Option] = opt.Label
@@ -112,15 +111,15 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 	name := vars["name"]
 	filterID := vars["filterID"]
 
-	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	opts, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
+	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, name)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	fj, err := f.FilterClient.GetJobState(filterID, filterCfg...)
+	fj, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -131,7 +130,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 		setStatusCode(req, w, err)
 		return
 	}
-	idNameMap, err := f.getIDNameMap(versionURL.Path, name, datasetCfg)
+	idNameMap, err := f.getIDNameMap(req.Context(), versionURL.Path, name)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -182,21 +181,21 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 	name := vars["name"]
 	filterID := vars["filterID"]
 
-	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	filter, err := f.FilterClient.GetJobState(filterID, filterCfg...)
+	filter, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	selectedValues, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
+	selectedValues, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, name)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	fj, err := f.FilterClient.GetJobState(filterID, filterCfg...)
+	fj, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -213,18 +212,18 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.DatasetClient.Get(datasetID, datasetCfg...)
+	dataset, err := f.DatasetClient.Get(req.Context(), datasetID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
+	ver, err := f.DatasetClient.GetVersion(req.Context(), datasetID, edition, version)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, name, datasetCfg...)
+	allValues, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, name)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -237,7 +236,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -249,7 +248,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.Model, dims dataset.Dimensions, datasetID, releaseDate string) {
-	p := mapper.CreateListSelectorPage(name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate)
+	p := mapper.CreateListSelectorPage(req.Context(), name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate)
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -279,9 +278,9 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 	name := vars["name"]
 	filterID := vars["filterID"]
 
-	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	fj, err := f.FilterClient.GetJobState(filterID)
+	fj, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -298,7 +297,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 		return
 	}
 
-	vals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name, datasetCfg...)
+	vals, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, name)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -309,7 +308,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 		options = append(options, val.Option)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(filterID, name, options, filterCfg...); err != nil {
+	if err := f.FilterClient.AddDimensionValues(req.Context(), filterID, name, options); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
@@ -322,8 +321,9 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
+	ctx := req.Context()
 
-	_, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
 	if err := req.ParseForm(); err != nil {
 		setStatusCode(req, w, err)
@@ -349,7 +349,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 
 	// concurrently remove any fields that have been deselected
 	go func() {
-		opts, err := f.FilterClient.GetDimensionOptions(filterID, name, filterCfg...)
+		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, name)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -357,8 +357,8 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 
 		for _, opt := range opts {
 			if _, ok := req.Form[opt.Option]; !ok {
-				if err := f.FilterClient.RemoveDimensionValue(filterID, name, opt.Option, filterCfg...); err != nil {
-					log.ErrorR(req, err, nil)
+				if err := f.FilterClient.RemoveDimensionValue(req.Context(), filterID, name, opt.Option); err != nil {
+					log.ErrorCtx(ctx, err, nil)
 				}
 			}
 		}
@@ -377,15 +377,15 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 		options = append(options, k)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(filterID, name, options, filterCfg...); err != nil {
-		log.TraceR(req, err.Error(), nil)
+	if err := f.FilterClient.AddDimensionValues(req.Context(), filterID, name, options); err != nil {
+		log.InfoCtx(ctx, err.Error(), nil)
 	}
 
 	http.Redirect(w, req, redirectURL, 302)
 }
 
-func (f *Filter) getDimensionValues(filterID, name string, cfg []dataset.Config, filterCfg []filter.Config) (values []string, labelIDMap map[string]string, err error) {
-	fj, err := f.FilterClient.GetJobState(filterID, filterCfg...)
+func (f *Filter) getDimensionValues(ctx context.Context, filterID, name string) (values []string, labelIDMap map[string]string, err error) {
+	fj, err := f.FilterClient.GetJobState(ctx, filterID)
 	if err != nil {
 		return
 	}
@@ -400,7 +400,7 @@ func (f *Filter) getDimensionValues(filterID, name string, cfg []dataset.Config,
 		return
 	}
 
-	vals, err := f.DatasetClient.GetOptions(datasetID, edition, version, name, cfg...)
+	vals, err := f.DatasetClient.GetOptions(ctx, datasetID, edition, version, name)
 	if err != nil {
 		return
 	}
@@ -414,21 +414,23 @@ func (f *Filter) getDimensionValues(filterID, name string, cfg []dataset.Config,
 	return
 }
 
-// DimensionRemoveAll ...
+// DimensionRemoveAll removes all options on a particular dimensions
 func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
-	log.Debug("attempting to remove all", nil)
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
+	ctx := req.Context()
 
-	_, filterCfg := setAuthTokenIfRequired(req)
+	log.InfoCtx(ctx, "attempting to remove all on dimension", log.Data{"dimension": name, "filterID": filterID})
 
-	if err := f.FilterClient.RemoveDimension(filterID, name, filterCfg...); err != nil {
+	req = forwardFlorenceTokenIfRequired(req)
+
+	if err := f.FilterClient.RemoveDimension(req.Context(), filterID, name); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	if err := f.FilterClient.AddDimension(filterID, name, filterCfg...); err != nil {
+	if err := f.FilterClient.AddDimension(req.Context(), filterID, name); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
@@ -437,16 +439,16 @@ func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, redirectURL, 302)
 }
 
-// DimensionRemoveOne ...
+// DimensionRemoveOne removes an individual option on a dimensions
 func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
 	option := vars["option"]
 
-	_, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	if err := f.FilterClient.RemoveDimensionValue(filterID, name, option, filterCfg...); err != nil {
+	if err := f.FilterClient.RemoveDimensionValue(req.Context(), filterID, name, option); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}

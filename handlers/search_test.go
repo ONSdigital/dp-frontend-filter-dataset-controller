@@ -26,6 +26,7 @@ func TestUnitSearch(t *testing.T) {
 	version := "1"
 	query := "Newport"
 	expectedHTML := "<html>Search Results</html>"
+	ctx := gomock.Any()
 
 	Convey("test Search", t, func() {
 		Convey("test search can successfully load a page", func() {
@@ -35,19 +36,19 @@ func TestUnitSearch(t *testing.T) {
 			msc := NewMockSearchClient(mockCtrl)
 			mrc := NewMockRenderer(mockCtrl)
 
-			mfc.EXPECT().GetJobState(filterID).Return(filter.Model{
+			mfc.EXPECT().GetJobState(ctx, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(datasetID).Return(dataset.Model{}, nil)
-			mdc.EXPECT().GetVersion(datasetID, edition, version).Return(dataset.Version{}, nil)
-			mdc.EXPECT().GetDimensions(datasetID, edition, version).Return(dataset.Dimensions{}, nil)
-			mdc.EXPECT().GetOptions(datasetID, edition, version, name).Return(dataset.Options{}, nil)
-			msc.EXPECT().Dimension(datasetID, edition, version, name, query).Return(&search.Model{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, filterID, name).Return([]filter.DimensionOption{}, nil)
+			mdc.EXPECT().Get(ctx, datasetID).Return(dataset.Model{}, nil)
+			mdc.EXPECT().GetVersion(ctx, datasetID, edition, version).Return(dataset.Version{}, nil)
+			mdc.EXPECT().GetDimensions(ctx, datasetID, edition, version).Return(dataset.Dimensions{}, nil)
+			mdc.EXPECT().GetOptions(ctx, datasetID, edition, version, name).Return(dataset.Options{}, nil)
+			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query).Return(&search.Model{}, nil)
 			mrc.EXPECT().Do("dataset-filter/hierarchy", gomock.Any()).Return([]byte(expectedHTML), nil)
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
@@ -71,7 +72,7 @@ func TestUnitSearch(t *testing.T) {
 			msc := NewMockSearchClient(mockCtrl)
 			mrc := NewMockRenderer(mockCtrl)
 
-			mfc.EXPECT().GetJobState(filterID).Return(filter.Model{}, errors.New("get job state error"))
+			mfc.EXPECT().GetJobState(ctx, filterID).Return(filter.Model{}, errors.New("get job state error"))
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
 			w := httptest.NewRecorder()
@@ -91,14 +92,14 @@ func TestUnitSearch(t *testing.T) {
 			msc := NewMockSearchClient(mockCtrl)
 			mrc := NewMockRenderer(mockCtrl)
 
-			mfc.EXPECT().GetJobState(filterID).Return(filter.Model{
+			mfc.EXPECT().GetJobState(ctx, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(filterID, name).Return([]filter.DimensionOption{}, errors.New("get dimensions options error"))
+			mfc.EXPECT().GetDimensionOptions(ctx, filterID, name).Return([]filter.DimensionOption{}, errors.New("get dimensions options error"))
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
 			w := httptest.NewRecorder()
@@ -119,15 +120,15 @@ func TestUnitSearch(t *testing.T) {
 			msc := NewMockSearchClient(mockCtrl)
 			mrc := NewMockRenderer(mockCtrl)
 
-			mfc.EXPECT().GetJobState(filterID).Return(filter.Model{
+			mfc.EXPECT().GetJobState(ctx, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(datasetID).Return(dataset.Model{}, errors.New("dataset get error"))
+			mfc.EXPECT().GetDimensionOptions(ctx, filterID, name).Return([]filter.DimensionOption{}, nil)
+			mdc.EXPECT().Get(ctx, datasetID).Return(dataset.Model{}, errors.New("dataset get error"))
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
 			w := httptest.NewRecorder()
@@ -148,16 +149,16 @@ func TestUnitSearch(t *testing.T) {
 			msc := NewMockSearchClient(mockCtrl)
 			mrc := NewMockRenderer(mockCtrl)
 
-			mfc.EXPECT().GetJobState(filterID).Return(filter.Model{
+			mfc.EXPECT().GetJobState(ctx, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(datasetID).Return(dataset.Model{}, nil)
-			mdc.EXPECT().GetVersion(datasetID, edition, version).Return(dataset.Version{}, errors.New("get version error"))
+			mfc.EXPECT().GetDimensionOptions(ctx, filterID, name).Return([]filter.DimensionOption{}, nil)
+			mdc.EXPECT().Get(ctx, datasetID).Return(dataset.Model{}, nil)
+			mdc.EXPECT().GetVersion(ctx, datasetID, edition, version).Return(dataset.Version{}, errors.New("get version error"))
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
 			w := httptest.NewRecorder()
@@ -178,17 +179,17 @@ func TestUnitSearch(t *testing.T) {
 			msc := NewMockSearchClient(mockCtrl)
 			mrc := NewMockRenderer(mockCtrl)
 
-			mfc.EXPECT().GetJobState(filterID).Return(filter.Model{
+			mfc.EXPECT().GetJobState(ctx, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(datasetID).Return(dataset.Model{}, nil)
-			mdc.EXPECT().GetVersion(datasetID, edition, version).Return(dataset.Version{}, nil)
-			mdc.EXPECT().GetOptions(datasetID, edition, version, name).Return(dataset.Options{}, errors.New("get options error"))
+			mfc.EXPECT().GetDimensionOptions(ctx, filterID, name).Return([]filter.DimensionOption{}, nil)
+			mdc.EXPECT().Get(ctx, datasetID).Return(dataset.Model{}, nil)
+			mdc.EXPECT().GetVersion(ctx, datasetID, edition, version).Return(dataset.Version{}, nil)
+			mdc.EXPECT().GetOptions(ctx, datasetID, edition, version, name).Return(dataset.Options{}, errors.New("get options error"))
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
 			w := httptest.NewRecorder()
@@ -209,18 +210,18 @@ func TestUnitSearch(t *testing.T) {
 			msc := NewMockSearchClient(mockCtrl)
 			mrc := NewMockRenderer(mockCtrl)
 
-			mfc.EXPECT().GetJobState(filterID).Return(filter.Model{
+			mfc.EXPECT().GetJobState(ctx, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(datasetID).Return(dataset.Model{}, nil)
-			mdc.EXPECT().GetVersion(datasetID, edition, version).Return(dataset.Version{}, nil)
-			mdc.EXPECT().GetOptions(datasetID, edition, version, name).Return(dataset.Options{}, nil)
-			msc.EXPECT().Dimension(datasetID, edition, version, name, query).Return(&search.Model{}, errors.New("search api error"))
+			mfc.EXPECT().GetDimensionOptions(ctx, filterID, name).Return([]filter.DimensionOption{}, nil)
+			mdc.EXPECT().Get(ctx, datasetID).Return(dataset.Model{}, nil)
+			mdc.EXPECT().GetVersion(ctx, datasetID, edition, version).Return(dataset.Version{}, nil)
+			mdc.EXPECT().GetOptions(ctx, datasetID, edition, version, name).Return(dataset.Options{}, nil)
+			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query).Return(&search.Model{}, errors.New("search api error"))
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
 			w := httptest.NewRecorder()
@@ -241,19 +242,19 @@ func TestUnitSearch(t *testing.T) {
 			msc := NewMockSearchClient(mockCtrl)
 			mrc := NewMockRenderer(mockCtrl)
 
-			mfc.EXPECT().GetJobState(filterID).Return(filter.Model{
+			mfc.EXPECT().GetJobState(ctx, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(datasetID).Return(dataset.Model{}, nil)
-			mdc.EXPECT().GetVersion(datasetID, edition, version).Return(dataset.Version{}, nil)
-			mdc.EXPECT().GetOptions(datasetID, edition, version, name).Return(dataset.Options{}, nil)
-			msc.EXPECT().Dimension(datasetID, edition, version, name, query).Return(&search.Model{}, nil)
-			mdc.EXPECT().GetDimensions(datasetID, edition, version).Return(dataset.Dimensions{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, filterID, name).Return([]filter.DimensionOption{}, nil)
+			mdc.EXPECT().Get(ctx, datasetID).Return(dataset.Model{}, nil)
+			mdc.EXPECT().GetVersion(ctx, datasetID, edition, version).Return(dataset.Version{}, nil)
+			mdc.EXPECT().GetOptions(ctx, datasetID, edition, version, name).Return(dataset.Options{}, nil)
+			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query).Return(&search.Model{}, nil)
+			mdc.EXPECT().GetDimensions(ctx, datasetID, edition, version).Return(dataset.Dimensions{}, nil)
 			mrc.EXPECT().Do("dataset-filter/hierarchy", gomock.Any()).Return([]byte(expectedHTML), errors.New("renderer error"))
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
@@ -276,14 +277,14 @@ func TestUnitSearch(t *testing.T) {
 			msc := NewMockSearchClient(mockCtrl)
 			mrc := NewMockRenderer(mockCtrl)
 
-			mfc.EXPECT().GetJobState(filterID).Return(filter.Model{
+			mfc.EXPECT().GetJobState(ctx, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:22000/datasets",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(filterID, name).Return([]filter.DimensionOption{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, filterID, name).Return([]filter.DimensionOption{}, nil)
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
 			w := httptest.NewRecorder()

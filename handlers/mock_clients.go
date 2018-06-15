@@ -5,6 +5,7 @@
 package handlers
 
 import (
+	"context"
 	reflect "reflect"
 
 	codelist "github.com/ONSdigital/go-ns/clients/codelist"
@@ -39,129 +40,94 @@ func (m *MockDatasetClient) EXPECT() *MockDatasetClientMockRecorder {
 }
 
 // Get mocks base method
-func (m *MockDatasetClient) Get(arg0 string, arg1 ...dataset.Config) (dataset.Model, error) {
-	varargs := []interface{}{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Get", varargs...)
+func (m *MockDatasetClient) Get(arg0 context.Context, arg1 string) (dataset.Model, error) {
+	ret := m.ctrl.Call(m, "Get", arg0, arg1)
 	ret0, _ := ret[0].(dataset.Model)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get
-func (mr *MockDatasetClientMockRecorder) Get(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockDatasetClient)(nil).Get), varargs...)
+func (mr *MockDatasetClientMockRecorder) Get(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockDatasetClient)(nil).Get), arg0, arg1)
 }
 
 // GetDimensions mocks base method
-func (m *MockDatasetClient) GetDimensions(arg0, arg1, arg2 string, arg3 ...dataset.Config) (dataset.Dimensions, error) {
-	varargs := []interface{}{arg0, arg1, arg2}
-	for _, a := range arg3 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetDimensions", varargs...)
+func (m *MockDatasetClient) GetDimensions(arg0 context.Context, arg1, arg2, arg3 string) (dataset.Dimensions, error) {
+	ret := m.ctrl.Call(m, "GetDimensions", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(dataset.Dimensions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetDimensions indicates an expected call of GetDimensions
-func (mr *MockDatasetClientMockRecorder) GetDimensions(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensions", reflect.TypeOf((*MockDatasetClient)(nil).GetDimensions), varargs...)
+func (mr *MockDatasetClientMockRecorder) GetDimensions(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensions", reflect.TypeOf((*MockDatasetClient)(nil).GetDimensions), arg0, arg1, arg2, arg3)
 }
 
 // GetEditions mocks base method
-func (m *MockDatasetClient) GetEditions(arg0 string, arg1 ...dataset.Config) ([]dataset.Edition, error) {
-	varargs := []interface{}{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetEditions", varargs...)
+func (m *MockDatasetClient) GetEditions(arg0 context.Context, arg1 string) ([]dataset.Edition, error) {
+	ret := m.ctrl.Call(m, "GetEditions", arg0, arg1)
 	ret0, _ := ret[0].([]dataset.Edition)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetEditions indicates an expected call of GetEditions
-func (mr *MockDatasetClientMockRecorder) GetEditions(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEditions", reflect.TypeOf((*MockDatasetClient)(nil).GetEditions), varargs...)
+func (mr *MockDatasetClientMockRecorder) GetEditions(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEditions", reflect.TypeOf((*MockDatasetClient)(nil).GetEditions), arg0, arg1)
 }
 
 // GetOptions mocks base method
-func (m *MockDatasetClient) GetOptions(arg0, arg1, arg2, arg3 string, arg4 ...dataset.Config) (dataset.Options, error) {
-	varargs := []interface{}{arg0, arg1, arg2, arg3}
-	for _, a := range arg4 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetOptions", varargs...)
+func (m *MockDatasetClient) GetOptions(arg0 context.Context, arg1, arg2, arg3, arg4 string) (dataset.Options, error) {
+	ret := m.ctrl.Call(m, "GetOptions", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(dataset.Options)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOptions indicates an expected call of GetOptions
-func (mr *MockDatasetClientMockRecorder) GetOptions(arg0, arg1, arg2, arg3 interface{}, arg4 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1, arg2, arg3}, arg4...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptions", reflect.TypeOf((*MockDatasetClient)(nil).GetOptions), varargs...)
+func (mr *MockDatasetClientMockRecorder) GetOptions(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptions", reflect.TypeOf((*MockDatasetClient)(nil).GetOptions), arg0, arg1, arg2, arg3, arg4)
 }
 
 // GetVersion mocks base method
-func (m *MockDatasetClient) GetVersion(arg0, arg1, arg2 string, arg3 ...dataset.Config) (dataset.Version, error) {
-	varargs := []interface{}{arg0, arg1, arg2}
-	for _, a := range arg3 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetVersion", varargs...)
+func (m *MockDatasetClient) GetVersion(arg0 context.Context, arg1, arg2, arg3 string) (dataset.Version, error) {
+	ret := m.ctrl.Call(m, "GetVersion", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(dataset.Version)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetVersion indicates an expected call of GetVersion
-func (mr *MockDatasetClientMockRecorder) GetVersion(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersion", reflect.TypeOf((*MockDatasetClient)(nil).GetVersion), varargs...)
+func (mr *MockDatasetClientMockRecorder) GetVersion(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersion", reflect.TypeOf((*MockDatasetClient)(nil).GetVersion), arg0, arg1, arg2, arg3)
 }
 
 // GetVersionMetadata mocks base method
-func (m *MockDatasetClient) GetVersionMetadata(arg0, arg1, arg2 string, arg3 ...dataset.Config) (dataset.Metadata, error) {
-	varargs := []interface{}{arg0, arg1, arg2}
-	for _, a := range arg3 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetVersionMetadata", varargs...)
+func (m *MockDatasetClient) GetVersionMetadata(arg0 context.Context, arg1, arg2, arg3 string) (dataset.Metadata, error) {
+	ret := m.ctrl.Call(m, "GetVersionMetadata", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(dataset.Metadata)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetVersionMetadata indicates an expected call of GetVersionMetadata
-func (mr *MockDatasetClientMockRecorder) GetVersionMetadata(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersionMetadata", reflect.TypeOf((*MockDatasetClient)(nil).GetVersionMetadata), varargs...)
+func (mr *MockDatasetClientMockRecorder) GetVersionMetadata(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersionMetadata", reflect.TypeOf((*MockDatasetClient)(nil).GetVersionMetadata), arg0, arg1, arg2, arg3)
 }
 
 // GetVersions mocks base method
-func (m *MockDatasetClient) GetVersions(arg0, arg1 string, arg2 ...dataset.Config) ([]dataset.Version, error) {
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetVersions", varargs...)
+func (m *MockDatasetClient) GetVersions(arg0 context.Context, arg1, arg2 string) ([]dataset.Version, error) {
+	ret := m.ctrl.Call(m, "GetVersions", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]dataset.Version)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetVersions indicates an expected call of GetVersions
-func (mr *MockDatasetClientMockRecorder) GetVersions(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersions", reflect.TypeOf((*MockDatasetClient)(nil).GetVersions), varargs...)
+func (mr *MockDatasetClientMockRecorder) GetVersions(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersions", reflect.TypeOf((*MockDatasetClient)(nil).GetVersions), arg0, arg1, arg2)
 }
 
 // Healthcheck mocks base method
@@ -177,7 +143,7 @@ func (mr *MockDatasetClientMockRecorder) Healthcheck() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Healthcheck", reflect.TypeOf((*MockDatasetClient)(nil).Healthcheck))
 }
 
-/// MockFilterClient is a mock of FilterClient interface
+// MockFilterClient is a mock of FilterClient interface
 type MockFilterClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockFilterClientMockRecorder
@@ -201,180 +167,130 @@ func (m *MockFilterClient) EXPECT() *MockFilterClientMockRecorder {
 }
 
 // AddDimension mocks base method
-func (m *MockFilterClient) AddDimension(arg0, arg1 string, arg2 ...filter.Config) error {
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "AddDimension", varargs...)
+func (m *MockFilterClient) AddDimension(arg0 context.Context, arg1, arg2 string) error {
+	ret := m.ctrl.Call(m, "AddDimension", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddDimension indicates an expected call of AddDimension
-func (mr *MockFilterClientMockRecorder) AddDimension(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDimension", reflect.TypeOf((*MockFilterClient)(nil).AddDimension), varargs...)
+func (mr *MockFilterClientMockRecorder) AddDimension(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDimension", reflect.TypeOf((*MockFilterClient)(nil).AddDimension), arg0, arg1, arg2)
 }
 
 // AddDimensionValue mocks base method
-func (m *MockFilterClient) AddDimensionValue(arg0, arg1, arg2 string, arg3 ...filter.Config) error {
-	varargs := []interface{}{arg0, arg1, arg2}
-	for _, a := range arg3 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "AddDimensionValue", varargs...)
+func (m *MockFilterClient) AddDimensionValue(arg0 context.Context, arg1, arg2, arg3 string) error {
+	ret := m.ctrl.Call(m, "AddDimensionValue", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddDimensionValue indicates an expected call of AddDimensionValue
-func (mr *MockFilterClientMockRecorder) AddDimensionValue(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDimensionValue", reflect.TypeOf((*MockFilterClient)(nil).AddDimensionValue), varargs...)
+func (mr *MockFilterClientMockRecorder) AddDimensionValue(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDimensionValue", reflect.TypeOf((*MockFilterClient)(nil).AddDimensionValue), arg0, arg1, arg2, arg3)
 }
 
 // AddDimensionValues mocks base method
-func (m *MockFilterClient) AddDimensionValues(arg0, arg1 string, arg2 []string, arg3 ...filter.Config) error {
-	varargs := []interface{}{arg0, arg1, arg2}
-	for _, a := range arg3 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "AddDimensionValues", varargs...)
+func (m *MockFilterClient) AddDimensionValues(arg0 context.Context, arg1, arg2 string, arg3 []string) error {
+	ret := m.ctrl.Call(m, "AddDimensionValues", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddDimensionValues indicates an expected call of AddDimensionValues
-func (mr *MockFilterClientMockRecorder) AddDimensionValues(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDimensionValues", reflect.TypeOf((*MockFilterClient)(nil).AddDimensionValues), varargs...)
+func (mr *MockFilterClientMockRecorder) AddDimensionValues(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDimensionValues", reflect.TypeOf((*MockFilterClient)(nil).AddDimensionValues), arg0, arg1, arg2, arg3)
 }
 
 // CreateBlueprint mocks base method
-func (m *MockFilterClient) CreateBlueprint(arg0, arg1, arg2 string, arg3 []string, arg4 ...filter.Config) (string, error) {
-	varargs := []interface{}{arg0, arg1, arg2, arg3}
-	for _, a := range arg4 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "CreateBlueprint", varargs...)
+func (m *MockFilterClient) CreateBlueprint(arg0 context.Context, arg1, arg2, arg3 string, arg4 []string) (string, error) {
+	ret := m.ctrl.Call(m, "CreateBlueprint", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateBlueprint indicates an expected call of CreateBlueprint
-func (mr *MockFilterClientMockRecorder) CreateBlueprint(arg0, arg1, arg2, arg3 interface{}, arg4 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1, arg2, arg3}, arg4...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBlueprint", reflect.TypeOf((*MockFilterClient)(nil).CreateBlueprint), varargs...)
+func (mr *MockFilterClientMockRecorder) CreateBlueprint(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBlueprint", reflect.TypeOf((*MockFilterClient)(nil).CreateBlueprint), arg0, arg1, arg2, arg3, arg4)
 }
 
 // GetDimension mocks base method
-func (m *MockFilterClient) GetDimension(arg0, arg1 string, arg2 ...filter.Config) (filter.Dimension, error) {
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetDimension", varargs...)
+func (m *MockFilterClient) GetDimension(arg0 context.Context, arg1, arg2 string) (filter.Dimension, error) {
+	ret := m.ctrl.Call(m, "GetDimension", arg0, arg1, arg2)
 	ret0, _ := ret[0].(filter.Dimension)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetDimension indicates an expected call of GetDimension
-func (mr *MockFilterClientMockRecorder) GetDimension(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimension", reflect.TypeOf((*MockFilterClient)(nil).GetDimension), varargs...)
+func (mr *MockFilterClientMockRecorder) GetDimension(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimension", reflect.TypeOf((*MockFilterClient)(nil).GetDimension), arg0, arg1, arg2)
 }
 
 // GetDimensionOptions mocks base method
-func (m *MockFilterClient) GetDimensionOptions(arg0, arg1 string, arg2 ...filter.Config) ([]filter.DimensionOption, error) {
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetDimensionOptions", varargs...)
+func (m *MockFilterClient) GetDimensionOptions(arg0 context.Context, arg1, arg2 string) ([]filter.DimensionOption, error) {
+	ret := m.ctrl.Call(m, "GetDimensionOptions", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]filter.DimensionOption)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetDimensionOptions indicates an expected call of GetDimensionOptions
-func (mr *MockFilterClientMockRecorder) GetDimensionOptions(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensionOptions", reflect.TypeOf((*MockFilterClient)(nil).GetDimensionOptions), varargs...)
+func (mr *MockFilterClientMockRecorder) GetDimensionOptions(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensionOptions", reflect.TypeOf((*MockFilterClient)(nil).GetDimensionOptions), arg0, arg1, arg2)
 }
 
 // GetDimensions mocks base method
-func (m *MockFilterClient) GetDimensions(arg0 string, arg1 ...filter.Config) ([]filter.Dimension, error) {
-	varargs := []interface{}{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetDimensions", varargs...)
+func (m *MockFilterClient) GetDimensions(arg0 context.Context, arg1 string) ([]filter.Dimension, error) {
+	ret := m.ctrl.Call(m, "GetDimensions", arg0, arg1)
 	ret0, _ := ret[0].([]filter.Dimension)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetDimensions indicates an expected call of GetDimensions
-func (mr *MockFilterClientMockRecorder) GetDimensions(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensions", reflect.TypeOf((*MockFilterClient)(nil).GetDimensions), varargs...)
+func (mr *MockFilterClientMockRecorder) GetDimensions(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensions", reflect.TypeOf((*MockFilterClient)(nil).GetDimensions), arg0, arg1)
 }
 
 // GetJobState mocks base method
-func (m *MockFilterClient) GetJobState(arg0 string, arg1 ...filter.Config) (filter.Model, error) {
-	varargs := []interface{}{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetJobState", varargs...)
+func (m *MockFilterClient) GetJobState(arg0 context.Context, arg1 string) (filter.Model, error) {
+	ret := m.ctrl.Call(m, "GetJobState", arg0, arg1)
 	ret0, _ := ret[0].(filter.Model)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetJobState indicates an expected call of GetJobState
-func (mr *MockFilterClientMockRecorder) GetJobState(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobState", reflect.TypeOf((*MockFilterClient)(nil).GetJobState), varargs...)
+func (mr *MockFilterClientMockRecorder) GetJobState(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobState", reflect.TypeOf((*MockFilterClient)(nil).GetJobState), arg0, arg1)
 }
 
 // GetOutput mocks base method
-func (m *MockFilterClient) GetOutput(arg0 string, arg1 ...filter.Config) (filter.Model, error) {
-	varargs := []interface{}{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetOutput", varargs...)
+func (m *MockFilterClient) GetOutput(arg0 context.Context, arg1 string) (filter.Model, error) {
+	ret := m.ctrl.Call(m, "GetOutput", arg0, arg1)
 	ret0, _ := ret[0].(filter.Model)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOutput indicates an expected call of GetOutput
-func (mr *MockFilterClientMockRecorder) GetOutput(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOutput", reflect.TypeOf((*MockFilterClient)(nil).GetOutput), varargs...)
+func (mr *MockFilterClientMockRecorder) GetOutput(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOutput", reflect.TypeOf((*MockFilterClient)(nil).GetOutput), arg0, arg1)
 }
 
 // GetPreview mocks base method
-func (m *MockFilterClient) GetPreview(arg0 string, arg1 ...filter.Config) (filter.Preview, error) {
-	varargs := []interface{}{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetPreview", varargs...)
+func (m *MockFilterClient) GetPreview(arg0 context.Context, arg1 string) (filter.Preview, error) {
+	ret := m.ctrl.Call(m, "GetPreview", arg0, arg1)
 	ret0, _ := ret[0].(filter.Preview)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPreview indicates an expected call of GetPreview
-func (mr *MockFilterClientMockRecorder) GetPreview(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreview", reflect.TypeOf((*MockFilterClient)(nil).GetPreview), varargs...)
+func (mr *MockFilterClientMockRecorder) GetPreview(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPreview", reflect.TypeOf((*MockFilterClient)(nil).GetPreview), arg0, arg1)
 }
 
 // Healthcheck mocks base method
@@ -391,55 +307,40 @@ func (mr *MockFilterClientMockRecorder) Healthcheck() *gomock.Call {
 }
 
 // RemoveDimension mocks base method
-func (m *MockFilterClient) RemoveDimension(arg0, arg1 string, arg2 ...filter.Config) error {
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "RemoveDimension", varargs...)
+func (m *MockFilterClient) RemoveDimension(arg0 context.Context, arg1, arg2 string) error {
+	ret := m.ctrl.Call(m, "RemoveDimension", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveDimension indicates an expected call of RemoveDimension
-func (mr *MockFilterClientMockRecorder) RemoveDimension(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDimension", reflect.TypeOf((*MockFilterClient)(nil).RemoveDimension), varargs...)
+func (mr *MockFilterClientMockRecorder) RemoveDimension(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDimension", reflect.TypeOf((*MockFilterClient)(nil).RemoveDimension), arg0, arg1, arg2)
 }
 
 // RemoveDimensionValue mocks base method
-func (m *MockFilterClient) RemoveDimensionValue(arg0, arg1, arg2 string, arg3 ...filter.Config) error {
-	varargs := []interface{}{arg0, arg1, arg2}
-	for _, a := range arg3 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "RemoveDimensionValue", varargs...)
+func (m *MockFilterClient) RemoveDimensionValue(arg0 context.Context, arg1, arg2, arg3 string) error {
+	ret := m.ctrl.Call(m, "RemoveDimensionValue", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveDimensionValue indicates an expected call of RemoveDimensionValue
-func (mr *MockFilterClientMockRecorder) RemoveDimensionValue(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDimensionValue", reflect.TypeOf((*MockFilterClient)(nil).RemoveDimensionValue), varargs...)
+func (mr *MockFilterClientMockRecorder) RemoveDimensionValue(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDimensionValue", reflect.TypeOf((*MockFilterClient)(nil).RemoveDimensionValue), arg0, arg1, arg2, arg3)
 }
 
 // UpdateBlueprint mocks base method
-func (m *MockFilterClient) UpdateBlueprint(arg0 filter.Model, arg1 bool, arg2 ...filter.Config) (filter.Model, error) {
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "UpdateBlueprint", varargs...)
+func (m *MockFilterClient) UpdateBlueprint(arg0 context.Context, arg1 filter.Model, arg2 bool) (filter.Model, error) {
+	ret := m.ctrl.Call(m, "UpdateBlueprint", arg0, arg1, arg2)
 	ret0, _ := ret[0].(filter.Model)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateBlueprint indicates an expected call of UpdateBlueprint
-func (mr *MockFilterClientMockRecorder) UpdateBlueprint(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBlueprint", reflect.TypeOf((*MockFilterClient)(nil).UpdateBlueprint), varargs...)
+func (mr *MockFilterClientMockRecorder) UpdateBlueprint(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBlueprint", reflect.TypeOf((*MockFilterClient)(nil).UpdateBlueprint), arg0, arg1, arg2)
 }
 
 // MockCodelistClient is a mock of CodelistClient interface
@@ -639,9 +540,9 @@ func (m *MockSearchClient) EXPECT() *MockSearchClientMockRecorder {
 }
 
 // Dimension mocks base method
-func (m *MockSearchClient) Dimension(arg0, arg1, arg2, arg3, arg4 string, arg5 ...search.Config) (*search.Model, error) {
-	varargs := []interface{}{arg0, arg1, arg2, arg3, arg4}
-	for _, a := range arg5 {
+func (m *MockSearchClient) Dimension(arg0 context.Context, arg1, arg2, arg3, arg4, arg5 string, arg6 ...search.Config) (*search.Model, error) {
+	varargs := []interface{}{arg0, arg1, arg2, arg3, arg4, arg5}
+	for _, a := range arg6 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Dimension", varargs...)
@@ -651,8 +552,8 @@ func (m *MockSearchClient) Dimension(arg0, arg1, arg2, arg3, arg4 string, arg5 .
 }
 
 // Dimension indicates an expected call of Dimension
-func (mr *MockSearchClientMockRecorder) Dimension(arg0, arg1, arg2, arg3, arg4 interface{}, arg5 ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{arg0, arg1, arg2, arg3, arg4}, arg5...)
+func (mr *MockSearchClientMockRecorder) Dimension(arg0, arg1, arg2, arg3, arg4, arg5 interface{}, arg6 ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{arg0, arg1, arg2, arg3, arg4, arg5}, arg6...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dimension", reflect.TypeOf((*MockSearchClient)(nil).Dimension), varargs...)
 }
 
@@ -667,14 +568,4 @@ func (m *MockSearchClient) Healthcheck() (string, error) {
 // Healthcheck indicates an expected call of Healthcheck
 func (mr *MockSearchClientMockRecorder) Healthcheck() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Healthcheck", reflect.TypeOf((*MockSearchClient)(nil).Healthcheck))
-}
-
-// SetInternalToken mocks base method
-func (m *MockSearchClient) SetInternalToken(arg0 string) {
-	m.ctrl.Call(m, "SetInternalToken", arg0)
-}
-
-// SetInternalToken indicates an expected call of SetInternalToken
-func (mr *MockSearchClientMockRecorder) SetInternalToken(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetInternalToken", reflect.TypeOf((*MockSearchClient)(nil).SetInternalToken), arg0)
 }

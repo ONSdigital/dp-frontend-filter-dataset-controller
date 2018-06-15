@@ -21,15 +21,16 @@ var acceptedReg = regexp.MustCompile(`^\w{3}-\d{2}$`)
 func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
+	ctx := req.Context()
 
-	_, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	if err := f.FilterClient.RemoveDimension(filterID, "time", filterCfg...); err != nil {
+	if err := f.FilterClient.RemoveDimension(req.Context(), filterID, "time"); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	if err := f.FilterClient.AddDimension(filterID, "time", filterCfg...); err != nil {
+	if err := f.FilterClient.AddDimension(req.Context(), filterID, "time"); err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
@@ -51,20 +52,20 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 
 	switch req.Form.Get("time-selection") {
 	case "latest":
-		if err := f.FilterClient.AddDimensionValue(filterID, "time", req.Form.Get("latest-option"), filterCfg...); err != nil {
-			log.ErrorR(req, err, nil)
+		if err := f.FilterClient.AddDimensionValue(req.Context(), filterID, "time", req.Form.Get("latest-option")); err != nil {
+			log.ErrorCtx(ctx, err, nil)
 		}
 	case "single":
 		if err := f.addSingleTime(filterID, req); err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorCtx(ctx, err, nil)
 		}
 	case "range":
 		if err := f.addTimeRange(filterID, req); err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorCtx(ctx, err, nil)
 		}
 	case "list":
 		if err := f.addTimeList(filterID, req); err != nil {
-			log.ErrorR(req, err, nil)
+			log.ErrorCtx(ctx, err, nil)
 		}
 	}
 
@@ -76,20 +77,21 @@ func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
 	month := req.Form.Get("month-single")
 	year := req.Form.Get("year-single")
 
-	_, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
 	date, err := time.Parse("January 2006", fmt.Sprintf("%s %s", month, year))
 	if err != nil {
 		return err
 	}
 
-	return f.FilterClient.AddDimensionValue(filterID, "time", date.Format("Jan-06"), filterCfg...)
+	return f.FilterClient.AddDimensionValue(req.Context(), filterID, "time", date.Format("Jan-06"))
 }
 
 func (f *Filter) addTimeList(filterID string, req *http.Request) error {
-	_, filterCfg := setAuthTokenIfRequired(req)
+	ctx := req.Context()
+	req = forwardFlorenceTokenIfRequired(req)
 
-	opts, err := f.FilterClient.GetDimensionOptions(filterID, "time", filterCfg...)
+	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, "time")
 	if err != nil {
 		return err
 	}
@@ -97,8 +99,8 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	// Remove any unselected times
 	for _, opt := range opts {
 		if _, ok := req.Form[opt.Option]; !ok {
-			if err := f.FilterClient.RemoveDimensionValue(filterID, "time", opt.Option, filterCfg...); err != nil {
-				log.ErrorR(req, err, nil)
+			if err := f.FilterClient.RemoveDimensionValue(req.Context(), filterID, "time", opt.Option); err != nil {
+				log.ErrorCtx(ctx, err, nil)
 			}
 		}
 	}
@@ -112,8 +114,8 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 		options = append(options, k)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(filterID, "time", options, filterCfg...); err != nil {
-		log.TraceR(req, err.Error(), nil)
+	if err := f.FilterClient.AddDimensionValues(req.Context(), filterID, "time", options); err != nil {
+		log.TraceCtx(ctx, err.Error(), nil)
 	}
 
 	return nil
@@ -125,9 +127,9 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 	endMonth := req.Form.Get("end-month")
 	endYear := req.Form.Get("end-year")
 
-	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	values, labelIDMap, err := f.getDimensionValues(filterID, "time", datasetCfg, filterCfg)
+	values, labelIDMap, err := f.getDimensionValues(req.Context(), filterID, "time")
 	if err != nil {
 		return err
 	}
@@ -160,7 +162,7 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 		}
 	}
 
-	return f.FilterClient.AddDimensionValues(filterID, "time", options, filterCfg...)
+	return f.FilterClient.AddDimensionValues(req.Context(), filterID, "time", options)
 }
 
 // Time specifically handles the data for the time dimension page
@@ -168,9 +170,9 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	fj, err := f.FilterClient.GetJobState(filterID, filterCfg...)
+	fj, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -187,18 +189,18 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.DatasetClient.Get(datasetID, datasetCfg...)
+	dataset, err := f.DatasetClient.Get(req.Context(), datasetID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
+	ver, err := f.DatasetClient.GetVersion(req.Context(), datasetID, edition, version)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	allValues, err := f.DatasetClient.GetOptions(datasetID, edition, version, "time", datasetCfg...)
+	allValues, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, "time")
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -210,19 +212,19 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	selValues, err := f.FilterClient.GetDimensionOptions(filterID, "time", filterCfg...)
+	selValues, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, "time")
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	p, err := mapper.CreateTimePage(fj, dataset, ver, allValues, selValues, dims, datasetID)
+	p, err := mapper.CreateTimePage(req.Context(), fj, dataset, ver, allValues, selValues, dims, datasetID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return

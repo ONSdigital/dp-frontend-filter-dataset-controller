@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -22,15 +23,15 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
-	_, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	fil, err := f.FilterClient.GetJobState(filterID, filterCfg...)
+	fil, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	mdl, err := f.FilterClient.UpdateBlueprint(fil, true, filterCfg...)
+	mdl, err := f.FilterClient.UpdateBlueprint(req.Context(), fil, true)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -46,15 +47,15 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterOutputID := vars["filterOutputID"]
 
-	datasetCfg, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	fj, err := f.FilterClient.GetOutput(filterOutputID, filterCfg...)
+	fj, err := f.FilterClient.GetOutput(req.Context(), filterOutputID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	prev, err := f.FilterClient.GetPreview(filterOutputID, filterCfg...)
+	prev, err := f.FilterClient.GetPreview(req.Context(), filterOutputID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -89,12 +90,12 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.DatasetClient.Get(datasetID, datasetCfg...)
+	dataset, err := f.DatasetClient.Get(req.Context(), datasetID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(datasetID, edition, version, datasetCfg...)
+	ver, err := f.DatasetClient.GetVersion(req.Context(), datasetID, edition, version)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -106,25 +107,25 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreatePreviewPage(dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate)
+	p := mapper.CreatePreviewPage(req.Context(), dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate)
 
 	if latestURL.Path == versionURL.Path {
 		p.Data.IsLatestVersion = true
 	}
 
-	metadata, err := f.DatasetClient.GetVersionMetadata(datasetID, edition, version, datasetCfg...)
+	metadata, err := f.DatasetClient.GetVersionMetadata(req.Context(), datasetID, edition, version)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(datasetID, edition, version, datasetCfg...)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
-	size, err := f.getMetadataTextSize(datasetID, edition, version, metadata, dims, datasetCfg)
+	size, err := f.getMetadataTextSize(req.Context(), datasetID, edition, version, metadata, dims)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
@@ -137,7 +138,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	})
 
 	for _, dim := range dims.Items {
-		opts, err := f.DatasetClient.GetOptions(datasetID, edition, version, dim.ID, datasetCfg...)
+		opts, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, dim.ID)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -199,15 +200,18 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterOutputID := vars["filterOutputID"]
 
-	_, filterCfg := setAuthTokenIfRequired(req)
+	req = forwardFlorenceTokenIfRequired(req)
 
-	prev, err := f.FilterClient.GetOutput(filterOutputID, filterCfg...)
+	prev, err := f.FilterClient.GetOutput(req.Context(), filterOutputID)
 	if err != nil {
 		setStatusCode(req, w, err)
 		return
 	}
 
 	for k, download := range prev.Downloads {
+		if len(download.URL) == 0 {
+			continue
+		}
 		downloadURL, err := url.Parse(download.URL)
 		if err != nil {
 			setStatusCode(req, w, err)
@@ -227,13 +231,13 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 	w.Write(b)
 }
 
-func (f *Filter) getMetadataTextSize(datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.Dimensions, cfg []dataset.Config) (int, error) {
+func (f *Filter) getMetadataTextSize(ctx context.Context, datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.Dimensions) (int, error) {
 	var b bytes.Buffer
 
 	b.WriteString(metadata.String())
 	b.WriteString("Dimensions:\n")
 	for _, dimension := range dimensions.Items {
-		options, err := f.DatasetClient.GetOptions(datasetID, edition, version, dimension.ID, cfg...)
+		options, err := f.DatasetClient.GetOptions(ctx, datasetID, edition, version, dimension.ID)
 		if err != nil {
 			return 0, err
 		}

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"context"
 	"os"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
@@ -20,21 +21,22 @@ import (
 // Init initialises routes for the service
 func Init(r *mux.Router) {
 	cfg := config.Get()
+	ctx := context.Background()
 
 	fi, err := os.Open("rules.json")
 	if err != nil {
-		log.ErrorC("could not open rules for validation", err, nil)
+		log.ErrorCtx(ctx, err, nil)
 	}
 	defer fi.Close()
 
 	v, err := validator.New(fi)
 	if err != nil {
-		log.ErrorC("failed to create form validator", err, nil)
+		log.ErrorCtx(ctx, err, nil)
 	}
 
 	rend := renderer.New(cfg.RendererURL)
-	fc := filter.New(cfg.FilterAPIURL)
-	dc := dataset.New(cfg.DatasetAPIURL)
+	fc := filter.New(cfg.FilterAPIURL, "", "")
+	dc := dataset.NewAPIClient(cfg.DatasetAPIURL, "", "")
 	clc := codelist.New(cfg.CodeListAPIURL)
 	hc := hierarchy.New(cfg.HierarchyAPIURL)
 	sc := search.New(cfg.SearchAPIURL)
