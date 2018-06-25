@@ -131,12 +131,6 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p.Data.Downloads = append(p.Data.Downloads, previewPage.Download{
-		Extension: "txt",
-		Size:      strconv.Itoa(size),
-		URI:       fmt.Sprintf("/datasets/%s/editions/%s/versions/%s/metadata.txt", datasetID, edition, version),
-	})
-
 	for _, dim := range dims.Items {
 		opts, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, dim.ID)
 		if err != nil {
@@ -175,6 +169,14 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 			p.Data.Downloads[i] = d
 		}
 	}
+
+	// Text file is created on the fly in this app, so do not prepend the
+	// download service url as is the case with other downloads
+	p.Data.Downloads = append(p.Data.Downloads, previewPage.Download{
+		Extension: "txt",
+		Size:      strconv.Itoa(size),
+		URI:       fmt.Sprintf("/datasets/%s/editions/%s/versions/%s/metadata.txt", datasetID, edition, version),
+	})
 
 	body, err := json.Marshal(p)
 	if err != nil {
