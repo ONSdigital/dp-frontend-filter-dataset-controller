@@ -261,6 +261,8 @@ func CreateListSelectorPage(ctx context.Context, name string, selectedValues []f
 				allListValues[i] = strconv.Itoa(val)
 			}
 		}
+	} else {
+		sort.Strings(allListValues)
 	}
 
 	for _, val := range allListValues {
