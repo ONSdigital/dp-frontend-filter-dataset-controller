@@ -63,10 +63,10 @@
 			"revisionTime": "2018-06-07T12:04:51Z"
 		},
 		{
-			"checksumSHA1": "35ys5+6pPFU/LW1EN7nO9m/r/hY=",
+			"checksumSHA1": "aRud33IADXVFY7YocAA+ND5wFhE=",
 			"path": "github.com/ONSdigital/go-ns/clients/dataset",
-			"revision": "666652ebb01b51069df453f7d81518f437e41372",
-			"revisionTime": "2018-06-07T12:04:51Z"
+			"revision": "14e9258eac958bf8ae790ba0a7468f9775f27d14",
+			"revisionTime": "2018-07-16T14:44:21Z"
 		},
 		{
 			"checksumSHA1": "zcGFJ7e53wqtfodnorq4kRWKg3k=",

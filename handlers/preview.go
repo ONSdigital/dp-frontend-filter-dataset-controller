@@ -132,7 +132,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	}
 
 	for _, dim := range dims.Items {
-		opts, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, dim.ID)
+		opts, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, dim.Name)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -140,7 +140,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 
 		if len(opts.Items) == 1 {
 			p.Data.SingleValueDimensions = append(p.Data.SingleValueDimensions, previewPage.Dimension{
-				Name:   strings.Title(dim.ID),
+				Name:   strings.Title(dim.Name),
 				Values: []string{opts.Items[0].Label},
 			})
 		}
@@ -236,10 +236,10 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 func (f *Filter) getMetadataTextSize(ctx context.Context, datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.Dimensions) (int, error) {
 	var b bytes.Buffer
 
-	b.WriteString(metadata.String())
+	b.WriteString(metadata.ToString())
 	b.WriteString("Dimensions:\n")
 	for _, dimension := range dimensions.Items {
-		options, err := f.DatasetClient.GetOptions(ctx, datasetID, edition, version, dimension.ID)
+		options, err := f.DatasetClient.GetOptions(ctx, datasetID, edition, version, dimension.Name)
 		if err != nil {
 			return 0, err
 		}

@@ -84,14 +84,14 @@ func CreateFilterOverview(ctx context.Context, dimensions []filter.ModelDimensio
 			}
 
 			for _, dim := range datasetDims {
-				if dim.ID == d.Name {
+				if dim.Name == d.Name {
+					fod.Filter = strings.Title(dim.Name)
 					if len(dim.Label) > 0 {
 						fod.Filter = strings.Title(dim.Label)
-					} else {
-						fod.Filter = strings.Title(dim.ID)
 					}
 				}
 			}
+
 			if d.Name == "age" {
 				var ages []int
 				for _, a := range fod.AddedCategories {
@@ -164,7 +164,7 @@ func CreateListSelectorPage(ctx context.Context, name string, selectedValues []f
 	pageTitle := strings.Title(name)
 
 	for _, dim := range dims.Items {
-		if dim.ID == name {
+		if dim.Name == name {
 			p.Metadata.Description = dim.Description
 			if len(dim.Label) > 0 {
 				pageTitle = strings.Title(dim.Label)
@@ -388,7 +388,7 @@ func CreateAgePage(ctx context.Context, f filter.Model, d dataset.Model, v datas
 	log.InfoCtx(ctx, "mapping api responses to age page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
 
 	for _, dim := range dims.Items {
-		if dim.ID == "age" {
+		if dim.Name == "age" {
 			p.Metadata.Description = dim.Description
 		}
 	}
@@ -530,7 +530,7 @@ func CreateTimePage(ctx context.Context, f filter.Model, d dataset.Model, v data
 	p.DatasetId = datasetID
 
 	for _, dim := range dims.Items {
-		if dim.ID == "time" {
+		if dim.Name == "time" {
 			p.Metadata.Description = dim.Description
 		}
 	}
@@ -693,7 +693,7 @@ func CreateHierarchySearchPage(ctx context.Context, items []search.Item, dst dat
 
 	pageTitle := strings.Title(name)
 	for _, dim := range dims {
-		if dim.ID == name && len(dim.Label) > 0 {
+		if dim.Name == name && len(dim.Label) > 0 {
 			pageTitle = strings.Title(dim.Label)
 		}
 	}
@@ -796,7 +796,7 @@ func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst datas
 
 	pageTitle := strings.Title(name)
 	for _, dim := range dims.Items {
-		if dim.ID == name {
+		if dim.Name == name {
 			p.Metadata.Description = dim.Description
 			if len(dim.Label) > 0 {
 				pageTitle = strings.Title(dim.Label)
