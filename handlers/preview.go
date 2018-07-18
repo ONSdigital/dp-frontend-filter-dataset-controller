@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -63,18 +64,32 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 
 	filterID := fj.Links.FilterBlueprint.ID
 
-	var dimensions []filter.ModelDimension
-	for _, header := range prev.Headers {
-		dimensions = append(dimensions, filter.ModelDimension{Name: header})
+	if len(prev.Headers[0]) < 4 || strings.ToUpper(prev.Headers[0][0:3]) != "V4_" {
+		err = errors.New("Unexpected format - expected `V4_N` in header")
+		setStatusCode(req, w, err)
+		return
+	}
+	markingsColumnCount, err := strconv.Atoi(prev.Headers[0][3:])
+	if err != nil {
+		setStatusCode(req, w, err)
+		return
+	}
+	indexOfFirstLabelColumn := markingsColumnCount + 2 // +1 for observation, +1 for first codelist column
+	dimensions := []filter.ModelDimension{filter.ModelDimension{Name: "Valoos"}}
+	for i := indexOfFirstLabelColumn; i < len(prev.Headers); i += 2 {
+		dimensions = append(dimensions, filter.ModelDimension{Name: prev.Headers[i]})
 	}
 
 	for rowN, row := range prev.Rows {
 		if rowN >= 10 {
 			break
 		}
-		for i, val := range row {
-			if i < len(dimensions) {
-				dimensions[i].Values = append(dimensions[i].Values, val)
+		if len(row) > 0 {
+			dimensions[0].Values = append(dimensions[0].Values, row[0])
+			dimIndex := 1
+			for i := indexOfFirstLabelColumn; i < len(row); i += 2 {
+				dimensions[dimIndex].Values = append(dimensions[dimIndex].Values, row[i])
+				dimIndex++
 			}
 		}
 	}
