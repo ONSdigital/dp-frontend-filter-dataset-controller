@@ -75,7 +75,12 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	indexOfFirstLabelColumn := markingsColumnCount + 2 // +1 for observation, +1 for first codelist column
-	dimensions := []filter.ModelDimension{filter.ModelDimension{Name: "Valoos"}}
+	dimensions := []filter.ModelDimension{filter.ModelDimension{Name: "Values"}}
+	// add markings column headers
+	for i := 1; i <= markingsColumnCount; i++ {
+		dimensions = append(dimensions, filter.ModelDimension{Name: prev.Headers[i]})
+	}
+	// add non-codelist column headers
 	for i := indexOfFirstLabelColumn; i < len(prev.Headers); i += 2 {
 		dimensions = append(dimensions, filter.ModelDimension{Name: prev.Headers[i]})
 	}
@@ -85,8 +90,12 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 			break
 		}
 		if len(row) > 0 {
-			dimensions[0].Values = append(dimensions[0].Values, row[0])
-			dimIndex := 1
+			// add observation[0]+markings[1:markingsColumnCount+1] columns of row
+			for i := 0; i <= markingsColumnCount; i++ {
+				dimensions[i].Values = append(dimensions[i].Values, row[i])
+			}
+			// add non-codelist[indexOfFirstLabelColumn:/2] columns of row
+			dimIndex := markingsColumnCount + 1
 			for i := indexOfFirstLabelColumn; i < len(row); i += 2 {
 				dimensions[dimIndex].Values = append(dimensions[dimIndex].Values, row[i])
 				dimIndex++
