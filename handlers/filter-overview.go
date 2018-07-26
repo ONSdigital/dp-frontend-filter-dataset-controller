@@ -55,7 +55,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	dimensionIDNameLookup := make(map[string]map[string]string)
 	for _, dim := range datasetDimensions.Items {
 		idNameLookup := make(map[string]string)
-		options, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, dim.ID)
+		options, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, dim.Name)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -64,7 +64,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		for _, opt := range options.Items {
 			idNameLookup[opt.Option] = opt.Label
 		}
-		dimensionIDNameLookup[dim.ID] = idNameLookup
+		dimensionIDNameLookup[dim.Name] = idNameLookup
 	}
 
 	var dimensions FilterModelDimensions

@@ -232,21 +232,21 @@ func getTestDimensions() []filter.ModelDimension {
 func getTestDatasetDimensions() []dataset.Dimension {
 	return []dataset.Dimension{
 		{
-			ID: "year",
+			Name: "year",
 		},
 		{
-			ID:    "geography",
+			Name:  "geography",
 			Label: "Geographic Areas",
 		},
 		{
-			ID: "sex",
+			Name: "sex",
 		},
 		{
-			ID:    "age-range",
+			Name:  "age-range",
 			Label: "Age",
 		},
 		{
-			ID: "time",
+			Name: "time",
 		},
 	}
 }
