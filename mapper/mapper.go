@@ -857,10 +857,10 @@ func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst datas
 				for i := len(h.Breadcrumbs) - 1; i >= 0; i-- {
 					breadcrumb := h.Breadcrumbs[i]
 
-					if !topLevelGeographies[breadcrumb.Links.Self.ID] {
+					if !topLevelGeographies[breadcrumb.Links.Code.ID] {
 						var url string
-						if breadcrumb.Links.Self.ID != "" {
-							url = fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, breadcrumb.Links.Self.ID)
+						if breadcrumb.Links.Code.ID != "" {
+							url = fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, breadcrumb.Links.Code.ID)
 						} else {
 							url = fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name)
 						}
@@ -878,8 +878,8 @@ func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst datas
 				breadcrumb := h.Breadcrumbs[i]
 
 				var url string
-				if breadcrumb.Links.Self.ID != "" {
-					url = fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, breadcrumb.Links.Self.ID)
+				if breadcrumb.Links.Code.ID != "" {
+					url = fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, breadcrumb.Links.Code.ID)
 				} else {
 					url = fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name)
 				}
@@ -910,7 +910,7 @@ func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst datas
 		} else {
 			p.Data.Parent = h.Breadcrumbs[0].Label
 			p.Data.GoBack = hierarchy.Link{
-				URL: fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, h.Breadcrumbs[0].Links.Self.ID),
+				URL: fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, h.Breadcrumbs[0].Links.Code.ID),
 			}
 		}
 	}
@@ -932,14 +932,14 @@ func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst datas
 	if h.HasData && len(h.Breadcrumbs) == 0 {
 		var selected bool
 		for _, val := range selVals {
-			if val.Option == h.Links.Self.ID {
+			if val.Option == h.Links.Code.ID {
 				selected = true
 			}
 		}
 
 		p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
 			Label:    h.Label,
-			ID:       h.Links.Self.ID,
+			ID:       h.Links.Code.ID,
 			SubNum:   "0",
 			SubURL:   "",
 			Selected: selected,
@@ -950,15 +950,15 @@ func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst datas
 	for _, child := range h.Children {
 		var selected bool
 		for _, val := range selVals {
-			if val.Option == child.Links.Self.ID {
+			if val.Option == child.Links.Code.ID {
 				selected = true
 			}
 		}
 		p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
 			Label:    child.Label,
-			ID:       child.Links.Self.ID,
+			ID:       child.Links.Code.ID,
 			SubNum:   strconv.Itoa(child.NumberofChildren),
-			SubURL:   fmt.Sprintf("redirect:/filters/%s/dimensions/%s/%s", f.FilterID, name, child.Links.Self.ID),
+			SubURL:   fmt.Sprintf("redirect:/filters/%s/dimensions/%s/%s", f.FilterID, name, child.Links.Code.ID),
 			Selected: selected,
 			HasData:  child.HasData,
 		})
