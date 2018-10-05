@@ -347,6 +347,7 @@ func CreatePreviewPage(ctx context.Context, dimensions []filter.ModelDimension, 
 			Extension: ext,
 			Size:      d.Size,
 			URI:       d.URL,
+			Skipped:   d.Skipped,
 		})
 	}
 

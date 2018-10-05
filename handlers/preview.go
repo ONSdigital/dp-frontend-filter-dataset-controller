@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
 	"strings"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
@@ -178,7 +179,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	}
 
 	for i, d := range p.Data.Downloads {
-		if d.Extension == "xls" && len(d.Size) > 0 {
+		if d.Extension == "xls" && (len(d.Size) > 0 || d.Skipped) {
 			p.IsDownloadLoaded = true
 		}
 
