@@ -276,6 +276,32 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 
 }
 
+type flatNodes struct {
+	list  []*hierarchy.Child
+	order []string
+}
+
+func (n flatNodes) addWithoutChildren(val hierarchy.Child, i int) {
+	if !val.HasData {
+		return
+	}
+
+	n.list[i] = &hierarchy.Child{
+		Label:   val.Label,
+		Links:   val.Links,
+		HasData: val.HasData,
+	}
+}
+
+func (n flatNodes) addWithChildren(val hierarchy.Child, i int) {
+	n.list[i] = &hierarchy.Child{
+		Label:            val.Label,
+		Links:            val.Links,
+		HasData:          val.HasData,
+		NumberofChildren: val.NumberofChildren,
+	}
+}
+
 // Flatten the geography hierarchy - please note this will only work for this particular hierarchy,
 // need helper functions for other geog hierarchies too.
 func (f *Filter) flattenGeographyTopLevel(instanceID string) (h hierarchy.Model, err error) {
@@ -290,72 +316,62 @@ func (f *Filter) flattenGeographyTopLevel(instanceID string) (h hierarchy.Model,
 		h.HasData = root.HasData
 	}
 
-	h.Children = make([]hierarchy.Child, 6)
+	// Order: Great Britain, England and Wales, England, Northern Ireland, Scotland, Wales
+	nodes := flatNodes{
+		list:  make([]*hierarchy.Child, 6),
+		order: []string{"K03000001", "K04000001", "E92000001", "N92000002", "S92000003", "W92000004"},
+	}
 
 	for _, val := range root.Children {
-		// K03000001 Great Britain
-		if val.Links.Code.ID == "K03000001" {
-			h.Children[0].Label = val.Label
-			h.Children[0].Links = val.Links
-			h.Children[0].HasData = true
+		if val.Links.Code.ID == nodes.order[0] {
+			nodes.addWithoutChildren(val, 0)
 
-			if val.HasData {
-				child, err := f.HierarchyClient.GetChild(instanceID, "geography", val.Links.Code.ID)
-				if err != nil {
-					return h, err
+			child, err := f.HierarchyClient.GetChild(instanceID, "geography", val.Links.Code.ID)
+			if err != nil {
+				return h, err
+			}
+
+			for _, childVal := range child.Children {
+
+				if childVal.Links.Code.ID == nodes.order[1] {
+					nodes.addWithoutChildren(childVal, 1)
+
+					grandChild, err := f.HierarchyClient.GetChild(instanceID, "geography", childVal.Links.Code.ID)
+					if err != nil {
+						return h, err
+					}
+
+					for _, grandChildVal := range grandChild.Children {
+						if grandChildVal.Links.Code.ID == nodes.order[2] {
+							nodes.addWithChildren(grandChildVal, 2)
+						}
+
+						if grandChildVal.Links.Code.ID == nodes.order[5] {
+							nodes.addWithChildren(grandChildVal, 5)
+						}
+
+					}
 				}
 
-				for _, childVal := range child.Children {
-					// K04000001 England and Wales
-					if childVal.Links.Code.ID == "K04000001" {
-						h.Children[1].Label = childVal.Label
-						h.Children[1].Links = childVal.Links
-						h.Children[1].HasData = true
-
-						if childVal.HasData {
-							grandChild, err := f.HierarchyClient.GetChild(instanceID, "geography", childVal.Links.Code.ID)
-							if err != nil {
-								return h, err
-							}
-
-							for _, grandChildVal := range grandChild.Children {
-								// E92000001 England
-								if grandChildVal.Links.Code.ID == "E92000001" {
-									h.Children[2].Label = grandChildVal.Label
-									h.Children[2].Links = grandChildVal.Links
-									h.Children[2].HasData = grandChildVal.HasData
-									h.Children[2].NumberofChildren = grandChildVal.NumberofChildren
-								}
-
-								// W92000004 Wales
-								if grandChildVal.Links.Code.ID == "W92000004" {
-									h.Children[5].Label = grandChildVal.Label
-									h.Children[5].Links = grandChildVal.Links
-									h.Children[5].HasData = grandChildVal.HasData
-									h.Children[5].NumberofChildren = grandChildVal.NumberofChildren
-								}
-							}
-						}
-					}
-
-					// S92000003 Scotland
-					if childVal.Links.Code.ID == "S92000003" {
-						h.Children[4].Label = childVal.Label
-						h.Children[4].Links = childVal.Links
-						h.Children[4].HasData = childVal.HasData
-						h.Children[4].NumberofChildren = childVal.NumberofChildren
-					}
+				if childVal.Links.Code.ID == nodes.order[4] {
+					nodes.addWithChildren(childVal, 4)
 				}
 			}
 		}
-		// N92000002 Northern Ireland
-		if val.Links.Code.ID == "N92000002" {
-			h.Children[3].Label = val.Label
-			h.Children[3].HasData = val.HasData
-			h.Children[3].Links = val.Links
-			h.Children[3].NumberofChildren = val.NumberofChildren
+
+		if val.Links.Code.ID == nodes.order[3] {
+			nodes.addWithChildren(val, 3)
 		}
 	}
 
+	//remove nil elements from list
+	children := []hierarchy.Child{}
+	for _, c := range nodes.list {
+		if c != nil {
+			children = append(children, *c)
+		}
+	}
+
+	h.Children = children
 	return h, err
 }
