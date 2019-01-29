@@ -65,7 +65,14 @@ func CreateFilterOverview(ctx context.Context, dimensions []filter.ModelDimensio
 		}
 
 		if d.Name == "time" {
-			fod.Filter = "Time"
+			for _, dim := range datasetDims {
+				if dim.Name == d.Name {
+					fod.Filter = strings.Title(dim.Name)
+					if len(dim.Label) > 0 {
+						fod.Filter = dim.Label
+					}
+				}
+			}
 			times, err := dates.ConvertToReadable(d.Values)
 			if err != nil {
 				log.ErrorCtx(ctx, err, nil)
@@ -87,7 +94,7 @@ func CreateFilterOverview(ctx context.Context, dimensions []filter.ModelDimensio
 				if dim.Name == d.Name {
 					fod.Filter = strings.Title(dim.Name)
 					if len(dim.Label) > 0 {
-						fod.Filter = strings.Title(dim.Label)
+						fod.Filter = dim.Label
 					}
 				}
 			}
@@ -167,7 +174,7 @@ func CreateListSelectorPage(ctx context.Context, name string, selectedValues []f
 		if dim.Name == name {
 			p.Metadata.Description = dim.Description
 			if len(dim.Label) > 0 {
-				pageTitle = strings.Title(dim.Label)
+				pageTitle = dim.Label
 			}
 		}
 	}
@@ -695,7 +702,7 @@ func CreateHierarchySearchPage(ctx context.Context, items []search.Item, dst dat
 	pageTitle := strings.Title(name)
 	for _, dim := range dims {
 		if dim.Name == name && len(dim.Label) > 0 {
-			pageTitle = strings.Title(dim.Label)
+			pageTitle = dim.Label
 		}
 	}
 	p.DatasetTitle = dst.Title
@@ -800,7 +807,7 @@ func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst datas
 		if dim.Name == name {
 			p.Metadata.Description = dim.Description
 			if len(dim.Label) > 0 {
-				pageTitle = strings.Title(dim.Label)
+				pageTitle = dim.Label
 			}
 		}
 	}
