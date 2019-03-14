@@ -27,23 +27,27 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
+	ctx := req.Context()
 
 	req = forwardFlorenceTokenIfRequired(req)
 
 	fj, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	versionURL, err := url.Parse(fj.Links.Version.HRef)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to parse version href", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	idNameMap, err := f.getIDNameMap(req.Context(), versionURL.Path, name)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get name map", log.Data{"error": err, "filter_id": filterID, "path": versionURL, "name": name})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -61,6 +65,7 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 
 		readbleDates, err := dates.ConvertToReadable(codedDates)
 		if err != nil {
+			log.InfoCtx(ctx, "failed to convert dates", log.Data{"error": err, "filter_id": filterID, "dates": codedDates})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -79,6 +84,7 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 
 	b, err := json.Marshal(lids)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to marshal json", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -110,28 +116,33 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
+	ctx := req.Context()
 
 	req = forwardFlorenceTokenIfRequired(req)
 
 	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, name)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get dimension options", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	fj, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	versionURL, err := url.Parse(fj.Links.Version.HRef)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to parse version href", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 	idNameMap, err := f.getIDNameMap(req.Context(), versionURL.Path, name)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get name map", log.Data{"error": err, "filter_id": filterID, "path": versionURL, "name": name})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -149,6 +160,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 
 		readbleDates, err := dates.ConvertToReadable(codedDates)
 		if err != nil {
+			log.InfoCtx(ctx, "failed to convert dates", log.Data{"error": err, "filter_id": filterID, "dates": codedDates})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -167,6 +179,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 
 	b, err := json.Marshal(lids)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to marshal json", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -180,64 +193,70 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
+	ctx := req.Context()
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	filter, err := f.FilterClient.GetJobState(req.Context(), filterID)
+	fj, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	selectedValues, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, name)
 	if err != nil {
-		setStatusCode(req, w, err)
-		return
-	}
-
-	fj, err := f.FilterClient.GetJobState(req.Context(), filterID)
-	if err != nil {
+		log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	versionURL, err := url.Parse(fj.Links.Version.HRef)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to parse version href", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
+
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to extract dataset info from path", log.Data{"error": err, "filter_id": filterID, "path": versionURL})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	dataset, err := f.DatasetClient.Get(req.Context(), datasetID)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get dataset", log.Data{"error": err, "dataset_id": datasetID})
 		setStatusCode(req, w, err)
 		return
 	}
+
 	ver, err := f.DatasetClient.GetVersion(req.Context(), datasetID, edition, version)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get version", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	allValues, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, name)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get options from dataset client",
+			log.Data{"error": err, "dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
 	// then the dimension should be populated as a hierarchy
-	if _, err = f.HierarchyClient.GetRoot(filter.InstanceID, name); err == nil && len(allValues.Items) > 20 {
+	if _, err = f.HierarchyClient.GetRoot(fj.InstanceID, name); err == nil && len(allValues.Items) > 20 {
 		f.Hierarchy(w, req)
 		return
 	}
 
 	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get dimensions", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -252,12 +271,14 @@ func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name str
 
 	b, err := json.Marshal(p)
 	if err != nil {
+		log.InfoCtx(req.Context(), "failed to marshal json", log.Data{"error": err, "filter_id": filter.FilterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	templateBytes, err := f.Renderer.Do("dataset-filter/list-selector", b)
 	if err != nil {
+		log.InfoCtx(req.Context(), "failed to render", log.Data{"error": err, "filter_id": filter.FilterID})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -277,28 +298,34 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
+	ctx := req.Context()
 
 	req = forwardFlorenceTokenIfRequired(req)
 
 	fj, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	versionURL, err := url.Parse(fj.Links.Version.HRef)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to parse version href", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to extract dataset info from path", log.Data{"error": err, "filter_id": filterID, "path": versionURL})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	vals, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, name)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get options from dataset client",
+			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -309,6 +336,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 	}
 
 	if err := f.FilterClient.AddDimensionValues(req.Context(), filterID, name, options); err != nil {
+		log.InfoCtx(ctx, "failed to add dimension values", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -326,6 +354,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 	req = forwardFlorenceTokenIfRequired(req)
 
 	if err := req.ParseForm(); err != nil {
+		log.InfoCtx(ctx, "failed to parse form", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -349,15 +378,16 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 
 	// concurrently remove any fields that have been deselected
 	go func() {
-		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptions(ctx, filterID, name)
 		if err != nil {
+			log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		for _, opt := range opts {
 			if _, ok := req.Form[opt.Option]; !ok {
-				if err := f.FilterClient.RemoveDimensionValue(req.Context(), filterID, name, opt.Option); err != nil {
+				if err := f.FilterClient.RemoveDimensionValue(ctx, filterID, name, opt.Option); err != nil {
 					log.ErrorCtx(ctx, err, nil)
 				}
 			}
@@ -377,7 +407,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 		options = append(options, k)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(req.Context(), filterID, name, options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(ctx, filterID, name, options); err != nil {
 		log.InfoCtx(ctx, err.Error(), nil)
 	}
 
@@ -421,16 +451,18 @@ func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
 	filterID := vars["filterID"]
 	ctx := req.Context()
 
-	log.InfoCtx(ctx, "attempting to remove all on dimension", log.Data{"dimension": name, "filterID": filterID})
+	log.InfoCtx(ctx, "attempting to remove all options from dimension", log.Data{"dimension": name, "filterID": filterID})
 
 	req = forwardFlorenceTokenIfRequired(req)
 
 	if err := f.FilterClient.RemoveDimension(req.Context(), filterID, name); err != nil {
+		log.InfoCtx(ctx, "failed to remove dimension", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	if err := f.FilterClient.AddDimension(req.Context(), filterID, name); err != nil {
+		log.InfoCtx(ctx, "failed to add dimension", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -449,6 +481,7 @@ func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
 	req = forwardFlorenceTokenIfRequired(req)
 
 	if err := f.FilterClient.RemoveDimensionValue(req.Context(), filterID, name, option); err != nil {
+		log.InfoCtx(req.Context(), "failed to remove dimension option", log.Data{"error": err, "filter_id": filterID, "dimension": name, "option": option})
 		setStatusCode(req, w, err)
 		return
 	}
