@@ -349,12 +349,11 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
-	ctx := req.Context()
 
 	req = forwardFlorenceTokenIfRequired(req)
 
 	if err := req.ParseForm(); err != nil {
-		log.InfoCtx(ctx, "failed to parse form", log.Data{"error": err, "filter_id": filterID, "dimension": name})
+		log.InfoCtx(req.Context(), "failed to parse form", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -378,17 +377,17 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 
 	// concurrently remove any fields that have been deselected
 	go func() {
-		opts, err := f.FilterClient.GetDimensionOptions(ctx, filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, name)
 		if err != nil {
-			log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": name})
+			log.InfoCtx(req.Context(), "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		for _, opt := range opts {
 			if _, ok := req.Form[opt.Option]; !ok {
-				if err := f.FilterClient.RemoveDimensionValue(ctx, filterID, name, opt.Option); err != nil {
-					log.ErrorCtx(ctx, err, nil)
+				if err := f.FilterClient.RemoveDimensionValue(req.Context(), filterID, name, opt.Option); err != nil {
+					log.ErrorCtx(req.Context(), err, nil)
 				}
 			}
 		}
@@ -407,8 +406,8 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 		options = append(options, k)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(ctx, filterID, name, options); err != nil {
-		log.InfoCtx(ctx, err.Error(), nil)
+	if err := f.FilterClient.AddDimensionValues(req.Context(), filterID, name, options); err != nil {
+		log.InfoCtx(req.Context(), err.Error(), nil)
 	}
 
 	http.Redirect(w, req, redirectURL, 302)
