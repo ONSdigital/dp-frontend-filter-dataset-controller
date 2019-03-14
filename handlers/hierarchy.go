@@ -46,6 +46,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 
 	fil, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -83,6 +84,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			})
 		}
 		if err != nil {
+			log.InfoCtx(ctx, "failed to get hierarchy node", log.Data{"error": err, "filter_id": filterID, "dimension": name, "code": code})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -144,6 +146,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 		}
 	}
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get hierarchy node", log.Data{"error": err, "filter_id": fil.FilterID, "dimension": name, "code": code})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -176,6 +179,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 		}
 	}
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get hierarchy node", log.Data{"error": err, "filter_id": fil.FilterID, "dimension": name, "code": code})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -194,11 +198,13 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	filterID := vars["filterID"]
 	name := vars["name"]
 	code := vars["code"]
+	ctx := req.Context()
 
 	req = forwardFlorenceTokenIfRequired(req)
 
 	fil, err := f.FilterClient.GetJobState(req.Context(), filterID)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -214,46 +220,56 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get hierarchy node", log.Data{"error": err, "filter_id": filterID, "dimension": name, "code": code})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, name)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	versionURL, err := url.Parse(fil.Links.Version.HRef)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to parse version href", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to extract dataset info from path", log.Data{"error": err, "filter_id": filterID, "path": versionURL})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	d, err := f.DatasetClient.Get(req.Context(), datasetID)
 	if err != nil {
+		log.InfoCtx(req.Context(), "failed to get dataset", log.Data{"error": err, "dataset_id": datasetID})
 		setStatusCode(req, w, err)
 		return
 	}
 	ver, err := f.DatasetClient.GetVersion(req.Context(), datasetID, edition, version)
 	if err != nil {
+		log.InfoCtx(req.Context(), "failed to get version", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	allVals, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, name)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get options from dataset client",
+			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
 	if err != nil {
+		log.InfoCtx(ctx, "failed to get dimensions",
+			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -262,12 +278,14 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 
 	b, err := json.Marshal(p)
 	if err != nil {
+		log.InfoCtx(req.Context(), "failed to marshal json", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	templateBytes, err := f.Renderer.Do("dataset-filter/hierarchy", b)
 	if err != nil {
+		log.InfoCtx(req.Context(), "failed to render", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
