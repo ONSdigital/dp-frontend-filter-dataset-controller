@@ -390,6 +390,10 @@ func (f *Filter) flattenGeographyTopLevel(instanceID string) (h hierarchy.Model,
 		}
 	}
 
+	if len(children) == 0 {
+		children = root.Children
+	}
+
 	h.Children = children
 	return h, err
 }
