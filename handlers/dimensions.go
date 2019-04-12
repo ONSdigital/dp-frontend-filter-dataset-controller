@@ -315,10 +315,10 @@ func sortedTime(opts dataset.Options) dataset.Options {
 			break
 		}
 
-		code := strings.Split(o.Links.Code.ID, "-")
-
-		// this codes are mmm-mmm-yyyy where the second month relates to the year
+		// these codes are mmm-mmm-yyyy where the second month relates to the year
+		// e.g. `nov-jan-2014` means november 2013 - january 2014
 		// so to sort chronologically we must refer to the second month mentioned
+		code := strings.Split(o.Links.Code.ID, "-")
 		month := code[1]
 		month = strings.ToLower(month)
 		year := code[len(code)-1]
