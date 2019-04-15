@@ -217,6 +217,7 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	//use normal list format unless a specially recognized time format
 	if len(allValues.Items) <= 20 || !acceptedReg.MatchString(allValues.Items[0].Option) {
 		mux.Vars(req)["name"] = "time"
 		f.DimensionSelector(w, req)
