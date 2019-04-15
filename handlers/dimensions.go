@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
+	"strings"
 	"sync"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
@@ -261,7 +263,127 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if name == "time" {
+		allValues = sortedTime(allValues)
+	}
+
 	f.listSelector(w, req, name, selectedValues, allValues, fj, dataset, dims, datasetID, ver.ReleaseDate)
+}
+
+type sorting struct {
+	substring string
+	option    dataset.Option
+}
+
+//sort time chronologically, for code lists which match the format mmm-mmm-yyyy
+func sortedTime(opts dataset.Options) dataset.Options {
+	if &opts == nil || len(opts.Items) == 0 {
+		return opts
+	}
+
+	validMonths := map[string]int{
+		"jan":       1,
+		"january":   1,
+		"feb":       2,
+		"february":  2,
+		"mar":       3,
+		"march":     3,
+		"apr":       4,
+		"april":     4,
+		"may":       5,
+		"jun":       6,
+		"june":      6,
+		"jul":       7,
+		"july":      7,
+		"aug":       8,
+		"august":    8,
+		"sep":       9,
+		"september": 9,
+		"oct":       10,
+		"october":   10,
+		"nov":       11,
+		"november":  11,
+		"dec":       12,
+		"december":  12,
+	}
+
+	output := make(map[string][]sorting)
+
+	for _, o := range opts.Items {
+		if &o.Links == nil || &o.Links.Code == nil {
+			log.Debug("options list does not contain code ids so cannot be sorted", nil)
+			break
+		}
+
+		// these codes are mmm-mmm-yyyy where the second month relates to the year
+		// e.g. `nov-jan-2014` means november 2013 - january 2014
+		// so to sort chronologically we must refer to the second month mentioned
+		code := strings.Split(o.Links.Code.ID, "-")
+		month := code[1]
+		month = strings.ToLower(month)
+		year := code[len(code)-1]
+		year = strings.ToLower(year)
+
+		var monthOrder int
+		var ok bool
+		if monthOrder, ok = validMonths[month]; !ok {
+			log.Debug("time does not follow an understood format so cannot be sorted", log.Data{"lookup": month, "code": o.Links.Code.ID})
+			break
+		}
+
+		sortedOptions := output[year]
+
+		if len(sortedOptions) == 0 {
+			sortedOptions = append(sortedOptions, sorting{month, o})
+			output[year] = sortedOptions
+			continue
+		}
+
+		//insert the month in the correct place according to its order number
+		for i, s := range sortedOptions {
+			if validMonths[s.substring] < monthOrder {
+				if len(sortedOptions)-1 > i {
+					continue
+				}
+
+				//at end of list, add to end
+				sortedOptions = append(sortedOptions, sorting{month, o})
+				break
+			}
+
+			sortedOptions = append(sortedOptions, sorting{})
+			copy(sortedOptions[i+1:], sortedOptions[i:])
+			sortedOptions[i] = sorting{month, o}
+			break
+		}
+
+		output[year] = sortedOptions
+	}
+
+	//get the years from the map and sort them
+	keys := []string{}
+	for y := range output {
+		keys = append(keys, y)
+	}
+	sort.Strings(keys)
+
+	//flatten the map of sorted lists into one super-sorted list
+	newList := []dataset.Option{}
+	for _, key := range keys {
+		l := output[key]
+
+		for _, o := range l {
+			newList = append(newList, o.option)
+		}
+	}
+
+	//check lists are the same length (so contain the same data) and only
+	//return the sorted list if it's complete
+	if len(newList) == len(opts.Items) {
+		opts.Items = newList
+	}
+
+	return opts
 }
 
 // ListSelector controls the render of the age selector list template
