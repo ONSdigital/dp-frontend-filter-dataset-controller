@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -308,21 +309,18 @@ func sortedTime(opts dataset.Options) dataset.Options {
 	}
 
 	output := make(map[string][]sorting)
-
 	for _, o := range opts.Items {
 		if &o.Links == nil || &o.Links.Code == nil {
 			log.Debug("options list does not contain code ids so cannot be sorted", nil)
 			break
 		}
-
 		// these codes are mmm-mmm-yyyy where the second month relates to the year
 		// e.g. `nov-jan-2014` means november 2013 - january 2014
 		// so to sort chronologically we must refer to the second month mentioned
-		code := strings.Split(o.Links.Code.ID, "-")
-		month := code[1]
-		month = strings.ToLower(month)
-		year := code[len(code)-1]
-		year = strings.ToLower(year)
+		month, year, err := splitCode(o.Links.Code.ID)
+		if err != nil {
+			log.Debug("option format is not sortable, returning flat list", log.Data{"code": o.Links.Code.ID})
+		}
 
 		var monthOrder int
 		var ok bool
@@ -376,14 +374,31 @@ func sortedTime(opts dataset.Options) dataset.Options {
 			newList = append(newList, o.option)
 		}
 	}
-
 	//check lists are the same length (so contain the same data) and only
 	//return the sorted list if it's complete
 	if len(newList) == len(opts.Items) {
 		opts.Items = newList
 	}
-
 	return opts
+}
+
+func splitCode(id string) (string, string, error) {
+	code := strings.Split(id, "-")
+	if len(code) == 1 {
+		return "", "", errors.New("code cannot be split")
+	}
+
+	if len(code) < 3 {
+		return "", "", errors.New("code does not match expected format")
+	}
+
+	month := code[1]
+	month = strings.ToLower(month)
+
+	year := code[len(code)-1]
+	year = strings.ToLower(year)
+
+	return month, year, nil
 }
 
 // ListSelector controls the render of the age selector list template
