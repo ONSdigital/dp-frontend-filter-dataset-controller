@@ -320,6 +320,7 @@ func sortedTime(opts dataset.Options) dataset.Options {
 		month, year, err := splitCode(o.Links.Code.ID)
 		if err != nil {
 			log.Debug("option format is not sortable, returning flat list", log.Data{"code": o.Links.Code.ID})
+			break
 		}
 
 		var monthOrder int
@@ -392,7 +393,7 @@ func splitCode(id string) (string, string, error) {
 		return "", "", errors.New("code does not match expected format")
 	}
 
-	month := code[1]
+	month := code[len(code)-2]
 	month = strings.ToLower(month)
 
 	year := code[len(code)-1]
