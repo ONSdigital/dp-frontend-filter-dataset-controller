@@ -8,6 +8,7 @@ import (
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/routes"
+	"github.com/ONSdigital/go-ns/handlers/collectionID"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/gorilla/mux"
@@ -30,6 +31,9 @@ func main() {
 	log.InfoCtx(ctx, "listening...", log.Data{
 		"bind_address": cfg.BindAddr,
 	})
+
+	s.Middleware["CollectionID"] = collectionID.Handler
+	s.MiddlewareOrder = append(s.MiddlewareOrder, "CollectionID")
 
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
