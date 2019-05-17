@@ -1,0 +1,38 @@
+[
+  {
+    "id": "start-month",
+    "rules": [
+      {
+        "name": "min_length",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "end-month",
+    "rules": [
+      {
+        "name": "min_length",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "start-year",
+    "rules": [
+      {
+        "name": "min_length",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "end-year",
+    "rules": [
+      {
+        "name": "min_length",
+        "value": 1
+      }
+    ]
+  }
+]
