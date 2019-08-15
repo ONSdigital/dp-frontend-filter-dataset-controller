@@ -574,11 +574,9 @@ func CreateTimePage(ctx context.Context, f filter.Model, d dataset.Model, v data
 
 	p.Metadata.Title = "Time"
 
-	lookup := getNameIDLookup(allVals)
-
 	var allTimes []string
 	for _, val := range allVals.Items {
-		allTimes = append(allTimes, val.Label)
+		allTimes = append(allTimes, val.Option)
 	}
 
 	times, err := dates.ConvertToReadable(allTimes)
@@ -589,13 +587,13 @@ func CreateTimePage(ctx context.Context, f filter.Model, d dataset.Model, v data
 	times = dates.Sort(times)
 
 	p.Data.FirstTime = timeModel.Value{
-		Option: lookup[times[0].Format("Jan-06")],
+		Option: times[0].Format("Jan-06"),
 		Month:  times[0].Month().String(),
 		Year:   fmt.Sprintf("%d", times[0].Year()),
 	}
 
 	p.Data.LatestTime = timeModel.Value{
-		Option: lookup[times[len(times)-1].Format("Jan-06")],
+		Option: times[len(times)-1].Format("Jan-06"),
 		Month:  times[len(times)-1].Month().String(),
 		Year:   fmt.Sprintf("%d", times[len(times)-1].Year()),
 	}
@@ -628,7 +626,7 @@ func CreateTimePage(ctx context.Context, f filter.Model, d dataset.Model, v data
 		}
 
 		p.Data.Values = append(p.Data.Values, timeModel.Value{
-			Option:     lookup[val.Format("Jan-06")],
+			Option:     val.Format("Jan-06"),
 			Month:      val.Month().String(),
 			Year:       fmt.Sprintf("%d", val.Year()),
 			IsSelected: isSelected,

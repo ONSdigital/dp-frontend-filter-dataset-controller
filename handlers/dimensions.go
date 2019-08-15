@@ -54,16 +54,13 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 		setStatusCode(req, w, err)
 		return
 	}
-
 	var lids []labelID
 
 	if name == "time" {
 
 		var codedDates []string
-		labelIDMap := make(map[string]string)
-		for k, v := range idNameMap {
-			codedDates = append(codedDates, v)
-			labelIDMap[v] = k
+		for k := range idNameMap {
+			codedDates = append(codedDates, k)
 		}
 
 		readbleDates, err := dates.ConvertToReadable(codedDates)
@@ -78,7 +75,7 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 		for _, date := range readbleDates {
 			lid := labelID{
 				Label: fmt.Sprintf("%s %d", date.Month(), date.Year()),
-				ID:    labelIDMap[date.Format("Jan-06")],
+				ID:    idNameMap[date.Format("Jan-06")],
 			}
 
 			lids = append(lids, lid)
@@ -153,7 +150,6 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 	var lids []labelID
 
 	if name == "time" {
-
 		var codedDates []string
 		labelIDMap := make(map[string]string)
 		for _, opt := range opts {
