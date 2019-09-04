@@ -933,7 +933,7 @@ func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst datas
 	p.Data.AddAllFilters.URL = curPath + "/add-all"
 	for _, child := range h.Children {
 		if child.HasData {
-			p.Data.AddAllFilters.ShowLink = true
+			p.Data.HasData = true
 			break
 		}
 	}
