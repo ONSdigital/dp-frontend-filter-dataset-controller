@@ -931,6 +931,12 @@ func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst datas
 
 	p.Data.AddAllFilters.Amount = strconv.Itoa(len(h.Children))
 	p.Data.AddAllFilters.URL = curPath + "/add-all"
+	for _, child := range h.Children {
+		if child.HasData {
+			p.Data.HasData = true
+			break
+		}
+	}
 	p.Data.RemoveAll.URL = curPath + "/remove-all"
 
 	idLabelMap := getIDNameLookup(allVals)
