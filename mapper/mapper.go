@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/dp-frontend-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-models/model"
@@ -19,8 +20,7 @@ import (
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	timeModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time"
-	"github.com/ONSdigital/go-ns/clients/dataset"
-	"github.com/ONSdigital/go-ns/clients/filter"
+	"github.com/ONSdigital/dp-api-clients-go/filter"
 	hierarchyClient "github.com/ONSdigital/go-ns/clients/hierarchy"
 	"github.com/ONSdigital/go-ns/clients/search"
 	"github.com/ONSdigital/go-ns/log"

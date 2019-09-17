@@ -10,7 +10,7 @@ import (
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
-	"github.com/ONSdigital/go-ns/clients/filter"
+	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
@@ -24,14 +24,14 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	dims, err := f.FilterClient.GetDimensions(req.Context(), filterID)
+	dims, err := f.FilterClient.GetDimensions(req.Context(), serviceAuthToken, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	fj, err := f.FilterClient.GetJobState(req.Context(), filterID)
+	fj, err := f.FilterClient.GetJobState(req.Context(), serviceAuthToken, downloadServiceToken, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -52,7 +52,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	datasetDimensions, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
+	datasetDimensions, err := f.DatasetClient.GetDimensions(req.Context(), serviceAuthToken, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -80,7 +80,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	var dimensions FilterModelDimensions
 	for _, dim := range dims {
 		var vals []filter.DimensionOption
-		vals, err = f.FilterClient.GetDimensionOptions(req.Context(), filterID, dim.Name)
+		vals, err = f.FilterClient.GetDimensionOptions(req.Context(), serviceAuthToken, filterID, dim.Name)
 		if err != nil {
 			log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": dim.Name})
 			setStatusCode(req, w, err)
@@ -154,20 +154,20 @@ func (f *Filter) FilterOverviewClearAll(w http.ResponseWriter, req *http.Request
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	dims, err := f.FilterClient.GetDimensions(req.Context(), filterID)
+	dims, err := f.FilterClient.GetDimensions(req.Context(), serviceAuthToken, filterID)
 	if err != nil {
 		log.ErrorCtx(ctx, err, nil)
 		return
 	}
 
 	for _, dim := range dims {
-		if err := f.FilterClient.RemoveDimension(req.Context(), filterID, dim.Name); err != nil {
+		if err := f.FilterClient.RemoveDimension(req.Context(), serviceAuthToken, filterID, dim.Name); err != nil {
 			log.InfoCtx(ctx, "failed to remove dimension", log.Data{"error": err, "filter_id": filterID, "dimension": dim.Name})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		if err := f.FilterClient.AddDimension(req.Context(), filterID, dim.Name); err != nil {
+		if err := f.FilterClient.AddDimension(req.Context(), serviceAuthToken, filterID, dim.Name); err != nil {
 			log.InfoCtx(ctx, "failed to add dimension", log.Data{"error": err, "filter_id": filterID, "dimension": dim.Name})
 			setStatusCode(req, w, err)
 			return

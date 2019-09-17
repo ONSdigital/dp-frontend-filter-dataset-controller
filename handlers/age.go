@@ -24,13 +24,13 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	if err := f.FilterClient.RemoveDimension(req.Context(), filterID, "age"); err != nil {
+	if err := f.FilterClient.RemoveDimension(req.Context(), serviceAuthToken, filterID, "age"); err != nil {
 		log.InfoCtx(ctx, "failed to remove dimension", log.Data{"error": err, "filter_id": filterID, "dimension": "age"})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	if err := f.FilterClient.AddDimension(req.Context(), filterID, "age"); err != nil {
+	if err := f.FilterClient.AddDimension(req.Context(), serviceAuthToken, filterID, "age"); err != nil {
 		log.InfoCtx(ctx, "failed to add dimension", log.Data{"error": err, "filter_id": filterID, "dimension": "age"})
 		setStatusCode(req, w, err)
 		return
@@ -56,7 +56,7 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 
 	switch req.Form.Get("age-selection") {
 	case "all":
-		if err := f.FilterClient.AddDimensionValue(req.Context(), filterID, "age", req.Form.Get("all-ages-option")); err != nil {
+		if err := f.FilterClient.AddDimensionValue(req.Context(), serviceAuthToken, filterID,"age", req.Form.Get("all-ages-option")); err != nil {
 			log.ErrorCtx(ctx, err, log.Data{"age_case": "all"})
 		}
 	case "range":
@@ -77,7 +77,7 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 	req = forwardFlorenceTokenIfRequired(req)
 	ctx := req.Context()
 
-	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, "age")
+	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), serviceAuthToken, filterID, "age")
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 	// Remove any unselected ages
 	for _, opt := range opts {
 		if _, ok := req.Form[opt.Option]; !ok {
-			if err := f.FilterClient.RemoveDimensionValue(req.Context(), filterID, "age", opt.Option); err != nil {
+			if err := f.FilterClient.RemoveDimensionValue(req.Context(), serviceAuthToken, filterID, "age", opt.Option); err != nil {
 				log.ErrorCtx(ctx, err, nil)
 			}
 		}
@@ -103,7 +103,7 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 
 	}
 
-	if err := f.FilterClient.AddDimensionValues(req.Context(), filterID, "age", options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(req.Context(), serviceAuthToken, filterID, "age", options); err != nil {
 		log.InfoCtx(ctx, err.Error(), nil)
 	}
 
@@ -171,7 +171,7 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 		}
 	}
 
-	return f.FilterClient.AddDimensionValues(req.Context(), filterID, "age", options)
+	return f.FilterClient.AddDimensionValues(req.Context(), serviceAuthToken, filterID, "age", options)
 }
 
 func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
@@ -181,7 +181,7 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	fj, err := f.FilterClient.GetJobState(req.Context(), filterID)
+	fj, err := f.FilterClient.GetJobState(req.Context(), serviceAuthToken, downloadServiceToken, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -228,14 +228,14 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	selValues, err := f.FilterClient.GetDimensionOptions(req.Context(), filterID, "age")
+	selValues, err := f.FilterClient.GetDimensionOptions(req.Context(), serviceAuthToken, filterID, "age")
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": "age"})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), serviceAuthToken, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})

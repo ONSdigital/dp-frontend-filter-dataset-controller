@@ -8,7 +8,7 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
 	"github.com/ONSdigital/go-ns/clients/codelist"
 	"github.com/ONSdigital/go-ns/clients/dataset"
-	"github.com/ONSdigital/go-ns/clients/filter"
+	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/go-ns/clients/hierarchy"
 	"github.com/ONSdigital/go-ns/clients/renderer"
 	"github.com/ONSdigital/go-ns/clients/search"

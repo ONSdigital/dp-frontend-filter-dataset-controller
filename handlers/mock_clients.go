@@ -10,7 +10,7 @@ import (
 
 	codelist "github.com/ONSdigital/go-ns/clients/codelist"
 	dataset "github.com/ONSdigital/go-ns/clients/dataset"
-	filter "github.com/ONSdigital/go-ns/clients/filter"
+	filter "github.com/ONSdigital/dp-api-clients-go/filter"
 	hierarchy "github.com/ONSdigital/go-ns/clients/hierarchy"
 	"github.com/ONSdigital/go-ns/clients/search"
 	gomock "github.com/golang/mock/gomock"

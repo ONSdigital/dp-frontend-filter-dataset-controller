@@ -44,6 +44,7 @@ func setStatusCode(req *http.Request, w http.ResponseWriter, err error) {
 	w.WriteHeader(status)
 }
 
+// TODO delete - token shouldn't be added to the context but kept as a header
 func forwardFlorenceTokenIfRequired(req *http.Request) *http.Request {
 	if len(req.Header.Get(common.FlorenceHeaderKey)) > 0 {
 		ctx := common.SetFlorenceIdentity(req.Context(), req.Header.Get(common.FlorenceHeaderKey))
