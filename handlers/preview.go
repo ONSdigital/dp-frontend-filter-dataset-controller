@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -23,20 +24,21 @@ import (
 
 // Submit handles the submitting of a filter job through the filter API
 func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 	ctx := req.Context()
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	fil, err := f.FilterClient.GetJobState(req.Context(), serviceAuthToken, downloadServiceToken, filterID)
+	fil, err := f.FilterClient.GetJobState(req.Context(), cfg.ServiceAuthToken, "", filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	mdl, err := f.FilterClient.UpdateBlueprint(req.Context(), serviceAuthToken, downloadServiceToken, fil, true)
+	mdl, err := f.FilterClient.UpdateBlueprint(req.Context(), cfg.ServiceAuthToken, "", fil, true)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to submit filter blueprint", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -50,20 +52,22 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 
 // PreviewPage controls the rendering of the preview and download page
 func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterOutputID := vars["filterOutputID"]
 	ctx := req.Context()
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	fj, err := f.FilterClient.GetOutput(req.Context(), serviceAuthToken, downloadServiceToken, filterOutputID)
+
+	fj, err := f.FilterClient.GetOutput(req.Context(), cfg.ServiceAuthToken, "", filterOutputID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get filter output", log.Data{"error": err, "filter_output_id": filterOutputID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	prev, err := f.FilterClient.GetPreview(req.Context(), serviceAuthToken, downloadServiceToken, filterOutputID)
+	prev, err := f.FilterClient.GetPreview(req.Context(), cfg.ServiceAuthToken, "", filterOutputID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get preview", log.Data{"error": err, "filter_output_id": filterOutputID})
 		setStatusCode(req, w, err)
@@ -161,7 +165,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(req.Context(), serviceAuthToken, datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -249,13 +253,14 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 // GetFilterJob returns the filter output json to the client to form preview
 // for AJAX request
 func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterOutputID := vars["filterOutputID"]
 	ctx := req.Context()
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	prev, err := f.FilterClient.GetOutput(req.Context(), serviceAuthToken, downloadServiceToken, filterOutputID)
+	prev, err := f.FilterClient.GetOutput(req.Context(), cfg.ServiceAuthToken, "", filterOutputID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get filter output", log.Data{"error": err, "filter_output_id": filterOutputID})
 		setStatusCode(req, w, err)

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -18,19 +19,18 @@ import (
 
 // UpdateAge is a handler which will update age values on a filter job
 func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	ctx := req.Context()
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 
 	req = forwardFlorenceTokenIfRequired(req)
-
-	if err := f.FilterClient.RemoveDimension(req.Context(), serviceAuthToken, filterID, "age"); err != nil {
+	if err := f.FilterClient.RemoveDimension(req.Context(), cfg.ServiceAuthToken, filterID, "age"); err != nil {
 		log.InfoCtx(ctx, "failed to remove dimension", log.Data{"error": err, "filter_id": filterID, "dimension": "age"})
 		setStatusCode(req, w, err)
 		return
 	}
-
-	if err := f.FilterClient.AddDimension(req.Context(), serviceAuthToken, filterID, "age"); err != nil {
+	if err := f.FilterClient.AddDimension(req.Context(), cfg.ServiceAuthToken, filterID, "age"); err != nil {
 		log.InfoCtx(ctx, "failed to add dimension", log.Data{"error": err, "filter_id": filterID, "dimension": "age"})
 		setStatusCode(req, w, err)
 		return
@@ -53,10 +53,9 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 	}
 
 	log.InfoCtx(ctx, "age-selection", log.Data{"age": req.Form.Get("age-selection")})
-
 	switch req.Form.Get("age-selection") {
 	case "all":
-		if err := f.FilterClient.AddDimensionValue(req.Context(), serviceAuthToken, filterID,"age", req.Form.Get("all-ages-option")); err != nil {
+		if err := f.FilterClient.AddDimensionValue(req.Context(), cfg.ServiceAuthToken, filterID,"age", req.Form.Get("all-ages-option")); err != nil {
 			log.ErrorCtx(ctx, err, log.Data{"age_case": "all"})
 		}
 	case "range":
@@ -74,18 +73,17 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 }
 
 func (f *Filter) addAgeList(filterID string, req *http.Request) error {
+	cfg := config.Get()
 	req = forwardFlorenceTokenIfRequired(req)
 	ctx := req.Context()
-
-	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), serviceAuthToken, filterID, "age")
+	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.ServiceAuthToken, filterID, "age")
 	if err != nil {
 		return err
 	}
-
 	// Remove any unselected ages
 	for _, opt := range opts {
 		if _, ok := req.Form[opt.Option]; !ok {
-			if err := f.FilterClient.RemoveDimensionValue(req.Context(), serviceAuthToken, filterID, "age", opt.Option); err != nil {
+			if err := f.FilterClient.RemoveDimensionValue(req.Context(), cfg.ServiceAuthToken, filterID, "age", opt.Option); err != nil {
 				log.ErrorCtx(ctx, err, nil)
 			}
 		}
@@ -103,7 +101,7 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 
 	}
 
-	if err := f.FilterClient.AddDimensionValues(req.Context(), serviceAuthToken, filterID, "age", options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(req.Context(), cfg.ServiceAuthToken, filterID, "age", options); err != nil {
 		log.InfoCtx(ctx, err.Error(), nil)
 	}
 
@@ -111,6 +109,7 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 }
 
 func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
+	cfg := config.Get()
 	youngest := req.Form.Get("youngest")
 	oldest := req.Form.Get("oldest")
 
@@ -170,18 +169,17 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 			isInRange = false
 		}
 	}
-
-	return f.FilterClient.AddDimensionValues(req.Context(), serviceAuthToken, filterID, "age", options)
+	return f.FilterClient.AddDimensionValues(req.Context(), cfg.ServiceAuthToken, filterID, "age", options)
 }
 
 func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 	ctx := req.Context()
 
 	req = forwardFlorenceTokenIfRequired(req)
-
-	fj, err := f.FilterClient.GetJobState(req.Context(), serviceAuthToken, downloadServiceToken, filterID)
+	fj, err := f.FilterClient.GetJobState(req.Context(), cfg.ServiceAuthToken, "", filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -228,14 +226,13 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	selValues, err := f.FilterClient.GetDimensionOptions(req.Context(), serviceAuthToken, filterID, "age")
+	selValues, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.ServiceAuthToken, filterID, "age")
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": "age"})
 		setStatusCode(req, w, err)
 		return
 	}
-
-	dims, err := f.DatasetClient.GetDimensions(req.Context(), serviceAuthToken, datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})

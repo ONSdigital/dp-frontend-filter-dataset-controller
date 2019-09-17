@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -22,12 +23,12 @@ func TestUnitFilterOverview(t *testing.T) {
 	Convey("test FilterOverview", t, func() {
 		Convey("test FilterOverview can successfully load a page", func() {
 			mockFilterClient := NewMockFilterClient(mockCtrl)
-			mockFilterClient.EXPECT().GetDimensions(ctx, serviceAuthToken, "12345").Return([]filter.Dimension{filter.Dimension{Name: "Day"}, filter.Dimension{Name: "Goods and Services"}}, nil)
-			mockFilterClient.EXPECT().GetDimensionOptions(ctx, serviceAuthToken, "12345", "Day").Return([]filter.DimensionOption{}, nil)
-			mockFilterClient.EXPECT().GetDimensionOptions(ctx, serviceAuthToken, "12345", "Goods and Services").Return([]filter.DimensionOption{}, nil)
+			mockFilterClient.EXPECT().GetDimensions(ctx, "", "12345").Return([]filter.Dimension{filter.Dimension{Name: "Day"}, filter.Dimension{Name: "Goods and Services"}}, nil)
+			mockFilterClient.EXPECT().GetDimensionOptions(ctx, "", "12345", "Day").Return([]filter.DimensionOption{}, nil)
+			mockFilterClient.EXPECT().GetDimensionOptions(ctx, "", "12345", "Goods and Services").Return([]filter.DimensionOption{}, nil)
 			mockFilterClient.EXPECT().GetJobState(ctx, "12345").Return(filter.Model{Links: filter.Links{Version: filter.Link{HRef: "/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"}}}, nil)
 			mockDatasetClient := NewMockDatasetClient(mockCtrl)
-			mockDatasetClient.EXPECT().GetDimensions(ctx, serviceAuthToken,"95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1").Return(dataset.Dimensions{Items: []dataset.Dimension{{Name: "geography"}}}, nil)
+			mockDatasetClient.EXPECT().GetDimensions(ctx, "","95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1").Return(dataset.Dimensions{Items: []dataset.Dimension{{Name: "geography"}}}, nil)
 			mockDatasetClient.EXPECT().GetOptions(ctx, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1", "geography")
 			mockDatasetClient.EXPECT().Get(ctx, "95c4669b-3ae9-4ba7-b690-87e890a1c67c").Return(dataset.Model{Contacts: []dataset.Contact{{Name: "Matt"}}}, nil)
 			mockDatasetClient.EXPECT().GetVersion(ctx, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1").Return(dataset.Version{}, nil)
@@ -49,7 +50,7 @@ func TestUnitFilterOverview(t *testing.T) {
 
 		Convey("test sucessful FilterOverviewClearAll", func() {
 			mockFilterClient := NewMockFilterClient(mockCtrl)
-			mockFilterClient.EXPECT().GetDimensions(ctx, serviceAuthToken, "12345").Return([]filter.Dimension{filter.Dimension{Name: "Day"}, filter.Dimension{Name: "Goods and Services"}}, nil)
+			mockFilterClient.EXPECT().GetDimensions(ctx, "", "12345").Return([]filter.Dimension{filter.Dimension{Name: "Day"}, filter.Dimension{Name: "Goods and Services"}}, nil)
 			mockFilterClient.EXPECT().RemoveDimension(ctx, "12345", "Day")
 			mockFilterClient.EXPECT().AddDimension(ctx, "12345", "Day")
 			mockFilterClient.EXPECT().RemoveDimension(ctx, "12345", "Goods and Services")
