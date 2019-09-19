@@ -26,14 +26,14 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	dims, err := f.FilterClient.GetDimensions(req.Context(), cfg.ServiceAuthToken, filterID)
+	dims, err := f.FilterClient.GetDimensions(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	fj, err := f.FilterClient.GetJobState(req.Context(), cfg.ServiceAuthToken, "", filterID)
+	fj, err := f.FilterClient.GetJobState(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, cfg.DownloadAuthToken, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -82,7 +82,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	var dimensions FilterModelDimensions
 	for _, dim := range dims {
 		var vals []filter.DimensionOption
-		vals, err = f.FilterClient.GetDimensionOptions(req.Context(), cfg.ServiceAuthToken, filterID, dim.Name)
+		vals, err = f.FilterClient.GetDimensionOptions(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, dim.Name)
 		if err != nil {
 			log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": dim.Name})
 			setStatusCode(req, w, err)
@@ -157,20 +157,20 @@ func (f *Filter) FilterOverviewClearAll(w http.ResponseWriter, req *http.Request
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	dims, err := f.FilterClient.GetDimensions(req.Context(), cfg.ServiceAuthToken, filterID)
+	dims, err := f.FilterClient.GetDimensions(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID)
 	if err != nil {
 		log.ErrorCtx(ctx, err, nil)
 		return
 	}
 
 	for _, dim := range dims {
-		if err := f.FilterClient.RemoveDimension(req.Context(), cfg.ServiceAuthToken, filterID, dim.Name); err != nil {
+		if err := f.FilterClient.RemoveDimension(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, dim.Name); err != nil {
 			log.InfoCtx(ctx, "failed to remove dimension", log.Data{"error": err, "filter_id": filterID, "dimension": dim.Name})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		if err := f.FilterClient.AddDimension(req.Context(), cfg.ServiceAuthToken, filterID, dim.Name); err != nil {
+		if err := f.FilterClient.AddDimension(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, dim.Name); err != nil {
 			log.InfoCtx(ctx, "failed to add dimension", log.Data{"error": err, "filter_id": filterID, "dimension": dim.Name})
 			setStatusCode(req, w, err)
 			return

@@ -31,14 +31,14 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	fil, err := f.FilterClient.GetJobState(req.Context(), cfg.ServiceAuthToken, "", filterID)
+	fil, err := f.FilterClient.GetJobState(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, cfg.DownloadAuthToken, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	mdl, err := f.FilterClient.UpdateBlueprint(req.Context(), cfg.ServiceAuthToken, "", fil, true)
+	mdl, err := f.FilterClient.UpdateBlueprint(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, cfg.DownloadAuthToken, fil, true)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to submit filter blueprint", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -60,14 +60,14 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	req = forwardFlorenceTokenIfRequired(req)
 
 
-	fj, err := f.FilterClient.GetOutput(req.Context(), cfg.ServiceAuthToken, "", filterOutputID)
+	fj, err := f.FilterClient.GetOutput(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, cfg.DownloadAuthToken, filterOutputID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get filter output", log.Data{"error": err, "filter_output_id": filterOutputID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	prev, err := f.FilterClient.GetPreview(req.Context(), cfg.ServiceAuthToken, "", filterOutputID)
+	prev, err := f.FilterClient.GetPreview(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, cfg.DownloadAuthToken, filterOutputID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get preview", log.Data{"error": err, "filter_output_id": filterOutputID})
 		setStatusCode(req, w, err)
@@ -260,7 +260,7 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	prev, err := f.FilterClient.GetOutput(req.Context(), cfg.ServiceAuthToken, "", filterOutputID)
+	prev, err := f.FilterClient.GetOutput(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, cfg.DownloadAuthToken, filterOutputID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get filter output", log.Data{"error": err, "filter_output_id": filterOutputID})
 		setStatusCode(req, w, err)

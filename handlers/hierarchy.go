@@ -45,7 +45,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	fil, err := f.FilterClient.GetJobState(req.Context(), cfg.ServiceAuthToken, "", filterID)
+	fil, err := f.FilterClient.GetJobState(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, cfg.DownloadAuthToken, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -90,7 +90,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.ServiceAuthToken, filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, name)
 		if err != nil {
 			log.ErrorCtx(ctx, err, nil)
 		}
@@ -99,7 +99,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			for _, opt := range opts {
 				if opt.Option == hv.Links.Self.ID {
 					if _, ok := req.Form[hv.Links.Self.ID]; !ok {
-						if err := f.FilterClient.RemoveDimensionValue(req.Context(), cfg.ServiceAuthToken, filterID, name, hv.Links.Self.ID); err != nil {
+						if err := f.FilterClient.RemoveDimensionValue(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, name, hv.Links.Self.ID); err != nil {
 							log.ErrorCtx(ctx, err, nil)
 						}
 					}
@@ -122,7 +122,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		if err := f.FilterClient.AddDimensionValue(req.Context(), cfg.ServiceAuthToken, filterID, name, k); err != nil {
+		if err := f.FilterClient.AddDimensionValue(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, name, k); err != nil {
 			log.InfoCtx(ctx, err.Error(), nil)
 		}
 	}
@@ -156,7 +156,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 	for _, child := range h.Children {
 		options = append(options, child.Links.Self.ID)
 	}
-	if err := f.FilterClient.AddDimensionValues(req.Context(), cfg.ServiceAuthToken, fil.FilterID, name, options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, fil.FilterID, name, options); err != nil {
 		log.ErrorCtx(ctx, err, nil)
 	}
 
@@ -186,7 +186,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 	}
 
 	for _, child := range h.Children {
-		if err := f.FilterClient.RemoveDimensionValue(req.Context(), cfg.ServiceAuthToken, fil.FilterID, name, child.Links.Self.ID); err != nil {
+		if err := f.FilterClient.RemoveDimensionValue(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, fil.FilterID, name, child.Links.Self.ID); err != nil {
 			log.ErrorCtx(ctx, err, nil)
 		}
 	}
@@ -204,7 +204,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	fil, err := f.FilterClient.GetJobState(req.Context(), cfg.ServiceAuthToken, "", filterID)
+	fil, err := f.FilterClient.GetJobState(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, cfg.DownloadAuthToken, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -227,7 +227,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.ServiceAuthToken, filterID, name)
+	selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, name)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)

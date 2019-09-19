@@ -24,17 +24,18 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 	ctx := req.Context()
+	log.InfoR(req, "---HERE!!!!---", log.Data{"ctx": req.Context()})
 
 	req = forwardFlorenceTokenIfRequired(req)
 
 
-	if err := f.FilterClient.RemoveDimension(req.Context(), cfg.ServiceAuthToken, filterID, "time"); err != nil {
+	if err := f.FilterClient.RemoveDimension(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, "time"); err != nil {
 		log.InfoCtx(ctx, "failed to remove dimension", log.Data{"error": err, "filter_id": filterID, "dimension": "time"})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	if err := f.FilterClient.AddDimension(req.Context(), cfg.ServiceAuthToken, filterID, "time"); err != nil {
+	if err := f.FilterClient.AddDimension(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, "time"); err != nil {
 		log.InfoCtx(ctx, "failed to add dimension", log.Data{"error": err, "filter_id": filterID, "dimension": "time"})
 		setStatusCode(req, w, err)
 		return
@@ -58,7 +59,7 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 
 	switch req.Form.Get("time-selection") {
 	case "latest":
-		if err := f.FilterClient.AddDimensionValue(req.Context(), cfg.ServiceAuthToken, filterID, "time", req.Form.Get("latest-option")); err != nil {
+		if err := f.FilterClient.AddDimensionValue(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, "time", req.Form.Get("latest-option")); err != nil {
 			log.ErrorCtx(ctx, err, nil)
 		}
 	case "single":
@@ -92,7 +93,7 @@ func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
 	}
 
 
-	return f.FilterClient.AddDimensionValue(req.Context(), cfg.ServiceAuthToken, filterID, "time", date.Format("Jan-06"))
+	return f.FilterClient.AddDimensionValue(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, "time", date.Format("Jan-06"))
 }
 
 func (f *Filter) addTimeList(filterID string, req *http.Request) error {
@@ -101,7 +102,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	req = forwardFlorenceTokenIfRequired(req)
 
 
-	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.ServiceAuthToken, filterID, "time")
+	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, "time")
 	if err != nil {
 		return err
 	}
@@ -109,7 +110,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	// Remove any unselected times
 	for _, opt := range opts {
 		if _, ok := req.Form[opt.Option]; !ok {
-			if err := f.FilterClient.RemoveDimensionValue(req.Context(), cfg.ServiceAuthToken, filterID, "time", opt.Option); err != nil {
+			if err := f.FilterClient.RemoveDimensionValue(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, "time", opt.Option); err != nil {
 				log.ErrorCtx(ctx, err, nil)
 			}
 		}
@@ -124,7 +125,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 		options = append(options, k)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(req.Context(), cfg.ServiceAuthToken, filterID, "time", options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, "time", options); err != nil {
 		log.TraceCtx(ctx, err.Error(), nil)
 	}
 
@@ -174,7 +175,7 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 	}
 
 
-	return f.FilterClient.AddDimensionValues(req.Context(), cfg.ServiceAuthToken, filterID, "time", options)
+	return f.FilterClient.AddDimensionValues(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, "time", options)
 }
 
 // Time specifically handles the data for the time dimension page
@@ -186,7 +187,7 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	fj, err := f.FilterClient.GetJobState(req.Context(), cfg.ServiceAuthToken, "", filterID)
+	fj, err := f.FilterClient.GetJobState(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, cfg.DownloadAuthToken, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -234,7 +235,7 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	selValues, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.ServiceAuthToken, filterID, "time")
+	selValues, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, "time")
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": "time"})
 		setStatusCode(req, w, err)

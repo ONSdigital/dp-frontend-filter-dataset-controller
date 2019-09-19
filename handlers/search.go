@@ -35,14 +35,14 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 		searchConfig = append(searchConfig, search.Config{InternalToken: cfg.SearchAPIAuthToken, FlorenceToken: req.Header.Get("X-Florence-Token")})
 	}
 
-	fil, err := f.FilterClient.GetJobState(req.Context(), cfg.ServiceAuthToken, "", filterID)
+	fil, err := f.FilterClient.GetJobState(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, cfg.DownloadAuthToken, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.ServiceAuthToken, filterID, name)
+	selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, name)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
@@ -136,7 +136,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 
 	req = forwardFlorenceTokenIfRequired(req)
 
-	fil, err := f.FilterClient.GetJobState(req.Context(), cfg.ServiceAuthToken, "", filterID)
+	fil, err := f.FilterClient.GetJobState(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, cfg.DownloadAuthToken, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -168,7 +168,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 		for _, item := range searchRes.Items {
 			options = append(options, item.Code)
 		}
-		if err := f.FilterClient.AddDimensionValues(req.Context(), cfg.ServiceAuthToken, filterID, name, options); err != nil {
+		if err := f.FilterClient.AddDimensionValues(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, name, options); err != nil {
 			log.InfoCtx(ctx, "failed to add dimension", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
@@ -178,7 +178,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 
 	if len(req.Form["remove-all"]) > 0 {
 		for _, item := range searchRes.Items {
-			if err := f.FilterClient.RemoveDimensionValue(req.Context(), cfg.ServiceAuthToken, filterID, name, item.Code); err != nil {
+			if err := f.FilterClient.RemoveDimensionValue(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, name, item.Code); err != nil {
 				log.InfoCtx(ctx, "failed to remove dimension option", log.Data{"error": err, "filter_id": filterID, "dimension": name, "option": item.Code})
 				setStatusCode(req, w, err)
 			}
@@ -192,7 +192,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 
 	go func() {
 
-		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.ServiceAuthToken, filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, name)
 		if err != nil {
 			log.ErrorCtx(ctx, err, nil)
 		}
@@ -201,7 +201,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 			for _, opt := range opts {
 				if opt.Option == item.Code {
 					if _, ok := req.Form[item.Code]; !ok {
-						if err := f.FilterClient.RemoveDimensionValue(req.Context(), cfg.ServiceAuthToken, filterID, name, item.Code); err != nil {
+						if err := f.FilterClient.RemoveDimensionValue(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, name, item.Code); err != nil {
 							log.ErrorCtx(ctx, err, nil)
 						}
 					}
@@ -224,7 +224,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		if err := f.FilterClient.AddDimensionValue(req.Context(), cfg.ServiceAuthToken, filterID, name, k); err != nil {
+		if err := f.FilterClient.AddDimensionValue(req.Context(), cfg.UserAuthToken, cfg.ServiceAuthToken, filterID, name, k); err != nil {
 			log.InfoCtx(ctx, err.Error(), nil)
 			continue
 		}
