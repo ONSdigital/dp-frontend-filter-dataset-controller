@@ -15,6 +15,12 @@
 			"revisionTime": "2019-09-20T14:47:44Z"
 		},
 		{
+			"checksumSHA1": "DuEmN/mGJAeZmL32CaeOuHqyOzE=",
+			"path": "github.com/ONSdigital/dp-api-clients-go/headers",
+			"revision": "533f62f276db8fae16271d4ab9849a4adacf89dd",
+			"revisionTime": "2019-09-20T14:47:44Z"
+		},
+		{
 			"checksumSHA1": "bTEnJshSpFGH6Wx/QQch4hqzOPs=",
 			"path": "github.com/ONSdigital/dp-frontend-dataset-controller/helpers",
 			"revision": "1a931cf26ef3ede2ebb90f2785021fee0441222f",
