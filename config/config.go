@@ -17,7 +17,7 @@ type Config struct {
 	SearchAPIAuthToken  	string
 	ServiceAuthToken  		string
 	UserAuthToken  			string
-	DownloadAuthToken  	string
+	DownloadAuthToken  		string
 	SearchAPIURL        	string
 	DownloadServiceURL  	string
 

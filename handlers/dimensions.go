@@ -11,12 +11,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/go-ns/clients/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
@@ -273,7 +273,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 
 	// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
 	// then the dimension should be populated as a hierarchy
-	if _, err = f.HierarchyClient.GetRoot(fj.InstanceID, name); err == nil && len(allValues.Items) > 20 {
+	if _, err = f.HierarchyClient.GetRoot(ctx, fj.InstanceID, name); err == nil && len(allValues.Items) > 20 {
 		f.Hierarchy(w, req)
 		return
 	}

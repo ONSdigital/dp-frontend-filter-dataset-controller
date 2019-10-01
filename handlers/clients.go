@@ -3,11 +3,11 @@ package handlers
 import (
 	"context"
 
+	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
+	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/go-ns/clients/codelist"
 	"github.com/ONSdigital/go-ns/clients/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/go-ns/clients/hierarchy"
-	"github.com/ONSdigital/go-ns/clients/search"
 	"github.com/ONSdigital/go-ns/healthcheck"
 )
 
@@ -54,11 +54,11 @@ type CodelistClient interface {
 	GetIDNameMap(id string) (map[string]string, error)
 }
 
-// HierarchyClient contains methods expected for a heirarchy client
+// HierarchyClient contains methods expected for a hierarchy client
 type HierarchyClient interface {
 	healthcheck.Client
-	GetRoot(instanceID, name string) (hierarchy.Model, error)
-	GetChild(instanceID, name, code string) (hierarchy.Model, error)
+	GetRoot(ctx context.Context, instanceID, name string) (hierarchy.Model, error)
+	GetChild(ctx context.Context, instanceID, name, code string) (hierarchy.Model, error)
 }
 
 // SearchClient contains methods expected for a search client

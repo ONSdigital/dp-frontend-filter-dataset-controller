@@ -10,7 +10,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/go-ns/clients/dataset"
-	"github.com/ONSdigital/go-ns/clients/search"
+	"github.com/ONSdigital/dp-api-clients-go/search"
 	gomock "github.com/golang/mock/gomock"
 
 	. "github.com/smartystreets/goconvey/convey"
