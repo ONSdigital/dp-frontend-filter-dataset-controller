@@ -5,8 +5,14 @@
 		{
 			"checksumSHA1": "XSTkos3yRqDizeLvw7mSPKEGPxY=",
 			"path": "github.com/ONSdigital/dp-api-clients-go",
-			"revision": "552331196ddb8c147f3c09948a48be8e2db0cba1",
-			"revisionTime": "2019-09-13T08:39:25Z"
+			"revision": "533f62f276db8fae16271d4ab9849a4adacf89dd",
+			"revisionTime": "2019-09-20T14:47:44Z"
+		},
+		{
+			"checksumSHA1": "gR0dJ6iRSxBod2E/K5Wc9shKLAM=",
+			"path": "github.com/ONSdigital/dp-api-clients-go/filter",
+			"revision": "533f62f276db8fae16271d4ab9849a4adacf89dd",
+			"revisionTime": "2019-09-20T14:47:44Z"
 		},
 		{
 			"checksumSHA1": "bTEnJshSpFGH6Wx/QQch4hqzOPs=",
@@ -165,10 +171,10 @@
 			"revisionTime": "2017-07-17T12:56:40Z"
 		},
 		{
-			"checksumSHA1": "/5JpULDw51Em+1+OJHcfDkbw/e0=",
+			"checksumSHA1": "IHIm2BA6DrJDHvALz65pY2G38sM=",
 			"path": "github.com/golang/mock/gomock",
-			"revision": "f67f7081ddcd0f92a20c1d58e7cd8b23253d15c7",
-			"revisionTime": "2017-12-07T01:11:52Z"
+			"revision": "cbd2e353ab04dfb7bd2e19ab7aa041c3440ad2c5",
+			"revisionTime": "2019-07-09T22:53:26Z"
 		},
 		{
 			"checksumSHA1": "yIkYzW7bzAD81zHyuCNmEj4+oxQ=",
@@ -189,10 +195,10 @@
 			"revisionTime": "2017-05-30T19:55:47Z"
 		},
 		{
-			"checksumSHA1": "Js/yx9fZ3+wH1wZpHNIxSTMIaCg=",
+			"checksumSHA1": "cIiyvAduLLFvu+tg1Qr5Jw3jeWo=",
 			"path": "github.com/jtolds/gls",
-			"revision": "77f18212c9c7edc9bd6a33d383a7b545ce62f064",
-			"revisionTime": "2017-05-03T22:40:06Z"
+			"revision": "b4936e06046bbecbb94cae9c18127ebe510a2cb9",
+			"revisionTime": "2018-11-10T20:28:10Z"
 		},
 		{
 			"checksumSHA1": "OBvAHqWjdI4NQVAqTkcQAdTuCFY=",

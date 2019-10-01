@@ -20,19 +20,19 @@ type ClientError interface {
 // FilterClient contains the methods expected for a filter client
 type FilterClient interface {
 	healthcheck.Client
-	GetDimensions(ctx context.Context, serviceAuthToken, filterID string) (dims []filter.Dimension, err error)
-	GetDimensionOptions(ctx context.Context, serviceAuthToken, filterID, name string) (fdv []filter.DimensionOption, err error)
-	GetJobState(ctx context.Context, serviceAuthToken, downloadServiceToken, filterID string) (f filter.Model, err error)
-	GetOutput(ctx context.Context, serviceAuthToken, downloadServiceToken, filterOutputID string) (f filter.Model, err error)
-	GetDimension(ctx context.Context, serviceAuthToken, filterID, name string) (dim filter.Dimension, err error)
-	AddDimensionValue(ctx context.Context, serviceAuthToken, filterID, name, value string) error
-	RemoveDimensionValue(ctx context.Context, serviceAuthToken, filterID, name, value string) error
-	RemoveDimension(ctx context.Context, serviceAuthToken, filterID, name string) (err error)
-	AddDimension(ctx context.Context, serviceAuthToken, filterID, name string) (err error)
-	AddDimensionValues(ctx context.Context, serviceAuthToken, filterID, name string, options []string) error
-	UpdateBlueprint(ctx context.Context, serviceAuthToken, downloadServiceToken string, m filter.Model, doSubmit bool) (filter.Model, error)
-	CreateBlueprint(context.Context, string, string, string, string, string, []string) (string, error)
-	GetPreview(context.Context, string, string, string) (filter.Preview, error)
+	GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID string) (dims []filter.Dimension, err error)
+	GetDimensionOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (fdv []filter.DimensionOption, err error)
+	GetJobState(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, downloadServiceToken, filterID string) (f filter.Model, err error)
+	GetOutput(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, downloadServiceToken, filterOutputID string) (f filter.Model, err error)
+	GetDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (dim filter.Dimension, err error)
+	AddDimensionValue(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name, value string) error
+	RemoveDimensionValue(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name, value string) error
+	RemoveDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (err error)
+	AddDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (err error)
+	AddDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, options []string) error
+	UpdateBlueprint(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, downloadServiceToken string, m filter.Model, doSubmit bool) (filter.Model, error)
+	CreateBlueprint(context.Context, string, string, string, string, string, string, string, []string) (string, error)
+	GetPreview(context.Context, string, string, string, string, string) (filter.Preview, error)
 }
 
 // DatasetClient is an interface with methods required for a dataset client

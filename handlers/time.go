@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -23,15 +24,22 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 	filterID := vars["filterID"]
 	ctx := req.Context()
 
-	req = forwardFlorenceTokenIfRequired(req)
+	collectionID := getCollectionIDFromContext(ctx)
+	userAccessToken, err := headers.GetUserAuthToken(req)
+	if err != nil{
+		if err != headers.ErrHeaderNotFound {
+			log.Error(err, nil)
+		}
+	}
 
-	if err := f.FilterClient.RemoveDimension(req.Context(), serviceAuthToken, filterID, "time"); err != nil {
+
+	if err := f.FilterClient.RemoveDimension(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, "time"); err != nil {
 		log.InfoCtx(ctx, "failed to remove dimension", log.Data{"error": err, "filter_id": filterID, "dimension": "time"})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	if err := f.FilterClient.AddDimension(req.Context(), serviceAuthToken, filterID, "time"); err != nil {
+	if err := f.FilterClient.AddDimension(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, "time"); err != nil {
 		log.InfoCtx(ctx, "failed to add dimension", log.Data{"error": err, "filter_id": filterID, "dimension": "time"})
 		setStatusCode(req, w, err)
 		return
@@ -55,7 +63,7 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 
 	switch req.Form.Get("time-selection") {
 	case "latest":
-		if err := f.FilterClient.AddDimensionValue(req.Context(), serviceAuthToken, filterID, "time", req.Form.Get("latest-option")); err != nil {
+		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, "time", req.Form.Get("latest-option")); err != nil {
 			log.ErrorCtx(ctx, err, nil)
 		}
 	case "single":
@@ -77,24 +85,40 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 }
 
 func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
+	ctx := req.Context()
+
 	month := req.Form.Get("month-single")
 	year := req.Form.Get("year-single")
 
-	req = forwardFlorenceTokenIfRequired(req)
+	collectionID := getCollectionIDFromContext(ctx)
+	userAccessToken, err := headers.GetUserAuthToken(req)
+	if err != nil{
+		if err != headers.ErrHeaderNotFound {
+			log.Error(err, nil)
+		}
+	}
 
 	date, err := time.Parse("January 2006", fmt.Sprintf("%s %s", month, year))
 	if err != nil {
 		return err
 	}
 
-	return f.FilterClient.AddDimensionValue(req.Context(), serviceAuthToken, filterID, "time", date.Format("Jan-06"))
+
+	return f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, "time", date.Format("Jan-06"))
 }
 
 func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	ctx := req.Context()
-	req = forwardFlorenceTokenIfRequired(req)
+	collectionID := getCollectionIDFromContext(ctx)
+	userAccessToken, err := headers.GetUserAuthToken(req)
+	if err != nil{
+		if err != headers.ErrHeaderNotFound {
+			log.Error(err, nil)
+		}
+	}
 
-	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), serviceAuthToken, filterID, "time")
+
+	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, "time")
 	if err != nil {
 		return err
 	}
@@ -102,7 +126,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	// Remove any unselected times
 	for _, opt := range opts {
 		if _, ok := req.Form[opt.Option]; !ok {
-			if err := f.FilterClient.RemoveDimensionValue(req.Context(), serviceAuthToken, filterID, "time", opt.Option); err != nil {
+			if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, "time", opt.Option); err != nil {
 				log.ErrorCtx(ctx, err, nil)
 			}
 		}
@@ -117,7 +141,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 		options = append(options, k)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(req.Context(), serviceAuthToken, filterID, "time", options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, "time", options); err != nil {
 		log.TraceCtx(ctx, err.Error(), nil)
 	}
 
@@ -129,10 +153,16 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 	startYear := req.Form.Get("start-year")
 	endMonth := req.Form.Get("end-month")
 	endYear := req.Form.Get("end-year")
+	ctx := req.Context()
+	collectionID := getCollectionIDFromContext(ctx)
+	userAccessToken, err := headers.GetUserAuthToken(req)
+	if err != nil{
+		if err != headers.ErrHeaderNotFound {
+			log.Error(err, nil)
+		}
+	}
 
-	req = forwardFlorenceTokenIfRequired(req)
-
-	values, labelIDMap, err := f.getDimensionValues(req.Context(), filterID, "time")
+	values, labelIDMap, err := f.getDimensionValues(req.Context(), filterID, "time", userAccessToken)
 	if err != nil {
 		return err
 	}
@@ -165,7 +195,8 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 		}
 	}
 
-	return f.FilterClient.AddDimensionValues(req.Context(), serviceAuthToken, filterID, "time", options)
+
+	return f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, "time", options)
 }
 
 // Time specifically handles the data for the time dimension page
@@ -174,9 +205,15 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 	filterID := vars["filterID"]
 	ctx := req.Context()
 
-	req = forwardFlorenceTokenIfRequired(req)
+	collectionID := getCollectionIDFromContext(ctx)
+	userAccessToken, err := headers.GetUserAuthToken(req)
+	if err != nil{
+		if err != headers.ErrHeaderNotFound {
+			log.Error(err, nil)
+		}
+	}
 
-	fj, err := f.FilterClient.GetJobState(req.Context(), serviceAuthToken, downloadServiceToken, filterID)
+	fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -224,14 +261,14 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	selValues, err := f.FilterClient.GetDimensionOptions(req.Context(), serviceAuthToken, filterID, "time")
+	selValues, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, "time")
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": "time"})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(req.Context(), serviceAuthToken, datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
