@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -211,6 +212,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 }
 
 func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 	name := vars["name"]

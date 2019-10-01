@@ -14,6 +14,7 @@ import (
 // UseLatest will create a new filter job for the same dataset with the
 // latest version
 func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 	ctx := req.Context()

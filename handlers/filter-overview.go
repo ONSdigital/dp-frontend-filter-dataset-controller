@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"net/http"
 	"net/url"
 	"sort"
@@ -20,6 +21,7 @@ import (
 // FilterOverview controls the render of the filter overview template
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 	ctx := req.Context()
@@ -156,6 +158,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 // FilterOverviewClearAll removes all selected options for all dimensions
 func (f *Filter) FilterOverviewClearAll(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 	ctx := req.Context()

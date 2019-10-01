@@ -20,9 +20,11 @@ var acceptedReg = regexp.MustCompile(`^\w{3}-\d{2}$`)
 
 // UpdateTime will update the time filter based on the radio selected filters by the user
 func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 	ctx := req.Context()
+	log.InfoR(req, "---HERE!!!!---", log.Data{"ctx": req.Context()})
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
@@ -108,6 +110,7 @@ func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
 }
 
 func (f *Filter) addTimeList(filterID string, req *http.Request) error {
+	cfg := config.Get()
 	ctx := req.Context()
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
@@ -149,6 +152,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 }
 
 func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
+	cfg := config.Get()
 	startMonth := req.Form.Get("start-month")
 	startYear := req.Form.Get("start-year")
 	endMonth := req.Form.Get("end-month")
@@ -201,6 +205,7 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 
 // Time specifically handles the data for the time dimension page
 func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 	ctx := req.Context()

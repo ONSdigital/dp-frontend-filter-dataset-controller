@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -24,6 +25,7 @@ import (
 
 // Submit handles the submitting of a filter job through the filter API
 func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 	ctx := req.Context()
@@ -57,6 +59,7 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 
 // PreviewPage controls the rendering of the preview and download page
 func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterOutputID := vars["filterOutputID"]
 	ctx := req.Context()
@@ -263,6 +266,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 // GetFilterJob returns the filter output json to the client to form preview
 // for AJAX request
 func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterOutputID := vars["filterOutputID"]
 	ctx := req.Context()

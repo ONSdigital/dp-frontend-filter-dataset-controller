@@ -126,6 +126,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 
 // SearchUpdate will update a dimension based on selected search resultss
 func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	ctx := req.Context()
 	if err := req.ParseForm(); err != nil {
 		log.ErrorCtx(ctx, err, nil)

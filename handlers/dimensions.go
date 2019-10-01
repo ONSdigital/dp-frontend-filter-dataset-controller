@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"net/http"
 	"net/url"
 	"sort"
@@ -28,10 +29,12 @@ type labelID struct {
 
 // GetAllDimensionOptionsJSON will return a list of all options from the dataset api
 func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
 	ctx := req.Context()
+	log.InfoR(req, "---HERE!!!!---", log.Data{"ctx": ctx})
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
@@ -123,6 +126,7 @@ func (f *Filter) getIDNameMap(ctx context.Context, versionURL, dimension string)
 
 // GetSelectedDimensionOptionsJSON will return a list of selected options from the filter api with corresponding label
 func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
@@ -206,6 +210,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 // DimensionSelector controls the render of the range selector template
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
@@ -452,6 +457,7 @@ func (f *Filter) DimensionAddAll(w http.ResponseWriter, req *http.Request) {
 }
 
 func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL string) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
@@ -509,6 +515,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 
 // AddList adds a list of values
 func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
@@ -621,6 +628,7 @@ func (f *Filter) getDimensionValues(ctx context.Context, filterID, name, userAcc
 
 // DimensionRemoveAll removes all options on a particular dimensions
 func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
@@ -654,6 +662,7 @@ func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
 
 // DimensionRemoveOne removes an individual option on a dimensions
 func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
+	cfg := config.Get()
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
