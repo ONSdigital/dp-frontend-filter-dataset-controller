@@ -19,7 +19,6 @@ import (
 
 // UpdateAge is a handler which will update age values on a filter job
 func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
-	cfg := config.Get()
 	ctx := req.Context()
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
@@ -120,7 +119,6 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 }
 
 func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
-	cfg := config.Get()
 	youngest := req.Form.Get("youngest")
 	oldest := req.Form.Get("oldest")
 
@@ -190,7 +188,6 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 }
 
 func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
-	cfg := config.Get()
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 	ctx := req.Context()

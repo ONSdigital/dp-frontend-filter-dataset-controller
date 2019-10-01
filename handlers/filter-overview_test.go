@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
