@@ -274,7 +274,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 
 	// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
 	// then the dimension should be populated as a hierarchy
-	if _, err = f.HierarchyClient.GetRoot(fj.InstanceID, name); err == nil && len(allValues.Items) > 20 {
+	if _, err = f.HierarchyClient.GetRoot(ctx, fj.InstanceID, name); err == nil && len(allValues.Items) > 20 {
 		f.Hierarchy(w, req)
 		return
 	}

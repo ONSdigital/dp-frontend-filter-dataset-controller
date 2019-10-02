@@ -13,7 +13,7 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
-	"github.com/ONSdigital/go-ns/clients/search"
+	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )

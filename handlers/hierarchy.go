@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
-	"github.com/ONSdigital/go-ns/clients/hierarchy"
+	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
@@ -74,12 +75,12 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		var h hierarchy.Model
 		var err error
 		if len(code) > 0 {
-			h, err = f.HierarchyClient.GetChild(fil.InstanceID, name, code)
+			h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
 		} else {
 			if name == "geography" {
-				h, err = f.flattenGeographyTopLevel(fil.InstanceID)
+				h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
 			} else {
-				h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
+				h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
 			}
 
 			// We include the value on the root as a selectable item, so append
@@ -149,12 +150,12 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 
 	var h hierarchy.Model
 	if len(code) > 0 {
-		h, err = f.HierarchyClient.GetChild(fil.InstanceID, name, code)
+		h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
 	} else {
 		if name == "geography" {
-			h, err = f.flattenGeographyTopLevel(fil.InstanceID)
+			h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
 		} else {
-			h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
+			h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
 		}
 	}
 	if err != nil {
@@ -187,12 +188,12 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 	var h hierarchy.Model
 
 	if len(code) > 0 {
-		h, err = f.HierarchyClient.GetChild(fil.InstanceID, name, code)
+		h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
 	} else {
 		if name == "geography" {
-			h, err = f.flattenGeographyTopLevel(fil.InstanceID)
+			h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
 		} else {
-			h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
+			h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
 		}
 	}
 	if err != nil {
@@ -234,12 +235,12 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 
 	var h hierarchy.Model
 	if len(code) > 0 {
-		h, err = f.HierarchyClient.GetChild(fil.InstanceID, name, code)
+		h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
 	} else {
 		if name == "geography" {
-			h, err = f.flattenGeographyTopLevel(fil.InstanceID)
+			h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
 		} else {
-			h, err = f.HierarchyClient.GetRoot(fil.InstanceID, name)
+			h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
 		}
 	}
 	if err != nil {
@@ -345,8 +346,8 @@ func (n flatNodes) addWithChildren(val hierarchy.Child, i int) {
 
 // Flatten the geography hierarchy - please note this will only work for this particular hierarchy,
 // need helper functions for other geog hierarchies too.
-func (f *Filter) flattenGeographyTopLevel(instanceID string) (h hierarchy.Model, err error) {
-	root, err := f.HierarchyClient.GetRoot(instanceID, "geography")
+func (f *Filter) flattenGeographyTopLevel(ctx context.Context,instanceID string) (h hierarchy.Model, err error) {
+	root, err := f.HierarchyClient.GetRoot(ctx, instanceID, "geography")
 	if err != nil {
 		return
 	}
@@ -367,7 +368,7 @@ func (f *Filter) flattenGeographyTopLevel(instanceID string) (h hierarchy.Model,
 		if val.Links.Code.ID == nodes.order[0] {
 			nodes.addWithoutChildren(val, 0)
 
-			child, err := f.HierarchyClient.GetChild(instanceID, "geography", val.Links.Code.ID)
+			child, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", val.Links.Code.ID)
 			if err != nil {
 				return h, err
 			}
@@ -377,7 +378,7 @@ func (f *Filter) flattenGeographyTopLevel(instanceID string) (h hierarchy.Model,
 				if childVal.Links.Code.ID == nodes.order[1] {
 					nodes.addWithoutChildren(childVal, 1)
 
-					grandChild, err := f.HierarchyClient.GetChild(instanceID, "geography", childVal.Links.Code.ID)
+					grandChild, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", childVal.Links.Code.ID)
 					if err != nil {
 						return h, err
 					}

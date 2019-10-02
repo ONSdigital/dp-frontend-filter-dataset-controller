@@ -21,8 +21,8 @@ import (
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	timeModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
-	hierarchyClient "github.com/ONSdigital/go-ns/clients/hierarchy"
-	"github.com/ONSdigital/go-ns/clients/search"
+	hierarchyClient "github.com/ONSdigital/dp-api-clients-go/hierarchy"
+	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/go-ns/log"
 )
 

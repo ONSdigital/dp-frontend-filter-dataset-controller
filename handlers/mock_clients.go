@@ -8,8 +8,8 @@ import (
 	context "context"
 	dataset "github.com/ONSdigital/dp-api-clients-go/dataset"
 	filter "github.com/ONSdigital/dp-api-clients-go/filter"
-	hierarchy "github.com/ONSdigital/go-ns/clients/hierarchy"
-	search "github.com/ONSdigital/go-ns/clients/search"
+	hierarchy "github.com/ONSdigital/dp-api-clients-go/hierarchy"
+	search "github.com/ONSdigital/dp-api-clients-go/search"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 )
@@ -379,33 +379,33 @@ func (m *MockHierarchyClient) EXPECT() *MockHierarchyClientMockRecorder {
 }
 
 // GetChild mocks base method
-func (m *MockHierarchyClient) GetChild(arg0, arg1, arg2 string) (hierarchy.Model, error) {
+func (m *MockHierarchyClient) GetChild(arg0 context.Context, arg1, arg2, arg3 string) (hierarchy.Model, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetChild", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetChild", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(hierarchy.Model)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetChild indicates an expected call of GetChild
-func (mr *MockHierarchyClientMockRecorder) GetChild(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockHierarchyClientMockRecorder) GetChild(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChild", reflect.TypeOf((*MockHierarchyClient)(nil).GetChild), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChild", reflect.TypeOf((*MockHierarchyClient)(nil).GetChild), arg0, arg1, arg2, arg3)
 }
 
 // GetRoot mocks base method
-func (m *MockHierarchyClient) GetRoot(arg0, arg1 string) (hierarchy.Model, error) {
+func (m *MockHierarchyClient) GetRoot(arg0 context.Context, arg1, arg2 string) (hierarchy.Model, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRoot", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetRoot", arg0, arg1, arg2)
 	ret0, _ := ret[0].(hierarchy.Model)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetRoot indicates an expected call of GetRoot
-func (mr *MockHierarchyClientMockRecorder) GetRoot(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockHierarchyClientMockRecorder) GetRoot(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRoot", reflect.TypeOf((*MockHierarchyClient)(nil).GetRoot), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRoot", reflect.TypeOf((*MockHierarchyClient)(nil).GetRoot), arg0, arg1, arg2)
 }
 
 // Healthcheck mocks base method

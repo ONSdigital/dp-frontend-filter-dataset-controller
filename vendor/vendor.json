@@ -33,6 +33,24 @@
 			"revisionTime": "2019-09-20T14:47:44Z"
 		},
 		{
+			"checksumSHA1": "Pzgjf9q4N7IpiSq8uiQsobGwl4E=",
+			"path": "github.com/ONSdigital/dp-api-clients-go/hierarchy",
+			"revision": "533f62f276db8fae16271d4ab9849a4adacf89dd",
+			"revisionTime": "2019-09-20T14:47:44Z"
+		},
+		{
+			"checksumSHA1": "LJUV3GKJKS6Lx1JdhqYqUH0seys=",
+			"path": "github.com/ONSdigital/dp-api-clients-go/renderer",
+			"revision": "533f62f276db8fae16271d4ab9849a4adacf89dd",
+			"revisionTime": "2019-09-20T14:47:44Z"
+		},
+		{
+			"checksumSHA1": "EZm0hjujf8HbR/72aCWg7RcoqEQ=",
+			"path": "github.com/ONSdigital/dp-api-clients-go/search",
+			"revision": "533f62f276db8fae16271d4ab9849a4adacf89dd",
+			"revisionTime": "2019-09-20T14:47:44Z"
+		},
+		{
 			"checksumSHA1": "bTEnJshSpFGH6Wx/QQch4hqzOPs=",
 			"path": "github.com/ONSdigital/dp-frontend-dataset-controller/helpers",
 			"revision": "1a931cf26ef3ede2ebb90f2785021fee0441222f",
@@ -117,10 +135,10 @@
 			"revisionTime": "2018-06-07T12:04:51Z"
 		},
 		{
-			"checksumSHA1": "hlr8fdPLJMYY6YkPuiBkI8Jm9Mc=",
+			"checksumSHA1": "IV6CmyPxZnOlkVCcXXYVuBwUz+I=",
 			"path": "github.com/ONSdigital/go-ns/common",
-			"revision": "caee21dda39f1143056a5ec0b3031036e14c7c42",
-			"revisionTime": "2019-05-20T09:08:57Z"
+			"revision": "f2c71bd127a5817b4708f0613a034f3d90e89766",
+			"revisionTime": "2019-09-16T10:14:16Z"
 		},
 		{
 			"checksumSHA1": "vTOAgsj69LFRQVsg/Of0O8B/eaY=",

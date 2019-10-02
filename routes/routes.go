@@ -4,13 +4,13 @@ import (
 	"context"
 	"os"
 
+	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
+	"github.com/ONSdigital/dp-api-clients-go/renderer"
+	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
-	"github.com/ONSdigital/dp-api-clients-go/dataset"
-	"github.com/ONSdigital/go-ns/clients/hierarchy"
-	"github.com/ONSdigital/go-ns/clients/renderer"
-	"github.com/ONSdigital/go-ns/clients/search"
 	"github.com/ONSdigital/go-ns/handlers/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/validator"
@@ -35,7 +35,7 @@ func Init(r *mux.Router) {
 
 	rend := renderer.New(cfg.RendererURL)
 	fc := filter.New(cfg.FilterAPIURL)
-	dc := dataset.NewAPIClient(cfg.DatasetAPIURL, "", "")
+	dc := dataset.NewAPIClient(cfg.DatasetAPIURL)
 	hc := hierarchy.New(cfg.HierarchyAPIURL)
 	sc := search.New(cfg.SearchAPIURL)
 	filter := handlers.NewFilter(rend, fc, dc, hc, sc, v, cfg.DownloadServiceURL, cfg.ServiceAuthToken, cfg.DownloadAuthToken)

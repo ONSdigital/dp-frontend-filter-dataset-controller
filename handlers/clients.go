@@ -5,8 +5,8 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/go-ns/clients/hierarchy"
-	"github.com/ONSdigital/go-ns/clients/search"
+	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
+	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/go-ns/healthcheck"
 )
 
@@ -44,11 +44,11 @@ type DatasetClient interface {
 	GetVersionMetadata(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version string) (m dataset.Metadata, err error)
 }
 
-// HierarchyClient contains methods expected for a heirarchy client
+// HierarchyClient contains methods expected for a hierarchy client
 type HierarchyClient interface {
 	healthcheck.Client
-	GetRoot(instanceID, name string) (hierarchy.Model, error)
-	GetChild(instanceID, name, code string) (hierarchy.Model, error)
+	GetRoot(ctx context.Context, instanceID, name string) (hierarchy.Model, error)
+	GetChild(ctx context.Context, instanceID, name, code string) (hierarchy.Model, error)
 }
 
 // SearchClient contains methods expected for a search client
