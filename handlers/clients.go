@@ -3,9 +3,9 @@ package handlers
 import (
 	"context"
 
-	"github.com/ONSdigital/go-ns/clients/codelist"
-	"github.com/ONSdigital/go-ns/clients/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/go-ns/clients/codelist"
 	"github.com/ONSdigital/go-ns/clients/hierarchy"
 	"github.com/ONSdigital/go-ns/clients/search"
 	"github.com/ONSdigital/go-ns/healthcheck"
@@ -38,13 +38,11 @@ type FilterClient interface {
 // DatasetClient is an interface with methods required for a dataset client
 type DatasetClient interface {
 	healthcheck.Client
-	Get(ctx context.Context, id string) (m dataset.Model, err error)
-	GetEditions(ctx context.Context, id string) (m []dataset.Edition, err error)
-	GetVersions(ctx context.Context, id, edition string) (m []dataset.Version, err error)
-	GetVersion(ctx context.Context, id, edition, version string) (m dataset.Version, err error)
-	GetDimensions(ctx context.Context, id, edition, version string) (m dataset.Dimensions, err error)
-	GetOptions(ctx context.Context, id, edition, version, dimension string) (m dataset.Options, err error)
-	GetVersionMetadata(ctx context.Context, id, edition, version string) (m dataset.Metadata, err error)
+	Get(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID string) (m dataset.Model, err error)
+	GetVersion(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, datasetID, edition, version string) (m dataset.Version, err error)
+	GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version string) (m dataset.Dimensions, err error)
+	GetOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension string) (m dataset.Options, err error)
+	GetVersionMetadata(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version string) (m dataset.Metadata, err error)
 }
 
 // CodelistClient contains methods expected for a codelist client

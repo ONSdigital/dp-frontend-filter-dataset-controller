@@ -219,20 +219,20 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.DatasetClient.Get(req.Context(), datasetID)
+	dataset, err := f.DatasetClient.Get(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, datasetID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dataset", log.Data{"error": err, "dataset_id": datasetID})
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(req.Context(), datasetID, edition, version)
+	ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get version", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	allValues, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, "age")
+	allValues, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, f.serviceAuthToken, collectionID, datasetID, edition, version, "age")
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from dataset client",
 			log.Data{"error": err, "dimension": "age", "dataset_id": datasetID, "edition": edition, "version": version})
@@ -252,7 +252,7 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		setStatusCode(req, w, err)
 		return
 	}
-	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})

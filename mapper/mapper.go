@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ONSdigital/go-ns/clients/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-frontend-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-models/model"

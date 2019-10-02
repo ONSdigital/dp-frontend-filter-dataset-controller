@@ -11,12 +11,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ONSdigital/dp-api-clients-go/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
-	"github.com/ONSdigital/go-ns/clients/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
@@ -56,7 +56,7 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 		return
 	}
 
-	idNameMap, err := f.getIDNameMap(req.Context(), versionURL.Path, name)
+	idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionURL.Path, name)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get name map", log.Data{"error": err, "filter_id": filterID, "path": versionURL, "name": name})
 		setStatusCode(req, w, err)
@@ -103,14 +103,15 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 	w.Write(b)
 }
 
-func (f *Filter) getIDNameMap(ctx context.Context, versionURL, dimension string) (map[string]string, error) {
+func (f *Filter) getIDNameMap(ctx context.Context, userAccessToken, versionURL, dimension string) (map[string]string, error) {
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL)
+	collectionID := getCollectionIDFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	idNameMap := make(map[string]string)
-	opts, err := f.DatasetClient.GetOptions(ctx, datasetID, edition, version, dimension)
+	opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, f.serviceAuthToken, collectionID, datasetID, edition, version, dimension)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +158,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 		setStatusCode(req, w, err)
 		return
 	}
-	idNameMap, err := f.getIDNameMap(req.Context(), versionURL.Path, name)
+	idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken,versionURL.Path, name)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get name map", log.Data{"error": err, "filter_id": filterID, "path": versionURL, "name": name})
 		setStatusCode(req, w, err)
@@ -249,21 +250,21 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.DatasetClient.Get(req.Context(), datasetID)
+	dataset, err := f.DatasetClient.Get(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, datasetID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dataset", log.Data{"error": err, "dataset_id": datasetID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	ver, err := f.DatasetClient.GetVersion(req.Context(), datasetID, edition, version)
+	ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get version", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	allValues, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, name)
+	allValues, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, f.serviceAuthToken, collectionID, datasetID, edition, version, name)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from dataset client",
 			log.Data{"error": err, "dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -278,7 +279,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
@@ -488,7 +489,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 		return
 	}
 
-	vals, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, name)
+	vals, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, f.serviceAuthToken, collectionID, datasetID, edition, version, name)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from dataset client",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -609,7 +610,7 @@ func (f *Filter) getDimensionValues(ctx context.Context, filterID, name, userAcc
 		return
 	}
 
-	vals, err := f.DatasetClient.GetOptions(ctx, datasetID, edition, version, name)
+	vals, err := f.DatasetClient.GetOptions(ctx, userAccessToken, f.serviceAuthToken, collectionID, datasetID, edition, version, name)
 	if err != nil {
 		return
 	}
