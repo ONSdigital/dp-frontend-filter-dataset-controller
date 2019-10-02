@@ -6,20 +6,20 @@ import (
 
 // Config represents service configuration for dp-frontend-filter-dataset-controller
 type Config struct {
-	BindAddr			string
-	RendererURL			string
-	FilterAPIURL		string
-	DatasetAPIURL		string
-	CodeListAPIURL		string
-	HierarchyAPIURL		string
-	DatasetAPIAuthToken	string
-	FilterAPIAuthToken	string
-	SearchAPIAuthToken	string
-	ServiceAuthToken  	string
-	UserAuthToken  		string
-	DownloadAuthToken  	string
-	SearchAPIURL		string
-	DownloadServiceURL	string
+	BindAddr            	string
+	RendererURL         	string
+	FilterAPIURL        	string
+	DatasetAPIURL       	string
+	CodeListAPIURL      	string
+	HierarchyAPIURL     	string
+	DatasetAPIAuthToken 	string
+	FilterAPIAuthToken  	string
+	SearchAPIAuthToken  	string
+	ServiceAuthToken  		string
+	UserAuthToken  			string
+	DownloadAuthToken  		string
+	SearchAPIURL        	string
+	DownloadServiceURL  	string
 
 }
 
