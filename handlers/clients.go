@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 
-	"github.com/ONSdigital/go-ns/clients/codelist"
 	"github.com/ONSdigital/go-ns/clients/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/go-ns/clients/hierarchy"
@@ -45,13 +44,6 @@ type DatasetClient interface {
 	GetDimensions(ctx context.Context, id, edition, version string) (m dataset.Dimensions, err error)
 	GetOptions(ctx context.Context, id, edition, version, dimension string) (m dataset.Options, err error)
 	GetVersionMetadata(ctx context.Context, id, edition, version string) (m dataset.Metadata, err error)
-}
-
-// CodelistClient contains methods expected for a codelist client
-type CodelistClient interface {
-	healthcheck.Client
-	GetValues(id string) (vals codelist.DimensionValues, err error)
-	GetIDNameMap(id string) (map[string]string, error)
 }
 
 // HierarchyClient contains methods expected for a heirarchy client
