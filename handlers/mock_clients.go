@@ -6,8 +6,8 @@ package handlers
 
 import (
 	context "context"
+	dataset "github.com/ONSdigital/dp-api-clients-go/dataset"
 	filter "github.com/ONSdigital/dp-api-clients-go/filter"
-	dataset "github.com/ONSdigital/go-ns/clients/dataset"
 	hierarchy "github.com/ONSdigital/go-ns/clients/hierarchy"
 	search "github.com/ONSdigital/go-ns/clients/search"
 	gomock "github.com/golang/mock/gomock"
@@ -38,108 +38,78 @@ func (m *MockDatasetClient) EXPECT() *MockDatasetClientMockRecorder {
 }
 
 // Get mocks base method
-func (m *MockDatasetClient) Get(arg0 context.Context, arg1 string) (dataset.Model, error) {
+func (m *MockDatasetClient) Get(arg0 context.Context, arg1, arg2, arg3, arg4 string) (dataset.Model, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", arg0, arg1)
+	ret := m.ctrl.Call(m, "Get", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(dataset.Model)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get
-func (mr *MockDatasetClientMockRecorder) Get(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDatasetClientMockRecorder) Get(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockDatasetClient)(nil).Get), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockDatasetClient)(nil).Get), arg0, arg1, arg2, arg3, arg4)
 }
 
 // GetDimensions mocks base method
-func (m *MockDatasetClient) GetDimensions(arg0 context.Context, arg1, arg2, arg3 string) (dataset.Dimensions, error) {
+func (m *MockDatasetClient) GetDimensions(arg0 context.Context, arg1, arg2, arg3, arg4, arg5, arg6 string) (dataset.Dimensions, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDimensions", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "GetDimensions", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(dataset.Dimensions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetDimensions indicates an expected call of GetDimensions
-func (mr *MockDatasetClientMockRecorder) GetDimensions(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockDatasetClientMockRecorder) GetDimensions(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensions", reflect.TypeOf((*MockDatasetClient)(nil).GetDimensions), arg0, arg1, arg2, arg3)
-}
-
-// GetEditions mocks base method
-func (m *MockDatasetClient) GetEditions(arg0 context.Context, arg1 string) ([]dataset.Edition, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEditions", arg0, arg1)
-	ret0, _ := ret[0].([]dataset.Edition)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetEditions indicates an expected call of GetEditions
-func (mr *MockDatasetClientMockRecorder) GetEditions(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEditions", reflect.TypeOf((*MockDatasetClient)(nil).GetEditions), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensions", reflect.TypeOf((*MockDatasetClient)(nil).GetDimensions), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // GetOptions mocks base method
-func (m *MockDatasetClient) GetOptions(arg0 context.Context, arg1, arg2, arg3, arg4 string) (dataset.Options, error) {
+func (m *MockDatasetClient) GetOptions(arg0 context.Context, arg1, arg2, arg3, arg4, arg5, arg6, arg7 string) (dataset.Options, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOptions", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "GetOptions", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 	ret0, _ := ret[0].(dataset.Options)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOptions indicates an expected call of GetOptions
-func (mr *MockDatasetClientMockRecorder) GetOptions(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockDatasetClientMockRecorder) GetOptions(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptions", reflect.TypeOf((*MockDatasetClient)(nil).GetOptions), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptions", reflect.TypeOf((*MockDatasetClient)(nil).GetOptions), arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 }
 
 // GetVersion mocks base method
-func (m *MockDatasetClient) GetVersion(arg0 context.Context, arg1, arg2, arg3 string) (dataset.Version, error) {
+func (m *MockDatasetClient) GetVersion(arg0 context.Context, arg1, arg2, arg3, arg4, arg5, arg6, arg7 string) (dataset.Version, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetVersion", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "GetVersion", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 	ret0, _ := ret[0].(dataset.Version)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetVersion indicates an expected call of GetVersion
-func (mr *MockDatasetClientMockRecorder) GetVersion(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockDatasetClientMockRecorder) GetVersion(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersion", reflect.TypeOf((*MockDatasetClient)(nil).GetVersion), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersion", reflect.TypeOf((*MockDatasetClient)(nil).GetVersion), arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 }
 
 // GetVersionMetadata mocks base method
-func (m *MockDatasetClient) GetVersionMetadata(arg0 context.Context, arg1, arg2, arg3 string) (dataset.Metadata, error) {
+func (m *MockDatasetClient) GetVersionMetadata(arg0 context.Context, arg1, arg2, arg3, arg4, arg5, arg6 string) (dataset.Metadata, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetVersionMetadata", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "GetVersionMetadata", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(dataset.Metadata)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetVersionMetadata indicates an expected call of GetVersionMetadata
-func (mr *MockDatasetClientMockRecorder) GetVersionMetadata(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockDatasetClientMockRecorder) GetVersionMetadata(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersionMetadata", reflect.TypeOf((*MockDatasetClient)(nil).GetVersionMetadata), arg0, arg1, arg2, arg3)
-}
-
-// GetVersions mocks base method
-func (m *MockDatasetClient) GetVersions(arg0 context.Context, arg1, arg2 string) ([]dataset.Version, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetVersions", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]dataset.Version)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetVersions indicates an expected call of GetVersions
-func (mr *MockDatasetClientMockRecorder) GetVersions(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersions", reflect.TypeOf((*MockDatasetClient)(nil).GetVersions), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersionMetadata", reflect.TypeOf((*MockDatasetClient)(nil).GetVersionMetadata), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // Healthcheck mocks base method

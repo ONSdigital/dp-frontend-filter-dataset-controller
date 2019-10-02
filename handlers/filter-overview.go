@@ -8,9 +8,9 @@ import (
 	"sort"
 	"unicode"
 
+	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
 
 	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/go-ns/log"
@@ -60,7 +60,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	datasetDimensions, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
+	datasetDimensions, err := f.DatasetClient.GetDimensions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -71,7 +71,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	dimensionIDNameLookup := make(map[string]map[string]string)
 	for _, dim := range datasetDimensions.Items {
 		idNameLookup := make(map[string]string)
-		options, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, dim.Name)
+		options, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, f.serviceAuthToken, collectionID, datasetID, edition, version, dim.Name)
 		if err != nil {
 			log.InfoCtx(ctx, "failed to get options from dataset client",
 				log.Data{"error": err, "dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -107,14 +107,14 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	sort.Sort(dimensions)
 
-	dataset, err := f.DatasetClient.Get(req.Context(), datasetID)
+	dataset, err := f.DatasetClient.Get(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, datasetID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dataset", log.Data{"error": err, "dataset_id": datasetID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	ver, err := f.DatasetClient.GetVersion(req.Context(), datasetID, edition, version)
+	ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get version", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
