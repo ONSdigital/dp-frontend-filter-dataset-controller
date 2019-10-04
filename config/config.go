@@ -6,19 +6,18 @@ import (
 
 // Config represents service configuration for dp-frontend-filter-dataset-controller
 type Config struct {
-	BindAddr			string
-	RendererURL			string
-	FilterAPIURL		string
-	DatasetAPIURL		string
-	HierarchyAPIURL		string
-	DatasetAPIAuthToken	string
-	FilterAPIAuthToken	string
-	SearchAPIAuthToken	string
-	ServiceAuthToken  	string
-	UserAuthToken  		string
-	DownloadAuthToken  	string
-	SearchAPIURL		string
-	DownloadServiceURL	string
+	BindAddr            string
+	RendererURL         string
+	FilterAPIURL        string
+	DatasetAPIURL       string
+	HierarchyAPIURL     string
+	DatasetAPIAuthToken string
+	FilterAPIAuthToken  string
+	SearchAPIAuthToken  string
+	ServiceAuthToken    string
+	DownloadAuthToken   string
+	SearchAPIURL        string
+	DownloadServiceURL  string
 
 }
 
@@ -26,18 +25,18 @@ type Config struct {
 // variables
 func Get() *Config {
 	cfg := &Config{
-		BindAddr:            	":20001",
-		RendererURL:         	"http://localhost:20010",
-		FilterAPIURL:        	"http://localhost:22100",
-		DatasetAPIURL:       	"http://localhost:22000",
-		HierarchyAPIURL:     	"http://localhost:22600",
-		DatasetAPIAuthToken: 	"FD0108EA-825D-411C-9B1D-41EF7727F465",
-		FilterAPIAuthToken:  	"FD0108EA-825D-411C-9B1D-41EF7727F465",
-		SearchAPIAuthToken:  	"SD0108EA-825D-411C-45J3-41EF7727F123",
-		ServiceAuthToken:  	 	"",
-		DownloadAuthToken:  	"",
-		SearchAPIURL:        	"http://localhost:23100",
-		DownloadServiceURL:  	"http://localhost:23600",
+		BindAddr:            ":20001",
+		RendererURL:         "http://localhost:20010",
+		FilterAPIURL:        "http://localhost:22100",
+		DatasetAPIURL:       "http://localhost:22000",
+		HierarchyAPIURL:     "http://localhost:22600",
+		DatasetAPIAuthToken: "FD0108EA-825D-411C-9B1D-41EF7727F465",
+		FilterAPIAuthToken:  "FD0108EA-825D-411C-9B1D-41EF7727F465",
+		SearchAPIAuthToken:  "SD0108EA-825D-411C-45J3-41EF7727F123",
+		ServiceAuthToken:    "",
+		DownloadAuthToken:   "",
+		SearchAPIURL:        "http://localhost:23100",
+		DownloadServiceURL:  "http://localhost:23600",
 	}
 
 	if v := os.Getenv("BIND_ADDR"); len(v) > 0 {
