@@ -32,7 +32,6 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 	name := vars["name"]
 	filterID := vars["filterID"]
 	ctx := req.Context()
-	log.InfoR(req, "---HERE!!!!---", log.Data{"ctx": ctx})
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
