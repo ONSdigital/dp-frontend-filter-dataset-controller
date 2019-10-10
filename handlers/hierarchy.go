@@ -28,6 +28,10 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 
 	ctx := req.Context()
 	collectionID := getCollectionIDFromContext(ctx)
+	serviceAuthToken, err := headers.GetServiceAuthToken(req)
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
+	}
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if !headers.IsNotFound(err) {
 		log.Error(err, nil)
@@ -49,7 +53,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
+	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -94,7 +98,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, name)
 		if err != nil {
 			log.ErrorCtx(ctx, err, nil)
 		}
@@ -103,7 +107,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			for _, opt := range opts {
 				if opt.Option == hv.Links.Self.ID {
 					if _, ok := req.Form[hv.Links.Self.ID]; !ok {
-						if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, name, hv.Links.Self.ID); err != nil {
+						if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, name, hv.Links.Self.ID); err != nil {
 							log.ErrorCtx(ctx, err, nil)
 						}
 					}
@@ -126,7 +130,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, name, k); err != nil {
+		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, name, k); err != nil {
 			log.InfoCtx(ctx, err.Error(), nil)
 		}
 	}
@@ -138,6 +142,10 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 
 	ctx := req.Context()
 	collectionID := getCollectionIDFromContext(ctx)
+	serviceAuthToken, err := headers.GetServiceAuthToken(req)
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
+	}
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if !headers.IsNotFound(err) {
 		log.Error(err, nil)
@@ -164,7 +172,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 	for _, child := range h.Children {
 		options = append(options, child.Links.Self.ID)
 	}
-	if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, fil.FilterID, name, options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, serviceAuthToken, collectionID, fil.FilterID, name, options); err != nil {
 		log.ErrorCtx(ctx, err, nil)
 	}
 
@@ -174,6 +182,10 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI string) {
 	ctx := req.Context()
 	collectionID := getCollectionIDFromContext(ctx)
+	serviceAuthToken, err := headers.GetServiceAuthToken(req)
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
+	}
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if !headers.IsNotFound(err) {
 		log.Error(err, nil)
@@ -197,7 +209,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 	}
 
 	for _, child := range h.Children {
-		if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, fil.FilterID, name, child.Links.Self.ID); err != nil {
+		if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, serviceAuthToken, collectionID, fil.FilterID, name, child.Links.Self.ID); err != nil {
 			log.ErrorCtx(ctx, err, nil)
 		}
 	}
@@ -213,12 +225,16 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
 	collectionID := getCollectionIDFromContext(ctx)
+	serviceAuthToken, err := headers.GetServiceAuthToken(req)
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
+	}
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if !headers.IsNotFound(err) {
 		log.Error(err, nil)
 	}
 
-	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
+	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -241,7 +257,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, name)
+	selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, name)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
@@ -261,20 +277,20 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	d, err := f.DatasetClient.Get(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, datasetID)
+	d, err := f.DatasetClient.Get(req.Context(), userAccessToken, serviceAuthToken, collectionID, datasetID)
 	if err != nil {
 		log.InfoCtx(req.Context(), "failed to get dataset", log.Data{"error": err, "dataset_id": datasetID})
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, datasetID, edition, version)
+	ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, serviceAuthToken, f.downloadAuthToken, collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(req.Context(), "failed to get version", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	allVals, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, f.serviceAuthToken, collectionID, datasetID, edition, version, name)
+	allVals, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, serviceAuthToken, collectionID, datasetID, edition, version, name)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from dataset client",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -282,7 +298,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), userAccessToken, serviceAuthToken, collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})

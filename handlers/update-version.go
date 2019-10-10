@@ -19,19 +19,23 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
 	collectionID := getCollectionIDFromContext(ctx)
+	serviceAuthToken, err := headers.GetServiceAuthToken(req)
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
+	}
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if !headers.IsNotFound(err) {
 		log.Error(err, nil)
 	}
 
-	oldJob, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
+	oldJob, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID)
+	dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -52,7 +56,7 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dst, err := f.DatasetClient.Get(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, datasetID)
+	dst, err := f.DatasetClient.Get(req.Context(), userAccessToken, serviceAuthToken, collectionID, datasetID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dataset", log.Data{"error": err, "dataset_id": datasetID})
 		setStatusCode(req, w, err)
@@ -73,7 +77,7 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	newFilterID, err := f.FilterClient.CreateBlueprint(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, datasetID, edition, version, []string{})
+	newFilterID, err := f.FilterClient.CreateBlueprint(req.Context(), userAccessToken, serviceAuthToken, f.downloadAuthToken, collectionID, datasetID, edition, version, []string{})
 	if err != nil {
 		log.InfoCtx(ctx, "failed to create filter blueprint", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
@@ -81,13 +85,13 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 	}
 
 	for _, dim := range dims {
-		if err := f.FilterClient.AddDimension(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, newFilterID, dim.Name); err != nil {
+		if err := f.FilterClient.AddDimension(req.Context(), userAccessToken, serviceAuthToken, collectionID, newFilterID, dim.Name); err != nil {
 			log.InfoCtx(ctx, "failed to add dimension", log.Data{"error": err, "filter_id": filterID, "dimension": dim.Name})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		dimValues, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, dim.Name)
+		dimValues, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, dim.Name)
 		if err != nil {
 			log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": dim.Name})
 			setStatusCode(req, w, err)
@@ -99,7 +103,7 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 			vals = append(vals, val.Option)
 		}
 
-		if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, newFilterID, dim.Name, vals); err != nil {
+		if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, serviceAuthToken, collectionID, newFilterID, dim.Name, vals); err != nil {
 			log.InfoCtx(ctx, "failed to add dimension values", log.Data{"error": err, "filter_id": newFilterID, "dimension": dim.Name})
 			setStatusCode(req, w, err)
 			return

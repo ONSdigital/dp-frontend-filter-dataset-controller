@@ -27,19 +27,23 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 	dimensionName := "time"
 
 	collectionID := getCollectionIDFromContext(ctx)
+	serviceAuthToken, err := headers.GetServiceAuthToken(req)
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
+	}
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if !headers.IsNotFound(err) {
 		log.Error(err, nil)
 	}
 
 
-	if err := f.FilterClient.RemoveDimension(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, dimensionName); err != nil {
+	if err := f.FilterClient.RemoveDimension(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, dimensionName); err != nil {
 		log.InfoCtx(ctx, "failed to remove dimension", log.Data{"error": err, "filter_id": filterID, "dimension": dimensionName})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	if err := f.FilterClient.AddDimension(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, dimensionName); err != nil {
+	if err := f.FilterClient.AddDimension(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, dimensionName); err != nil {
 		log.InfoCtx(ctx, "failed to add dimension", log.Data{"error": err, "filter_id": filterID, "dimension": dimensionName})
 		setStatusCode(req, w, err)
 		return
@@ -63,7 +67,7 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 
 	switch req.Form.Get("time-selection") {
 	case "latest":
-		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, dimensionName, req.Form.Get("latest-option")); err != nil {
+		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, dimensionName, req.Form.Get("latest-option")); err != nil {
 			log.ErrorCtx(ctx, err, nil)
 		}
 	case "single":
@@ -92,6 +96,10 @@ func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
 	dimensionName := "time"
 
 	collectionID := getCollectionIDFromContext(ctx)
+	serviceAuthToken, err := headers.GetServiceAuthToken(req)
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
+	}
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if !headers.IsNotFound(err) {
 		log.Error(err, nil)
@@ -109,7 +117,7 @@ func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
 	}
 
 
-	return f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, dimensionName, date.Format("Jan-06"))
+	return f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, dimensionName, date.Format("Jan-06"))
 }
 
 func (f *Filter) addTimeList(filterID string, req *http.Request) error {
@@ -117,13 +125,17 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	collectionID := getCollectionIDFromContext(ctx)
 	dimensionName := "time"
 
+	serviceAuthToken, err := headers.GetServiceAuthToken(req)
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
+	}
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if !headers.IsNotFound(err) {
 		log.Error(err, nil)
 	}
 
 
-	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, dimensionName)
+	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, dimensionName)
 	if err != nil {
 		return err
 	}
@@ -131,7 +143,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	// Remove any unselected times
 	for _, opt := range opts {
 		if _, ok := req.Form[opt.Option]; !ok {
-			if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, dimensionName, opt.Option); err != nil {
+			if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, dimensionName, opt.Option); err != nil {
 				log.ErrorCtx(ctx, err, nil)
 			}
 		}
@@ -146,7 +158,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 		options = append(options, k)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, dimensionName, options); err != nil {
+	if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, dimensionName, options); err != nil {
 		log.TraceCtx(ctx, err.Error(), nil)
 	}
 
@@ -162,13 +174,16 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 	dimensionName := "time"
 
 	collectionID := getCollectionIDFromContext(ctx)
+	serviceAuthToken, err := headers.GetServiceAuthToken(req)
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
+	}
 	userAccessToken, err := headers.GetUserAuthToken(req)
-
 	if !headers.IsNotFound(err) {
 		log.Error(err, nil)
 	}
 
-	values, labelIDMap, err := f.getDimensionValues(req.Context(), filterID, dimensionName, userAccessToken)
+	values, labelIDMap, err := f.getDimensionValues(req.Context(), userAccessToken, serviceAuthToken, filterID, dimensionName)
 	if err != nil {
 		return err
 	}
@@ -202,7 +217,7 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 	}
 
 
-	return f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, dimensionName, options)
+	return f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, dimensionName, options)
 }
 
 // Time specifically handles the data for the time dimension page
@@ -213,13 +228,16 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 	dimensionName := "time"
 
 	collectionID := getCollectionIDFromContext(ctx)
+	serviceAuthToken, err := headers.GetServiceAuthToken(req)
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
+	}
 	userAccessToken, err := headers.GetUserAuthToken(req)
-
 	if !headers.IsNotFound(err) {
 		log.Error(err, nil)
 	}
 
-	fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
+	fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -239,20 +257,20 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.DatasetClient.Get(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, datasetID)
+	dataset, err := f.DatasetClient.Get(req.Context(), userAccessToken, serviceAuthToken, collectionID, datasetID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dataset", log.Data{"error": err, "dataset_id": datasetID})
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, datasetID, edition, version)
+	ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, serviceAuthToken, f.downloadAuthToken, collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get version", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	allValues, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, f.serviceAuthToken, collectionID, datasetID, edition, version, dimensionName)
+	allValues, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, serviceAuthToken, collectionID, datasetID, edition, version, dimensionName)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from dataset client",
 			log.Data{"error": err, "dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -267,14 +285,14 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	selValues, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, dimensionName)
+	selValues, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, dimensionName)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": dimensionName})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), userAccessToken, serviceAuthToken, collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})

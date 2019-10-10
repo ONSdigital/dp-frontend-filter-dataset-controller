@@ -38,7 +38,8 @@ func Init(r *mux.Router) {
 	dc := dataset.NewAPIClient(cfg.DatasetAPIURL)
 	hc := hierarchy.New(cfg.HierarchyAPIURL)
 	sc := search.New(cfg.SearchAPIURL)
-	filter := handlers.NewFilter(rend, fc, dc, hc, sc, v, cfg.DownloadServiceURL, cfg.ServiceAuthToken, cfg.DownloadAuthToken)
+
+	filter := handlers.NewFilter(rend, fc, dc, hc, sc, v, cfg.DownloadServiceURL)
 
 	r.StrictSlash(true).Path("/healthcheck").HandlerFunc(healthcheck.Handler)
 

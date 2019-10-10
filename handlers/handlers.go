@@ -24,7 +24,7 @@ type Filter struct {
 }
 
 // NewFilter creates a new instance of Filter
-func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient, sc SearchClient, val Validator, downloadServiceURL, serviceAuthToken, downloadAuthToken string) *Filter {
+func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient, sc SearchClient, val Validator, downloadServiceURL string) *Filter {
 	return &Filter{
 		Renderer:           r,
 		FilterClient:       fc,
@@ -33,8 +33,6 @@ func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient
 		SearchClient:       sc,
 		val:                val,
 		downloadServiceURL: downloadServiceURL,
-		serviceAuthToken: 	serviceAuthToken,
-		downloadAuthToken: 	downloadAuthToken,
 	}
 }
 
