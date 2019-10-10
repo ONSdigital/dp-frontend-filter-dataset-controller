@@ -16,7 +16,6 @@ type Config struct {
 	SearchAPIAuthToken  string
 	SearchAPIURL        string
 	DownloadServiceURL  string
-
 }
 
 // Get returns the default config with any modifications through environment
