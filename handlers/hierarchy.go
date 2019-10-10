@@ -29,10 +29,8 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -141,10 +139,8 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 	ctx := req.Context()
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 
@@ -179,10 +175,8 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 	ctx := req.Context()
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 	var h hierarchy.Model
@@ -220,10 +214,8 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, filterID)

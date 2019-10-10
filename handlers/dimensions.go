@@ -35,10 +35,8 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 	fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
@@ -131,10 +129,8 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, name)
@@ -215,10 +211,8 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 	fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
@@ -462,10 +456,8 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 	fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
@@ -519,10 +511,8 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -635,10 +625,8 @@ func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 	if err := f.FilterClient.RemoveDimension(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, name); err != nil {
@@ -668,10 +656,8 @@ func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 	if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, f.serviceAuthToken, collectionID, filterID, name, option); err != nil {

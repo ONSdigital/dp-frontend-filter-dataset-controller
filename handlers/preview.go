@@ -30,10 +30,8 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 
     collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
@@ -63,10 +61,8 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 
@@ -269,10 +265,8 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 	prev, err := f.FilterClient.GetOutput(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, filterOutputID)

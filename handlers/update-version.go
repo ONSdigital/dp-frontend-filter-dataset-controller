@@ -20,10 +20,8 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil{
-		if err != headers.ErrHeaderNotFound {
-			log.Error(err, nil)
-		}
+	if !headers.IsNotFound(err) {
+		log.Error(err, nil)
 	}
 
 	oldJob, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, f.serviceAuthToken, f.downloadAuthToken, collectionID, filterID)
