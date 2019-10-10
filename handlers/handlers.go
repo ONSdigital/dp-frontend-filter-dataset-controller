@@ -19,8 +19,6 @@ type Filter struct {
 	SearchClient       SearchClient
 	val                Validator
 	downloadServiceURL string
-	serviceAuthToken   string
-	downloadAuthToken  string
 }
 
 // NewFilter creates a new instance of Filter

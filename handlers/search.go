@@ -29,10 +29,6 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
 	collectionID := getCollectionIDFromContext(ctx)
-	serviceAuthToken, err := headers.GetServiceAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
-	}
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if !headers.IsNotFound(err) {
 		log.Error(err, nil)
@@ -43,14 +39,14 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 		searchConfig = append(searchConfig, search.Config{InternalToken: cfg.SearchAPIAuthToken, FlorenceToken: req.Header.Get("X-Florence-Token")})
 	}
 
-	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, serviceAuthToken, f.downloadAuthToken, collectionID,filterID)
+	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID,filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, name)
+	selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from filter client", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
@@ -70,20 +66,20 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	d, err := f.DatasetClient.Get(req.Context(), userAccessToken, serviceAuthToken, collectionID, datasetID)
+	d, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dataset", log.Data{"error": err, "dataset_id": datasetID})
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, serviceAuthToken, f.downloadAuthToken, collectionID, datasetID, edition, version)
+	ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get version", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	allVals, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, serviceAuthToken, collectionID, datasetID, edition, version, name)
+	allVals, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, "", collectionID, datasetID, edition, version, name)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from dataset client",
 			log.Data{"error": err, "dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -99,7 +95,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(req.Context(), userAccessToken, serviceAuthToken, collectionID, datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -142,16 +138,12 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 	redirectURI := fmt.Sprintf("/filters/%s/dimensions", filterID)
 
 	collectionID := getCollectionIDFromContext(ctx)
-	serviceAuthToken, err := headers.GetServiceAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
-	}
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if !headers.IsNotFound(err) {
 		log.Error(err, nil)
 	}
 
-	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, serviceAuthToken, f.downloadAuthToken, collectionID,filterID)
+	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID,filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -183,7 +175,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 		for _, item := range searchRes.Items {
 			options = append(options, item.Code)
 		}
-		if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, name, options); err != nil {
+		if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options); err != nil {
 			log.InfoCtx(ctx, "failed to add dimension", log.Data{"error": err, "filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
@@ -193,7 +185,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 
 	if len(req.Form["remove-all"]) > 0 {
 		for _, item := range searchRes.Items {
-			if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, name, item.Code); err != nil {
+			if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, item.Code); err != nil {
 				log.InfoCtx(ctx, "failed to remove dimension option", log.Data{"error": err, "filter_id": filterID, "dimension": name, "option": item.Code})
 				setStatusCode(req, w, err)
 			}
@@ -207,7 +199,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 
 	go func() {
 
-		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
 		if err != nil {
 			log.ErrorCtx(ctx, err, nil)
 		}
@@ -216,7 +208,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 			for _, opt := range opts {
 				if opt.Option == item.Code {
 					if _, ok := req.Form[item.Code]; !ok {
-						if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, name, item.Code); err != nil {
+						if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, item.Code); err != nil {
 							log.ErrorCtx(ctx, err, nil)
 						}
 					}
@@ -239,7 +231,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, serviceAuthToken, collectionID, filterID, name, k); err != nil {
+		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, k); err != nil {
 			log.InfoCtx(ctx, err.Error(), nil)
 			continue
 		}
