@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-frontend-models/model"
-	"github.com/ONSdigital/go-ns/clients/dataset"
-	"github.com/ONSdigital/go-ns/clients/filter"
+	"github.com/ONSdigital/dp-api-clients-go/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/filter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
