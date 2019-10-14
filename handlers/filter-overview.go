@@ -26,8 +26,10 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 	dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID)
@@ -160,8 +162,10 @@ func (f *Filter) FilterOverviewClearAll(w http.ResponseWriter, req *http.Request
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 	dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID)

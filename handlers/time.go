@@ -28,8 +28,10 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 
@@ -93,8 +95,10 @@ func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 	date, err := time.Parse("January 2006", fmt.Sprintf("%s %s", month, year))
@@ -112,8 +116,10 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	dimensionName := "time"
 
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 
@@ -157,8 +163,10 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 	values, labelIDMap, err := f.getDimensionValues(req.Context(), userAccessToken, filterID, dimensionName)
@@ -207,8 +215,10 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 	fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)

@@ -26,8 +26,10 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 	if err := f.FilterClient.RemoveDimension(ctx, userAccessToken, "", collectionID, filterID, dimensionName); err != nil {
@@ -82,8 +84,10 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 	collectionID := getCollectionIDFromContext(ctx)
 	dimensionName := "age"
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 	opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName)
 	if err != nil {
@@ -132,8 +136,10 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 	}
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 	values, labelIDMap, err := f.getDimensionValues(ctx, userAccessToken, filterID, dimensionName)
@@ -194,8 +200,10 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 	fj, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
