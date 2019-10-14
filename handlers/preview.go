@@ -30,8 +30,10 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 
     collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
@@ -61,8 +63,10 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 
@@ -265,10 +269,11 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
-
 	prev, err := f.FilterClient.GetOutput(req.Context(), userAccessToken, "", "", collectionID, filterOutputID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get filter output", log.Data{"error": err, "filter_output_id": filterOutputID})

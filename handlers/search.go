@@ -30,8 +30,10 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 	var searchConfig []search.Config
@@ -139,8 +141,10 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 
 	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
-	if !headers.IsNotFound(err) {
-		log.Error(err, nil)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
 	}
 
 	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID,filterID)
