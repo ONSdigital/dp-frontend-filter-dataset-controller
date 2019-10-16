@@ -12,11 +12,12 @@ import (
 
 	"strings"
 
+	"github.com/ONSdigital/dp-api-clients-go/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
-	"github.com/ONSdigital/go-ns/clients/dataset"
-	"github.com/ONSdigital/go-ns/clients/filter"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
@@ -27,16 +28,22 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 	filterID := vars["filterID"]
 	ctx := req.Context()
 
-	req = forwardFlorenceTokenIfRequired(req)
+    collectionID := getCollectionIDFromContext(ctx)
+	userAccessToken, err := headers.GetUserAuthToken(req)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
+	}
 
-	fil, err := f.FilterClient.GetJobState(req.Context(), filterID)
+	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get job state", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	mdl, err := f.FilterClient.UpdateBlueprint(req.Context(), fil, true)
+	mdl, err := f.FilterClient.UpdateBlueprint(req.Context(), userAccessToken, "", "", collectionID, fil, true)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to submit filter blueprint", log.Data{"error": err, "filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -54,16 +61,23 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	filterOutputID := vars["filterOutputID"]
 	ctx := req.Context()
 
-	req = forwardFlorenceTokenIfRequired(req)
+	collectionID := getCollectionIDFromContext(ctx)
+	userAccessToken, err := headers.GetUserAuthToken(req)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
+	}
 
-	fj, err := f.FilterClient.GetOutput(req.Context(), filterOutputID)
+
+	fj, err := f.FilterClient.GetOutput(req.Context(), userAccessToken, "", "", collectionID,filterOutputID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get filter output", log.Data{"error": err, "filter_output_id": filterOutputID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	prev, err := f.FilterClient.GetPreview(req.Context(), filterOutputID)
+	prev, err := f.FilterClient.GetPreview(req.Context(), userAccessToken, "", "", collectionID, filterOutputID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get preview", log.Data{"error": err, "filter_output_id": filterOutputID})
 		setStatusCode(req, w, err)
@@ -128,13 +142,13 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dataset, err := f.DatasetClient.Get(req.Context(), datasetID)
+	dataset, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dataset", log.Data{"error": err, "dataset_id": datasetID})
 		setStatusCode(req, w, err)
 		return
 	}
-	ver, err := f.DatasetClient.GetVersion(req.Context(), datasetID, edition, version)
+	ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get version", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
@@ -154,14 +168,14 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		p.Data.IsLatestVersion = true
 	}
 
-	metadata, err := f.DatasetClient.GetVersionMetadata(req.Context(), datasetID, edition, version)
+	metadata, err := f.DatasetClient.GetVersionMetadata(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get version metadata", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(req.Context(), datasetID, edition, version)
+	dims, err := f.DatasetClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get dimensions",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -169,7 +183,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	size, err := f.getMetadataTextSize(req.Context(), datasetID, edition, version, metadata, dims)
+	size, err := f.getMetadataTextSize(req.Context(), userAccessToken, datasetID, edition, version, metadata, dims)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get metadata text size", log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
@@ -177,7 +191,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	}
 
 	for _, dim := range dims.Items {
-		opts, err := f.DatasetClient.GetOptions(req.Context(), datasetID, edition, version, dim.Name)
+		opts, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, "", collectionID, datasetID, edition, version, dim.Name)
 		if err != nil {
 			log.InfoCtx(ctx, "failed to get options from dataset client",
 				log.Data{"error": err, "dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -253,9 +267,14 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 	filterOutputID := vars["filterOutputID"]
 	ctx := req.Context()
 
-	req = forwardFlorenceTokenIfRequired(req)
-
-	prev, err := f.FilterClient.GetOutput(req.Context(), filterOutputID)
+	collectionID := getCollectionIDFromContext(ctx)
+	userAccessToken, err := headers.GetUserAuthToken(req)
+	if err != nil {
+		if headers.IsNotErrNotFound(err) {
+			log.Error(err, nil)
+		}
+	}
+	prev, err := f.FilterClient.GetOutput(req.Context(), userAccessToken, "", "", collectionID, filterOutputID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get filter output", log.Data{"error": err, "filter_output_id": filterOutputID})
 		setStatusCode(req, w, err)
@@ -287,13 +306,14 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 	w.Write(b)
 }
 
-func (f *Filter) getMetadataTextSize(ctx context.Context, datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.Dimensions) (int, error) {
+func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.Dimensions) (int, error) {
 	var b bytes.Buffer
+	collectionID := getCollectionIDFromContext(ctx)
 
 	b.WriteString(metadata.ToString())
 	b.WriteString("Dimensions:\n")
 	for _, dimension := range dimensions.Items {
-		options, err := f.DatasetClient.GetOptions(ctx, datasetID, edition, version, dimension.Name)
+		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name)
 		if err != nil {
 			return 0, err
 		}

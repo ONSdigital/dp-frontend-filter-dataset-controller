@@ -10,7 +10,6 @@ type Config struct {
 	RendererURL         string
 	FilterAPIURL        string
 	DatasetAPIURL       string
-	CodeListAPIURL      string
 	HierarchyAPIURL     string
 	DatasetAPIAuthToken string
 	FilterAPIAuthToken  string
@@ -25,7 +24,6 @@ func Get() *Config {
 	cfg := &Config{
 		BindAddr:            ":20001",
 		RendererURL:         "http://localhost:20010",
-		CodeListAPIURL:      "http://localhost:22400",
 		FilterAPIURL:        "http://localhost:22100",
 		DatasetAPIURL:       "http://localhost:22000",
 		HierarchyAPIURL:     "http://localhost:22600",
@@ -44,9 +42,6 @@ func Get() *Config {
 	}
 	if v := os.Getenv("FILTER_API_URL"); len(v) > 0 {
 		cfg.FilterAPIURL = v
-	}
-	if v := os.Getenv("CODELIST_API_URL"); len(v) > 0 {
-		cfg.CodeListAPIURL = v
 	}
 	if v := os.Getenv("DATASET_API_URL"); len(v) > 0 {
 		cfg.DatasetAPIURL = v
