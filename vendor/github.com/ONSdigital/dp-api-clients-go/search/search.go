@@ -9,13 +9,13 @@ import (
 	"strconv"
 
 	"github.com/ONSdigital/dp-api-clients-go/clientlog"
-	"github.com/ONSdigital/dp-rchttp"
+	rchttp "github.com/ONSdigital/dp-rchttp"
 	"github.com/ONSdigital/go-ns/common"
 )
 
 const (
 	service       = "search-api"
-	defaultLimit  = 20
+	defaultLimit  = 50
 	defaultOffset = 0
 )
 
@@ -130,12 +130,12 @@ func (c *Client) Dimension(ctx context.Context, datasetID, edition, version, nam
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, &ErrInvalidSearchAPIResponse{http.StatusOK, resp.StatusCode, uri}
 	}
 
-	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&m)
 
 	return
