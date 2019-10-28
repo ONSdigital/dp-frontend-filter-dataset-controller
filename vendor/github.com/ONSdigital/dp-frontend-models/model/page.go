@@ -7,7 +7,6 @@ type Page struct {
 	DatasetTitle                     string         `json:"dataset_title"`
 	URI                              string         `json:"uri"`
 	Taxonomy                         []TaxonomyNode `json:"taxonomy"`
-	TaxonomyDomain                   string         `json:"taxonomy_domain"`
 	Breadcrumb                       []TaxonomyNode `json:"breadcrumb"`
 	IsInFilterBreadcrumb             bool           `json:"is_in_filter_breadcrumb"`
 	ServiceMessage                   string         `json:"service_message"`
@@ -15,7 +14,7 @@ type Page struct {
 	SearchDisabled                   bool           `json:"search_disabled"`
 	SiteDomain                       string         `json:"-"`
 	PatternLibraryAssetsPath         string         `json:"-"`
-	Language                         string         `json:"-"`
+	Language                         string         `json:"language"`
 	IncludeAssetsIntegrityAttributes bool           `json:"-"`
 	ShowFeedbackForm                 bool           `json:"show_feedback_form"`
 	ReleaseDate                      string         `json:"release_date"`
