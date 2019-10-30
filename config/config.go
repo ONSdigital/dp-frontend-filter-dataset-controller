@@ -31,7 +31,7 @@ func Get() *Config {
 		FilterAPIAuthToken:  "FD0108EA-825D-411C-9B1D-41EF7727F465",
 		SearchAPIAuthToken:  "SD0108EA-825D-411C-45J3-41EF7727F123",
 		SearchAPIURL:        "http://localhost:23100",
-		DownloadServiceURL:  "http://localhost:23600",
+		DownloadServiceURL:  "http://localhost:23600", 
 	}
 
 	if v := os.Getenv("BIND_ADDR"); len(v) > 0 {
