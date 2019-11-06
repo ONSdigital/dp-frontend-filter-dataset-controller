@@ -141,10 +141,10 @@
 			"revisionTime": "2019-09-16T10:14:16Z"
 		},
 		{
-			"checksumSHA1": "vTOAgsj69LFRQVsg/Of0O8B/eaY=",
+			"checksumSHA1": "P5NQRDEiQJNSdTZqgcfR/o5T43Q=",
 			"path": "github.com/ONSdigital/go-ns/handlers/collectionID",
-			"revision": "caee21dda39f1143056a5ec0b3031036e14c7c42",
-			"revisionTime": "2019-05-20T09:08:57Z"
+			"revision": "6df4535416a74cab3a02f6aeb633e237334a1023",
+			"revisionTime": "2019-10-18T13:02:19Z"
 		},
 		{
 			"checksumSHA1": "ei+/RCSa0XO9v9rQxAh0uqyJ/28=",
