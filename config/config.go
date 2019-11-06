@@ -2,36 +2,42 @@ package config
 
 import (
 	"os"
+	"strconv"
+
+	"github.com/ONSdigital/go-ns/log"
+	"github.com/pkg/errors"
 )
 
 // Config represents service configuration for dp-frontend-filter-dataset-controller
 type Config struct {
-	BindAddr            string
-	RendererURL         string
-	FilterAPIURL        string
-	DatasetAPIURL       string
-	HierarchyAPIURL     string
-	DatasetAPIAuthToken string
-	FilterAPIAuthToken  string
-	SearchAPIAuthToken  string
-	SearchAPIURL        string
-	DownloadServiceURL  string
+	BindAddr             string
+	RendererURL          string
+	FilterAPIURL         string
+	DatasetAPIURL        string
+	HierarchyAPIURL      string
+	DatasetAPIAuthToken  string
+	FilterAPIAuthToken   string
+	SearchAPIAuthToken   string
+	SearchAPIURL         string
+	DownloadServiceURL   string
+	EnableDatasetPreview bool
 }
 
 // Get returns the default config with any modifications through environment
 // variables
 func Get() *Config {
 	cfg := &Config{
-		BindAddr:            ":20001",
-		RendererURL:         "http://localhost:20010",
-		FilterAPIURL:        "http://localhost:22100",
-		DatasetAPIURL:       "http://localhost:22000",
-		HierarchyAPIURL:     "http://localhost:22600",
-		DatasetAPIAuthToken: "FD0108EA-825D-411C-9B1D-41EF7727F465",
-		FilterAPIAuthToken:  "FD0108EA-825D-411C-9B1D-41EF7727F465",
-		SearchAPIAuthToken:  "SD0108EA-825D-411C-45J3-41EF7727F123",
-		SearchAPIURL:        "http://localhost:23100",
-		DownloadServiceURL:  "http://localhost:23600",
+		BindAddr:             ":20001",
+		RendererURL:          "http://localhost:20010",
+		FilterAPIURL:         "http://localhost:22100",
+		DatasetAPIURL:        "http://localhost:22000",
+		HierarchyAPIURL:      "http://localhost:22600",
+		DatasetAPIAuthToken:  "FD0108EA-825D-411C-9B1D-41EF7727F465",
+		FilterAPIAuthToken:   "FD0108EA-825D-411C-9B1D-41EF7727F465",
+		SearchAPIAuthToken:   "SD0108EA-825D-411C-45J3-41EF7727F123",
+		SearchAPIURL:         "http://localhost:23100",
+		DownloadServiceURL:   "http://localhost:23600",
+		EnableDatasetPreview: false,
 	}
 
 	if v := os.Getenv("BIND_ADDR"); len(v) > 0 {
@@ -64,6 +70,13 @@ func Get() *Config {
 	if v := os.Getenv("DOWNLOAD_SERVICE_URL"); len(v) > 0 {
 		cfg.DownloadServiceURL = v
 	}
+	if v := os.Getenv("ENABLE_DATASET_PREVIEW"); len(v) > 0 {
+		var err error
+		cfg.EnableDatasetPreview, err = strconv.ParseBool(v)
+		if err != nil {
+			log.Error(errors.WithMessage(err, "error parsing 'ENABLE_DATASET_PREVIEW' flag"), nil)
 
+		}
+	}
 	return cfg
 }
