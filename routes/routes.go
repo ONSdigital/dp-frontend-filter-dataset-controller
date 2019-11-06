@@ -39,12 +39,12 @@ func Init(r *mux.Router) {
 	hc := hierarchy.New(cfg.HierarchyAPIURL)
 	sc := search.New(cfg.SearchAPIURL)
 
-	filter := handlers.NewFilter(rend, fc, dc, hc, sc, v, cfg.DownloadServiceURL)
+	filter := handlers.NewFilter(rend, fc, dc, hc, sc, v, cfg.DownloadServiceURL, cfg.EnableDatasetPreview)
 
 	r.StrictSlash(true).Path("/healthcheck").HandlerFunc(healthcheck.Handler)
 
 	r.Path("/filter-outputs/{filterOutputID}.json").Methods("GET").HandlerFunc(filter.GetFilterJob)
-	r.StrictSlash(true).Path("/filter-outputs/{filterOutputID}").Methods("GET").HandlerFunc(filter.PreviewPage)
+	r.StrictSlash(true).Path("/filter-outputs/{filterOutputID}").Methods("GET").HandlerFunc(filter.OutputPage)
 
 	r.StrictSlash(true).Path("/filters/{filterID}/submit").Methods("POST").HandlerFunc(filter.Submit)
 	r.StrictSlash(true).Path("/filters/{filterID}/dimensions").Methods("GET").HandlerFunc(filter.FilterOverview)
