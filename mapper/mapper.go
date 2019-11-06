@@ -297,10 +297,11 @@ func CreateListSelectorPage(ctx context.Context, name string, selectedValues []f
 }
 
 // CreatePreviewPage maps data items from API responses to create a preview page
-func CreatePreviewPage(ctx context.Context, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterOutputID, datasetID, releaseDate string) previewPage.Page {
+func CreatePreviewPage(ctx context.Context, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterOutputID, datasetID, releaseDate string, enableDatasetPreivew bool) previewPage.Page {
 	var p previewPage.Page
 	p.Metadata.Title = "Preview and Download"
 	p.BetaBannerEnabled = true
+	p.EnableDatasetPreview = enableDatasetPreivew
 
 	log.InfoCtx(ctx, "mapping api responses to preview page model", log.Data{"filterOutputID": filterOutputID, "datasetID": datasetID})
 
@@ -357,8 +358,7 @@ func CreatePreviewPage(ctx context.Context, dimensions []filter.ModelDimension, 
 			Values: dim.Values,
 		})
 	}
-
-	if p.Data.Dimensions == nil {
+	if enableDatasetPreivew && p.Data.Dimensions == nil {
 		p.NoDimensionData = true
 	}
 
