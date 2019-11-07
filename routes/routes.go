@@ -18,8 +18,7 @@ import (
 )
 
 // Init initialises routes for the service
-func Init(r *mux.Router) {
-	cfg := config.Get()
+func Init(r *mux.Router, cfg *config.Config) {
 	ctx := context.Background()
 
 	fi, err := os.Open("rules.json")
