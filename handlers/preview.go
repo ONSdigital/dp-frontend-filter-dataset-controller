@@ -28,7 +28,7 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 	filterID := vars["filterID"]
 	ctx := req.Context()
 
-    collectionID := getCollectionIDFromContext(ctx)
+	collectionID := getCollectionIDFromContext(ctx)
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
@@ -55,8 +55,8 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, fmt.Sprintf("/filter-outputs/%s", filterOutputID), 302)
 }
 
-// PreviewPage controls the rendering of the preview and download page
-func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
+// OutputPage controls the rendering of the preview and download page
+func (f *Filter) OutputPage(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	filterOutputID := vars["filterOutputID"]
 	ctx := req.Context()
@@ -69,62 +69,64 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-
-	fj, err := f.FilterClient.GetOutput(req.Context(), userAccessToken, "", "", collectionID,filterOutputID)
+	fj, err := f.FilterClient.GetOutput(req.Context(), userAccessToken, "", "", collectionID, filterOutputID)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get filter output", log.Data{"error": err, "filter_output_id": filterOutputID})
 		setStatusCode(req, w, err)
 		return
 	}
 
-	prev, err := f.FilterClient.GetPreview(req.Context(), userAccessToken, "", "", collectionID, filterOutputID)
-	if err != nil {
-		log.InfoCtx(ctx, "failed to get preview", log.Data{"error": err, "filter_output_id": filterOutputID})
-		setStatusCode(req, w, err)
-		return
-	}
-
 	filterID := fj.Links.FilterBlueprint.ID
 
-	if len(prev.Headers[0]) < 4 || strings.ToUpper(prev.Headers[0][0:3]) != "V4_" {
-		err = errors.New("Unexpected format - expected `V4_N` in header")
-		log.InfoCtx(ctx, "failed to format header", log.Data{"error": err, "filter_output_id": filterOutputID, "header": prev.Headers})
-		setStatusCode(req, w, err)
-		return
-	}
-
-	markingsColumnCount, err := strconv.Atoi(prev.Headers[0][3:])
-	if err != nil {
-		log.InfoCtx(ctx, "failed to get column count from header cell", log.Data{"error": err, "filter_output_id": filterOutputID, "header": prev.Headers[0]})
-		setStatusCode(req, w, err)
-		return
-	}
-
-	indexOfFirstLabelColumn := markingsColumnCount + 2 // +1 for observation, +1 for first codelist column
-	dimensions := []filter.ModelDimension{filter.ModelDimension{Name: "Values"}}
-	// add markings column headers
-	for i := 1; i <= markingsColumnCount; i++ {
-		dimensions = append(dimensions, filter.ModelDimension{Name: prev.Headers[i]})
-	}
-	// add non-codelist column headers
-	for i := indexOfFirstLabelColumn; i < len(prev.Headers); i += 2 {
-		dimensions = append(dimensions, filter.ModelDimension{Name: prev.Headers[i]})
-	}
-
-	for rowN, row := range prev.Rows {
-		if rowN >= 10 {
-			break
+	dimensions := make([]filter.ModelDimension, 0)
+	if f.EnableDatasetPreview {
+		prev, err := f.FilterClient.GetPreview(req.Context(), userAccessToken, "", "", collectionID, filterOutputID)
+		if err != nil {
+			log.InfoCtx(ctx, "failed to get preview", log.Data{"error": err, "filter_output_id": filterOutputID})
+			setStatusCode(req, w, err)
+			return
 		}
-		if len(row) > 0 {
-			// add observation[0]+markings[1:markingsColumnCount+1] columns of row
-			for i := 0; i <= markingsColumnCount; i++ {
-				dimensions[i].Values = append(dimensions[i].Values, row[i])
+
+		if len(prev.Headers[0]) < 4 || strings.ToUpper(prev.Headers[0][0:3]) != "V4_" {
+			err = errors.New("Unexpected format - expected `V4_N` in header")
+			log.InfoCtx(ctx, "failed to format header", log.Data{"error": err, "filter_output_id": filterOutputID, "header": prev.Headers})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		markingsColumnCount, err := strconv.Atoi(prev.Headers[0][3:])
+		if err != nil {
+			log.InfoCtx(ctx, "failed to get column count from header cell", log.Data{"error": err, "filter_output_id": filterOutputID, "header": prev.Headers[0]})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		indexOfFirstLabelColumn := markingsColumnCount + 2 // +1 for observation, +1 for first codelist column
+		dimensions = []filter.ModelDimension{filter.ModelDimension{Name: "Values"}}
+		// add markings column headers
+		for i := 1; i <= markingsColumnCount; i++ {
+			dimensions = append(dimensions, filter.ModelDimension{Name: prev.Headers[i]})
+		}
+		// add non-codelist column headers
+		for i := indexOfFirstLabelColumn; i < len(prev.Headers); i += 2 {
+			dimensions = append(dimensions, filter.ModelDimension{Name: prev.Headers[i]})
+		}
+
+		for rowN, row := range prev.Rows {
+			if rowN >= 10 {
+				break
 			}
-			// add non-codelist[indexOfFirstLabelColumn:/2] columns of row
-			dimIndex := markingsColumnCount + 1
-			for i := indexOfFirstLabelColumn; i < len(row); i += 2 {
-				dimensions[dimIndex].Values = append(dimensions[dimIndex].Values, row[i])
-				dimIndex++
+			if len(row) > 0 {
+				// add observation[0]+markings[1:markingsColumnCount+1] columns of row
+				for i := 0; i <= markingsColumnCount; i++ {
+					dimensions[i].Values = append(dimensions[i].Values, row[i])
+				}
+				// add non-codelist[indexOfFirstLabelColumn:/2] columns of row
+				dimIndex := markingsColumnCount + 1
+				for i := indexOfFirstLabelColumn; i < len(row); i += 2 {
+					dimensions[dimIndex].Values = append(dimensions[dimIndex].Values, row[i])
+					dimIndex++
+				}
 			}
 		}
 	}
@@ -162,7 +164,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreatePreviewPage(req.Context(), dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate)
+	p := mapper.CreatePreviewPage(req.Context(), dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate, f.EnableDatasetPreview)
 
 	if latestURL.Path == versionURL.Path {
 		p.Data.IsLatestVersion = true
@@ -191,7 +193,7 @@ func (f *Filter) PreviewPage(w http.ResponseWriter, req *http.Request) {
 	}
 
 	for _, dim := range dims.Items {
-		opts, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, "", collectionID, datasetID, edition, version, dim.Name)
+		opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name)
 		if err != nil {
 			log.InfoCtx(ctx, "failed to get options from dataset client",
 				log.Data{"error": err, "dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})

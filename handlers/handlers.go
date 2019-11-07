@@ -1,7 +1,6 @@
 package handlers
 
 import (
-
 	"context"
 	"net/http"
 
@@ -12,25 +11,27 @@ import (
 
 // Filter represents the handlers for Filtering
 type Filter struct {
-	Renderer           Renderer
-	FilterClient       FilterClient
-	DatasetClient      DatasetClient
-	HierarchyClient    HierarchyClient
-	SearchClient       SearchClient
-	val                Validator
-	downloadServiceURL string
+	Renderer             Renderer
+	FilterClient         FilterClient
+	DatasetClient        DatasetClient
+	HierarchyClient      HierarchyClient
+	SearchClient         SearchClient
+	val                  Validator
+	downloadServiceURL   string
+	EnableDatasetPreview bool
 }
 
 // NewFilter creates a new instance of Filter
-func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient, sc SearchClient, val Validator, downloadServiceURL string) *Filter {
+func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient, sc SearchClient, val Validator, downloadServiceURL string, enableDatasetPreview bool) *Filter {
 	return &Filter{
-		Renderer:           r,
-		FilterClient:       fc,
-		DatasetClient:      dc,
-		HierarchyClient:    hc,
-		SearchClient:       sc,
-		val:                val,
-		downloadServiceURL: downloadServiceURL,
+		Renderer:             r,
+		FilterClient:         fc,
+		DatasetClient:        dc,
+		HierarchyClient:      hc,
+		SearchClient:         sc,
+		val:                  val,
+		downloadServiceURL:   downloadServiceURL,
+		EnableDatasetPreview: enableDatasetPreview,
 	}
 }
 

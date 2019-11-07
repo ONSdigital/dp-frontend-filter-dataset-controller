@@ -55,7 +55,7 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dataset := getTestDataset()
 
-		pp := CreatePreviewPage(ctx, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992")
+		pp := CreatePreviewPage(ctx, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992", false)
 		So(pp.SearchDisabled, ShouldBeFalse)
 		So(pp.Breadcrumb, ShouldHaveLength, 4)
 		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
