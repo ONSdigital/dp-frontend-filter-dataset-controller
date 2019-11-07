@@ -255,6 +255,12 @@
 			"revisionTime": "2016-09-10T10:38:22Z"
 		},
 		{
+			"checksumSHA1": "i1+Ef2OakJK8UC7zk9N7a0w+9J4=",
+			"path": "github.com/kelseyhightower/envconfig",
+			"revision": "0b417c4ec4a8a82eecc22a1459a504aa55163d61",
+			"revisionTime": "2019-05-24T18:54:01Z"
+		},
+		{
 			"checksumSHA1": "qNkx9+OTwZI6aFv7K9zuFCGODUw=",
 			"path": "github.com/mattn/go-colorable",
 			"revision": "941b50ebc6efddf4c41c8e4537a5f68a4e686b24",
