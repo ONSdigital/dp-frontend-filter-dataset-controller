@@ -4,13 +4,15 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/filter"
+	hierarchyClient "github.com/ONSdigital/dp-api-clients-go/hierarchy"
+	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-models/model"
@@ -20,9 +22,6 @@ import (
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	timeModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
-	hierarchyClient "github.com/ONSdigital/dp-api-clients-go/hierarchy"
-	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/go-ns/log"
 )
 
@@ -36,16 +35,10 @@ var topLevelGeographies = map[string]bool{
 	"K04000001": true,
 }
 
-// SetTaxonomyDomain will set the taxonomy domain for a given pages
-func SetTaxonomyDomain(p *model.Page) {
-	p.TaxonomyDomain = os.Getenv("TAXONOMY_DOMAIN")
-}
-
 // CreateFilterOverview maps data items from API responses to form a filter overview
 // front end page model
 func CreateFilterOverview(ctx context.Context, dimensions []filter.ModelDimension, datasetDims dataset.Items, filter filter.Model, dst dataset.Model, filterID, datasetID, releaseDate string) filterOverview.Page {
 	var p filterOverview.Page
-	SetTaxonomyDomain(&p.Page)
 	p.BetaBannerEnabled = true
 
 	log.InfoCtx(ctx, "mapping api response models into filter overview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
@@ -165,7 +158,6 @@ func CreateFilterOverview(ctx context.Context, dimensions []filter.ModelDimensio
 // dimension list selector page
 func CreateListSelectorPage(ctx context.Context, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.Model, dims dataset.Dimensions, datasetID, releaseDate string) listSelector.Page {
 	var p listSelector.Page
-	SetTaxonomyDomain(&p.Page)
 	p.BetaBannerEnabled = true
 	log.InfoCtx(ctx, "mapping api response models to list selector page model", log.Data{"filterID": filter.FilterID, "datasetID": datasetID, "dimension": name})
 
@@ -305,11 +297,11 @@ func CreateListSelectorPage(ctx context.Context, name string, selectedValues []f
 }
 
 // CreatePreviewPage maps data items from API responses to create a preview page
-func CreatePreviewPage(ctx context.Context, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterOutputID, datasetID, releaseDate string) previewPage.Page {
+func CreatePreviewPage(ctx context.Context, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterOutputID, datasetID, releaseDate string, enableDatasetPreivew bool) previewPage.Page {
 	var p previewPage.Page
 	p.Metadata.Title = "Preview and Download"
-	SetTaxonomyDomain(&p.Page)
 	p.BetaBannerEnabled = true
+	p.EnableDatasetPreview = enableDatasetPreivew
 
 	log.InfoCtx(ctx, "mapping api responses to preview page model", log.Data{"filterOutputID": filterOutputID, "datasetID": datasetID})
 
@@ -366,8 +358,7 @@ func CreatePreviewPage(ctx context.Context, dimensions []filter.ModelDimension, 
 			Values: dim.Values,
 		})
 	}
-
-	if p.Data.Dimensions == nil {
+	if enableDatasetPreivew && p.Data.Dimensions == nil {
 		p.NoDimensionData = true
 	}
 
@@ -393,7 +384,6 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 // CreateAgePage creates an age selector page based on api responses
 func CreateAgePage(ctx context.Context, f filter.Model, d dataset.Model, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.Dimensions, datasetID string) (age.Page, error) {
 	var p age.Page
-	SetTaxonomyDomain(&p.Page)
 	p.BetaBannerEnabled = true
 
 	log.InfoCtx(ctx, "mapping api responses to age page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
@@ -527,7 +517,6 @@ func CreateAgePage(ctx context.Context, f filter.Model, d dataset.Model, v datas
 // CreateTimePage will create a time selector page based on api response models
 func CreateTimePage(ctx context.Context, f filter.Model, d dataset.Model, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.Dimensions, datasetID string) (timeModel.Page, error) {
 	var p timeModel.Page
-	SetTaxonomyDomain(&p.Page)
 	p.BetaBannerEnabled = true
 
 	log.InfoCtx(ctx, "mapping api responses to time page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
@@ -699,7 +688,6 @@ func CreateTimePage(ctx context.Context, f filter.Model, d dataset.Model, v data
 // CreateHierarchySearchPage forms a search page based on various api response models
 func CreateHierarchySearchPage(ctx context.Context, items []search.Item, dst dataset.Model, f filter.Model, selVals []filter.DimensionOption, dims []dataset.Dimension, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query string) hierarchy.Page {
 	var p hierarchy.Page
-	SetTaxonomyDomain(&p.Page)
 	p.BetaBannerEnabled = true
 
 	log.InfoCtx(ctx, "mapping api response models to hierarchy search page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "name": name})
@@ -803,7 +791,6 @@ func CreateHierarchySearchPage(ctx context.Context, items []search.Item, dst dat
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
 func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst dataset.Model, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, dims dataset.Dimensions, name, curPath, datasetID, releaseDate string) hierarchy.Page {
 	var p hierarchy.Page
-	SetTaxonomyDomain(&p.Page)
 	p.BetaBannerEnabled = true
 
 	log.InfoCtx(ctx, "mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "label": h.Label})

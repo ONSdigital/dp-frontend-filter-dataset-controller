@@ -16,14 +16,18 @@ import (
 
 func main() {
 	log.Namespace = "dp-frontend-filter-dataset-controller"
-	cfg := config.Get()
+	cfg, err := config.Get()
+	if err != nil {
+		log.Error(err, nil)
+		os.Exit(1)
+	}
 	ctx := context.Background()
 
 	log.InfoCtx(ctx, "got service configuration", log.Data{"config": cfg})
 
 	r := mux.NewRouter()
 
-	routes.Init(r)
+	routes.Init(r, cfg)
 
 	s := server.New(cfg.BindAddr, r)
 	s.HandleOSSignals = false

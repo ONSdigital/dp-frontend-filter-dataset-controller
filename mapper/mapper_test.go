@@ -2,10 +2,8 @@ package mapper
 
 import (
 	"context"
-	"os"
 	"testing"
 
-	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -13,13 +11,6 @@ import (
 
 func TestUnitMapper(t *testing.T) {
 	ctx := context.Background()
-
-	Convey("test SetTaxonomyDomain adds the taxonomy domain to page model", t, func() {
-		os.Setenv("TAXONOMY_DOMAIN", "https://www.ons.gov.uk")
-		p := model.Page{}
-		SetTaxonomyDomain(&p)
-		So(p.TaxonomyDomain, ShouldEqual, "https://www.ons.gov.uk")
-	})
 
 	Convey("test CreateFilterOverview correctly maps item to filterOverview page model", t, func() {
 		dimensions := getTestDimensions()
@@ -64,7 +55,7 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dataset := getTestDataset()
 
-		pp := CreatePreviewPage(ctx, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992")
+		pp := CreatePreviewPage(ctx, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992", false)
 		So(pp.SearchDisabled, ShouldBeFalse)
 		So(pp.Breadcrumb, ShouldHaveLength, 4)
 		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
