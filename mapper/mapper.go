@@ -315,6 +315,8 @@ func CreatePreviewPage(ctx context.Context, dimensions []filter.ModelDimension, 
 		log.ErrorCtx(ctx, err, nil)
 	}
 
+	p.Data.CurrentVersionURL = versionURL.Path
+
 	p.IsInFilterBreadcrumb = true
 
 	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
