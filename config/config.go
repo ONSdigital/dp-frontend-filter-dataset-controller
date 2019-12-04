@@ -15,6 +15,7 @@ type Config struct {
 	SearchAPIURL         string `envconfig:"SEARCH_API_URL"`
 	DownloadServiceURL   string `envconfig:"DOWNLOAD_SERVICE_URL"`
 	EnableDatasetPreview bool   `envconfig:"ENABLE_DATASET_PREVIEW"`
+	EnableLoop11         bool   `envconfig:"ENABLE_LOOP11"`
 }
 
 var cfg *Config
@@ -38,6 +39,7 @@ func Get() (*Config, error) {
 		SearchAPIURL:         "http://localhost:23100",
 		DownloadServiceURL:   "http://localhost:23600",
 		EnableDatasetPreview: false,
+		EnableLoop11:         false,
 	}
 
 	return cfg, envconfig.Process("", cfg)

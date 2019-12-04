@@ -19,10 +19,11 @@ type Filter struct {
 	val                  Validator
 	downloadServiceURL   string
 	EnableDatasetPreview bool
+	EnableLoop11         bool
 }
 
 // NewFilter creates a new instance of Filter
-func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient, sc SearchClient, val Validator, downloadServiceURL string, enableDatasetPreview bool) *Filter {
+func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient, sc SearchClient, val Validator, downloadServiceURL string, enableDatasetPreview bool, enableLoop11 bool) *Filter {
 	return &Filter{
 		Renderer:             r,
 		FilterClient:         fc,
@@ -32,6 +33,7 @@ func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient
 		val:                  val,
 		downloadServiceURL:   downloadServiceURL,
 		EnableDatasetPreview: enableDatasetPreview,
+		EnableLoop11:         enableLoop11,
 	}
 }
 
