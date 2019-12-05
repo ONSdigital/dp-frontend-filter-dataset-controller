@@ -3,13 +3,14 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"net/http"
 	"net/url"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/ONSdigital/dp-api-clients-go/headers"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
@@ -62,7 +63,7 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 	log.InfoCtx(ctx, "age-selection", log.Data{dimensionName: req.Form.Get("age-selection")})
 	switch req.Form.Get("age-selection") {
 	case "all":
-		if err := f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID,dimensionName, req.Form.Get("all-ages-option")); err != nil {
+		if err := f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, req.Form.Get("all-ages-option")); err != nil {
 			log.ErrorCtx(ctx, err, log.Data{"age_case": "all"})
 		}
 	case "range":
@@ -239,7 +240,7 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	allValues, err := f.DatasetClient.GetOptions(ctx,  userAccessToken, "", collectionID, datasetID, edition, version, dimensionName)
+	allValues, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from dataset client",
 			log.Data{"error": err, "dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -267,7 +268,7 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p, err := mapper.CreateAgePage(ctx, fj, dataset, ver, allValues, selValues, dims, datasetID)
+	p, err := mapper.CreateAgePage(ctx, fj, dataset, ver, allValues, selValues, dims, datasetID, f.EnableLoop11)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to map data to page", log.Data{"error": err, "filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})
 		setStatusCode(req, w, err)

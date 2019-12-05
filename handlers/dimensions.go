@@ -427,7 +427,7 @@ func splitCode(id string) (string, string, error) {
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.Model, dims dataset.Dimensions, datasetID, releaseDate string) {
-	p := mapper.CreateListSelectorPage(req.Context(), name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate)
+	p := mapper.CreateListSelectorPage(req.Context(), name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate, f.EnableLoop11)
 
 	b, err := json.Marshal(p)
 	if err != nil {

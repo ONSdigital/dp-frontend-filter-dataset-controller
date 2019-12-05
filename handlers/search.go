@@ -110,7 +110,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreateHierarchySearchPage(req.Context(), searchRes.Items, d, fil, selVals, dims.Items, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"))
+	p := mapper.CreateHierarchySearchPage(req.Context(), searchRes.Items, d, fil, selVals, dims.Items, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.EnableLoop11)
 
 	b, err := json.Marshal(p)
 	if err != nil {

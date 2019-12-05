@@ -12,9 +12,9 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/headers"
+	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
-	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/gorilla/mux"
 )
@@ -146,7 +146,6 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 			log.Error(err, nil)
 		}
 	}
-
 
 	var h hierarchy.Model
 	if len(code) > 0 {
@@ -282,7 +281,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	allVals, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, "", collectionID, datasetID, edition, version, name)
+	allVals, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from dataset client",
 			log.Data{"error": err, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -298,7 +297,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreateHierarchyPage(req.Context(), h, d, fil, selVals, allVals, dims, name, req.URL.Path, datasetID, ver.ReleaseDate)
+	p := mapper.CreateHierarchyPage(req.Context(), h, d, fil, selVals, allVals, dims, name, req.URL.Path, datasetID, ver.ReleaseDate, f.EnableLoop11)
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -346,7 +345,7 @@ func (n flatNodes) addWithChildren(val hierarchy.Child, i int) {
 
 // Flatten the geography hierarchy - please note this will only work for this particular hierarchy,
 // need helper functions for other geog hierarchies too.
-func (f *Filter) flattenGeographyTopLevel(ctx context.Context,instanceID string) (h hierarchy.Model, err error) {
+func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string) (h hierarchy.Model, err error) {
 	root, err := f.HierarchyClient.GetRoot(ctx, instanceID, "geography")
 	if err != nil {
 		return
