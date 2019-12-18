@@ -18,7 +18,7 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dst := getTestDataset()
 
-		fop := CreateFilterOverview(ctx, dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992")
+		fop := CreateFilterOverview(ctx, dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992", false)
 		So(fop.FilterID, ShouldEqual, filter.FilterID)
 		So(fop.SearchDisabled, ShouldBeTrue)
 		So(fop.Data.Dimensions, ShouldHaveLength, 5)
@@ -111,7 +111,7 @@ func TestUnitMapper(t *testing.T) {
 
 			filter := getTestFilter()
 
-			p := CreateListSelectorPage(ctx, "time", selectedValues, allValues, filter, d, dataset.Dimensions{}, "12345", "11-11-1992")
+			p := CreateListSelectorPage(ctx, "time", selectedValues, allValues, filter, d, dataset.Dimensions{}, "12345", "11-11-1992", false)
 			So(p.Data.Title, ShouldEqual, "Time")
 			So(p.SearchDisabled, ShouldBeTrue)
 			So(p.FilterID, ShouldEqual, filter.FilterID)
