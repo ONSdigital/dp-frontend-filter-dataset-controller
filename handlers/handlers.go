@@ -23,7 +23,7 @@ type Filter struct {
 }
 
 // NewFilter creates a new instance of Filter
-func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient, sc SearchClient, val Validator, downloadServiceURL string, enableDatasetPreview bool, enableLoop11 bool) *Filter {
+func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient, sc SearchClient, val Validator, downloadServiceURL string, enableDatasetPreview, enableLoop11 bool) *Filter {
 	return &Filter{
 		Renderer:             r,
 		FilterClient:         fc,
