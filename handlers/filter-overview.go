@@ -71,7 +71,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	dimensionIDNameLookup := make(map[string]map[string]string)
 	for _, dim := range datasetDimensions.Items {
 		idNameLookup := make(map[string]string)
-		options, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, "", collectionID, datasetID, edition, version, dim.Name)
+		options, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name)
 		if err != nil {
 			log.InfoCtx(ctx, "failed to get options from dataset client",
 				log.Data{"error": err, "dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -128,7 +128,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreateFilterOverview(req.Context(), dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate)
+	p := mapper.CreateFilterOverview(req.Context(), dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate, f.EnableLoop11)
 
 	if latestURL.Path == versionURL.Path {
 		p.Data.IsLatestVersion = true
