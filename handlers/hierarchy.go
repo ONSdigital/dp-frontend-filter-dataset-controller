@@ -72,6 +72,8 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 	wg.Add(1)
 
 	go func() {
+		defer wg.Done()
+
 		var h hierarchy.Model
 		var err error
 		if len(code) > 0 {
@@ -112,12 +114,11 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 				}
 			}
 		}
-
-		wg.Done()
 	}()
 
+	options := make([]string, 0)
 	for k := range req.Form {
-		if k == "save-and-return" || k == ":uri" {
+		if k == "save-and-return" || k == ":uri" || k == "q" {
 			continue
 		}
 
@@ -128,11 +129,13 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, k); err != nil {
-			log.InfoCtx(ctx, err.Error(), nil)
-		}
+		options = append(options, k)
+	}
+	if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options); err != nil {
+		log.ErrorCtx(ctx, err, nil)
 	}
 
+	wg.Wait()
 	http.Redirect(w, req, redirectURI, 302)
 }
 
