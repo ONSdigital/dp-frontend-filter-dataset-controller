@@ -7,8 +7,10 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/dp-api-clients-go/search"
-	"github.com/ONSdigital/go-ns/healthcheck"
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 )
+
+// mockgen -source=clients.go -package=handlers > mock_clients.go
 
 // ClientError implements error interface with additional code method
 type ClientError interface {
@@ -18,7 +20,7 @@ type ClientError interface {
 
 // FilterClient contains the methods expected for a filter client
 type FilterClient interface {
-	healthcheck.Client
+	Checker(ctx context.Context) (*health.Check, error)
 	GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID string) (dims []filter.Dimension, err error)
 	GetDimensionOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (fdv []filter.DimensionOption, err error)
 	GetJobState(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, downloadServiceToken, filterID string) (f filter.Model, err error)
@@ -36,8 +38,8 @@ type FilterClient interface {
 
 // DatasetClient is an interface with methods required for a dataset client
 type DatasetClient interface {
-	healthcheck.Client
-	Get(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID string) (m dataset.Model, err error)
+	Checker(ctx context.Context) (*health.Check, error)
+	Get(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID string) (m dataset.DatasetDetails, err error)
 	GetVersion(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, datasetID, edition, version string) (m dataset.Version, err error)
 	GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version string) (m dataset.Dimensions, err error)
 	GetOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension string) (m dataset.Options, err error)
@@ -46,19 +48,19 @@ type DatasetClient interface {
 
 // HierarchyClient contains methods expected for a hierarchy client
 type HierarchyClient interface {
-	healthcheck.Client
+	Checker(ctx context.Context) (*health.Check, error)
 	GetRoot(ctx context.Context, instanceID, name string) (hierarchy.Model, error)
 	GetChild(ctx context.Context, instanceID, name, code string) (hierarchy.Model, error)
 }
 
 // SearchClient contains methods expected for a search client
 type SearchClient interface {
-	healthcheck.Client
+	Checker(ctx context.Context) (*health.Check, error)
 	Dimension(ctx context.Context, datasetID, edition, version, name, query string, params ...search.Config) (m *search.Model, err error)
 }
 
 // Renderer provides an interface for a service template renderer
 type Renderer interface {
-	healthcheck.Client
+	Checker(ctx context.Context) (*health.Check, error)
 	Do(path string, b []byte) ([]byte, error)
 }

@@ -11,15 +11,24 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
-	"github.com/ONSdigital/go-ns/handlers/healthcheck"
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/validator"
 	"github.com/gorilla/mux"
 )
 
+// Clients represents a list of clients
+type Clients struct {
+	Filter      *filter.Client
+	Dataset     *dataset.Client
+	Hierarchy   *hierarchy.Client
+	Healthcheck *health.HealthCheck
+	Renderer    *renderer.Renderer
+	Search      *search.Client
+}
+
 // Init initialises routes for the service
-func Init(r *mux.Router, cfg *config.Config) {
-	ctx := context.Background()
+func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients Clients) {
 
 	fi, err := os.Open("rules.json")
 	if err != nil {
@@ -32,15 +41,9 @@ func Init(r *mux.Router, cfg *config.Config) {
 		log.ErrorCtx(ctx, err, nil)
 	}
 
-	rend := renderer.New(cfg.RendererURL)
-	fc := filter.New(cfg.FilterAPIURL)
-	dc := dataset.NewAPIClient(cfg.DatasetAPIURL)
-	hc := hierarchy.New(cfg.HierarchyAPIURL)
-	sc := search.New(cfg.SearchAPIURL)
+	filter := handlers.NewFilter(clients.Renderer, clients.Filter, clients.Dataset, clients.Hierarchy, clients.Search, v, cfg.DownloadServiceURL, cfg.EnableDatasetPreview, cfg.EnableLoop11)
 
-	filter := handlers.NewFilter(rend, fc, dc, hc, sc, v, cfg.DownloadServiceURL, cfg.EnableDatasetPreview, cfg.EnableLoop11)
-
-	r.StrictSlash(true).Path("/healthcheck").HandlerFunc(healthcheck.Handler)
+	r.StrictSlash(true).Path("/health").HandlerFunc(clients.Healthcheck.Handler)
 
 	r.Path("/filter-outputs/{filterOutputID}.json").Methods("GET").HandlerFunc(filter.GetFilterJob)
 	r.StrictSlash(true).Path("/filter-outputs/{filterOutputID}").Methods("GET").HandlerFunc(filter.OutputPage)

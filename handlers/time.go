@@ -34,7 +34,6 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-
 	if err := f.FilterClient.RemoveDimension(req.Context(), userAccessToken, "", collectionID, filterID, dimensionName); err != nil {
 		log.InfoCtx(ctx, "failed to remove dimension", log.Data{"error": err, "filter_id": filterID, "dimension": dimensionName})
 		setStatusCode(req, w, err)
@@ -106,7 +105,6 @@ func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
 		return err
 	}
 
-
 	return f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, dimensionName, date.Format("Jan-06"))
 }
 
@@ -121,7 +119,6 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 			log.Error(err, nil)
 		}
 	}
-
 
 	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, dimensionName)
 	if err != nil {
@@ -202,7 +199,6 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 		}
 	}
 
-
 	return f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, dimensionName, options)
 }
 
@@ -254,7 +250,7 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	allValues, err := f.DatasetClient.GetOptions(req.Context(),  userAccessToken, "", collectionID, datasetID, edition, version, dimensionName)
+	allValues, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dimensionName)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to get options from dataset client",
 			log.Data{"error": err, "dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})

@@ -37,7 +37,7 @@ var topLevelGeographies = map[string]bool{
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
 // front end page model
-func CreateFilterOverview(ctx context.Context, dimensions []filter.ModelDimension, datasetDims dataset.Items, filter filter.Model, dst dataset.Model, filterID, datasetID, releaseDate string, enableLoop11 bool) filterOverview.Page {
+func CreateFilterOverview(ctx context.Context, dimensions []filter.ModelDimension, datasetDims dataset.Items, filter filter.Model, dst dataset.DatasetDetails, filterID, datasetID, releaseDate string, enableLoop11 bool) filterOverview.Page {
 	var p filterOverview.Page
 	p.BetaBannerEnabled = true
 	p.EnableLoop11 = enableLoop11
@@ -157,7 +157,7 @@ func CreateFilterOverview(ctx context.Context, dimensions []filter.ModelDimensio
 
 // CreateListSelectorPage maps items from API responses to form the model for a
 // dimension list selector page
-func CreateListSelectorPage(ctx context.Context, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.Model, dims dataset.Dimensions, datasetID, releaseDate string, enableLoop11 bool) listSelector.Page {
+func CreateListSelectorPage(ctx context.Context, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.DatasetDetails, dims dataset.Dimensions, datasetID, releaseDate string, enableLoop11 bool) listSelector.Page {
 	var p listSelector.Page
 	p.BetaBannerEnabled = true
 	p.EnableLoop11 = enableLoop11
@@ -299,7 +299,7 @@ func CreateListSelectorPage(ctx context.Context, name string, selectedValues []f
 }
 
 // CreatePreviewPage maps data items from API responses to create a preview page
-func CreatePreviewPage(ctx context.Context, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.Model, filterOutputID, datasetID, releaseDate string, enableDatasetPreivew bool, enableLoop11 bool) previewPage.Page {
+func CreatePreviewPage(ctx context.Context, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.DatasetDetails, filterOutputID, datasetID, releaseDate string, enableDatasetPreivew bool, enableLoop11 bool) previewPage.Page {
 	var p previewPage.Page
 	p.Metadata.Title = "Preview and Download"
 	p.BetaBannerEnabled = true
@@ -387,7 +387,7 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 }
 
 // CreateAgePage creates an age selector page based on api responses
-func CreateAgePage(ctx context.Context, f filter.Model, d dataset.Model, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.Dimensions, datasetID string, enableLoop11 bool) (age.Page, error) {
+func CreateAgePage(ctx context.Context, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.Dimensions, datasetID string, enableLoop11 bool) (age.Page, error) {
 	var p age.Page
 	p.BetaBannerEnabled = true
 	p.EnableLoop11 = enableLoop11
@@ -521,7 +521,7 @@ func CreateAgePage(ctx context.Context, f filter.Model, d dataset.Model, v datas
 }
 
 // CreateTimePage will create a time selector page based on api response models
-func CreateTimePage(ctx context.Context, f filter.Model, d dataset.Model, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.Dimensions, datasetID string, enableLoop11 bool) (timeModel.Page, error) {
+func CreateTimePage(ctx context.Context, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.Dimensions, datasetID string, enableLoop11 bool) (timeModel.Page, error) {
 	var p timeModel.Page
 	p.BetaBannerEnabled = true
 	p.EnableLoop11 = enableLoop11
@@ -693,7 +693,7 @@ func CreateTimePage(ctx context.Context, f filter.Model, d dataset.Model, v data
 }
 
 // CreateHierarchySearchPage forms a search page based on various api response models
-func CreateHierarchySearchPage(ctx context.Context, items []search.Item, dst dataset.Model, f filter.Model, selVals []filter.DimensionOption, dims []dataset.Dimension, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query string, enableLoop11 bool) hierarchy.Page {
+func CreateHierarchySearchPage(ctx context.Context, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, dims []dataset.Dimension, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query string, enableLoop11 bool) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
 	p.EnableLoop11 = enableLoop11
@@ -797,7 +797,7 @@ func CreateHierarchySearchPage(ctx context.Context, items []search.Item, dst dat
 }
 
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
-func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst dataset.Model, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, dims dataset.Dimensions, name, curPath, datasetID, releaseDate string, enableLoop11 bool) hierarchy.Page {
+func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, dims dataset.Dimensions, name, curPath, datasetID, releaseDate string, enableLoop11 bool) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
 	p.EnableLoop11 = enableLoop11

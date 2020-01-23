@@ -1,3 +1,7 @@
 language: go
-go: stable
-script: make test
+go:
+ - 1.12
+ - tip
+script:
+  - export GO111MODULE="on"
+  - make test

@@ -50,7 +50,7 @@ func TestUnitSearch(t *testing.T) {
 				},
 			}, nil)
 			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.Model{}, nil)
+			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
 			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version).Return(dataset.Dimensions{}, nil)
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, nil)
@@ -134,7 +134,7 @@ func TestUnitSearch(t *testing.T) {
 				},
 			}, nil)
 			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.Model{}, errors.New("dataset get error"))
+			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, errors.New("dataset get error"))
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
 			w := httptest.NewRecorder()
@@ -163,7 +163,7 @@ func TestUnitSearch(t *testing.T) {
 				},
 			}, nil)
 			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.Model{}, nil)
+			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
 			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, errors.New("get version error"))
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
@@ -193,7 +193,7 @@ func TestUnitSearch(t *testing.T) {
 				},
 			}, nil)
 			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.Model{}, nil)
+			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
 			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, errors.New("get options error"))
 
@@ -224,7 +224,7 @@ func TestUnitSearch(t *testing.T) {
 				},
 			}, nil)
 			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.Model{}, nil)
+			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
 			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, nil)
 			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query).Return(&search.Model{}, errors.New("search api error"))
@@ -256,7 +256,7 @@ func TestUnitSearch(t *testing.T) {
 				},
 			}, nil)
 			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.Model{}, nil)
+			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
 			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, nil)
 			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query).Return(&search.Model{}, nil)
