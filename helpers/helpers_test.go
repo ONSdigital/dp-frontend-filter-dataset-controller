@@ -1,15 +1,17 @@
 package helpers
 
 import (
+	"context"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestUnitHelpers(t *testing.T) {
+	ctx := context.Background()
 	Convey("test ExtractDatasetInfoFromPath", t, func() {
 		Convey("extracts datasetID, edition and version from path", func() {
-			datasetID, edition, version, err := ExtractDatasetInfoFromPath("/datasets/12345/editions/2016/versions/1")
+			datasetID, edition, version, err := ExtractDatasetInfoFromPath(ctx, "/datasets/12345/editions/2016/versions/1")
 			So(err, ShouldBeNil)
 			So(datasetID, ShouldEqual, "12345")
 			So(edition, ShouldEqual, "2016")
@@ -17,7 +19,7 @@ func TestUnitHelpers(t *testing.T) {
 		})
 
 		Convey("returns an error if it is unable to extract the information", func() {
-			datasetID, edition, version, err := ExtractDatasetInfoFromPath("invalid")
+			datasetID, edition, version, err := ExtractDatasetInfoFromPath(ctx, "invalid")
 			So(err.Error(), ShouldEqual, "unabled to extract datasetID, edition and version from path: invalid")
 			So(datasetID, ShouldEqual, "")
 			So(edition, ShouldEqual, "")

@@ -20,7 +20,7 @@ type ClientError interface {
 
 // FilterClient contains the methods expected for a filter client
 type FilterClient interface {
-	Checker(ctx context.Context) (*health.Check, error)
+	Checker(ctx context.Context, check *health.CheckState) error
 	GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID string) (dims []filter.Dimension, err error)
 	GetDimensionOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (fdv []filter.DimensionOption, err error)
 	GetJobState(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, downloadServiceToken, filterID string) (f filter.Model, err error)
@@ -38,7 +38,7 @@ type FilterClient interface {
 
 // DatasetClient is an interface with methods required for a dataset client
 type DatasetClient interface {
-	Checker(ctx context.Context) (*health.Check, error)
+	Checker(ctx context.Context, check *health.CheckState) error
 	Get(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID string) (m dataset.DatasetDetails, err error)
 	GetVersion(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, datasetID, edition, version string) (m dataset.Version, err error)
 	GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version string) (m dataset.Dimensions, err error)
@@ -48,19 +48,19 @@ type DatasetClient interface {
 
 // HierarchyClient contains methods expected for a hierarchy client
 type HierarchyClient interface {
-	Checker(ctx context.Context) (*health.Check, error)
+	Checker(ctx context.Context, check *health.CheckState) error
 	GetRoot(ctx context.Context, instanceID, name string) (hierarchy.Model, error)
 	GetChild(ctx context.Context, instanceID, name, code string) (hierarchy.Model, error)
 }
 
 // SearchClient contains methods expected for a search client
 type SearchClient interface {
-	Checker(ctx context.Context) (*health.Check, error)
+	Checker(ctx context.Context, check *health.CheckState) error
 	Dimension(ctx context.Context, datasetID, edition, version, name, query string, params ...search.Config) (m *search.Model, err error)
 }
 
 // Renderer provides an interface for a service template renderer
 type Renderer interface {
-	Checker(ctx context.Context) (*health.Check, error)
+	Checker(ctx context.Context, check *health.CheckState) error
 	Do(path string, b []byte) ([]byte, error)
 }

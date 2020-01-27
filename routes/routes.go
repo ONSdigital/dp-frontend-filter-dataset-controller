@@ -12,8 +12,8 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/validator"
+	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
 )
 
@@ -32,13 +32,13 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients Client
 
 	fi, err := os.Open("rules.json")
 	if err != nil {
-		log.ErrorCtx(ctx, err, nil)
+		log.Event(ctx, "unable to open date rules", log.Error(err))
 	}
 	defer fi.Close()
 
 	v, err := validator.New(fi)
 	if err != nil {
-		log.ErrorCtx(ctx, err, nil)
+		log.Event(ctx, "failed to validate date rules", log.Error(err))
 	}
 
 	filter := handlers.NewFilter(clients.Renderer, clients.Filter, clients.Dataset, clients.Hierarchy, clients.Search, v, cfg.DownloadServiceURL, cfg.EnableDatasetPreview, cfg.EnableLoop11)

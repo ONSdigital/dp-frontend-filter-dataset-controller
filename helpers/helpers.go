@@ -1,15 +1,16 @@
 package helpers
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 
-	"github.com/ONSdigital/go-ns/log"
+	"github.com/ONSdigital/log.go/log"
 )
 
 // ExtractDatasetInfoFromPath gets the datasetID, edition and version from a given path
-func ExtractDatasetInfoFromPath(path string) (datasetID, edition, version string, err error) {
-	log.Debug("attempting to extract dataset details from path", log.Data{"path": path})
+func ExtractDatasetInfoFromPath(ctx context.Context, path string) (datasetID, edition, version string, err error) {
+	log.Event(ctx, "attempting to extract dataset details from path", log.Data{"path": path})
 	pathReg := regexp.MustCompile(`\/datasets\/(.+)\/editions\/(.+)\/versions\/(.+)`)
 	subs := pathReg.FindStringSubmatch(path)
 	if len(subs) < 4 {

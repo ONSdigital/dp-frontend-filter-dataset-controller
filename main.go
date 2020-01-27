@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"os/signal"
-	"strconv"
 	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
@@ -16,14 +15,24 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/routes"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/go-ns/handlers/collectionID"
-	"github.com/ONSdigital/go-ns/log"
 	"github.com/ONSdigital/go-ns/server"
+	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
 )
 
 // App version informaton retrieved on runtime
 var (
-	BuildTime, GitCommit, Version string
+	// BuildTime represents the time in which the service was built
+	BuildTime string
+	// GitCommit represents the commit (SHA-1) hash of the service that is running
+	GitCommit string
+	// Version represents the version of the service that is running
+	Version string
+)
+
+const (
+	criticalTimeout = time.Minute
+	interval        = 10 * time.Second
 )
 
 func main() {
@@ -32,31 +41,25 @@ func main() {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, os.Kill)
 
-	cfg, err := config.Get()
-	if err != nil {
-		log.Error(err, nil)
-		os.Exit(1)
-	}
 	ctx := context.Background()
 
-	log.InfoCtx(ctx, "got service configuration", log.Data{"config": cfg})
-
-	var buildTime int64
-
-	if BuildTime == "" {
-		buildTime = 0
-	}
-	buildTime, err = strconv.ParseInt(BuildTime, 10, 64)
+	cfg, err := config.Get()
 	if err != nil {
-		log.Error(err, nil)
+		log.Event(ctx, "unable to retrieve service configuration", log.Error(err))
 		os.Exit(1)
 	}
 
-	versionInfo := health.CreateVersionInfo(
-		time.Unix(buildTime, 0),
+	log.Event(ctx, "got service configuration", log.Data{"config": cfg})
+
+	versionInfo, err := health.CreateVersionInfo(
+		BuildTime,
 		GitCommit,
 		Version,
 	)
+	if err != nil {
+		log.Event(ctx, "failed to create service version information", log.Error(err))
+		os.Exit(1)
+	}
 
 	r := mux.NewRouter()
 
@@ -68,18 +71,20 @@ func main() {
 		Search:    search.New(cfg.SearchAPIURL),
 	}
 
-	checkers := createCheckers(ctx, clients.Renderer, clients.Filter, clients.Dataset, clients.Hierarchy, clients.Search)
-
-	criticalTimeout := time.Minute
-	interval := 10 * time.Second
-	healthcheck := health.Create(versionInfo, criticalTimeout, interval, checkers...)
-
-	// Start healthcheck ticker
-	healthcheck.Start(ctx)
+	healthcheck, err := health.Create(versionInfo, criticalTimeout, interval,
+		clients.Renderer.Checker, clients.Filter.Checker, clients.Dataset.Checker,
+		clients.Hierarchy.Checker, clients.Search.Checker)
+	if err != nil {
+		log.Event(ctx, "failed to create service health checks", log.Error(err))
+		os.Exit(1)
+	}
 
 	clients.Healthcheck = &healthcheck
 
 	routes.Init(ctx, r, cfg, clients)
+
+	// Start healthcheck ticker
+	healthcheck.Start(ctx)
 
 	s := server.New(cfg.BindAddr, r)
 	s.HandleOSSignals = false
@@ -87,13 +92,13 @@ func main() {
 	s.Middleware["CollectionID"] = collectionID.CheckCookie
 	s.MiddlewareOrder = append(s.MiddlewareOrder, "CollectionID")
 
-	log.InfoCtx(ctx, "listening...", log.Data{
+	log.Event(ctx, "service listening...", log.Data{
 		"bind_address": cfg.BindAddr,
 	})
 
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
-			log.ErrorCtx(ctx, err, nil)
+			log.Event(ctx, "failed to start http listen and serve", log.Error(err))
 			return
 		}
 	}()
@@ -101,35 +106,13 @@ func main() {
 	<-signals
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	log.InfoCtx(ctx, "shutting service down gracefully", nil)
+	log.Event(ctx, "shutting service down gracefully")
 	defer cancel()
 
 	// Stop healthcheck ticker
 	healthcheck.Stop()
 
 	if err := s.Server.Shutdown(ctx); err != nil {
-		log.ErrorCtx(ctx, err, nil)
+		log.Event(ctx, "failed to shutdown http server", log.Error(err))
 	}
-}
-
-func createCheckers(ctx context.Context, rend *renderer.Renderer, fc *filter.Client,
-	dc *dataset.Client, hc *hierarchy.Client, sc *search.Client) []*health.Checker {
-
-	rendChecker := health.Checker(func(ctx context.Context) (*health.Check, error) {
-		return rend.Checker(ctx)
-	})
-	fcChecker := health.Checker(func(ctx context.Context) (*health.Check, error) {
-		return fc.Checker(ctx)
-	})
-	dcChecker := health.Checker(func(ctx context.Context) (*health.Check, error) {
-		return dc.Checker(ctx)
-	})
-	hcChecker := health.Checker(func(ctx context.Context) (*health.Check, error) {
-		return hc.Checker(ctx)
-	})
-	scChecker := health.Checker(func(ctx context.Context) (*health.Check, error) {
-		return sc.Checker(ctx)
-	})
-
-	return []*health.Checker{&rendChecker, &fcChecker, &dcChecker, &hcChecker, &scChecker}
 }

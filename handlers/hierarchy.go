@@ -261,7 +261,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		setStatusCode(req, w, err)
 		return
 	}
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
 	if err != nil {
 		log.InfoCtx(ctx, "failed to extract dataset info from path", log.Data{"error": err, "filter_id": filterID, "path": versionURL})
 		setStatusCode(req, w, err)

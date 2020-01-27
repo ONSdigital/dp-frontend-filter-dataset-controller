@@ -22,7 +22,7 @@ import (
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	timeModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time"
-	"github.com/ONSdigital/go-ns/log"
+	"github.com/ONSdigital/log.go/log"
 )
 
 var hierarchyBrowseLookup = map[string]string{
@@ -42,7 +42,7 @@ func CreateFilterOverview(ctx context.Context, dimensions []filter.ModelDimensio
 	p.BetaBannerEnabled = true
 	p.EnableLoop11 = enableLoop11
 
-	log.InfoCtx(ctx, "mapping api response models into filter overview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
+	log.Event(ctx, "mapping api response models into filter overview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
 
 	p.FilterID = filterID
 	p.DatasetTitle = dst.Title
@@ -70,7 +70,7 @@ func CreateFilterOverview(ctx context.Context, dimensions []filter.ModelDimensio
 			}
 			times, err := dates.ConvertToReadable(d.Values)
 			if err != nil {
-				log.ErrorCtx(ctx, err, nil)
+				log.Event(ctx, "unable to convert dates to human readable values", log.Error(err))
 				for _, ac := range d.Values {
 					fod.AddedCategories = append(fod.AddedCategories, ac)
 				}
@@ -133,7 +133,7 @@ func CreateFilterOverview(ctx context.Context, dimensions []filter.ModelDimensio
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
-		log.ErrorCtx(ctx, err, nil)
+		log.Event(ctx, "unable to parse version url", log.Error(err))
 	}
 
 	p.IsInFilterBreadcrumb = true
@@ -161,7 +161,7 @@ func CreateListSelectorPage(ctx context.Context, name string, selectedValues []f
 	var p listSelector.Page
 	p.BetaBannerEnabled = true
 	p.EnableLoop11 = enableLoop11
-	log.InfoCtx(ctx, "mapping api response models to list selector page model", log.Data{"filterID": filter.FilterID, "datasetID": datasetID, "dimension": name})
+	log.Event(ctx, "mapping api response models to list selector page model", log.Data{"filterID": filter.FilterID, "datasetID": datasetID, "dimension": name})
 
 	pageTitle := strings.Title(name)
 
@@ -184,7 +184,7 @@ func CreateListSelectorPage(ctx context.Context, name string, selectedValues []f
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
-		log.ErrorCtx(ctx, err, nil)
+		log.Event(ctx, "unable to parse version url", log.Error(err))
 	}
 
 	p.IsInFilterBreadcrumb = true
@@ -306,7 +306,7 @@ func CreatePreviewPage(ctx context.Context, dimensions []filter.ModelDimension, 
 	p.EnableDatasetPreview = enableDatasetPreivew
 	p.EnableLoop11 = enableLoop11
 
-	log.InfoCtx(ctx, "mapping api responses to preview page model", log.Data{"filterOutputID": filterOutputID, "datasetID": datasetID})
+	log.Event(ctx, "mapping api responses to preview page model", log.Data{"filterOutputID": filterOutputID, "datasetID": datasetID})
 
 	p.SearchDisabled = false
 	p.ShowFeedbackForm = true
@@ -315,7 +315,7 @@ func CreatePreviewPage(ctx context.Context, dimensions []filter.ModelDimension, 
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
-		log.ErrorCtx(ctx, err, nil)
+		log.Event(ctx, "unable to parse version url", log.Error(err))
 	}
 
 	p.Data.CurrentVersionURL = versionURL.Path
@@ -392,7 +392,7 @@ func CreateAgePage(ctx context.Context, f filter.Model, d dataset.DatasetDetails
 	p.BetaBannerEnabled = true
 	p.EnableLoop11 = enableLoop11
 
-	log.InfoCtx(ctx, "mapping api responses to age page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
+	log.Event(ctx, "mapping api responses to age page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
 
 	for _, dim := range dims.Items {
 		if dim.Name == "age" {
@@ -526,7 +526,7 @@ func CreateTimePage(ctx context.Context, f filter.Model, d dataset.DatasetDetail
 	p.BetaBannerEnabled = true
 	p.EnableLoop11 = enableLoop11
 
-	log.InfoCtx(ctx, "mapping api responses to time page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
+	log.Event(ctx, "mapping api responses to time page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
 
 	if _, err := time.Parse("Jan-06", allVals.Items[0].Option); err == nil {
 		p.Data.Type = "month"
@@ -641,7 +641,7 @@ func CreateTimePage(ctx context.Context, f filter.Model, d dataset.DatasetDetail
 		p.Data.CheckedRadio = "single"
 		date, err := time.Parse("Jan-06", selVals[0].Option)
 		if err != nil {
-			log.ErrorCtx(ctx, err, nil)
+			log.Event(ctx, "unable to parse date", log.Error(err))
 		}
 		p.Data.SelectedStartMonth = date.Month().String()
 		p.Data.SelectedStartYear = fmt.Sprintf("%d", date.Year())
@@ -678,7 +678,7 @@ func CreateTimePage(ctx context.Context, f filter.Model, d dataset.DatasetDetail
 
 		selDates, err := dates.ConvertToReadable(selOptions)
 		if err != nil {
-			log.ErrorCtx(ctx, err, nil)
+			log.Event(ctx, "unable to convert dates to human readable values", log.Error(err))
 		}
 
 		selDates = dates.Sort(selDates)
@@ -698,7 +698,7 @@ func CreateHierarchySearchPage(ctx context.Context, items []search.Item, dst dat
 	p.BetaBannerEnabled = true
 	p.EnableLoop11 = enableLoop11
 
-	log.InfoCtx(ctx, "mapping api response models to hierarchy search page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "name": name})
+	log.Event(ctx, "mapping api response models to hierarchy search page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "name": name})
 
 	pageTitle := strings.Title(name)
 	for _, dim := range dims {
@@ -726,7 +726,7 @@ func CreateHierarchySearchPage(ctx context.Context, items []search.Item, dst dat
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
-		log.ErrorCtx(ctx, err, nil)
+		log.Event(ctx, "unable to parse version url", log.Error(err))
 	}
 
 	p.Data.LandingPageURL = versionURL.Path + "#id-dimensions"
@@ -802,7 +802,7 @@ func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst datas
 	p.BetaBannerEnabled = true
 	p.EnableLoop11 = enableLoop11
 
-	log.InfoCtx(ctx, "mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "label": h.Label})
+	log.Event(ctx, "mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "label": h.Label})
 
 	pageTitle := strings.Title(name)
 	for _, dim := range dims.Items {
@@ -836,7 +836,7 @@ func CreateHierarchyPage(ctx context.Context, h hierarchyClient.Model, dst datas
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
-		log.ErrorCtx(ctx, err, nil)
+		log.Event(ctx, "unable to parse version url", log.Error(err))
 	}
 
 	p.IsInFilterBreadcrumb = true

@@ -15,53 +15,6 @@ import (
 	reflect "reflect"
 )
 
-// MockClientError is a mock of ClientError interface
-type MockClientError struct {
-	ctrl     *gomock.Controller
-	recorder *MockClientErrorMockRecorder
-}
-
-// MockClientErrorMockRecorder is the mock recorder for MockClientError
-type MockClientErrorMockRecorder struct {
-	mock *MockClientError
-}
-
-// NewMockClientError creates a new mock instance
-func NewMockClientError(ctrl *gomock.Controller) *MockClientError {
-	mock := &MockClientError{ctrl: ctrl}
-	mock.recorder = &MockClientErrorMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use
-func (m *MockClientError) EXPECT() *MockClientErrorMockRecorder {
-	return m.recorder
-}
-
-// Error mocks base method
-func (m *MockClientError) Error() error {
-	ret := m.ctrl.Call(m, "Error")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Error indicates an expected call of Error
-func (mr *MockClientErrorMockRecorder) Error() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockClientError)(nil).Error))
-}
-
-// Code mocks base method
-func (m *MockClientError) Code() int {
-	ret := m.ctrl.Call(m, "Code")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// Code indicates an expected call of Code
-func (mr *MockClientErrorMockRecorder) Code() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Code", reflect.TypeOf((*MockClientError)(nil).Code))
-}
-
 // MockFilterClient is a mock of FilterClient interface
 type MockFilterClient struct {
 	ctrl     *gomock.Controller
@@ -86,16 +39,15 @@ func (m *MockFilterClient) EXPECT() *MockFilterClientMockRecorder {
 }
 
 // Checker mocks base method
-func (m *MockFilterClient) Checker(ctx context.Context) (*healthcheck.Check, error) {
-	ret := m.ctrl.Call(m, "Checker", ctx)
-	ret0, _ := ret[0].(*healthcheck.Check)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+func (m *MockFilterClient) Checker(ctx context.Context, check *healthcheck.CheckState) error {
+	ret := m.ctrl.Call(m, "Checker", ctx, check)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Checker indicates an expected call of Checker
-func (mr *MockFilterClientMockRecorder) Checker(ctx interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Checker", reflect.TypeOf((*MockFilterClient)(nil).Checker), ctx)
+func (mr *MockFilterClientMockRecorder) Checker(ctx, check interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Checker", reflect.TypeOf((*MockFilterClient)(nil).Checker), ctx, check)
 }
 
 // GetDimensions mocks base method
@@ -286,16 +238,15 @@ func (m *MockDatasetClient) EXPECT() *MockDatasetClientMockRecorder {
 }
 
 // Checker mocks base method
-func (m *MockDatasetClient) Checker(ctx context.Context) (*healthcheck.Check, error) {
-	ret := m.ctrl.Call(m, "Checker", ctx)
-	ret0, _ := ret[0].(*healthcheck.Check)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+func (m *MockDatasetClient) Checker(ctx context.Context, check *healthcheck.CheckState) error {
+	ret := m.ctrl.Call(m, "Checker", ctx, check)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Checker indicates an expected call of Checker
-func (mr *MockDatasetClientMockRecorder) Checker(ctx interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Checker", reflect.TypeOf((*MockDatasetClient)(nil).Checker), ctx)
+func (mr *MockDatasetClientMockRecorder) Checker(ctx, check interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Checker", reflect.TypeOf((*MockDatasetClient)(nil).Checker), ctx, check)
 }
 
 // Get mocks base method
@@ -387,16 +338,15 @@ func (m *MockHierarchyClient) EXPECT() *MockHierarchyClientMockRecorder {
 }
 
 // Checker mocks base method
-func (m *MockHierarchyClient) Checker(ctx context.Context) (*healthcheck.Check, error) {
-	ret := m.ctrl.Call(m, "Checker", ctx)
-	ret0, _ := ret[0].(*healthcheck.Check)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+func (m *MockHierarchyClient) Checker(ctx context.Context, check *healthcheck.CheckState) error {
+	ret := m.ctrl.Call(m, "Checker", ctx, check)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Checker indicates an expected call of Checker
-func (mr *MockHierarchyClientMockRecorder) Checker(ctx interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Checker", reflect.TypeOf((*MockHierarchyClient)(nil).Checker), ctx)
+func (mr *MockHierarchyClientMockRecorder) Checker(ctx, check interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Checker", reflect.TypeOf((*MockHierarchyClient)(nil).Checker), ctx, check)
 }
 
 // GetRoot mocks base method
@@ -449,16 +399,15 @@ func (m *MockSearchClient) EXPECT() *MockSearchClientMockRecorder {
 }
 
 // Checker mocks base method
-func (m *MockSearchClient) Checker(ctx context.Context) (*healthcheck.Check, error) {
-	ret := m.ctrl.Call(m, "Checker", ctx)
-	ret0, _ := ret[0].(*healthcheck.Check)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+func (m *MockSearchClient) Checker(ctx context.Context, check *healthcheck.CheckState) error {
+	ret := m.ctrl.Call(m, "Checker", ctx, check)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Checker indicates an expected call of Checker
-func (mr *MockSearchClientMockRecorder) Checker(ctx interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Checker", reflect.TypeOf((*MockSearchClient)(nil).Checker), ctx)
+func (mr *MockSearchClientMockRecorder) Checker(ctx, check interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Checker", reflect.TypeOf((*MockSearchClient)(nil).Checker), ctx, check)
 }
 
 // Dimension mocks base method
@@ -503,16 +452,15 @@ func (m *MockRenderer) EXPECT() *MockRendererMockRecorder {
 }
 
 // Checker mocks base method
-func (m *MockRenderer) Checker(ctx context.Context) (*healthcheck.Check, error) {
-	ret := m.ctrl.Call(m, "Checker", ctx)
-	ret0, _ := ret[0].(*healthcheck.Check)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+func (m *MockRenderer) Checker(ctx context.Context, check *healthcheck.CheckState) error {
+	ret := m.ctrl.Call(m, "Checker", ctx, check)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Checker indicates an expected call of Checker
-func (mr *MockRendererMockRecorder) Checker(ctx interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Checker", reflect.TypeOf((*MockRenderer)(nil).Checker), ctx)
+func (mr *MockRendererMockRecorder) Checker(ctx, check interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Checker", reflect.TypeOf((*MockRenderer)(nil).Checker), ctx, check)
 }
 
 // Do mocks base method
