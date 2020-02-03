@@ -30,11 +30,6 @@ var (
 	Version string
 )
 
-const (
-	criticalTimeout = time.Minute
-	interval        = 10 * time.Second
-)
-
 func main() {
 	log.Namespace = "dp-frontend-filter-dataset-controller"
 
@@ -49,9 +44,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	timeout, err := time.ParseDuration(cfg.CriticalTimeout)
+	if err != nil {
+		log.Event(ctx, "failed to parse duration for healthcheck critical timeout", log.Error(err))
+		os.Exit(1)
+	}
+
+	interval, err := time.ParseDuration(cfg.Interval)
+	if err != nil {
+		log.Event(ctx, "failed to parse duration for healthcheck interval", log.Error(err))
+		os.Exit(1)
+	}
+
 	log.Event(ctx, "got service configuration", log.Data{"config": cfg})
 
-	versionInfo, err := health.CreateVersionInfo(
+	versionInfo, err := health.NewVersionInfo(
 		BuildTime,
 		GitCommit,
 		Version,
@@ -71,15 +78,13 @@ func main() {
 		Search:    search.New(cfg.SearchAPIURL),
 	}
 
-	healthcheck, err := health.Create(versionInfo, criticalTimeout, interval,
-		clients.Renderer.Checker, clients.Filter.Checker, clients.Dataset.Checker,
-		clients.Hierarchy.Checker, clients.Search.Checker)
-	if err != nil {
-		log.Event(ctx, "failed to create service health checks", log.Error(err))
+	healthcheck := health.New(versionInfo, timeout, interval)
+	clients.Healthcheck = &healthcheck
+
+	if err = registerCheckers(ctx, clients); err != nil {
+		log.Event(ctx, "failed to add checkers", log.Error(err))
 		os.Exit(1)
 	}
-
-	clients.Healthcheck = &healthcheck
 
 	routes.Init(ctx, r, cfg, clients)
 
@@ -115,4 +120,28 @@ func main() {
 	if err := s.Server.Shutdown(ctx); err != nil {
 		log.Event(ctx, "failed to shutdown http server", log.Error(err))
 	}
+}
+
+func registerCheckers(ctx context.Context, clients routes.Clients) (err error) {
+	if err = clients.Healthcheck.AddCheck("frontend renderer", clients.Renderer.Checker); err != nil {
+		log.Event(ctx, "failed to add frontend renderer checker", log.Error(err))
+	}
+
+	if err = clients.Healthcheck.AddCheck("filter API", clients.Filter.Checker); err != nil {
+		log.Event(ctx, "failed to add filter API checker", log.Error(err))
+	}
+
+	if err = clients.Healthcheck.AddCheck("Dataste API", clients.Dataset.Checker); err != nil {
+		log.Event(ctx, "failed to add dataset API checker", log.Error(err))
+	}
+
+	if err = clients.Healthcheck.AddCheck("Hierarchy API", clients.Hierarchy.Checker); err != nil {
+		log.Event(ctx, "failed to add hierarchy API checker", log.Error(err))
+	}
+
+	if err = clients.Healthcheck.AddCheck("Search API", clients.Search.Checker); err != nil {
+		log.Event(ctx, "failed to add search API checker", log.Error(err))
+	}
+
+	return
 }

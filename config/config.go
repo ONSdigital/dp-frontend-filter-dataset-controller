@@ -1,6 +1,8 @@
 package config
 
-import "github.com/kelseyhightower/envconfig"
+import (
+	"github.com/kelseyhightower/envconfig"
+)
 
 // Config represents service configuration for dp-frontend-filter-dataset-controller
 type Config struct {
@@ -9,13 +11,15 @@ type Config struct {
 	FilterAPIURL         string `envconfig:"FILTER_API_URL"`
 	DatasetAPIURL        string `envconfig:"DATASET_API_URL"`
 	HierarchyAPIURL      string `envconfig:"HIERARCHY_API_URL"`
-	DatasetAPIAuthToken  string `envconfig:"DATASET_API_AUTH_TOKEN"`
-	FilterAPIAuthToken   string `envconfig:"FILTER_API_AUTH_TOKEN"`
-	SearchAPIAuthToken   string `envconfig:"SEARCH_API_AUTH_TOKEN"`
+	DatasetAPIAuthToken  string `envconfig:"DATASET_API_AUTH_TOKEN" json:"-"`
+	FilterAPIAuthToken   string `envconfig:"FILTER_API_AUTH_TOKEN"  json:"-"`
+	SearchAPIAuthToken   string `envconfig:"SEARCH_API_AUTH_TOKEN"  json:"-"`
 	SearchAPIURL         string `envconfig:"SEARCH_API_URL"`
 	DownloadServiceURL   string `envconfig:"DOWNLOAD_SERVICE_URL"`
 	EnableDatasetPreview bool   `envconfig:"ENABLE_DATASET_PREVIEW"`
 	EnableLoop11         bool   `envconfig:"ENABLE_LOOP11"`
+	Interval             string `envconfig:"HEALTHCHECK_INTERVAL"`
+	CriticalTimeout      string `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 }
 
 var cfg *Config
@@ -40,6 +44,8 @@ func Get() (*Config, error) {
 		DownloadServiceURL:   "http://localhost:23600",
 		EnableDatasetPreview: false,
 		EnableLoop11:         false,
+		Interval:             "10s",
+		CriticalTimeout:      "1m",
 	}
 
 	return cfg, envconfig.Process("", cfg)

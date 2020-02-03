@@ -3,10 +3,10 @@ module github.com/ONSdigital/dp-frontend-filter-dataset-controller
 go 1.12
 
 require (
-	github.com/ONSdigital/dp-api-clients-go v0.0.0-20200127115422-5c4cb37b8065
+	github.com/ONSdigital/dp-api-clients-go v1.1.0
 	github.com/ONSdigital/dp-frontend-dataset-controller v1.9.0
 	github.com/ONSdigital/dp-frontend-models v1.1.0
-	github.com/ONSdigital/dp-healthcheck v0.0.0-20200124150251-169c38bada89
+	github.com/ONSdigital/dp-healthcheck v0.0.0-20200131122546-9db6d3f0494e
 	github.com/ONSdigital/go-ns v0.0.0-20191104121206-f144c4ec2e58
 	github.com/ONSdigital/log.go v0.0.0-20191127134126-2a610b254f20
 	github.com/golang/mock v1.4.0
