@@ -13,6 +13,6 @@ debug:
 	HUMAN_LOG=1 DEBUG=1 $(BINPATH)/dp-frontend-filter-dataset-controller
 
 test:
-	go test -cover $(shell go list ./... | grep -v /vendor/) -tags 'production' ./...
+	go test -race -cover ./...
 
 .PHONY: build debug
