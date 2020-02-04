@@ -19,6 +19,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// these form vars are not regular input fields, but transmit meta form info
+var specialFormVars = map[string]bool{
+	"save-and-return": true,
+	":uri":            true,
+	"q":               true,
+}
+
 // HierarchyUpdate controls the updating of a hierarchy job
 func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
@@ -72,6 +79,8 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 	wg.Add(1)
 
 	go func() {
+		defer wg.Done()
+
 		var h hierarchy.Model
 		var err error
 		if len(code) > 0 {
@@ -112,12 +121,11 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 				}
 			}
 		}
-
-		wg.Done()
 	}()
 
+	options := make([]string, 0)
 	for k := range req.Form {
-		if k == "save-and-return" || k == ":uri" {
+		if _, foundSpecial := specialFormVars[k]; foundSpecial {
 			continue
 		}
 
@@ -128,11 +136,13 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, k); err != nil {
-			log.InfoCtx(ctx, err.Error(), nil)
-		}
+		options = append(options, k)
+	}
+	if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options); err != nil {
+		log.ErrorCtx(ctx, err, nil)
 	}
 
+	wg.Wait()
 	http.Redirect(w, req, redirectURI, 302)
 }
 
