@@ -32,7 +32,7 @@ func (f Filter) Submit(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -65,7 +65,7 @@ func (f *Filter) OutputPage(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -271,7 +271,7 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 	prev, err := f.FilterClient.GetOutput(req.Context(), userAccessToken, "", "", collectionID, filterOutputID)

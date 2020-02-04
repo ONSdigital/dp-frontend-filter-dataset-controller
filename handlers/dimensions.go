@@ -38,7 +38,7 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -134,7 +134,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -218,7 +218,7 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -465,7 +465,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -521,7 +521,7 @@ func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -632,7 +632,7 @@ func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -665,7 +665,7 @@ func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 

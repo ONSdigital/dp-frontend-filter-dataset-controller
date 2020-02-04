@@ -3,11 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"net/http"
 	"net/url"
 	"regexp"
 	"time"
+
+	"github.com/ONSdigital/dp-api-clients-go/headers"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
@@ -30,7 +31,7 @@ func (f *Filter) UpdateTime(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -96,7 +97,7 @@ func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -116,7 +117,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -162,7 +163,7 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -213,7 +214,7 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 

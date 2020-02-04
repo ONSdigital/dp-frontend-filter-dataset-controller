@@ -29,7 +29,7 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -87,7 +87,7 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 	opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName)
@@ -139,7 +139,7 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -204,7 +204,7 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 

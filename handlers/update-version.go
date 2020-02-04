@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"net/http"
 	"net/url"
+
+	"github.com/ONSdigital/dp-api-clients-go/headers"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/log.go/log"
@@ -22,7 +23,7 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 

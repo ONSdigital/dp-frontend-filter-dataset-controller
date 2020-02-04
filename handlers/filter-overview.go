@@ -28,7 +28,7 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
@@ -162,13 +162,13 @@ func (f *Filter) FilterOverviewClearAll(w http.ResponseWriter, req *http.Request
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "access token missing", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.Error(err))
 		}
 	}
 
 	dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID)
 	if err != nil {
-		log.Event(ctx, "access token missing", log.Error(err))
+		log.Event(ctx, "failed to get dimensions", log.Error(err))
 		return
 	}
 
