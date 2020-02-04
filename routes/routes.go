@@ -41,7 +41,9 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients Client
 		log.Event(ctx, "failed to validate date rules", log.Error(err))
 	}
 
-	filter := handlers.NewFilter(clients.Renderer, clients.Filter, clients.Dataset, clients.Hierarchy, clients.Search, v, cfg.DownloadServiceURL, cfg.EnableDatasetPreview, cfg.EnableLoop11)
+	filter := handlers.NewFilter(clients.Renderer, clients.Filter, clients.Dataset,
+		clients.Hierarchy, clients.Search, v, cfg.SearchAPIAuthToken, cfg.DownloadServiceURL,
+		cfg.EnableDatasetPreview, cfg.EnableLoop11)
 
 	r.StrictSlash(true).Path("/health").HandlerFunc(clients.Healthcheck.Handler)
 

@@ -38,21 +38,9 @@ func main() {
 
 	ctx := context.Background()
 
-	cfg, err := config.Get()
+	cfg, err := config.Get(ctx)
 	if err != nil {
 		log.Event(ctx, "unable to retrieve service configuration", log.Error(err))
-		os.Exit(1)
-	}
-
-	timeout, err := time.ParseDuration(cfg.CriticalTimeout)
-	if err != nil {
-		log.Event(ctx, "failed to parse duration for healthcheck critical timeout", log.Error(err))
-		os.Exit(1)
-	}
-
-	interval, err := time.ParseDuration(cfg.Interval)
-	if err != nil {
-		log.Event(ctx, "failed to parse duration for healthcheck interval", log.Error(err))
 		os.Exit(1)
 	}
 
@@ -78,7 +66,7 @@ func main() {
 		Search:    search.New(cfg.SearchAPIURL),
 	}
 
-	healthcheck := health.New(versionInfo, timeout, interval)
+	healthcheck := health.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
 	clients.Healthcheck = &healthcheck
 
 	if err = registerCheckers(ctx, clients); err != nil {

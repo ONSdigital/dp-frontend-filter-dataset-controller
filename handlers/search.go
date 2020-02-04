@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
 	"regexp"
 	"strings"
 	"sync"
 
 	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/dp-api-clients-go/search"
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/log.go/log"
@@ -23,11 +21,6 @@ import (
 // hierarchy page
 func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	cfg, err := config.Get()
-	if err != nil {
-		log.Event(ctx, "failed to retrieve config", log.Error(err))
-		os.Exit(1)
-	}
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 	name := vars["name"]
@@ -43,7 +36,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 
 	var searchConfig []search.Config
 	if len(req.Header.Get("X-Florence-Token")) > 0 {
-		searchConfig = append(searchConfig, search.Config{InternalToken: cfg.SearchAPIAuthToken, FlorenceToken: req.Header.Get("X-Florence-Token")})
+		searchConfig = append(searchConfig, search.Config{InternalToken: f.SearchAPIAuthToken, FlorenceToken: req.Header.Get("X-Florence-Token")})
 	}
 
 	fil, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)

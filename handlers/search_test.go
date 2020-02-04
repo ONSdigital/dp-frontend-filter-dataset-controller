@@ -61,7 +61,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, "", false, false)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -84,7 +84,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, "", false, false)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -111,7 +111,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, "", false, false)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -140,7 +140,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, "", false, false)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -170,7 +170,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, "", false, false)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -201,7 +201,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, "", false, false)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -233,7 +233,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, "", false, false)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -267,7 +267,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, "", false, false)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -296,7 +296,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, "", false, false)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
