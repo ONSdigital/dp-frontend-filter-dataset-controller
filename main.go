@@ -76,9 +76,6 @@ func main() {
 
 	routes.Init(ctx, r, cfg, clients)
 
-	// Start healthcheck ticker
-	healthcheck.Start(ctx)
-
 	s := server.New(cfg.BindAddr, r)
 	s.HandleOSSignals = false
 
@@ -95,6 +92,9 @@ func main() {
 			return
 		}
 	}()
+
+	// Start healthcheck ticker
+	healthcheck.Start(ctx)
 
 	<-signals
 
@@ -119,15 +119,15 @@ func registerCheckers(ctx context.Context, clients routes.Clients) (err error) {
 		log.Event(ctx, "failed to add filter API checker", log.Error(err))
 	}
 
-	if err = clients.Healthcheck.AddCheck("Dataste API", clients.Dataset.Checker); err != nil {
+	if err = clients.Healthcheck.AddCheck("dataste API", clients.Dataset.Checker); err != nil {
 		log.Event(ctx, "failed to add dataset API checker", log.Error(err))
 	}
 
-	if err = clients.Healthcheck.AddCheck("Hierarchy API", clients.Hierarchy.Checker); err != nil {
+	if err = clients.Healthcheck.AddCheck("hierarchy API", clients.Hierarchy.Checker); err != nil {
 		log.Event(ctx, "failed to add hierarchy API checker", log.Error(err))
 	}
 
-	if err = clients.Healthcheck.AddCheck("Search API", clients.Search.Checker); err != nil {
+	if err = clients.Healthcheck.AddCheck("search API", clients.Search.Checker); err != nil {
 		log.Event(ctx, "failed to add search API checker", log.Error(err))
 	}
 
