@@ -38,7 +38,7 @@ func main() {
 
 	ctx := context.Background()
 
-	cfg, err := config.Get(ctx)
+	cfg, err := config.Get()
 	if err != nil {
 		log.Event(ctx, "unable to retrieve service configuration", log.Error(err))
 		os.Exit(1)

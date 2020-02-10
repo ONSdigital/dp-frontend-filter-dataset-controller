@@ -1,7 +1,6 @@
 package config
 
 import (
-	"context"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -29,7 +28,7 @@ var cfg *Config
 
 // Get returns the default config with any modifications through environment
 // variables
-func Get(ctx context.Context) (cfg *Config, err error) {
+func Get() (cfg *Config, err error) {
 
 	cfg = &Config{
 		BindAddr:                   ":20001",
