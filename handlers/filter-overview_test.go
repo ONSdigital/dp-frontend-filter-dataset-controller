@@ -34,7 +34,7 @@ func TestUnitFilterOverview(t *testing.T) {
 			mockDatasetClient := NewMockDatasetClient(mockCtrl)
 			mockDatasetClient.EXPECT().GetDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1").Return(dataset.Dimensions{Items: []dataset.Dimension{{Name: "geography"}}}, nil)
 			mockDatasetClient.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1", "geography")
-			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c").Return(dataset.Model{Contacts: []dataset.Contact{{Name: "Matt"}}}, nil)
+			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c").Return(dataset.DatasetDetails{Contacts: &[]dataset.Contact{{Name: "Matt"}}}, nil)
 			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1").Return(dataset.Version{}, nil)
 			mockRenderer := NewMockRenderer(mockCtrl)
 			mockRenderer.EXPECT().Do("dataset-filter/filter-overview", gomock.Any()).Return([]byte("some-bytes"), nil)
@@ -43,7 +43,7 @@ func TestUnitFilterOverview(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, "", false, false)
+			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, mockServiceAuthToken, "", false, false)
 			router.Path("/filters/{filterID}/dimensions").HandlerFunc(f.FilterOverview)
 
 			router.ServeHTTP(w, req)
@@ -64,7 +64,7 @@ func TestUnitFilterOverview(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(nil, mockFilterClient, nil, nil, nil, nil, "", false, false)
+			f := NewFilter(nil, mockFilterClient, nil, nil, nil, nil, mockServiceAuthToken, "", false, false)
 			router.Path("/filters/{filterID}/dimensions/clear-all").HandlerFunc(f.FilterOverviewClearAll)
 
 			router.ServeHTTP(w, req)

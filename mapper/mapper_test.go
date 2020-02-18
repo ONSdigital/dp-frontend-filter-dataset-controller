@@ -156,7 +156,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "2017",
 					},
 				},
-			}, filter.Model{}, dataset.Model{}, dataset.Dimensions{}, "1234", "today", false)
+			}, filter.Model{}, dataset.DatasetDetails{}, dataset.Dimensions{}, "1234", "today", false)
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
@@ -182,7 +182,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "Ireland",
 					},
 				},
-			}, filter.Model{}, dataset.Model{}, dataset.Dimensions{}, "1234", "today", false)
+			}, filter.Model{}, dataset.DatasetDetails{}, dataset.Dimensions{}, "1234", "today", false)
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
@@ -269,10 +269,10 @@ func getTestFilter() filter.Model {
 	}
 }
 
-func getTestDataset() dataset.Model {
-	return dataset.Model{
+func getTestDataset() dataset.DatasetDetails {
+	return dataset.DatasetDetails{
 		NextRelease: "17 January 2018",
-		Contacts: []dataset.Contact{
+		Contacts: &[]dataset.Contact{
 			{
 				Name:      "Matt Rout",
 				Telephone: "07984593234",

@@ -1,7 +1,7 @@
 #!/bin/bash -eux
 
-export GOPATH=$(pwd)/go
+cwd=$(pwd)
 
-pushd $GOPATH/src/github.com/ONSdigital/dp-frontend-filter-dataset-controller
+pushd $cwd/dp-frontend-filter-dataset-controller
   make test
 popd
