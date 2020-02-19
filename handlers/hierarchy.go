@@ -123,7 +123,6 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 
-	options := make([]string, 0)
 	for k := range req.Form {
 		if _, foundSpecial := specialFormVars[k]; foundSpecial {
 			continue
@@ -136,10 +135,9 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		options = append(options, k)
-	}
-	if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options); err != nil {
-		log.ErrorCtx(ctx, err, nil)
+		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, k); err != nil {
+			log.InfoCtx(ctx, err.Error(), nil)
+		}
 	}
 
 	wg.Wait()
