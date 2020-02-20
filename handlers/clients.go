@@ -23,15 +23,15 @@ type FilterClient interface {
 	Checker(ctx context.Context, check *health.CheckState) error
 	GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID string) (dims []filter.Dimension, err error)
 	GetDimensionOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (fdv []filter.DimensionOption, err error)
-	GetJobState(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, downloadServiceToken, filterID string) (f filter.Model, err error)
-	GetOutput(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, downloadServiceToken, filterOutputID string) (f filter.Model, err error)
+	GetJobState(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, filterID string) (f filter.Model, err error)
+	GetOutput(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, filterOutputID string) (f filter.Model, err error)
 	GetDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (dim filter.Dimension, err error)
 	AddDimensionValue(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name, value string) error
 	RemoveDimensionValue(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name, value string) error
 	RemoveDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (err error)
 	AddDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (err error)
 	AddDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, options []string) error
-	UpdateBlueprint(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, downloadServiceToken string, m filter.Model, doSubmit bool) (filter.Model, error)
+	UpdateBlueprint(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID string, m filter.Model, doSubmit bool) (filter.Model, error)
 	CreateBlueprint(context.Context, string, string, string, string, string, string, string, []string) (string, error)
 	GetPreview(context.Context, string, string, string, string, string) (filter.Preview, error)
 }
