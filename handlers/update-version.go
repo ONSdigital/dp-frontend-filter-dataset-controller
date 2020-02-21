@@ -42,7 +42,7 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 	}
 
 	versionURL, err := url.Parse(oldJob.Links.Version.HRef)
-	if err != nil {
+	if err != nil || versionURL.Path == "" {
 		log.Event(ctx, "failed to parse version href", log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
