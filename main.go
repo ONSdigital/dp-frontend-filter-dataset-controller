@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
@@ -40,11 +40,11 @@ func main() {
 
 	cfg, err := config.Get()
 	if err != nil {
-		log.Event(ctx, "unable to retrieve service configuration", log.Error(err))
+		log.Event(ctx, "unable to retrieve service configuration", log.FATAL, log.Error(err))
 		os.Exit(1)
 	}
 
-	log.Event(ctx, "got service configuration", log.Data{"config": cfg})
+	log.Event(ctx, "got service configuration", log.INFO, log.Data{"config": cfg})
 
 	versionInfo, err := health.NewVersionInfo(
 		BuildTime,
@@ -52,7 +52,7 @@ func main() {
 		Version,
 	)
 	if err != nil {
-		log.Event(ctx, "failed to create service version information", log.Error(err))
+		log.Event(ctx, "failed to create service version information", log.FATAL, log.Error(err))
 		os.Exit(1)
 	}
 
@@ -70,7 +70,6 @@ func main() {
 	clients.Healthcheck = &healthcheck
 
 	if err = registerCheckers(ctx, clients); err != nil {
-		log.Event(ctx, "failed to add checkers", log.Error(err))
 		os.Exit(1)
 	}
 
@@ -88,7 +87,7 @@ func main() {
 
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
-			log.Event(ctx, "failed to start http listen and serve", log.Error(err))
+			log.Event(ctx, "failed to start http listen and serve", log.ERROR, log.Error(err))
 			return
 		}
 	}()
@@ -96,39 +95,58 @@ func main() {
 	// Start healthcheck ticker
 	healthcheck.Start(ctx)
 
-	<-signals
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	log.Event(ctx, "shutting service down gracefully")
-	defer cancel()
-
-	// Stop healthcheck ticker
-	healthcheck.Stop()
-
-	if err := s.Server.Shutdown(ctx); err != nil {
-		log.Event(ctx, "failed to shutdown http server", log.Error(err))
+	// Block until a fatal error occurs
+	select {
+	case signal := <-signals:
+		log.Event(ctx, "quitting after os signal received", log.INFO, log.Data{"signal": signal})
 	}
+
+	log.Event(ctx, fmt.Sprintf("shutdown with timeout: %s", cfg.GracefulShutdownTimeout), log.INFO)
+
+	// give the app `Timeout` seconds to close gracefully before killing it.
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.GracefulShutdownTimeout)
+
+	go func() {
+		log.Event(ctx, "stop health checkers", log.INFO)
+		healthcheck.Stop()
+
+		if err := s.Shutdown(ctx); err != nil {
+			log.Event(ctx, "failed to gracefully shutdown http server", log.ERROR, log.Error(err))
+		}
+
+		cancel() // stop timer
+	}()
+
+	// wait for timeout or success (via cancel)
+	<-ctx.Done()
+	if ctx.Err() == context.DeadlineExceeded {
+		log.Event(ctx, "context deadline exceeded", log.WARN, log.Error(ctx.Err()))
+	} else {
+		log.Event(ctx, "graceful shutdown complete", log.INFO, log.Data{"context": ctx.Err()})
+	}
+
+	os.Exit(0)
 }
 
 func registerCheckers(ctx context.Context, clients routes.Clients) (err error) {
 	if err = clients.Healthcheck.AddCheck("frontend renderer", clients.Renderer.Checker); err != nil {
-		log.Event(ctx, "failed to add frontend renderer checker", log.Error(err))
+		log.Event(ctx, "failed to add frontend renderer checker", log.ERROR, log.Error(err))
 	}
 
 	if err = clients.Healthcheck.AddCheck("filter API", clients.Filter.Checker); err != nil {
-		log.Event(ctx, "failed to add filter API checker", log.Error(err))
+		log.Event(ctx, "failed to add filter API checker", log.ERROR, log.Error(err))
 	}
 
 	if err = clients.Healthcheck.AddCheck("dataste API", clients.Dataset.Checker); err != nil {
-		log.Event(ctx, "failed to add dataset API checker", log.Error(err))
+		log.Event(ctx, "failed to add dataset API checker", log.ERROR, log.Error(err))
 	}
 
 	if err = clients.Healthcheck.AddCheck("hierarchy API", clients.Hierarchy.Checker); err != nil {
-		log.Event(ctx, "failed to add hierarchy API checker", log.Error(err))
+		log.Event(ctx, "failed to add hierarchy API checker", log.ERROR, log.Error(err))
 	}
 
 	if err = clients.Healthcheck.AddCheck("search API", clients.Search.Checker); err != nil {
-		log.Event(ctx, "failed to add search API checker", log.Error(err))
+		log.Event(ctx, "failed to add search API checker", log.ERROR, log.Error(err))
 	}
 
 	return
