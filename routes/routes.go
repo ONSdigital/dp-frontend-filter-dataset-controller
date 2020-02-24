@@ -32,13 +32,13 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients Client
 
 	fi, err := os.Open("rules.json")
 	if err != nil {
-		log.Event(ctx, "unable to open date rules", log.Error(err))
+		log.Event(ctx, "unable to open date rules", log.WARN, log.Error(err))
 	}
 	defer fi.Close()
 
 	v, err := validator.New(fi)
 	if err != nil {
-		log.Event(ctx, "failed to validate date rules", log.Error(err))
+		log.Event(ctx, "failed to validate date rules", log.WARN, log.Error(err))
 	}
 
 	filter := handlers.NewFilter(clients.Renderer, clients.Filter, clients.Dataset,

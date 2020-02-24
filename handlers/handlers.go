@@ -49,7 +49,7 @@ func setStatusCode(req *http.Request, w http.ResponseWriter, err error) {
 			status = err.Code()
 		}
 	}
-	log.Event(req.Context(), "setting response status", log.Error(err), log.Data{"status": status})
+	log.Event(req.Context(), "setting response status", log.INFO, log.Error(err), log.Data{"status": status})
 	w.WriteHeader(status)
 }
 
@@ -57,7 +57,7 @@ func getCollectionIDFromContext(ctx context.Context) string {
 	if ctx.Value(common.CollectionIDHeaderKey) != nil {
 		collectionID, ok := ctx.Value(common.CollectionIDHeaderKey).(string)
 		if !ok {
-			log.Event(ctx, "failed to get collection ID", log.Error(errors.New("error casting collection ID context value to string")))
+			log.Event(ctx, "failed to get collection ID", log.WARN, log.Error(errors.New("error casting collection ID context value to string")))
 		}
 		return collectionID
 	}
