@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"context"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
@@ -11,6 +12,7 @@ import (
 
 func TestUnitMapper(t *testing.T) {
 	ctx := context.Background()
+	req := httptest.NewRequest("GET", "/", nil)
 
 	Convey("test CreateFilterOverview correctly maps item to filterOverview page model", t, func() {
 		dimensions := getTestDimensions()
@@ -18,7 +20,7 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dst := getTestDataset()
 
-		fop := CreateFilterOverview(ctx, dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992", false)
+		fop := CreateFilterOverview(ctx, req, dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992", false)
 		So(fop.FilterID, ShouldEqual, filter.FilterID)
 		So(fop.SearchDisabled, ShouldBeTrue)
 		So(fop.Data.Dimensions, ShouldHaveLength, 5)
@@ -55,7 +57,7 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dataset := getTestDataset()
 
-		pp := CreatePreviewPage(ctx, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992", false, false)
+		pp := CreatePreviewPage(ctx, req, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992", false, false)
 		So(pp.SearchDisabled, ShouldBeFalse)
 		So(pp.Breadcrumb, ShouldHaveLength, 4)
 		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
@@ -111,7 +113,7 @@ func TestUnitMapper(t *testing.T) {
 
 			filter := getTestFilter()
 
-			p := CreateListSelectorPage(ctx, "time", selectedValues, allValues, filter, d, dataset.Dimensions{}, "12345", "11-11-1992", false)
+			p := CreateListSelectorPage(ctx, req, "time", selectedValues, allValues, filter, d, dataset.Dimensions{}, "12345", "11-11-1992", false)
 			So(p.Data.Title, ShouldEqual, "Time")
 			So(p.SearchDisabled, ShouldBeTrue)
 			So(p.FilterID, ShouldEqual, filter.FilterID)
@@ -141,7 +143,7 @@ func TestUnitMapper(t *testing.T) {
 		})
 
 		Convey("correctly orders the time values into ascending numeric order", func() {
-			p := CreateListSelectorPage(ctx, "time", []filter.DimensionOption{}, dataset.Options{
+			p := CreateListSelectorPage(ctx, req, "time", []filter.DimensionOption{}, dataset.Options{
 				Items: []dataset.Option{
 					{
 						Label: "2013",
@@ -167,7 +169,7 @@ func TestUnitMapper(t *testing.T) {
 		})
 
 		Convey("correctly orders non time/age values alphabetically", func() {
-			p := CreateListSelectorPage(ctx, "geography", []filter.DimensionOption{}, dataset.Options{
+			p := CreateListSelectorPage(ctx, req, "geography", []filter.DimensionOption{}, dataset.Options{
 				Items: []dataset.Option{
 					{
 						Label: "Wales",
