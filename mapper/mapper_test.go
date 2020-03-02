@@ -2,11 +2,13 @@ package mapper
 
 import (
 	"context"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-frontend-models/model"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -283,4 +285,27 @@ func getTestDataset() dataset.DatasetDetails {
 		},
 		Title: "Small Area Population Estimates",
 	}
+}
+
+func TestUnitMapCookiesPreferences(t *testing.T) {
+	req := httptest.NewRequest("", "/", nil)
+	pageModel := model.Page{
+		CookiesPreferencesSet: false,
+		CookiesPolicy: model.CookiesPolicy{
+			Essential: false,
+			Usage:     false,
+		},
+	}
+
+	Convey("maps cookies preferences cookie data to page model correctly", t, func() {
+		So(pageModel.CookiesPreferencesSet, ShouldEqual, false)
+		So(pageModel.CookiesPolicy.Essential, ShouldEqual, false)
+		So(pageModel.CookiesPolicy.Usage, ShouldEqual, false)
+		req.AddCookie(&http.Cookie{Name: "cookies_preferences_set", Value: "true"})
+		req.AddCookie(&http.Cookie{Name: "cookies_policy", Value: "%7B%22essential%22%3Atrue%2C%22usage%22%3Atrue%7D"})
+		mapCookiePreferences(req, &pageModel.CookiesPreferencesSet, &pageModel.CookiesPolicy)
+		So(pageModel.CookiesPreferencesSet, ShouldEqual, true)
+		So(pageModel.CookiesPolicy.Essential, ShouldEqual, true)
+		So(pageModel.CookiesPolicy.Usage, ShouldEqual, true)
+	})
 }
