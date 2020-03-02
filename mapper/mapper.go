@@ -45,7 +45,7 @@ func CreateFilterOverview(ctx context.Context, req *http.Request, dimensions []f
 	p.EnableLoop11 = enableLoop11
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
-	log.Event(ctx, "mapping api response models into filter overview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
+	log.Event(ctx, "mapping api response models into filter overview page model", log.INFO, log.Data{"filterID": filterID, "datasetID": datasetID})
 
 	p.FilterID = filterID
 	p.DatasetTitle = dst.Title
@@ -73,7 +73,7 @@ func CreateFilterOverview(ctx context.Context, req *http.Request, dimensions []f
 			}
 			times, err := dates.ConvertToReadable(d.Values)
 			if err != nil {
-				log.Event(ctx, "unable to convert dates to human readable values", log.Error(err))
+				log.Event(ctx, "unable to convert dates to human readable values", log.WARN, log.Error(err))
 				for _, ac := range d.Values {
 					fod.AddedCategories = append(fod.AddedCategories, ac)
 				}
@@ -136,7 +136,7 @@ func CreateFilterOverview(ctx context.Context, req *http.Request, dimensions []f
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
-		log.Event(ctx, "unable to parse version url", log.Error(err))
+		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
 	}
 
 	p.IsInFilterBreadcrumb = true
@@ -166,7 +166,7 @@ func CreateListSelectorPage(ctx context.Context, req *http.Request, name string,
 	p.EnableLoop11 = enableLoop11
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
-	log.Event(ctx, "mapping api response models to list selector page model", log.Data{"filterID": filter.FilterID, "datasetID": datasetID, "dimension": name})
+	log.Event(ctx, "mapping api response models to list selector page model", log.INFO, log.Data{"filterID": filter.FilterID, "datasetID": datasetID, "dimension": name})
 
 	pageTitle := strings.Title(name)
 
@@ -189,7 +189,7 @@ func CreateListSelectorPage(ctx context.Context, req *http.Request, name string,
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
-		log.Event(ctx, "unable to parse version url", log.Error(err))
+		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
 	}
 
 	p.IsInFilterBreadcrumb = true
@@ -312,7 +312,7 @@ func CreatePreviewPage(ctx context.Context, req *http.Request, dimensions []filt
 	p.EnableLoop11 = enableLoop11
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
-	log.Event(ctx, "mapping api responses to preview page model", log.Data{"filterOutputID": filterOutputID, "datasetID": datasetID})
+	log.Event(ctx, "mapping api responses to preview page model", log.INFO, log.Data{"filterOutputID": filterOutputID, "datasetID": datasetID})
 
 	p.SearchDisabled = false
 	p.ShowFeedbackForm = true
@@ -321,7 +321,7 @@ func CreatePreviewPage(ctx context.Context, req *http.Request, dimensions []filt
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
-		log.Event(ctx, "unable to parse version url", log.Error(err))
+		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
 	}
 
 	p.Data.CurrentVersionURL = versionURL.Path
@@ -399,7 +399,7 @@ func CreateAgePage(ctx context.Context, req *http.Request, f filter.Model, d dat
 	p.EnableLoop11 = enableLoop11
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
-	log.Event(ctx, "mapping api responses to age page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
+	log.Event(ctx, "mapping api responses to age page model", log.INFO, log.Data{"filterID": f.FilterID, "datasetID": datasetID})
 
 	for _, dim := range dims.Items {
 		if dim.Name == "age" {
@@ -534,7 +534,7 @@ func CreateTimePage(ctx context.Context, req *http.Request, f filter.Model, d da
 	p.EnableLoop11 = enableLoop11
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
-	log.Event(ctx, "mapping api responses to time page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
+	log.Event(ctx, "mapping api responses to time page model", log.INFO, log.Data{"filterID": f.FilterID, "datasetID": datasetID})
 
 	if _, err := time.Parse("Jan-06", allVals.Items[0].Option); err == nil {
 		p.Data.Type = "month"
@@ -649,7 +649,7 @@ func CreateTimePage(ctx context.Context, req *http.Request, f filter.Model, d da
 		p.Data.CheckedRadio = "single"
 		date, err := time.Parse("Jan-06", selVals[0].Option)
 		if err != nil {
-			log.Event(ctx, "unable to parse date", log.Error(err))
+			log.Event(ctx, "unable to parse date", log.WARN, log.Error(err))
 		}
 		p.Data.SelectedStartMonth = date.Month().String()
 		p.Data.SelectedStartYear = fmt.Sprintf("%d", date.Year())
@@ -686,7 +686,7 @@ func CreateTimePage(ctx context.Context, req *http.Request, f filter.Model, d da
 
 		selDates, err := dates.ConvertToReadable(selOptions)
 		if err != nil {
-			log.Event(ctx, "unable to convert dates to human readable values", log.Error(err))
+			log.Event(ctx, "unable to convert dates to human readable values", log.WARN, log.Error(err))
 		}
 
 		selDates = dates.Sort(selDates)
@@ -707,7 +707,7 @@ func CreateHierarchySearchPage(ctx context.Context, req *http.Request, items []s
 	p.EnableLoop11 = enableLoop11
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
-	log.Event(ctx, "mapping api response models to hierarchy search page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "name": name})
+	log.Event(ctx, "mapping api response models to hierarchy search page", log.INFO, log.Data{"filterID": f.FilterID, "datasetID": datasetID, "name": name})
 
 	pageTitle := strings.Title(name)
 	for _, dim := range dims {
@@ -735,7 +735,7 @@ func CreateHierarchySearchPage(ctx context.Context, req *http.Request, items []s
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
-		log.Event(ctx, "unable to parse version url", log.Error(err))
+		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
 	}
 
 	p.Data.LandingPageURL = versionURL.Path + "#id-dimensions"
@@ -812,7 +812,7 @@ func CreateHierarchyPage(ctx context.Context, req *http.Request, h hierarchyClie
 	p.EnableLoop11 = enableLoop11
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
-	log.Event(ctx, "mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "label": h.Label})
+	log.Event(ctx, "mapping api response models to hierarchy page", log.INFO, log.Data{"filterID": f.FilterID, "datasetID": datasetID, "label": h.Label})
 
 	pageTitle := strings.Title(name)
 	for _, dim := range dims.Items {
@@ -846,7 +846,7 @@ func CreateHierarchyPage(ctx context.Context, req *http.Request, h hierarchyClie
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
-		log.Event(ctx, "unable to parse version url", log.Error(err))
+		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
 	}
 
 	p.IsInFilterBreadcrumb = true

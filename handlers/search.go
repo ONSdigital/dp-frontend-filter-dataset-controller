@@ -30,7 +30,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
 		}
 	}
 
@@ -41,47 +41,47 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 
 	fil, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
 	if err != nil {
-		log.Event(ctx, "failed to get job state", log.Error(err), log.Data{"filter_id": filterID})
+		log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	selVals, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
 	if err != nil {
-		log.Event(ctx, "failed to get options from filter client", log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+		log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	versionURL, err := url.Parse(fil.Links.Version.HRef)
 	if err != nil {
-		log.Event(ctx, "failed to parse version href", log.Error(err), log.Data{"filter_id": filterID})
+		log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
 	if err != nil {
-		log.Event(ctx, "failed to extract dataset info from path", log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	d, err := f.DatasetClient.Get(ctx, userAccessToken, "", collectionID, datasetID)
 	if err != nil {
-		log.Event(ctx, "failed to get dataset", log.Error(err), log.Data{"dataset_id": datasetID})
+		log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
 		setStatusCode(req, w, err)
 		return
 	}
 	ver, err := f.DatasetClient.GetVersion(ctx, userAccessToken, "", "", collectionID, datasetID, edition, version)
 	if err != nil {
-		log.Event(ctx, "failed to get version", log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+		log.Event(ctx, "failed to get version", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	allVals, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name)
 	if err != nil {
-		log.Event(ctx, "failed to get options from dataset client", log.Error(err),
+		log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
 			log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
@@ -89,7 +89,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 
 	searchRes, err := f.SearchClient.Dimension(ctx, datasetID, edition, version, name, q, searchConfig...)
 	if err != nil {
-		log.Event(ctx, "failed to get dimension from search client", log.Error(err),
+		log.Event(ctx, "failed to get dimension from search client", log.ERROR, log.Error(err),
 			log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version, "query": q})
 		setStatusCode(req, w, err)
 		return
@@ -97,7 +97,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 
 	dims, err := f.DatasetClient.GetDimensions(ctx, userAccessToken, "", collectionID, datasetID, edition, version)
 	if err != nil {
-		log.Event(ctx, "failed to get dimensions", log.Error(err),
+		log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
 			log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
@@ -107,14 +107,14 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 
 	b, err := json.Marshal(p)
 	if err != nil {
-		log.Event(ctx, "failed to marshal json", log.Error(err), log.Data{"filter_id": filterID})
+		log.Event(ctx, "failed to marshal json", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	templateBytes, err := f.Renderer.Do("dataset-filter/hierarchy", b)
 	if err != nil {
-		log.Event(ctx, "failed to render", log.Error(err), log.Data{"filter_id": filterID})
+		log.Event(ctx, "failed to render", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -126,7 +126,7 @@ func (f *Filter) Search(w http.ResponseWriter, req *http.Request) {
 func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	if err := req.ParseForm(); err != nil {
-		log.Event(ctx, "failed to parse request form", log.Error(err))
+		log.Event(ctx, "failed to parse request form", log.ERROR, log.Error(err))
 		return
 	}
 
@@ -141,33 +141,33 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.Error(err))
+			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
 		}
 	}
 
 	fil, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
 	if err != nil {
-		log.Event(ctx, "failed to get job state", log.Error(err), log.Data{"filter_id": filterID})
+		log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	versionURL, err := url.Parse(fil.Links.Version.HRef)
 	if err != nil {
-		log.Event(ctx, "failed to parse version href", log.Error(err), log.Data{"filter_id": filterID})
+		log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
 	if err != nil {
-		log.Event(ctx, "failed to extract dataset info from path", log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	searchRes, err := f.SearchClient.Dimension(ctx, datasetID, edition, version, name, q)
 	if err != nil {
-		log.Event(ctx, "failed to retrieve dimension search result, redirecting", log.Error(err))
+		log.Event(ctx, "failed to retrieve dimension search result, redirecting", log.ERROR, log.Error(err))
 		http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions", filterID), 302)
 		return
 	}
@@ -178,7 +178,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 			options = append(options, item.Code)
 		}
 		if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
-			log.Event(ctx, "failed to add dimension", log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -188,7 +188,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 	if len(req.Form["remove-all"]) > 0 {
 		for _, item := range searchRes.Items {
 			if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, item.Code); err != nil {
-				log.Event(ctx, "failed to remove dimension option", log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "option": item.Code})
+				log.Event(ctx, "failed to remove dimension option", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "option": item.Code})
 				setStatusCode(req, w, err)
 			}
 		}
@@ -203,7 +203,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 
 		opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
 		if err != nil {
-			log.Event(ctx, "failed to retrieve dimension options", log.Error(err))
+			log.Event(ctx, "failed to retrieve dimension options", log.WARN, log.Error(err))
 		}
 
 		for _, item := range searchRes.Items {
@@ -211,7 +211,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 				if opt.Option == item.Code {
 					if _, ok := req.Form[item.Code]; !ok {
 						if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, item.Code); err != nil {
-							log.Event(ctx, "failed to remove dimension value", log.Error(err))
+							log.Event(ctx, "failed to remove dimension value", log.WARN, log.Error(err))
 						}
 					}
 				}
@@ -234,7 +234,7 @@ func (f *Filter) SearchUpdate(w http.ResponseWriter, req *http.Request) {
 		}
 
 		if err := f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, k); err != nil {
-			log.Event(ctx, "failed to add dimension value", log.Error(err))
+			log.Event(ctx, "failed to add dimension value", log.WARN, log.Error(err))
 			continue
 		}
 	}
