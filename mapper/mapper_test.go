@@ -20,7 +20,7 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dst := getTestDataset()
 
-		fop := CreateFilterOverview(req, dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992", false)
+		fop := CreateFilterOverview(req, dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992")
 		So(fop.FilterID, ShouldEqual, filter.FilterID)
 		So(fop.SearchDisabled, ShouldBeTrue)
 		So(fop.Data.Dimensions, ShouldHaveLength, 5)
@@ -57,7 +57,7 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dataset := getTestDataset()
 
-		pp := CreatePreviewPage(req, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992", false, false)
+		pp := CreatePreviewPage(req, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992", false)
 		So(pp.SearchDisabled, ShouldBeFalse)
 		So(pp.Breadcrumb, ShouldHaveLength, 4)
 		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
@@ -113,7 +113,7 @@ func TestUnitMapper(t *testing.T) {
 
 			filter := getTestFilter()
 
-			p := CreateListSelectorPage(req, "time", selectedValues, allValues, filter, d, dataset.Dimensions{}, "12345", "11-11-1992", false)
+			p := CreateListSelectorPage(req, "time", selectedValues, allValues, filter, d, dataset.Dimensions{}, "12345", "11-11-1992")
 			So(p.Data.Title, ShouldEqual, "Time")
 			So(p.SearchDisabled, ShouldBeTrue)
 			So(p.FilterID, ShouldEqual, filter.FilterID)
@@ -158,7 +158,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "2017",
 					},
 				},
-			}, filter.Model{}, dataset.DatasetDetails{}, dataset.Dimensions{}, "1234", "today", false)
+			}, filter.Model{}, dataset.DatasetDetails{}, dataset.Dimensions{}, "1234", "today")
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
@@ -184,7 +184,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "Ireland",
 					},
 				},
-			}, filter.Model{}, dataset.DatasetDetails{}, dataset.Dimensions{}, "1234", "today", false)
+			}, filter.Model{}, dataset.DatasetDetails{}, dataset.Dimensions{}, "1234", "today")
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 

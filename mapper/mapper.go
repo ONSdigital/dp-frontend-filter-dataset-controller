@@ -38,10 +38,10 @@ var topLevelGeographies = map[string]bool{
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
 // front end page model
-func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension, datasetDims dataset.Items, filter filter.Model, dst dataset.DatasetDetails, filterID, datasetID, releaseDate string, enableLoop11 bool) filterOverview.Page {
+func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension, datasetDims dataset.Items, filter filter.Model, dst dataset.DatasetDetails, filterID, datasetID, releaseDate string) filterOverview.Page {
 	var p filterOverview.Page
 	p.BetaBannerEnabled = true
-	p.EnableLoop11 = enableLoop11
+
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
@@ -160,10 +160,10 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 
 // CreateListSelectorPage maps items from API responses to form the model for a
 // dimension list selector page
-func CreateListSelectorPage(req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.DatasetDetails, dims dataset.Dimensions, datasetID, releaseDate string, enableLoop11 bool) listSelector.Page {
+func CreateListSelectorPage(req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.DatasetDetails, dims dataset.Dimensions, datasetID, releaseDate string) listSelector.Page {
 	var p listSelector.Page
 	p.BetaBannerEnabled = true
-	p.EnableLoop11 = enableLoop11
+
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
@@ -305,12 +305,12 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 }
 
 // CreatePreviewPage maps data items from API responses to create a preview page
-func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.DatasetDetails, filterOutputID, datasetID, releaseDate string, enableDatasetPreivew bool, enableLoop11 bool) previewPage.Page {
+func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.DatasetDetails, filterOutputID, datasetID, releaseDate string, enableDatasetPreivew bool) previewPage.Page {
 	var p previewPage.Page
 	p.Metadata.Title = "Preview and Download"
 	p.BetaBannerEnabled = true
 	p.EnableDatasetPreview = enableDatasetPreivew
-	p.EnableLoop11 = enableLoop11
+
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
@@ -395,10 +395,10 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 }
 
 // CreateAgePage creates an age selector page based on api responses
-func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.Dimensions, datasetID string, enableLoop11 bool) (age.Page, error) {
+func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.Dimensions, datasetID string) (age.Page, error) {
 	var p age.Page
 	p.BetaBannerEnabled = true
-	p.EnableLoop11 = enableLoop11
+
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	log.Event(req.Context(), "mapping api responses to age page model", log.INFO, log.Data{"filterID": f.FilterID, "datasetID": datasetID})
@@ -530,10 +530,10 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 }
 
 // CreateTimePage will create a time selector page based on api response models
-func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.Dimensions, datasetID string, enableLoop11 bool) (timeModel.Page, error) {
+func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.Dimensions, datasetID string) (timeModel.Page, error) {
 	var p timeModel.Page
 	p.BetaBannerEnabled = true
-	p.EnableLoop11 = enableLoop11
+
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
@@ -704,10 +704,10 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 }
 
 // CreateHierarchySearchPage forms a search page based on various api response models
-func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, dims []dataset.Dimension, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query string, enableLoop11 bool) hierarchy.Page {
+func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, dims []dataset.Dimension, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query string) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
-	p.EnableLoop11 = enableLoop11
+
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
@@ -810,10 +810,10 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 }
 
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
-func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, dims dataset.Dimensions, name, curPath, datasetID, releaseDate string, enableLoop11 bool) hierarchy.Page {
+func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, dims dataset.Dimensions, name, curPath, datasetID, releaseDate string) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
-	p.EnableLoop11 = enableLoop11
+
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()

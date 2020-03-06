@@ -19,7 +19,6 @@ type Config struct {
 	SearchAPIURL               string        `envconfig:"SEARCH_API_URL"`
 	DownloadServiceURL         string        `envconfig:"DOWNLOAD_SERVICE_URL"`
 	EnableDatasetPreview       bool          `envconfig:"ENABLE_DATASET_PREVIEW"`
-	EnableLoop11               bool          `envconfig:"ENABLE_LOOP11"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
@@ -43,7 +42,6 @@ func Get() (cfg *Config, err error) {
 		SearchAPIURL:               "http://localhost:23100",
 		DownloadServiceURL:         "http://localhost:23600",
 		EnableDatasetPreview:       false,
-		EnableLoop11:               false,
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        10 * time.Second,
 		HealthCheckCriticalTimeout: time.Minute,
