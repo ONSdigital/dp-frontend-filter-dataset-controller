@@ -427,7 +427,7 @@ func splitCode(id string) (string, string, error) {
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.DatasetDetails, dims dataset.Dimensions, datasetID, releaseDate string) {
 	ctx := req.Context()
-	p := mapper.CreateListSelectorPage(ctx, name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate, f.EnableLoop11)
+	p := mapper.CreateListSelectorPage(req, name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate)
 
 	b, err := json.Marshal(p)
 	if err != nil {

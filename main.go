@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -129,25 +130,36 @@ func main() {
 }
 
 func registerCheckers(ctx context.Context, clients routes.Clients) (err error) {
+
+	hasErrors := false
+
 	if err = clients.Healthcheck.AddCheck("frontend renderer", clients.Renderer.Checker); err != nil {
+		hasErrors = true
 		log.Event(ctx, "failed to add frontend renderer checker", log.ERROR, log.Error(err))
 	}
 
 	if err = clients.Healthcheck.AddCheck("filter API", clients.Filter.Checker); err != nil {
+		hasErrors = true
 		log.Event(ctx, "failed to add filter API checker", log.ERROR, log.Error(err))
 	}
 
 	if err = clients.Healthcheck.AddCheck("dataste API", clients.Dataset.Checker); err != nil {
+		hasErrors = true
 		log.Event(ctx, "failed to add dataset API checker", log.ERROR, log.Error(err))
 	}
 
 	if err = clients.Healthcheck.AddCheck("hierarchy API", clients.Hierarchy.Checker); err != nil {
+		hasErrors = true
 		log.Event(ctx, "failed to add hierarchy API checker", log.ERROR, log.Error(err))
 	}
 
 	if err = clients.Healthcheck.AddCheck("search API", clients.Search.Checker); err != nil {
+		hasErrors = true
 		log.Event(ctx, "failed to add search API checker", log.ERROR, log.Error(err))
 	}
 
-	return
+	if hasErrors {
+		return errors.New("Error(s) registering checkers for healthcheck")
+	}
+	return nil
 }

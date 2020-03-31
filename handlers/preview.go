@@ -164,7 +164,7 @@ func (f *Filter) OutputPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p := mapper.CreatePreviewPage(req.Context(), dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate, f.EnableDatasetPreview, f.EnableLoop11)
+	p := mapper.CreatePreviewPage(req, dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate, f.EnableDatasetPreview)
 
 	if latestURL.Path == versionURL.Path {
 		p.Data.IsLatestVersion = true

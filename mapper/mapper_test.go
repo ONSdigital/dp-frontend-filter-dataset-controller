@@ -1,16 +1,18 @@
 package mapper
 
 import (
-	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-frontend-models/model"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestUnitMapper(t *testing.T) {
-	ctx := context.Background()
+	req := httptest.NewRequest("GET", "/", nil)
 
 	Convey("test CreateFilterOverview correctly maps item to filterOverview page model", t, func() {
 		dimensions := getTestDimensions()
@@ -18,7 +20,7 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dst := getTestDataset()
 
-		fop := CreateFilterOverview(ctx, dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992", false)
+		fop := CreateFilterOverview(req, dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992")
 		So(fop.FilterID, ShouldEqual, filter.FilterID)
 		So(fop.SearchDisabled, ShouldBeTrue)
 		So(fop.Data.Dimensions, ShouldHaveLength, 5)
@@ -55,7 +57,7 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dataset := getTestDataset()
 
-		pp := CreatePreviewPage(ctx, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992", false, false)
+		pp := CreatePreviewPage(req, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992", false)
 		So(pp.SearchDisabled, ShouldBeFalse)
 		So(pp.Breadcrumb, ShouldHaveLength, 4)
 		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
@@ -111,7 +113,7 @@ func TestUnitMapper(t *testing.T) {
 
 			filter := getTestFilter()
 
-			p := CreateListSelectorPage(ctx, "time", selectedValues, allValues, filter, d, dataset.Dimensions{}, "12345", "11-11-1992", false)
+			p := CreateListSelectorPage(req, "time", selectedValues, allValues, filter, d, dataset.Dimensions{}, "12345", "11-11-1992")
 			So(p.Data.Title, ShouldEqual, "Time")
 			So(p.SearchDisabled, ShouldBeTrue)
 			So(p.FilterID, ShouldEqual, filter.FilterID)
@@ -141,7 +143,7 @@ func TestUnitMapper(t *testing.T) {
 		})
 
 		Convey("correctly orders the time values into ascending numeric order", func() {
-			p := CreateListSelectorPage(ctx, "time", []filter.DimensionOption{}, dataset.Options{
+			p := CreateListSelectorPage(req, "time", []filter.DimensionOption{}, dataset.Options{
 				Items: []dataset.Option{
 					{
 						Label: "2013",
@@ -156,7 +158,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "2017",
 					},
 				},
-			}, filter.Model{}, dataset.DatasetDetails{}, dataset.Dimensions{}, "1234", "today", false)
+			}, filter.Model{}, dataset.DatasetDetails{}, dataset.Dimensions{}, "1234", "today")
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
@@ -167,7 +169,7 @@ func TestUnitMapper(t *testing.T) {
 		})
 
 		Convey("correctly orders non time/age values alphabetically", func() {
-			p := CreateListSelectorPage(ctx, "geography", []filter.DimensionOption{}, dataset.Options{
+			p := CreateListSelectorPage(req, "geography", []filter.DimensionOption{}, dataset.Options{
 				Items: []dataset.Option{
 					{
 						Label: "Wales",
@@ -182,7 +184,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "Ireland",
 					},
 				},
-			}, filter.Model{}, dataset.DatasetDetails{}, dataset.Dimensions{}, "1234", "today", false)
+			}, filter.Model{}, dataset.DatasetDetails{}, dataset.Dimensions{}, "1234", "today")
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
@@ -281,4 +283,27 @@ func getTestDataset() dataset.DatasetDetails {
 		},
 		Title: "Small Area Population Estimates",
 	}
+}
+
+func TestUnitMapCookiesPreferences(t *testing.T) {
+	req := httptest.NewRequest("", "/", nil)
+	pageModel := model.Page{
+		CookiesPreferencesSet: false,
+		CookiesPolicy: model.CookiesPolicy{
+			Essential: false,
+			Usage:     false,
+		},
+	}
+
+	Convey("maps cookies preferences cookie data to page model correctly", t, func() {
+		So(pageModel.CookiesPreferencesSet, ShouldEqual, false)
+		So(pageModel.CookiesPolicy.Essential, ShouldEqual, false)
+		So(pageModel.CookiesPolicy.Usage, ShouldEqual, false)
+		req.AddCookie(&http.Cookie{Name: "cookies_preferences_set", Value: "true"})
+		req.AddCookie(&http.Cookie{Name: "cookies_policy", Value: "%7B%22essential%22%3Atrue%2C%22usage%22%3Atrue%7D"})
+		mapCookiePreferences(req, &pageModel.CookiesPreferencesSet, &pageModel.CookiesPolicy)
+		So(pageModel.CookiesPreferencesSet, ShouldEqual, true)
+		So(pageModel.CookiesPolicy.Essential, ShouldEqual, true)
+		So(pageModel.CookiesPolicy.Usage, ShouldEqual, true)
+	})
 }
