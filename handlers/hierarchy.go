@@ -58,7 +58,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", collectionID, "", filterID)
+	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 	if err != nil {
 		log.Event(ctx, "failed to get job state", log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
@@ -105,25 +105,52 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
-		if err != nil {
-			log.Event(ctx, "failed to get dimension options", log.Error(err))
-		}
+		f.removeDimensionValues(ctx, req, userAccessToken, collectionID, filterID, name, h.Children)
 
-		for _, hv := range h.Children {
-			for _, opt := range opts {
-				if opt.Option == hv.Links.Self.ID {
-					if _, ok := req.Form[hv.Links.Self.ID]; !ok {
-						if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, hv.Links.Self.ID); err != nil {
-							log.Event(ctx, "failed to remove dimension value", log.Error(err))
-						}
-					}
+	}()
+
+	if formRedirectURI := f.hierarchyUpdateProcessRequestForm(req.Context(), userAccessToken, collectionID, filterID, name, req.Form, 3); formRedirectURI != "" {
+		redirectURI = formRedirectURI
+	}
+
+	wg.Wait()
+	http.Redirect(w, req, redirectURI, http.StatusFound)
+}
+
+// removeDimensionValues removes the dimension values that are present in the request form and match any child self link ID.
+// It does it in O(NumChildren + NumOpts*log(NumChildren)*log(NumReqForm)) time.
+func (f *Filter) removeDimensionValues(ctx context.Context, req *http.Request, userAccessToken, collectionID, filterID, name string, children []hierarchy.Child) {
+
+	// Get dimension options from filterAPI
+	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
+	if err != nil {
+		log.Event(ctx, "failed to get dimension options", log.Error(err))
+	}
+
+	// Create children map by self link ID
+	childrenMap := map[string]*hierarchy.Child{}
+	for _, child := range children {
+		childrenMap[child.Links.Self.ID] = &child
+	}
+
+	// Iterate options, and remove any dimension value not provided in the form, and present in the children.
+	for _, opt := range opts {
+		if _, childFound := childrenMap[opt.Option]; childFound {
+			if _, reqFound := req.Form[opt.Option]; !reqFound {
+				if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, opt.Option); err != nil {
+					log.Event(ctx, "failed to remove dimension value", log.Error(err))
 				}
 			}
 		}
-	}()
+	}
+}
 
-	for k := range req.Form {
+// hierarchyUpdateProcessRequestForm iterates the provided url.Values, and Adds the dimension values in batches. If a redirectURI is found, it will be returned.
+func (f *Filter) hierarchyUpdateProcessRequestForm(ctx context.Context, userAccessToken, collectionID, filterID, name string, form url.Values, maxOptionsBatchSize int) (redirectURI string) {
+
+	options := []string{}
+
+	for k := range form {
 		if _, foundSpecial := specialFormVars[k]; foundSpecial {
 			continue
 		}
@@ -135,13 +162,26 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, k); err != nil {
-			log.Event(ctx, "failed to add dimension value", log.Error(err))
+		options = append(options, k)
+
+		// If the batch size is complete, send it and reset the batch
+		if len(options) == maxOptionsBatchSize {
+			if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
+				log.Event(ctx, "failed to add dimension values", log.Error(err))
+			}
+			options = []string{}
+		}
+
+	}
+
+	// Send any remaining Dimension value
+	if len(options) > 0 {
+		if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
+			log.Event(ctx, "failed to add dimension values", log.Error(err))
 		}
 	}
 
-	wg.Wait()
-	http.Redirect(w, req, redirectURI, 302)
+	return redirectURI
 }
 
 func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI string) {

@@ -22,6 +22,7 @@ type Config struct {
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
+	BatchSizeFilterAPI         int           `envconfig:"BATCH_SIZE_FILTER_API"`
 }
 
 var cfg *Config
@@ -45,6 +46,7 @@ func Get() (cfg *Config, err error) {
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        10 * time.Second,
 		HealthCheckCriticalTimeout: time.Minute,
+		BatchSizeFilterAPI:         100,
 	}
 
 	return cfg, envconfig.Process("", cfg)

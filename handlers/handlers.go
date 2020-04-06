@@ -20,11 +20,12 @@ type Filter struct {
 	val                  Validator
 	downloadServiceURL   string
 	EnableDatasetPreview bool
+	BatchSizeFilterAPI   int
 }
 
 // NewFilter creates a new instance of Filter
 func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient,
-	sc SearchClient, val Validator, searchAPIAuthToken, downloadServiceURL string, enableDatasetPreview bool) *Filter {
+	sc SearchClient, val Validator, searchAPIAuthToken, downloadServiceURL string, enableDatasetPreview bool, batchSizeFilterAPI int) *Filter {
 
 	return &Filter{
 		Renderer:             r,
@@ -36,6 +37,7 @@ func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient
 		downloadServiceURL:   downloadServiceURL,
 		EnableDatasetPreview: enableDatasetPreview,
 		SearchAPIAuthToken:   searchAPIAuthToken,
+		BatchSizeFilterAPI:   batchSizeFilterAPI,
 	}
 }
 

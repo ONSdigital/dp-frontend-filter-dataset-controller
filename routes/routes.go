@@ -43,7 +43,7 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients Client
 
 	filter := handlers.NewFilter(clients.Renderer, clients.Filter, clients.Dataset,
 		clients.Hierarchy, clients.Search, v, cfg.SearchAPIAuthToken, cfg.DownloadServiceURL,
-		cfg.EnableDatasetPreview)
+		cfg.EnableDatasetPreview, cfg.BatchSizeFilterAPI)
 
 	r.StrictSlash(true).Path("/health").HandlerFunc(clients.Healthcheck.Handler)
 
