@@ -79,7 +79,7 @@ func TestHierarchyUpdate(t *testing.T) {
 			mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, dimensionName).Return(hierarchy.Model{}, nil)
 
-			// Perform the call
+			// Prepare request with header
 			req, err := http.NewRequestWithContext(ctxWithCollectionID, "GET", fmt.Sprintf("/filters/%s/dimensions/%s/update", filterID, dimensionName), nil)
 			So(err, ShouldBeNil)
 			req.Header.Add("X-Florence-Token", mockUserAuthToken)
@@ -87,6 +87,7 @@ func TestHierarchyUpdate(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
+			// Set handler and perform call
 			router := mux.NewRouter()
 			f := NewFilter(nil, mockFilterClient, nil, mockHierarchyClient, nil, nil, mockSearchAPIAuthToken, "", false, batchSizeFilterAPI)
 			router.Path("/filters/{filterID}/dimensions/{name}/update").HandlerFunc(f.HierarchyUpdate)
@@ -101,18 +102,31 @@ func TestHierarchyUpdate(t *testing.T) {
 			// test code
 			mockCode := "testCode"
 
-			// hierarchy child, with grandchildren that match a dimensionOption
-			child := hierarchy.Model{
-				Children: []hierarchy.Child{
-					hierarchy.Child{
-						Links: hierarchy.Links{
-							Self: hierarchy.Link{
-								ID: "dimensionOption1", // Present in dimensionOptions
-							},
-						},
+			child1 := hierarchy.Child{
+				Links: hierarchy.Links{
+					Self: hierarchy.Link{
+						ID: "dimensionOption1", // Present in dimensionOptions
 					},
 				},
 			}
+
+			child2 := hierarchy.Child{
+				Links: hierarchy.Links{
+					Self: hierarchy.Link{
+						ID: "dimensionOption2", // Present in dimensionOptions
+					},
+				},
+			}
+
+			childN := hierarchy.Child{
+				Links: hierarchy.Links{
+					Self: hierarchy.Link{
+						ID: "dimensionOptionN", // NOT Present in dimensionOptions
+					},
+				},
+			}
+
+			modelWithChildren := hierarchy.Model{Children: []hierarchy.Child{child1, child2, childN}}
 
 			// FilterClient mock expecting 2 AddDimensionValues batch calls - one with 3 items and one with 2 items
 			mockFilterClient := NewMockFilterClient(mockCtrl)
@@ -120,13 +134,14 @@ func TestHierarchyUpdate(t *testing.T) {
 			mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName).Return(dimensionOptions, nil)
 			mockFilterClient.EXPECT().AddDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, gomock.Len(3)).Return(nil)
 			mockFilterClient.EXPECT().AddDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, gomock.Len(2)).Return(nil)
-			mockFilterClient.EXPECT().RemoveDimensionValue(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, "dimensionOption1").Return(nil)
+			mockFilterClient.EXPECT().RemoveDimensionValue(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, "dimensionOption1").Return(nil) // for child1
+			mockFilterClient.EXPECT().RemoveDimensionValue(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, "dimensionOption2").Return(nil) // for child2
 
 			// HierarchyClient mock expecting GetChild, returns child model with self link
 			mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
-			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, dimensionName, mockCode).Return(child, nil)
+			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, dimensionName, mockCode).Return(modelWithChildren, nil)
 
-			// Perform the call
+			// Prepare request with header and context
 			req, err := http.NewRequestWithContext(ctxWithCollectionID, "GET", fmt.Sprintf("/filters/%s/dimensions/%s/%s/update", filterID, dimensionName, mockCode), nil)
 			So(err, ShouldBeNil)
 			req.Header.Add("X-Florence-Token", mockUserAuthToken)
@@ -134,6 +149,7 @@ func TestHierarchyUpdate(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
+			// Set handler and perform call
 			router := mux.NewRouter()
 			f := NewFilter(nil, mockFilterClient, nil, mockHierarchyClient, nil, nil, mockSearchAPIAuthToken, "", false, batchSizeFilterAPI)
 			router.Path("/filters/{filterID}/dimensions/{name}/{code}/update").HandlerFunc(f.HierarchyUpdate)

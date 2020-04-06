@@ -118,8 +118,10 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 }
 
 // removeDimensionValues removes the dimension values that are present in the request form and match any child self link ID.
-// It does it in O(NumChildren + NumOpts*log(NumChildren)*log(NumReqForm)) time.
+// It does it in O(NumChildren + NumOpts*log(NumChildren)*log(NumReqForm)) time, and calling filter API RemoveDimensionValue concurrently.
 func (f *Filter) removeDimensionValues(ctx context.Context, req *http.Request, userAccessToken, collectionID, filterID, name string, children []hierarchy.Child) {
+
+	wg := &sync.WaitGroup{}
 
 	// Get dimension options from filterAPI
 	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
@@ -137,15 +139,22 @@ func (f *Filter) removeDimensionValues(ctx context.Context, req *http.Request, u
 	for _, opt := range opts {
 		if _, childFound := childrenMap[opt.Option]; childFound {
 			if _, reqFound := req.Form[opt.Option]; !reqFound {
-				if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, opt.Option); err != nil {
-					log.Event(ctx, "failed to remove dimension value", log.Error(err))
-				}
+				// call RemoveDimensionValue in a parallel go-routine for efficiency
+				wg.Add(1)
+				go func(option string) {
+					defer wg.Done()
+					if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, option); err != nil {
+						log.Event(ctx, "failed to remove dimension value", log.Error(err))
+					}
+				}(opt.Option)
 			}
 		}
 	}
+	wg.Wait()
 }
 
 // hierarchyUpdateProcessRequestForm iterates the provided url.Values, and Adds the dimension values in batches. If a redirectURI is found, it will be returned.
+// Note that we don't do parallel calls of AddDimensionValues to prevent having to copy large amounts of data if batches are big.
 func (f *Filter) hierarchyUpdateProcessRequestForm(ctx context.Context, userAccessToken, collectionID, filterID, name string, form url.Values, maxOptionsBatchSize int) (redirectURI string) {
 
 	options := []string{}
