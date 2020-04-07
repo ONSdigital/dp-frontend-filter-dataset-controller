@@ -107,25 +107,39 @@ func main() {
 	// give the app `Timeout` seconds to close gracefully before killing it.
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.GracefulShutdownTimeout)
 
+	var gracefulShutdown bool
+
 	go func() {
+		defer cancel()
+		hasShutdownErrs := false
+
 		log.Event(ctx, "stop health checkers", log.INFO)
 		healthcheck.Stop()
 
 		if err := s.Shutdown(ctx); err != nil {
 			log.Event(ctx, "failed to gracefully shutdown http server", log.ERROR, log.Error(err))
+			hasShutdownErrs = true
 		}
 
-		cancel() // stop timer
+		if !hasShutdownErrs {
+			gracefulShutdown = true
+		}
 	}()
 
 	// wait for timeout or success (via cancel)
 	<-ctx.Done()
 	if ctx.Err() == context.DeadlineExceeded {
-		log.Event(ctx, "context deadline exceeded", log.WARN, log.Error(ctx.Err()))
-	} else {
-		log.Event(ctx, "graceful shutdown complete", log.INFO, log.Data{"context": ctx.Err()})
+		log.Event(ctx, "context deadline exceeded", log.ERROR, log.Error(ctx.Err()))
+		os.Exit(1)
 	}
 
+	if !gracefulShutdown {
+		err := errors.New("graceful shutdown has errors")
+		log.Event(ctx, "failed to gracefully shutdown", log.ERROR, log.Error(err))
+		os.Exit(1)
+	}
+
+	log.Event(ctx, "graceful shutdown complete", log.INFO)
 	os.Exit(0)
 }
 
