@@ -33,16 +33,24 @@ var (
 
 func main() {
 	log.Namespace = "dp-frontend-filter-dataset-controller"
+	ctx := context.Background()
 
+	if err := run(ctx); err != nil {
+		log.Event(ctx, "application unexpectedly failed", log.ERROR, log.Error(err))
+		os.Exit(1)
+	}
+
+	os.Exit(0)
+}
+
+func run(ctx context.Context) error {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, os.Kill)
-
-	ctx := context.Background()
 
 	cfg, err := config.Get()
 	if err != nil {
 		log.Event(ctx, "unable to retrieve service configuration", log.FATAL, log.Error(err))
-		os.Exit(1)
+		return err
 	}
 
 	log.Event(ctx, "got service configuration", log.INFO, log.Data{"config": cfg})
@@ -53,8 +61,8 @@ func main() {
 		Version,
 	)
 	if err != nil {
-		log.Event(ctx, "failed to create service version information", log.FATAL, log.Error(err))
-		os.Exit(1)
+		log.Event(ctx, "failed to create service version information", log.ERROR, log.Error(err))
+		return err
 	}
 
 	r := mux.NewRouter()
@@ -71,7 +79,7 @@ func main() {
 	clients.Healthcheck = &healthcheck
 
 	if err = registerCheckers(ctx, clients); err != nil {
-		os.Exit(1)
+		return err
 	}
 
 	routes.Init(ctx, r, cfg, clients)
@@ -130,17 +138,17 @@ func main() {
 	<-ctx.Done()
 	if ctx.Err() == context.DeadlineExceeded {
 		log.Event(ctx, "context deadline exceeded", log.ERROR, log.Error(ctx.Err()))
-		os.Exit(1)
+		return ctx.Err()
 	}
 
 	if !gracefulShutdown {
-		err := errors.New("graceful shutdown has errors")
-		log.Event(ctx, "failed to gracefully shutdown", log.ERROR, log.Error(err))
-		os.Exit(1)
+		err = errors.New("failed to shutdown gracefully")
+		log.Event(ctx, "failed to shutdown gracefully ", log.ERROR, log.Error(err))
+		return err
 	}
 
 	log.Event(ctx, "graceful shutdown complete", log.INFO)
-	os.Exit(0)
+	return nil
 }
 
 func registerCheckers(ctx context.Context, clients routes.Clients) (err error) {
