@@ -20,7 +20,6 @@ func TestUnitFilterOverview(t *testing.T) {
 	mockUserAuthToken := ""
 	mockCollectionID := ""
 	filterID := "12345"
-	batchSizeFilterAPI := 3
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -44,7 +43,7 @@ func TestUnitFilterOverview(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, mockServiceAuthToken, "", false, batchSizeFilterAPI)
+			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, mockServiceAuthToken, "", false)
 			router.Path("/filters/{filterID}/dimensions").HandlerFunc(f.FilterOverview)
 
 			router.ServeHTTP(w, req)
@@ -65,7 +64,7 @@ func TestUnitFilterOverview(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(nil, mockFilterClient, nil, nil, nil, nil, mockServiceAuthToken, "", false, batchSizeFilterAPI)
+			f := NewFilter(nil, mockFilterClient, nil, nil, nil, nil, mockServiceAuthToken, "", false)
 			router.Path("/filters/{filterID}/dimensions/clear-all").HandlerFunc(f.FilterOverviewClearAll)
 
 			router.ServeHTTP(w, req)

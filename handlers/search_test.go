@@ -33,7 +33,6 @@ func TestUnitSearch(t *testing.T) {
 	query := "Newport"
 	expectedHTML := "<html>Search Results</html>"
 	ctx := gomock.Any()
-	batchSizeFilterAPI := 3
 
 	Convey("test Search", t, func() {
 		Convey("test search can successfully load a page", func() {
@@ -62,7 +61,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, batchSizeFilterAPI)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -85,7 +84,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, batchSizeFilterAPI)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -112,7 +111,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, batchSizeFilterAPI)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -141,7 +140,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, batchSizeFilterAPI)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -171,7 +170,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, batchSizeFilterAPI)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -202,7 +201,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, batchSizeFilterAPI)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -234,7 +233,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, batchSizeFilterAPI)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -268,7 +267,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, batchSizeFilterAPI)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)
@@ -297,7 +296,7 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false, batchSizeFilterAPI)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
 
 			router.ServeHTTP(w, req)

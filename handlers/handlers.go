@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/pkg/errors"
@@ -20,12 +21,11 @@ type Filter struct {
 	val                  Validator
 	downloadServiceURL   string
 	EnableDatasetPreview bool
-	BatchSizeFilterAPI   int
 }
 
 // NewFilter creates a new instance of Filter
 func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient,
-	sc SearchClient, val Validator, searchAPIAuthToken, downloadServiceURL string, enableDatasetPreview bool, batchSizeFilterAPI int) *Filter {
+	sc SearchClient, val Validator, searchAPIAuthToken, downloadServiceURL string, enableDatasetPreview bool) *Filter {
 
 	return &Filter{
 		Renderer:             r,
@@ -37,15 +37,19 @@ func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient
 		downloadServiceURL:   downloadServiceURL,
 		EnableDatasetPreview: enableDatasetPreview,
 		SearchAPIAuthToken:   searchAPIAuthToken,
-		BatchSizeFilterAPI:   batchSizeFilterAPI,
 	}
 }
 
 func setStatusCode(req *http.Request, w http.ResponseWriter, err error) {
-	status := http.StatusInternalServerError
-	if err, ok := err.(ClientError); ok {
-		if err.Code() == http.StatusNotFound {
-			status = err.Code()
+	status := http.StatusOK
+	if err != nil {
+		switch err.(type) {
+		case filter.ErrInvalidFilterAPIResponse:
+			status = http.StatusBadGateway
+		case ClientError:
+			status = err.(ClientError).Code()
+		default:
+			status = http.StatusInternalServerError
 		}
 	}
 	log.Event(req.Context(), "setting response status", log.INFO, log.Error(err), log.Data{"status": status})
