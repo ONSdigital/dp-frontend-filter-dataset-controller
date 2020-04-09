@@ -22,7 +22,6 @@ An HTTP service for the controlling of data relevant to the filtering of a parti
 | GRACEFUL_SHUTDOWN_TIMEOUT     | 5s                      | The graceful shutdown timeout in seconds
 | HEALTHCHECK_INTERVAL          | 10s                     | The time between calling healthcheck endpoints for check subsystems
 | HEALTHCHECK_CRITICAL_TIMEOUT  | 1m                      | The time taken for the health changes from warning state to critical due to subsystem check failures 
-| BATCH_SIZE_FILTER_API         | 100                     | Maximum number of items for each batch that will be sent to filter API in batch operations
 
 `HEALTHCHECK_INTERVAL` and `HEALTHCHECK_CRITICAL_TIMEOUT` can use the following formats to represent duration of time:
 
