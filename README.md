@@ -20,8 +20,8 @@ An HTTP service for the controlling of data relevant to the filtering of a parti
 | SEARCH_API_AUTH_TOKEN         | n/a                     | The token used to access the Search API
 | ENABLE_DATASET_PREVIEW        | false                   | Flag to add preview of dataset to output page
 | GRACEFUL_SHUTDOWN_TIMEOUT     | 5s                      | The graceful shutdown timeout in seconds
-| HEALTHCHECK_INTERVAL          | 10s                     | The time between calling healthcheck endpoints for check subsystems
-| HEALTHCHECK_CRITICAL_TIMEOUT  | 1m                      | The time taken for the health changes from warning state to critical due to subsystem check failures 
+| HEALTHCHECK_INTERVAL          | 30s                     | The time between calling healthcheck endpoints for check subsystems
+| HEALTHCHECK_CRITICAL_TIMEOUT  | 90s                     | The time taken for the health changes from warning state to critical due to subsystem check failures 
 
 `HEALTHCHECK_INTERVAL` and `HEALTHCHECK_CRITICAL_TIMEOUT` can use the following formats to represent duration of time:
 
