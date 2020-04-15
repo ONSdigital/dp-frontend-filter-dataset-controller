@@ -43,8 +43,8 @@ func Get() (cfg *Config, err error) {
 		DownloadServiceURL:         "http://localhost:23600",
 		EnableDatasetPreview:       false,
 		GracefulShutdownTimeout:    5 * time.Second,
-		HealthCheckInterval:        10 * time.Second,
-		HealthCheckCriticalTimeout: time.Minute,
+		HealthCheckInterval:        30 * time.Second,
+		HealthCheckCriticalTimeout: 90 * time.Second,
 	}
 
 	return cfg, envconfig.Process("", cfg)
