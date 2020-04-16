@@ -138,12 +138,10 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		mapUniqueOptions[k] = struct{}{}
 	}
 
-	// Efficiently generate slice from map keys:
-	patchedOptionsValues := make([]string, len(mapUniqueOptions))
-	i := 0
+	// Generate slice from map keys:
+	patchedOptionsValues := []string{}
 	for optionValue := range mapUniqueOptions {
-		patchedOptionsValues[i] = optionValue
-		i++
+		patchedOptionsValues = append(patchedOptionsValues, optionValue)
 	}
 
 	// Add processed dimension values to Filter API
