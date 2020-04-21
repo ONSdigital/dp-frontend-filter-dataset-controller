@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -19,6 +18,7 @@ import (
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 )
 
 // App version informaton retrieved on runtime
@@ -94,10 +94,10 @@ func run(ctx context.Context) error {
 		"bind_address": cfg.BindAddr,
 	})
 
+	svcErrors := make(chan error, 1)
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
-			log.Event(ctx, "failed to start http listen and serve", log.ERROR, log.Error(err))
-			return
+			svcErrors <- errors.Wrap(err, "failure in http listen and serve")
 		}
 	}()
 
@@ -106,6 +106,8 @@ func run(ctx context.Context) error {
 
 	// Block until a fatal error occurs
 	select {
+	case err := <-svcErrors:
+		log.Event(ctx, "service error received", log.ERROR, log.Error(err))
 	case signal := <-signals:
 		log.Event(ctx, "quitting after os signal received", log.INFO, log.Data{"signal": signal})
 	}
