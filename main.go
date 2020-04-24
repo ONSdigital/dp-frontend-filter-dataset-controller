@@ -45,8 +45,13 @@ func main() {
 
 func run(ctx context.Context) error {
 	defer func() {
-		if err := recover(); err != nil {
-			log.Event(ctx, "++++++ David and Nathan look here - we have caught our unexpecting panic", log.ERROR, log.Error(err))
+		if iface := recover(); iface != nil {
+			switch val := iface.(type) {
+			case error:
+				log.Event(ctx, "++++++ David and Nathan look here - we have caught our unexpecting panic, with error", log.ERROR, log.Error(val))
+			default:
+				log.Event(ctx, "++++++ David and Nathan look here - we have caught our unexpecting panic, with generic interface", log.ERROR, log.Data{"value": fmt.Sprintf("%#v", val)})
+			}
 		}
 		log.Event(ctx, "++++++ David and Nathan look here - it is NOT panicking", log.INFO)
 	}()
