@@ -177,7 +177,7 @@ func (f *Filter) OutputPage(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
+	dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 	if err != nil {
 		log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
@@ -306,7 +306,7 @@ func (f *Filter) GetFilterJob(w http.ResponseWriter, req *http.Request) {
 	w.Write(b)
 }
 
-func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.Dimensions) (int, error) {
+func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.VersionDimensions) (int, error) {
 	var b bytes.Buffer
 	collectionID := getCollectionIDFromContext(ctx)
 

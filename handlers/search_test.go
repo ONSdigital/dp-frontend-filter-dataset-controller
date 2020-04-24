@@ -52,7 +52,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
 			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
 			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
-			mdc.EXPECT().GetDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version).Return(dataset.Dimensions{}, nil)
+			mdc.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version).Return(dataset.VersionDimensions{}, nil)
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, nil)
 			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query).Return(&search.Model{}, nil)
 			mrc.EXPECT().Do("dataset-filter/hierarchy", gomock.Any()).Return([]byte(expectedHTML), nil)
@@ -260,7 +260,7 @@ func TestUnitSearch(t *testing.T) {
 			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, nil)
 			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query).Return(&search.Model{}, nil)
-			mdc.EXPECT().GetDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version).Return(dataset.Dimensions{}, nil)
+			mdc.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version).Return(dataset.VersionDimensions{}, nil)
 			mrc.EXPECT().Do("dataset-filter/hierarchy", gomock.Any()).Return([]byte(expectedHTML), errors.New("renderer error"))
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)

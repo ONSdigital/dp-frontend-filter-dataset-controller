@@ -307,7 +307,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
+	dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 	if err != nil {
 		log.Event(ctx, "failed to get dimensions", log.Error(err),
 			log.Data{"dataset_id": datasetID, "edition": edition, "version": version})

@@ -113,7 +113,7 @@ func TestUnitMapper(t *testing.T) {
 
 			filter := getTestFilter()
 
-			p := CreateListSelectorPage(req, "time", selectedValues, allValues, filter, d, dataset.Dimensions{}, "12345", "11-11-1992")
+			p := CreateListSelectorPage(req, "time", selectedValues, allValues, filter, d, dataset.VersionDimensions{}, "12345", "11-11-1992")
 			So(p.Data.Title, ShouldEqual, "Time")
 			So(p.SearchDisabled, ShouldBeTrue)
 			So(p.FilterID, ShouldEqual, filter.FilterID)
@@ -158,7 +158,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "2017",
 					},
 				},
-			}, filter.Model{}, dataset.DatasetDetails{}, dataset.Dimensions{}, "1234", "today")
+			}, filter.Model{}, dataset.DatasetDetails{}, dataset.VersionDimensions{}, "1234", "today")
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
@@ -184,7 +184,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "Ireland",
 					},
 				},
-			}, filter.Model{}, dataset.DatasetDetails{}, dataset.Dimensions{}, "1234", "today")
+			}, filter.Model{}, dataset.DatasetDetails{}, dataset.VersionDimensions{}, "1234", "today")
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
@@ -222,8 +222,8 @@ func getTestDimensions() []filter.ModelDimension {
 	}
 }
 
-func getTestDatasetDimensions() []dataset.Dimension {
-	return []dataset.Dimension{
+func getTestDatasetDimensions() []dataset.VersionDimension {
+	return []dataset.VersionDimension{
 		{
 			Name: "year",
 		},
