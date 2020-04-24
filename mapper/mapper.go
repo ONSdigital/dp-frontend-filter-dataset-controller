@@ -39,6 +39,18 @@ var topLevelGeographies = map[string]bool{
 // CreateFilterOverview maps data items from API responses to form a filter overview
 // front end page model
 func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension, datasetDims dataset.Items, filter filter.Model, dst dataset.DatasetDetails, filterID, datasetID, releaseDate string) filterOverview.Page {
+	defer func() {
+		if iface := recover(); iface != nil {
+			switch val := iface.(type) {
+			case error:
+				log.Event(req.Context(), "++++++ David and Nathan look here - we have caught our unexpecting panic, with error", log.ERROR, log.Error(val))
+			default:
+				log.Event(req.Context(), "++++++ David and Nathan look here - we have caught our unexpecting panic, with generic interface", log.ERROR, log.Data{"value": fmt.Sprintf("%#v", val)})
+			}
+		}
+		log.Event(req.Context(), "++++++ David and Nathan look here - it is NOT panicking", log.INFO)
+	}()
+
 	var p filterOverview.Page
 	p.BetaBannerEnabled = true
 

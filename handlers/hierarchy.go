@@ -27,18 +27,6 @@ var specialFormVars = map[string]bool{
 
 // HierarchyUpdate controls the updating of a hierarchy job
 func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
-	defer func() {
-		if iface := recover(); iface != nil {
-			switch val := iface.(type) {
-			case error:
-				log.Event(req.Context(), "++++++ David and Nathan look here - we have caught our unexpecting panic, with error", log.ERROR, log.Error(val))
-			default:
-				log.Event(req.Context(), "++++++ David and Nathan look here - we have caught our unexpecting panic, with generic interface", log.ERROR, log.Data{"value": fmt.Sprintf("%#v", val)})
-			}
-		}
-		log.Event(req.Context(), "++++++ David and Nathan look here - it is NOT panicking", log.INFO)
-	}()
-
 	vars := mux.Vars(req)
 	filterID := vars["filterID"]
 	name := vars["name"]
