@@ -44,6 +44,13 @@ func main() {
 }
 
 func run(ctx context.Context) error {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Event(ctx, "++++++ David and Nathan look here - we have caught our unexpecting panic", log.ERROR, log.Error(err))
+		}
+		log.Event(ctx, "++++++ David and Nathan look here - it is NOT panicking", log.INFO)
+	}()
+
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, os.Kill)
 
