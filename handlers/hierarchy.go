@@ -105,6 +105,9 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
+		// TODO when PATCH endpoint is implemented in Filter API, we can send an array of delete operations for all options found in child items but not in the request form
+		// without needing to do a GetDimensionOptions.
+
 		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
 		if err != nil {
 			log.Event(ctx, "failed to get dimension options", log.Error(err))
@@ -134,6 +137,9 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			redirectURI = redirectSubs[1]
 			continue
 		}
+
+		// TODO when PATCH endpoint is implemented in Filter API, we can send an array of add operations for all options in the request form.
+		// instead of individual calls to AddDimensionValue
 
 		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, k); err != nil {
 			log.Event(ctx, "failed to add dimension value", log.Error(err))
