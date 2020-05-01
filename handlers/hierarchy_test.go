@@ -43,21 +43,21 @@ func TestHierarchyUpdate(t *testing.T) {
 
 		// dimension options originally existing in filter API before the test
 		dimensionOptions := []filter.DimensionOption{
-			filter.DimensionOption{
+			{
 				Option:              "opt1",
 				DimensionOptionsURL: "http://dimension.opt1.1.co.uk",
 			},
-			filter.DimensionOption{
+			{
 				Option:              "opt2",
 				DimensionOptionsURL: "http://dimension.opt1.2.co.uk",
 			},
-			filter.DimensionOption{
+			{
 				Option:              "opt3",
 				DimensionOptionsURL: "http://dimension.opt1.3.co.uk",
 			},
 		}
 
-		Convey("HierarchyUpdate called with a form containing new and overlapping options results in the union of options being sent tot filter API", func() {
+		Convey("HierarchyUpdate called with a form containing new and overlapping options results in the union of options being sent tot filter API, one by one", func() {
 
 			// Options comming from the request form
 			testForm := url.Values{
@@ -66,14 +66,13 @@ func TestHierarchyUpdate(t *testing.T) {
 				"opt5": []string{"v51", "v52", "v53"},
 			}
 
-			// Expected options posted to filter API
-			expectedPostedOptions := []string{"opt1", "opt2", "opt3", "opt4", "opt5"}
-
-			// FilterAPI is called only 3 times
+			// We call FilterAPI AddDimensionValue for each provided option in the form
 			mockFilterClient := NewMockFilterClient(mockCtrl)
 			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
 			mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName).Return(dimensionOptions, nil)
-			mockFilterClient.EXPECT().AddDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, ItemsEq(expectedPostedOptions)).Return(nil)
+			mockFilterClient.EXPECT().AddDimensionValue(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, "opt3").Return(nil)
+			mockFilterClient.EXPECT().AddDimensionValue(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, "opt4").Return(nil)
+			mockFilterClient.EXPECT().AddDimensionValue(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, "opt5").Return(nil)
 
 			// HierarchyClient mock expecting GetRoot
 			mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
@@ -132,19 +131,14 @@ func TestHierarchyUpdate(t *testing.T) {
 				},
 			}
 
-			// Expected options posted to filter API:
-			// - opt1 removed because present in children but not in request form
-			// - opt2 kept because present in children and in request form
-			// - opt3 kept because not present in children
-			expectedPostedOptions := []string{"opt2", "opt3"}
-
 			modelWithChildren := hierarchy.Model{Children: []hierarchy.Child{child1, child2, childN}}
 
-			// FilterClient mock expecting 2 AddDimensionValues batch calls - one with 3 items and one with 2 items
+			// We call FilterAPI AddDimensionValue for the option provided in the form, and RemoveDimensionValue for the opt1 because it is present in children but not in request form
 			mockFilterClient := NewMockFilterClient(mockCtrl)
 			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
 			mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName).Return(dimensionOptions, nil)
-			mockFilterClient.EXPECT().AddDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, ItemsEq(expectedPostedOptions)).Return(nil)
+			mockFilterClient.EXPECT().RemoveDimensionValue(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, "opt1").Return(nil)
+			mockFilterClient.EXPECT().AddDimensionValue(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, "opt2").Return(nil)
 
 			// HierarchyClient mock expecting GetChild, returns child model with self link
 			mockHierarchyClient := NewMockHierarchyClient(mockCtrl)

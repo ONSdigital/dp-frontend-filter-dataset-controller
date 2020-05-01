@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/headers"
@@ -74,55 +75,54 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var h hierarchy.Model
+	var wg sync.WaitGroup
+	wg.Add(1)
 
-	if len(code) > 0 {
-		h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
-	} else {
-		if name == "geography" {
-			h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
+	go func() {
+		defer wg.Done()
+
+		var h hierarchy.Model
+		var err error
+		if len(code) > 0 {
+			h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
 		} else {
-			h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
+			if name == "geography" {
+				h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
+			} else {
+				h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
+			}
+
+			// We include the value on the root as a selectable item, so append
+			// the value on the root to the child to see if it has been removed by
+			// the user
+			h.Children = append(h.Children, hierarchy.Child{
+				Links: h.Links,
+			})
+		}
+		if err != nil {
+			log.Event(ctx, "failed to get hierarchy node", log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
+			setStatusCode(req, w, err)
+			return
 		}
 
-		// We include the value on the root as a selectable item, so append
-		// the value on the root to the child to see if it has been removed by
-		// the user
-		h.Children = append(h.Children, hierarchy.Child{
-			Links: h.Links,
-		})
-	}
-	if err != nil {
-		log.Event(ctx, "failed to get hierarchy node", log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
-		setStatusCode(req, w, err)
-		return
-	}
-
-	// unique options to be posted. Using a map for faster access and uniqueness
-	mapUniqueOptions := make(map[string]struct{})
-
-	// Get existing dimension options from filterAPI
-	existingOptions, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
-	if err != nil {
-		log.Event(ctx, "failed to get dimension options", log.Error(err))
-		setStatusCode(req, w, err)
-		return
-	}
-
-	// Populate map with existing dimensions
-	for _, option := range existingOptions {
-		mapUniqueOptions[option.Option] = struct{}{}
-	}
-
-	// Remove dimension options found in the child items but not in the request form.
-	for _, child := range h.Children {
-		optionValue := child.Links.Self.ID
-		if _, reqFound := req.Form[optionValue]; !reqFound {
-			delete(mapUniqueOptions, optionValue)
+		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
+		if err != nil {
+			log.Event(ctx, "failed to get dimension options", log.Error(err))
 		}
-	}
 
-	// Iterate requested dimensions, populate requested option values, and override redirectURI if provided in the form; ignoringspecial form vars.
+		for _, hv := range h.Children {
+			for _, opt := range opts {
+				if opt.Option == hv.Links.Self.ID {
+					if _, ok := req.Form[hv.Links.Self.ID]; !ok {
+						if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, hv.Links.Self.ID); err != nil {
+							log.Event(ctx, "failed to remove dimension value", log.Error(err))
+						}
+					}
+				}
+			}
+		}
+	}()
+
 	for k := range req.Form {
 		if _, foundSpecial := specialFormVars[k]; foundSpecial {
 			continue
@@ -135,23 +135,13 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		mapUniqueOptions[k] = struct{}{}
+		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, k); err != nil {
+			log.Event(ctx, "failed to add dimension value", log.Error(err))
+		}
 	}
 
-	// Generate slice from map keys:
-	patchedOptionsValues := []string{}
-	for optionValue := range mapUniqueOptions {
-		patchedOptionsValues = append(patchedOptionsValues, optionValue)
-	}
-
-	// Add processed dimension values to Filter API
-	if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, patchedOptionsValues); err != nil {
-		log.Event(ctx, "failed to add dimension values", log.Error(err))
-		setStatusCode(req, w, err)
-		return
-	}
-
-	http.Redirect(w, req, redirectURI, http.StatusFound)
+	wg.Wait()
+	http.Redirect(w, req, redirectURI, 302)
 }
 
 func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI string) {
