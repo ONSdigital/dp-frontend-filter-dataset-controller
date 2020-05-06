@@ -45,7 +45,7 @@ func Get() (cfg *Config, err error) {
 		SearchAPIURL:               "http://localhost:23100",
 		DownloadServiceURL:         "http://localhost:23600",
 		EnableDatasetPreview:       false,
-		EnableProfiler:             true,
+		EnableProfiler:             false,
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
