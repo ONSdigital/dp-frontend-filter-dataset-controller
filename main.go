@@ -8,17 +8,20 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-api-clients-go/health"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/dp-api-clients-go/renderer"
 	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/routes"
-	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	healthcheck "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/go-ns/handlers/collectionID"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+
+	_ "net/http/pprof"
 )
 
 // App version informaton retrieved on runtime
@@ -55,7 +58,7 @@ func run(ctx context.Context) error {
 
 	log.Event(ctx, "got service configuration", log.INFO, log.Data{"config": cfg})
 
-	versionInfo, err := health.NewVersionInfo(
+	versionInfo, err := healthcheck.NewVersionInfo(
 		BuildTime,
 		GitCommit,
 		Version,
@@ -75,10 +78,15 @@ func run(ctx context.Context) error {
 		Search:    search.New(cfg.SearchAPIURL),
 	}
 
-	healthcheck := health.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
+	if cfg.EnableProfiler {
+		log.Event(ctx, "creating identity client, as profiler is enabled", log.INFO)
+		clients.ZebedeeHealth = health.NewClient("Zebedee", cfg.ZebedeeURL)
+	}
+
+	healthcheck := healthcheck.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
 	clients.Healthcheck = &healthcheck
 
-	if err = registerCheckers(ctx, clients); err != nil {
+	if err = registerCheckers(ctx, cfg, clients); err != nil {
 		return err
 	}
 
@@ -153,7 +161,7 @@ func run(ctx context.Context) error {
 	return nil
 }
 
-func registerCheckers(ctx context.Context, clients routes.Clients) (err error) {
+func registerCheckers(ctx context.Context, cfg *config.Config, clients routes.Clients) (err error) {
 
 	hasErrors := false
 
@@ -180,6 +188,13 @@ func registerCheckers(ctx context.Context, clients routes.Clients) (err error) {
 	if err = clients.Healthcheck.AddCheck("search API", clients.Search.Checker); err != nil {
 		hasErrors = true
 		log.Event(ctx, "failed to add search API checker", log.ERROR, log.Error(err))
+	}
+
+	if cfg.EnableProfiler {
+		if err = clients.Healthcheck.AddCheck("Zebedee", clients.ZebedeeHealth.Checker); err != nil {
+			hasErrors = true
+			log.Event(ctx, "failed to add zebedee checker", log.ERROR, log.Error(err))
+		}
 	}
 
 	if hasErrors {
