@@ -21,6 +21,7 @@ An HTTP service for the controlling of data relevant to the filtering of a parti
 | SEARCH_API_AUTH_TOKEN         | n/a                     | The token used to access the Search API
 | ENABLE_DATASET_PREVIEW        | false                   | Flag to add preview of dataset to output page
 | ENABLE_PROFILER               | false                   | Flag to enable go profiler
+| PPROF_TOKEN                   | ""                      | The profiling token to access service profiling
 | GRACEFUL_SHUTDOWN_TIMEOUT     | 5s                      | The graceful shutdown timeout in seconds
 | HEALTHCHECK_INTERVAL          | 30s                     | The time between calling healthcheck endpoints for check subsystems
 | HEALTHCHECK_CRITICAL_TIMEOUT  | 90s                     | The time taken for the health changes from warning state to critical due to subsystem check failures 
@@ -44,17 +45,18 @@ Valid time units are
 ### Profiling
 
 An optional `/debug` endpoint has been added, in order to profile this service via `pprof` go library.
-In order to use this endpoint, you will need to enable the flag and provide a valid ZebedeeURL, as it is auth-protected. Please, modify the following configuration variables to do so:
+In order to use this endpoint, you will need to enable profiler flag and set a PPROF_TOKEN:
+
 ```
-export ZEBEDEE_URL=your_zebedee_url
 export ENABLE_PROFILER=true
+export PPROF_TOKEN={generated uuid}
 ```
 
 Then you can us the profiler as follows:
 
 1- Start service, load test or if on environment wait for a number of requests to be made.
 
-2- Send authenticated request and store response in a file (this can be best done in command line like so: `curl <host>:<port>/debug/pprof/heap > heap.out` - see pprof documentation on other endpoints
+2- Send authenticated request and store response in a file (this can be best done in command line like so: `curl <host>:<port>/debug/pprof/heap -H "Authorization: Bearer {generated uuid} > heap.out` - see pprof documentation on other endpoints
 
 3- View profile either using a web ui to navigate data (a) or using pprof on command line to navigate data (b) 
   a) `go tool pprof -http=:8080 heap.out`

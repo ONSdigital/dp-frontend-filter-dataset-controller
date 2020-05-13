@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 
@@ -9,13 +10,11 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/health"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
-	"github.com/ONSdigital/dp-api-clients-go/identity"
 	"github.com/ONSdigital/dp-api-clients-go/renderer"
 	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	identityMiddleware "github.com/ONSdigital/go-ns/identity"
 	"github.com/ONSdigital/go-ns/validator"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
@@ -84,11 +83,28 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients Client
 
 	r.StrictSlash(true).Path("/filters/{filterID}/use-latest-version").HandlerFunc(filter.UseLatest)
 
-	// Create debug endpoint, if required to do so, under auth middleware
+	// Enable profiling endpoint for authorised users
 	if cfg.EnableProfiler {
-		idCli := identity.NewAPIClient(clients.ZebedeeHealth.Client, cfg.ZebedeeURL)
-		identityHandler := identityMiddleware.HandlerForHTTPClient(idCli)
-		middlewareChain := alice.New(identityHandler).Then(http.DefaultServeMux)
-		r.PathPrefix("/debug/").Handler(middlewareChain)
+		middlewareChain := alice.New(profileMiddleware(cfg.PprofToken)).Then(http.DefaultServeMux)
+		r.PathPrefix("/debug").Handler(middlewareChain)
+	}
+}
+
+// profileMiddleware to validate auth token before accessing endpoint
+func profileMiddleware(token string) func(http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			ctx := req.Context()
+
+			pprofToken := req.Header.Get("Authorization")
+			if pprofToken == "Bearer " || pprofToken != "Bearer "+token {
+				log.Event(ctx, "invalid auth token", log.ERROR, log.Error(errors.New("invalid auth token")))
+				w.WriteHeader(404)
+				return
+			}
+
+			log.Event(ctx, "accessing profiling endpoint", log.INFO)
+			h.ServeHTTP(w, req)
+		})
 	}
 }
