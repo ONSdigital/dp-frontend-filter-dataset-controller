@@ -8,7 +8,6 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/health"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/dp-api-clients-go/renderer"
 	"github.com/ONSdigital/dp-api-clients-go/search"
@@ -23,13 +22,12 @@ import (
 
 // Clients represents a list of clients
 type Clients struct {
-	Filter        *filter.Client
-	Dataset       *dataset.Client
-	Hierarchy     *hierarchy.Client
-	Healthcheck   *healthcheck.HealthCheck
-	Renderer      *renderer.Renderer
-	Search        *search.Client
-	ZebedeeHealth *health.Client
+	Filter      *filter.Client
+	Dataset     *dataset.Client
+	Hierarchy   *hierarchy.Client
+	Healthcheck *healthcheck.HealthCheck
+	Renderer    *renderer.Renderer
+	Search      *search.Client
 }
 
 // Init initialises routes for the service
