@@ -8,8 +8,7 @@ require (
 	github.com/ONSdigital/dp-frontend-dataset-controller v1.10.0
 	github.com/ONSdigital/dp-frontend-models v1.4.2
 	github.com/ONSdigital/dp-healthcheck v1.0.3
-	github.com/ONSdigital/dp-rchttp v0.0.0-20200114090501-463a529590e8
-	github.com/ONSdigital/go-ns v0.0.0-20200205115900-a11716f93bad
+	github.com/ONSdigital/go-ns v0.0.0-20200511161740-afc39066ee62
 	github.com/ONSdigital/log.go v1.0.0
 	github.com/golang/mock v1.4.0
 	github.com/gorilla/mux v1.7.4

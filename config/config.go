@@ -21,6 +21,7 @@ type Config struct {
 	DownloadServiceURL         string        `envconfig:"DOWNLOAD_SERVICE_URL"`
 	EnableDatasetPreview       bool          `envconfig:"ENABLE_DATASET_PREVIEW"`
 	EnableProfiler             bool          `envconfig:"ENABLE_PROFILER"`
+	PprofToken                 string        `envconfig:"PPROF_TOKEN" json:"-"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
