@@ -274,7 +274,7 @@ func (f *Filter) Time(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dims, err := f.DatasetClient.GetDimensions(ctx, userAccessToken, "", collectionID, datasetID, edition, version)
+	dims, err := f.DatasetClient.GetVersionDimensions(ctx, userAccessToken, "", collectionID, datasetID, edition, version)
 	if err != nil {
 		log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
 			log.Data{"dataset_id": datasetID, "edition": edition, "version": version})

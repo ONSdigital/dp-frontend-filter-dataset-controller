@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/pkg/errors"
@@ -40,10 +41,15 @@ func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient
 }
 
 func setStatusCode(req *http.Request, w http.ResponseWriter, err error) {
-	status := http.StatusInternalServerError
-	if err, ok := err.(ClientError); ok {
-		if err.Code() == http.StatusNotFound {
-			status = err.Code()
+	status := http.StatusOK
+	if err != nil {
+		switch err.(type) {
+		case filter.ErrInvalidFilterAPIResponse:
+			status = http.StatusBadGateway
+		case ClientError:
+			status = err.(ClientError).Code()
+		default:
+			status = http.StatusInternalServerError
 		}
 	}
 	log.Event(req.Context(), "setting response status", log.INFO, log.Error(err), log.Data{"status": status})

@@ -6,13 +6,14 @@ package handlers
 
 import (
 	context "context"
+	reflect "reflect"
+
 	dataset "github.com/ONSdigital/dp-api-clients-go/dataset"
 	filter "github.com/ONSdigital/dp-api-clients-go/filter"
 	hierarchy "github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	search "github.com/ONSdigital/dp-api-clients-go/search"
 	healthcheck "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
 // MockFilterClient is a mock of FilterClient interface
@@ -275,17 +276,17 @@ func (mr *MockDatasetClientMockRecorder) GetVersion(ctx, userAuthToken, serviceA
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersion", reflect.TypeOf((*MockDatasetClient)(nil).GetVersion), ctx, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, datasetID, edition, version)
 }
 
-// GetDimensions mocks base method
-func (m *MockDatasetClient) GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version string) (dataset.Dimensions, error) {
-	ret := m.ctrl.Call(m, "GetDimensions", ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version)
-	ret0, _ := ret[0].(dataset.Dimensions)
+// GetVersionDimensions mocks base method
+func (m *MockDatasetClient) GetVersionDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version string) (dataset.VersionDimensions, error) {
+	ret := m.ctrl.Call(m, "GetVersionDimensions", ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version)
+	ret0, _ := ret[0].(dataset.VersionDimensions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetDimensions indicates an expected call of GetDimensions
-func (mr *MockDatasetClientMockRecorder) GetDimensions(ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensions", reflect.TypeOf((*MockDatasetClient)(nil).GetDimensions), ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version)
+// GetVersionDimensions indicates an expected call of GetVersionDimensions
+func (mr *MockDatasetClientMockRecorder) GetVersionDimensions(ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersionDimensions", reflect.TypeOf((*MockDatasetClient)(nil).GetVersionDimensions), ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version)
 }
 
 // GetOptions mocks base method

@@ -2,6 +2,8 @@ package routes
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"os"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
@@ -11,10 +13,11 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
-	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/go-ns/validator"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
 )
 
 // Clients represents a list of clients
@@ -22,7 +25,7 @@ type Clients struct {
 	Filter      *filter.Client
 	Dataset     *dataset.Client
 	Hierarchy   *hierarchy.Client
-	Healthcheck *health.HealthCheck
+	Healthcheck *healthcheck.HealthCheck
 	Renderer    *renderer.Renderer
 	Search      *search.Client
 }
@@ -77,4 +80,29 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients Client
 	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/{name}/{code}").Methods("GET").HandlerFunc(filter.Hierarchy)
 
 	r.StrictSlash(true).Path("/filters/{filterID}/use-latest-version").HandlerFunc(filter.UseLatest)
+
+	// Enable profiling endpoint for authorised users
+	if cfg.EnableProfiler {
+		middlewareChain := alice.New(profileMiddleware(cfg.PprofToken)).Then(http.DefaultServeMux)
+		r.PathPrefix("/debug").Handler(middlewareChain)
+	}
+}
+
+// profileMiddleware to validate auth token before accessing endpoint
+func profileMiddleware(token string) func(http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			ctx := req.Context()
+
+			pprofToken := req.Header.Get("Authorization")
+			if pprofToken == "Bearer " || pprofToken != "Bearer "+token {
+				log.Event(ctx, "invalid auth token", log.ERROR, log.Error(errors.New("invalid auth token")))
+				w.WriteHeader(404)
+				return
+			}
+
+			log.Event(ctx, "accessing profiling endpoint", log.INFO)
+			h.ServeHTTP(w, req)
+		})
+	}
 }
