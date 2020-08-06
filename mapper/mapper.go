@@ -924,7 +924,7 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 
 	p.FilterID = f.FilterID
 	p.Data.Title = title
-	p.Metadata.Title = title
+	p.Metadata.Title = fmt.Sprintf("Filter Options - %s", title)
 
 	if len(h.Breadcrumbs) > 0 {
 		if len(h.Breadcrumbs) == 1 || topLevelGeographies[h.Breadcrumbs[0].Links.Code.ID] && name == "geography" {
