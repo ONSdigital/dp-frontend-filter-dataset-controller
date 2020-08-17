@@ -9,17 +9,14 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/health"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
-	"github.com/ONSdigital/dp-api-clients-go/identity"
 	"github.com/ONSdigital/dp-api-clients-go/renderer"
 	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	identityMiddleware "github.com/ONSdigital/go-ns/identity"
 	"github.com/ONSdigital/go-ns/validator"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
-	"github.com/justinas/alice"
 )
 
 // Clients represents a list of clients
@@ -84,11 +81,12 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients Client
 
 	r.StrictSlash(true).Path("/filters/{filterID}/use-latest-version").HandlerFunc(filter.UseLatest)
 
-	// Create debug endpoint, if required to do so, under auth middleware
-	if cfg.EnableProfiler {
-		idCli := identity.NewAPIClient(clients.ZebedeeHealth.Client, cfg.ZebedeeURL)
-		identityHandler := identityMiddleware.HandlerForHTTPClient(idCli)
-		middlewareChain := alice.New(identityHandler).Then(http.DefaultServeMux)
-		r.PathPrefix("/debug/").Handler(middlewareChain)
-	}
+	// // Create debug endpoint, if required to do so, under auth middleware
+	// if cfg.EnableProfiler {
+	// 	// idCli := identity.NewAPIClient(clients.ZebedeeHealth.Client, cfg.ZebedeeURL)
+	// 	// identityHandler := identityMiddleware.HandlerForHTTPClient(idCli)
+	// 	identityHandler := identityMiddleware.Handler(cfg.ZebedeeURL)
+	// 	middlewareChain := alice.New(identityHandler).Then(http.DefaultServeMux)
+	r.PathPrefix("/debug/").Handler(http.DefaultServeMux)
+	// }
 }

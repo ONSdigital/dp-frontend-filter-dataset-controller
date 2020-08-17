@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/go-ns/common"
+	dprequest "github.com/ONSdigital/dp-net/request"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/pkg/errors"
 )
@@ -57,8 +57,8 @@ func setStatusCode(req *http.Request, w http.ResponseWriter, err error) {
 }
 
 func getCollectionIDFromContext(ctx context.Context) string {
-	if ctx.Value(common.CollectionIDHeaderKey) != nil {
-		collectionID, ok := ctx.Value(common.CollectionIDHeaderKey).(string)
+	if ctx.Value(dprequest.CollectionIDHeaderKey) != nil {
+		collectionID, ok := ctx.Value(dprequest.CollectionIDHeaderKey).(string)
 		if !ok {
 			log.Event(ctx, "failed to get collection ID", log.WARN, log.Error(errors.New("error casting collection ID context value to string")))
 		}

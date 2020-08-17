@@ -15,10 +15,11 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/routes"
 	healthcheck "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	"github.com/ONSdigital/go-ns/handlers/collectionID"
-	"github.com/ONSdigital/go-ns/server"
+	dphandlers "github.com/ONSdigital/dp-net/handlers"
+	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
 	"github.com/pkg/errors"
 
 	_ "net/http/pprof"
@@ -91,12 +92,9 @@ func run(ctx context.Context) error {
 	}
 
 	routes.Init(ctx, r, cfg, clients)
-
-	s := server.New(cfg.BindAddr, r)
+	m := alice.New(dphandlers.CheckCookie(dphandlers.CollectionID))
+	s := dphttp.NewServer(cfg.BindAddr, m.Then(r))
 	s.HandleOSSignals = false
-
-	s.Middleware["CollectionID"] = collectionID.CheckCookie
-	s.MiddlewareOrder = append(s.MiddlewareOrder, "CollectionID")
 
 	log.Event(ctx, "service listening...", log.Data{
 		"bind_address": cfg.BindAddr,
@@ -175,7 +173,7 @@ func registerCheckers(ctx context.Context, cfg *config.Config, clients routes.Cl
 		log.Event(ctx, "failed to add filter API checker", log.ERROR, log.Error(err))
 	}
 
-	if err = clients.Healthcheck.AddCheck("dataste API", clients.Dataset.Checker); err != nil {
+	if err = clients.Healthcheck.AddCheck("dataset API", clients.Dataset.Checker); err != nil {
 		hasErrors = true
 		log.Event(ctx, "failed to add dataset API checker", log.ERROR, log.Error(err))
 	}
