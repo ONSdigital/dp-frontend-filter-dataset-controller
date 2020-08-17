@@ -21,8 +21,8 @@ github.com/ONSdigital/dp-net v1.0.7/go.mod h1:1QFzx32FwPKD2lgZI6MtcsUXritsBdJihl
 github.com/ONSdigital/dp-rchttp v0.0.0-20190919143000-bb5699e6fd59/go.mod h1:KkW68U3FPuivW4ogi9L8CPKNj9ZxGko4qcUY7KoAAkQ=
 github.com/ONSdigital/dp-rchttp v0.0.0-20200114090501-463a529590e8/go.mod h1:821jZtK0oBsV8hjIkNr8vhAWuv0FxJBPJuAHa2B70Gk=
 github.com/ONSdigital/go-ns v0.0.0-20191104121206-f144c4ec2e58/go.mod h1:iWos35il+NjbvDEqwtB736pyHru0MPFE/LqcwkV1wDc=
-github.com/ONSdigital/go-ns v0.0.0-20200205115900-a11716f93bad h1:Axoxm5rF6j7LSZfm4AGBT5IwGhWIcfcOkkhy/su/UpA=
-github.com/ONSdigital/go-ns v0.0.0-20200205115900-a11716f93bad/go.mod h1:uHT6LaUlRbJsJRrIlN31t+QLUB80tAbk6ZR9sfoHL8Y=
+github.com/ONSdigital/go-ns v0.0.0-20200511161740-afc39066ee62 h1:DyGIxcRIEEHGGb/FuvrWoYXvpbR0WDbnvEn9kBF4tvM=
+github.com/ONSdigital/go-ns v0.0.0-20200511161740-afc39066ee62/go.mod h1:uHT6LaUlRbJsJRrIlN31t+QLUB80tAbk6ZR9sfoHL8Y=
 github.com/ONSdigital/log.go v0.0.0-20191127134126-2a610b254f20/go.mod h1:BD7D8FWP1fzwUWsrCopEG72jl9cchCaVNIGSz6YvL+Y=
 github.com/ONSdigital/log.go v1.0.0/go.mod h1:UnGu9Q14gNC+kz0DOkdnLYGoqugCvnokHBRBxFRpVoQ=
 github.com/ONSdigital/log.go v1.0.1-0.20200805084515-ee61165ea36a/go.mod h1:dDnQATFXCBOknvj6ZQuKfmDhbOWf3e8mtV+dPEfWJqs=

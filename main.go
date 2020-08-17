@@ -8,7 +8,6 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/health"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/dp-api-clients-go/renderer"
 	"github.com/ONSdigital/dp-api-clients-go/search"
@@ -77,11 +76,6 @@ func run(ctx context.Context) error {
 		Dataset:   dataset.NewAPIClient(cfg.DatasetAPIURL),
 		Hierarchy: hierarchy.New(cfg.HierarchyAPIURL),
 		Search:    search.New(cfg.SearchAPIURL),
-	}
-
-	if cfg.EnableProfiler {
-		log.Event(ctx, "creating identity client, as profiler is enabled", log.INFO)
-		clients.ZebedeeHealth = health.NewClient("Zebedee", cfg.ZebedeeURL)
 	}
 
 	healthcheck := healthcheck.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
@@ -186,13 +180,6 @@ func registerCheckers(ctx context.Context, cfg *config.Config, clients routes.Cl
 	if err = clients.Healthcheck.AddCheck("search API", clients.Search.Checker); err != nil {
 		hasErrors = true
 		log.Event(ctx, "failed to add search API checker", log.ERROR, log.Error(err))
-	}
-
-	if cfg.EnableProfiler {
-		if err = clients.Healthcheck.AddCheck("Zebedee", clients.ZebedeeHealth.Checker); err != nil {
-			hasErrors = true
-			log.Event(ctx, "failed to add zebedee checker", log.ERROR, log.Error(err))
-		}
 	}
 
 	if hasErrors {

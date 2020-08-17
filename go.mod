@@ -9,7 +9,7 @@ require (
 	github.com/ONSdigital/dp-frontend-models v1.5.0
 	github.com/ONSdigital/dp-healthcheck v1.0.5
 	github.com/ONSdigital/dp-net v1.0.7
-	github.com/ONSdigital/go-ns v0.0.0-20200205115900-a11716f93bad
+	github.com/ONSdigital/go-ns v0.0.0-20200511161740-afc39066ee62
 	github.com/ONSdigital/log.go v1.0.1
 	github.com/golang/mock v1.4.4
 	github.com/gorilla/mux v1.7.4

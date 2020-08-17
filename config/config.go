@@ -13,7 +13,6 @@ type Config struct {
 	FilterAPIURL               string        `envconfig:"FILTER_API_URL"`
 	DatasetAPIURL              string        `envconfig:"DATASET_API_URL"`
 	HierarchyAPIURL            string        `envconfig:"HIERARCHY_API_URL"`
-	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"  json:"-"`
 	DatasetAPIAuthToken        string        `envconfig:"DATASET_API_AUTH_TOKEN" json:"-"`
 	FilterAPIAuthToken         string        `envconfig:"FILTER_API_AUTH_TOKEN"  json:"-"`
 	SearchAPIAuthToken         string        `envconfig:"SEARCH_API_AUTH_TOKEN"  json:"-"`
@@ -21,6 +20,7 @@ type Config struct {
 	DownloadServiceURL         string        `envconfig:"DOWNLOAD_SERVICE_URL"`
 	EnableDatasetPreview       bool          `envconfig:"ENABLE_DATASET_PREVIEW"`
 	EnableProfiler             bool          `envconfig:"ENABLE_PROFILER"`
+	PprofToken                 string        `envconfig:"PPROF_TOKEN" json:"-"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
@@ -38,7 +38,6 @@ func Get() (cfg *Config, err error) {
 		FilterAPIURL:               "http://localhost:22100",
 		DatasetAPIURL:              "http://localhost:22000",
 		HierarchyAPIURL:            "http://localhost:22600",
-		ZebedeeURL:                 "http://localhost:8082",
 		DatasetAPIAuthToken:        "FD0108EA-825D-411C-9B1D-41EF7727F465",
 		FilterAPIAuthToken:         "FD0108EA-825D-411C-9B1D-41EF7727F465",
 		SearchAPIAuthToken:         "SD0108EA-825D-411C-45J3-41EF7727F123",

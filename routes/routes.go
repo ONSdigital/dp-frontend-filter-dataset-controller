@@ -2,12 +2,12 @@ package routes
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"os"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/health"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/dp-api-clients-go/renderer"
 	"github.com/ONSdigital/dp-api-clients-go/search"
@@ -17,17 +17,17 @@ import (
 	"github.com/ONSdigital/go-ns/validator"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
 )
 
 // Clients represents a list of clients
 type Clients struct {
-	Filter        *filter.Client
-	Dataset       *dataset.Client
-	Hierarchy     *hierarchy.Client
-	Healthcheck   *healthcheck.HealthCheck
-	Renderer      *renderer.Renderer
-	Search        *search.Client
-	ZebedeeHealth *health.Client
+	Filter      *filter.Client
+	Dataset     *dataset.Client
+	Hierarchy   *hierarchy.Client
+	Healthcheck *healthcheck.HealthCheck
+	Renderer    *renderer.Renderer
+	Search      *search.Client
 }
 
 // Init initialises routes for the service
@@ -81,12 +81,28 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients Client
 
 	r.StrictSlash(true).Path("/filters/{filterID}/use-latest-version").HandlerFunc(filter.UseLatest)
 
-	// // Create debug endpoint, if required to do so, under auth middleware
-	// if cfg.EnableProfiler {
-	// 	// idCli := identity.NewAPIClient(clients.ZebedeeHealth.Client, cfg.ZebedeeURL)
-	// 	// identityHandler := identityMiddleware.HandlerForHTTPClient(idCli)
-	// 	identityHandler := identityMiddleware.Handler(cfg.ZebedeeURL)
-	// 	middlewareChain := alice.New(identityHandler).Then(http.DefaultServeMux)
-	r.PathPrefix("/debug/").Handler(http.DefaultServeMux)
-	// }
+	// Enable profiling endpoint for authorised users
+	if cfg.EnableProfiler {
+		middlewareChain := alice.New(profileMiddleware(cfg.PprofToken)).Then(http.DefaultServeMux)
+		r.PathPrefix("/debug").Handler(middlewareChain)
+	}
+}
+
+// profileMiddleware to validate auth token before accessing endpoint
+func profileMiddleware(token string) func(http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			ctx := req.Context()
+
+			pprofToken := req.Header.Get("Authorization")
+			if pprofToken == "Bearer " || pprofToken != "Bearer "+token {
+				log.Event(ctx, "invalid auth token", log.ERROR, log.Error(errors.New("invalid auth token")))
+				w.WriteHeader(404)
+				return
+			}
+
+			log.Event(ctx, "accessing profiling endpoint", log.INFO)
+			h.ServeHTTP(w, req)
+		})
+	}
 }
