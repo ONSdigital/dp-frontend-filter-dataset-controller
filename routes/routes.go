@@ -13,7 +13,6 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
-	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/go-ns/validator"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
@@ -22,16 +21,16 @@ import (
 
 // Clients represents a list of clients
 type Clients struct {
-	Filter      *filter.Client
-	Dataset     *dataset.Client
-	Hierarchy   *hierarchy.Client
-	Healthcheck *healthcheck.HealthCheck
-	Renderer    *renderer.Renderer
-	Search      *search.Client
+	Filter             *filter.Client
+	Dataset            *dataset.Client
+	Hierarchy          *hierarchy.Client
+	HealthcheckHandler func(w http.ResponseWriter, req *http.Request)
+	Renderer           *renderer.Renderer
+	Search             *search.Client
 }
 
 // Init initialises routes for the service
-func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients Clients) {
+func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients *Clients) {
 
 	fi, err := os.Open("rules.json")
 	if err != nil {
@@ -48,7 +47,7 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients Client
 		clients.Hierarchy, clients.Search, v, cfg.SearchAPIAuthToken, cfg.DownloadServiceURL,
 		cfg.EnableDatasetPreview)
 
-	r.StrictSlash(true).Path("/health").HandlerFunc(clients.Healthcheck.Handler)
+	r.StrictSlash(true).Path("/health").HandlerFunc(clients.HealthcheckHandler)
 
 	r.Path("/filter-outputs/{filterOutputID}.json").Methods("GET").HandlerFunc(filter.GetFilterJob)
 	r.StrictSlash(true).Path("/filter-outputs/{filterOutputID}").Methods("GET").HandlerFunc(filter.OutputPage)

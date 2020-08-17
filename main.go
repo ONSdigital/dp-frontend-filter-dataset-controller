@@ -2,27 +2,18 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 
-	"github.com/ONSdigital/dp-api-clients-go/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
-	"github.com/ONSdigital/dp-api-clients-go/renderer"
-	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/routes"
-	healthcheck "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dphandlers "github.com/ONSdigital/dp-net/handlers"
-	dphttp "github.com/ONSdigital/dp-net/http"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/service"
 	"github.com/ONSdigital/log.go/log"
-	"github.com/gorilla/mux"
-	"github.com/justinas/alice"
 	"github.com/pkg/errors"
 
 	_ "net/http/pprof"
 )
+
+const serviceName = "dp-frontend-filter-dataset-controller"
 
 // App version informaton retrieved on runtime
 var (
@@ -35,11 +26,11 @@ var (
 )
 
 func main() {
-	log.Namespace = "dp-frontend-filter-dataset-controller"
+	log.Namespace = serviceName
 	ctx := context.Background()
 
 	if err := run(ctx); err != nil {
-		log.Event(ctx, "application unexpectedly failed", log.ERROR, log.Error(err))
+		log.Event(ctx, "application unexpectedly failed", log.FATAL, log.Error(err))
 		os.Exit(1)
 	}
 
@@ -50,140 +41,30 @@ func run(ctx context.Context) error {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, os.Kill)
 
+	// Create service initialiser and an error channel for fatal errors
+	svcErrors := make(chan error, 1)
+	svcList := service.NewServiceList(&service.Init{})
+
+	// Read config
 	cfg, err := config.Get()
 	if err != nil {
 		log.Event(ctx, "unable to retrieve service configuration", log.FATAL, log.Error(err))
 		return err
 	}
-
 	log.Event(ctx, "got service configuration", log.INFO, log.Data{"config": cfg})
 
-	versionInfo, err := healthcheck.NewVersionInfo(
-		BuildTime,
-		GitCommit,
-		Version,
-	)
+	// Start service
+	svc, err := service.Run(ctx, cfg, svcList, BuildTime, GitCommit, Version, svcErrors)
 	if err != nil {
-		log.Event(ctx, "failed to create service version information", log.ERROR, log.Error(err))
-		return err
+		return errors.Wrap(err, "running service failed")
 	}
 
-	r := mux.NewRouter()
-
-	clients := routes.Clients{
-		Renderer:  renderer.New(cfg.RendererURL),
-		Filter:    filter.New(cfg.FilterAPIURL),
-		Dataset:   dataset.NewAPIClient(cfg.DatasetAPIURL),
-		Hierarchy: hierarchy.New(cfg.HierarchyAPIURL),
-		Search:    search.New(cfg.SearchAPIURL),
-	}
-
-	healthcheck := healthcheck.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
-	clients.Healthcheck = &healthcheck
-
-	if err = registerCheckers(ctx, cfg, clients); err != nil {
-		return err
-	}
-
-	routes.Init(ctx, r, cfg, clients)
-	m := alice.New(dphandlers.CheckCookie(dphandlers.CollectionID))
-	s := dphttp.NewServer(cfg.BindAddr, m.Then(r))
-	s.HandleOSSignals = false
-
-	log.Event(ctx, "service listening...", log.Data{
-		"bind_address": cfg.BindAddr,
-	})
-
-	svcErrors := make(chan error, 1)
-	go func() {
-		if err := s.ListenAndServe(); err != nil {
-			svcErrors <- errors.Wrap(err, "failure in http listen and serve")
-		}
-	}()
-
-	// Start healthcheck ticker
-	healthcheck.Start(ctx)
-
-	// Block until a fatal error occurs
+	// Blocks until an os interrupt or a fatal error occurs
 	select {
 	case err := <-svcErrors:
 		log.Event(ctx, "service error received", log.ERROR, log.Error(err))
-	case signal := <-signals:
-		log.Event(ctx, "quitting after os signal received", log.INFO, log.Data{"signal": signal})
+	case sig := <-signals:
+		log.Event(ctx, "os signal received", log.Data{"signal": sig}, log.INFO)
 	}
-
-	log.Event(ctx, fmt.Sprintf("shutdown with timeout: %s", cfg.GracefulShutdownTimeout), log.INFO)
-
-	// give the app `Timeout` seconds to close gracefully before killing it.
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.GracefulShutdownTimeout)
-
-	var gracefulShutdown bool
-
-	go func() {
-		defer cancel()
-		hasShutdownErrs := false
-
-		log.Event(ctx, "stop health checkers", log.INFO)
-		healthcheck.Stop()
-
-		if err := s.Shutdown(ctx); err != nil {
-			log.Event(ctx, "failed to gracefully shutdown http server", log.ERROR, log.Error(err))
-			hasShutdownErrs = true
-		}
-
-		if !hasShutdownErrs {
-			gracefulShutdown = true
-		}
-	}()
-
-	// wait for timeout or success (via cancel)
-	<-ctx.Done()
-	if ctx.Err() == context.DeadlineExceeded {
-		log.Event(ctx, "context deadline exceeded", log.ERROR, log.Error(ctx.Err()))
-		return ctx.Err()
-	}
-
-	if !gracefulShutdown {
-		err = errors.New("failed to shutdown gracefully")
-		log.Event(ctx, "failed to shutdown gracefully ", log.ERROR, log.Error(err))
-		return err
-	}
-
-	log.Event(ctx, "graceful shutdown complete", log.INFO)
-	return nil
-}
-
-func registerCheckers(ctx context.Context, cfg *config.Config, clients routes.Clients) (err error) {
-
-	hasErrors := false
-
-	if err = clients.Healthcheck.AddCheck("frontend renderer", clients.Renderer.Checker); err != nil {
-		hasErrors = true
-		log.Event(ctx, "failed to add frontend renderer checker", log.ERROR, log.Error(err))
-	}
-
-	if err = clients.Healthcheck.AddCheck("filter API", clients.Filter.Checker); err != nil {
-		hasErrors = true
-		log.Event(ctx, "failed to add filter API checker", log.ERROR, log.Error(err))
-	}
-
-	if err = clients.Healthcheck.AddCheck("dataset API", clients.Dataset.Checker); err != nil {
-		hasErrors = true
-		log.Event(ctx, "failed to add dataset API checker", log.ERROR, log.Error(err))
-	}
-
-	if err = clients.Healthcheck.AddCheck("hierarchy API", clients.Hierarchy.Checker); err != nil {
-		hasErrors = true
-		log.Event(ctx, "failed to add hierarchy API checker", log.ERROR, log.Error(err))
-	}
-
-	if err = clients.Healthcheck.AddCheck("search API", clients.Search.Checker); err != nil {
-		hasErrors = true
-		log.Event(ctx, "failed to add search API checker", log.ERROR, log.Error(err))
-	}
-
-	if hasErrors {
-		return errors.New("Error(s) registering checkers for healthcheck")
-	}
-	return nil
+	return svc.Close(ctx)
 }
