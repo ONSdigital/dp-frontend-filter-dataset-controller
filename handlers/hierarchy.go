@@ -38,12 +38,12 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "failed to retrieve auth header", log.Error(err))
+			log.Event(ctx, "failed to retrieve auth header", log.ERROR, log.Error(err))
 		}
 	}
 
 	if err := req.ParseForm(); err != nil {
-		log.Event(ctx, "failed to parse request", log.Error(err))
+		log.Event(ctx, "failed to parse request", log.ERROR, log.Error(err))
 		return
 	}
 
@@ -60,7 +60,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 
 	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 	if err != nil {
-		log.Event(ctx, "failed to get job state", log.Error(err), log.Data{"filter_id": filterID})
+		log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -100,7 +100,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 			})
 		}
 		if err != nil {
-			log.Event(ctx, "failed to get hierarchy node", log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
+			log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -110,7 +110,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 
 		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
 		if err != nil {
-			log.Event(ctx, "failed to get dimension options", log.Error(err))
+			log.Event(ctx, "failed to get dimension options", log.ERROR, log.Error(err))
 		}
 
 		for _, hv := range h.Children {
@@ -118,7 +118,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 				if opt.Option == hv.Links.Self.ID {
 					if _, ok := req.Form[hv.Links.Self.ID]; !ok {
 						if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, hv.Links.Self.ID); err != nil {
-							log.Event(ctx, "failed to remove dimension value", log.Error(err))
+							log.Event(ctx, "failed to remove dimension value", log.ERROR, log.Error(err))
 						}
 					}
 				}
@@ -142,7 +142,7 @@ func (f *Filter) HierarchyUpdate(w http.ResponseWriter, req *http.Request) {
 		// instead of individual calls to AddDimensionValue
 
 		if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, k); err != nil {
-			log.Event(ctx, "failed to add dimension value", log.Error(err))
+			log.Event(ctx, "failed to add dimension value", log.ERROR, log.Error(err))
 		}
 	}
 
@@ -157,7 +157,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "failed to retrieve auth header", log.Error(err))
+			log.Event(ctx, "failed to retrieve auth header", log.ERROR, log.Error(err))
 		}
 	}
 
@@ -172,7 +172,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 		}
 	}
 	if err != nil {
-		log.Event(ctx, "failed to get hierarchy node", log.Error(err), log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code})
+		log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -182,7 +182,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 		options = append(options, child.Links.Self.ID)
 	}
 	if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, "", collectionID, fil.FilterID, name, options); err != nil {
-		log.Event(ctx, "failed to add dimension values", log.Error(err))
+		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err))
 	}
 
 	http.Redirect(w, req, redirectURI, 302)
@@ -194,7 +194,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "failed to retrieve auth header", log.Error(err))
+			log.Event(ctx, "failed to retrieve auth header", log.ERROR, log.Error(err))
 		}
 	}
 
@@ -210,14 +210,14 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 		}
 	}
 	if err != nil {
-		log.Event(ctx, "failed to get hierarchy node", log.Error(err), log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code})
+		log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	for _, child := range h.Children {
 		if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, fil.FilterID, name, child.Links.Self.ID); err != nil {
-			log.Event(ctx, "failed to remove dimension value", log.Error(err))
+			log.Event(ctx, "failed to remove dimension value", log.ERROR, log.Error(err))
 		}
 	}
 
@@ -235,13 +235,13 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 	userAccessToken, err := headers.GetUserAuthToken(req)
 	if err != nil {
 		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "failed to retrieve auth header", log.Error(err))
+			log.Event(ctx, "failed to retrieve auth header", log.ERROR, log.Error(err))
 		}
 	}
 
 	fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 	if err != nil {
-		log.Event(ctx, "failed to get job state", log.Error(err), log.Data{"filter_id": filterID})
+		log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -257,47 +257,47 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 	if err != nil {
-		log.Event(ctx, "failed to get hierarchy node", log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
+		log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
 	if err != nil {
-		log.Event(ctx, "failed to get options from filter client", log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+		log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	versionURL, err := url.Parse(fil.Links.Version.HRef)
 	if err != nil {
-		log.Event(ctx, "failed to parse version href", log.Error(err), log.Data{"filter_id": filterID})
+		log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
 	if err != nil {
-		log.Event(ctx, "failed to extract dataset info from path", log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	d, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
 	if err != nil {
-		log.Event(req.Context(), "failed to get dataset", log.Error(err), log.Data{"dataset_id": datasetID})
+		log.Event(req.Context(), "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
 		setStatusCode(req, w, err)
 		return
 	}
 	ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, version)
 	if err != nil {
-		log.Event(req.Context(), "failed to get version", log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+		log.Event(req.Context(), "failed to get version", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	allVals, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name)
 	if err != nil {
-		log.Event(ctx, "failed to get options from dataset client", log.Error(err),
+		log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
 			log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
@@ -305,7 +305,7 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 
 	dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 	if err != nil {
-		log.Event(ctx, "failed to get dimensions", log.Error(err),
+		log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
 			log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
 		return
@@ -315,14 +315,14 @@ func (f *Filter) Hierarchy(w http.ResponseWriter, req *http.Request) {
 
 	b, err := json.Marshal(p)
 	if err != nil {
-		log.Event(req.Context(), "failed to marshal json", log.Error(err), log.Data{"filter_id": filterID})
+		log.Event(req.Context(), "failed to marshal json", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}
 
 	templateBytes, err := f.Renderer.Do("dataset-filter/hierarchy", b)
 	if err != nil {
-		log.Event(req.Context(), "failed to render", log.Error(err), log.Data{"filter_id": filterID})
+		log.Event(req.Context(), "failed to render", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
 		return
 	}

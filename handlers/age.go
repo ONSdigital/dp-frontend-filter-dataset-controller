@@ -60,7 +60,7 @@ func (f *Filter) UpdateAge(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Event(ctx, "age-selection", log.Data{dimensionName: req.Form.Get("age-selection")})
+	log.Event(ctx, "age-selection", log.INFO, log.Data{dimensionName: req.Form.Get("age-selection")})
 	switch req.Form.Get("age-selection") {
 	case "all":
 		if err := f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, req.Form.Get("all-ages-option")); err != nil {

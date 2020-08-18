@@ -68,7 +68,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	svc.Server = serviceList.GetHTTPServer(cfg.BindAddr, m.Then(r))
 
 	// Start Healthcheck and HTTP Server
-	log.Event(ctx, "service listening...", log.Data{
+	log.Event(ctx, "service listening...", log.INFO, log.Data{
 		"bind_address": cfg.BindAddr,
 	})
 	svc.HealthCheck.Start(ctx)
@@ -90,7 +90,7 @@ func createMiddleware(cfg *config.Config) alice.Chain {
 // Close gracefully shuts the service down in the required order, with timeout
 func (svc *Service) Close(ctx context.Context) error {
 	timeout := svc.Config.GracefulShutdownTimeout
-	log.Event(ctx, "commencing graceful shutdown", log.Data{"graceful_shutdown_timeout": timeout}, log.INFO)
+	log.Event(ctx, "commencing graceful shutdown", log.INFO, log.Data{"graceful_shutdown_timeout": timeout})
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	hasShutdownError := false
 
