@@ -32,7 +32,7 @@ func Get() (cfg *Config, err error) {
 	cfg = &Config{
 		BindAddr:                   ":20001",
 		RendererURL:                "http://localhost:20010",
-		APIRouterURL:               "http://localhost:23200",
+		APIRouterURL:               "http://localhost:23200/v1",
 		DatasetAPIAuthToken:        "FD0108EA-825D-411C-9B1D-41EF7727F465",
 		FilterAPIAuthToken:         "FD0108EA-825D-411C-9B1D-41EF7727F465",
 		SearchAPIAuthToken:         "SD0108EA-825D-411C-45J3-41EF7727F123",
