@@ -139,7 +139,7 @@ func (svc *Service) registerCheckers(ctx context.Context, cfg *config.Config) (e
 		log.Event(ctx, "failed to add frontend renderer checker", log.ERROR, log.Error(err))
 	}
 
-	if err = svc.HealthCheck.AddCheck("API Router", svc.routerHealthClient.Checker); err != nil {
+	if err = svc.HealthCheck.AddCheck("API router", svc.routerHealthClient.Checker); err != nil {
 		hasErrors = true
 		log.Event(ctx, "failed to add API router checker", log.ERROR, log.Error(err))
 	}
