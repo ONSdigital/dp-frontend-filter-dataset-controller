@@ -89,7 +89,7 @@ func TestHierarchyUpdate(t *testing.T) {
 			// Set handler and perform call
 			router := mux.NewRouter()
 			f := NewFilter(nil, mockFilterClient, nil, mockHierarchyClient, nil, nil, mockSearchAPIAuthToken, "", false)
-			router.Path("/filters/{filterID}/dimensions/{name}/update").HandlerFunc(f.HierarchyUpdate)
+			router.Path("/filters/{filterID}/dimensions/{name}/update").HandlerFunc(f.HierarchyUpdate())
 			router.ServeHTTP(w, req)
 
 			So(w.Code, ShouldEqual, http.StatusFound)
@@ -155,7 +155,7 @@ func TestHierarchyUpdate(t *testing.T) {
 			// Set handler and perform call
 			router := mux.NewRouter()
 			f := NewFilter(nil, mockFilterClient, nil, mockHierarchyClient, nil, nil, mockSearchAPIAuthToken, "", false)
-			router.Path("/filters/{filterID}/dimensions/{name}/{code}/update").HandlerFunc(f.HierarchyUpdate)
+			router.Path("/filters/{filterID}/dimensions/{name}/{code}/update").HandlerFunc(f.HierarchyUpdate())
 			router.ServeHTTP(w, req)
 
 			So(w.Code, ShouldEqual, http.StatusFound)

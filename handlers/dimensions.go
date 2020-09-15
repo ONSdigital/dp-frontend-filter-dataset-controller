@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	dphandlers "github.com/ONSdigital/dp-net/handlers"
 	"net/http"
 	"net/url"
 	"sort"
@@ -27,80 +28,74 @@ type labelID struct {
 }
 
 // GetAllDimensionOptionsJSON will return a list of all options from the dataset api
-func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	name := vars["name"]
-	filterID := vars["filterID"]
-	ctx := req.Context()
+func (f *Filter) GetAllDimensionOptionsJSON() http.HandlerFunc {
+	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
+		vars := mux.Vars(req)
+		name := vars["name"]
+		filterID := vars["filterID"]
+		ctx := req.Context()
 
-	collectionID := getCollectionIDFromContext(ctx)
-
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
-		}
-	}
-
-	fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
-	if err != nil {
-		log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
-		setStatusCode(req, w, err)
-		return
-	}
-
-	versionURL, err := url.Parse(fj.Links.Version.HRef)
-	if err != nil {
-		log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
-		setStatusCode(req, w, err)
-		return
-	}
-
-	idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionURL.Path, name)
-	if err != nil {
-		log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL, "name": name})
-		setStatusCode(req, w, err)
-		return
-	}
-
-	var lids []labelID
-
-	if name == "time" {
-
-		var codedDates []string
-		labelIDMap := make(map[string]string)
-		for k, v := range idNameMap {
-			codedDates = append(codedDates, v)
-			labelIDMap[v] = k
-		}
-
-		readbleDates, err := dates.ConvertToReadable(codedDates)
+		fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
-			log.Event(ctx, "failed to convert dates", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dates": codedDates})
+			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		readbleDates = dates.Sort(readbleDates)
+		versionURL, err := url.Parse(fj.Links.Version.HRef)
+		if err != nil {
+			log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			setStatusCode(req, w, err)
+			return
+		}
 
-		for _, date := range readbleDates {
-			lid := labelID{
-				Label: fmt.Sprintf("%s %d", date.Month(), date.Year()),
-				ID:    labelIDMap[date.Format("Jan-06")],
+		idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionURL.Path, name)
+		if err != nil {
+			log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL, "name": name})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		var lids []labelID
+
+		if name == "time" {
+
+			var codedDates []string
+			labelIDMap := make(map[string]string)
+			for k, v := range idNameMap {
+				codedDates = append(codedDates, v)
+				labelIDMap[v] = k
 			}
 
-			lids = append(lids, lid)
+			readbleDates, err := dates.ConvertToReadable(codedDates)
+			if err != nil {
+				log.Event(ctx, "failed to convert dates", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dates": codedDates})
+				setStatusCode(req, w, err)
+				return
+			}
+
+			readbleDates = dates.Sort(readbleDates)
+
+			for _, date := range readbleDates {
+				lid := labelID{
+					Label: fmt.Sprintf("%s %d", date.Month(), date.Year()),
+					ID:    labelIDMap[date.Format("Jan-06")],
+				}
+
+				lids = append(lids, lid)
+			}
 		}
-	}
 
-	b, err := json.Marshal(lids)
-	if err != nil {
-		log.Event(ctx, "failed to marshal json", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
-		setStatusCode(req, w, err)
-		return
-	}
+		b, err := json.Marshal(lids)
+		if err != nil {
+			log.Event(ctx, "failed to marshal json", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			setStatusCode(req, w, err)
+			return
+		}
 
-	w.Write(b)
+		w.Write(b)
+	})
+
 }
 
 func (f *Filter) getIDNameMap(ctx context.Context, userAccessToken, versionURL, dimension string) (map[string]string, error) {
@@ -124,172 +119,161 @@ func (f *Filter) getIDNameMap(ctx context.Context, userAccessToken, versionURL, 
 }
 
 // GetSelectedDimensionOptionsJSON will return a list of selected options from the filter api with corresponding label
-func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	name := vars["name"]
-	filterID := vars["filterID"]
-	ctx := req.Context()
+func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
+	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
+		vars := mux.Vars(req)
+		name := vars["name"]
+		filterID := vars["filterID"]
+		ctx := req.Context()
 
-	collectionID := getCollectionIDFromContext(ctx)
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
-		}
-	}
-
-	opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
-	if err != nil {
-		log.Event(ctx, "failed to get dimension options", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
-		setStatusCode(req, w, err)
-		return
-	}
-
-	fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
-	if err != nil {
-		log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
-		setStatusCode(req, w, err)
-		return
-	}
-
-	versionURL, err := url.Parse(fj.Links.Version.HRef)
-	if err != nil {
-		log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
-		setStatusCode(req, w, err)
-		return
-	}
-	idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionURL.Path, name)
-	if err != nil {
-		log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL, "name": name})
-		setStatusCode(req, w, err)
-		return
-	}
-
-	var lids []labelID
-
-	if name == "time" {
-
-		var codedDates []string
-		labelIDMap := make(map[string]string)
-		for _, opt := range opts {
-			codedDates = append(codedDates, idNameMap[opt.Option])
-			labelIDMap[idNameMap[opt.Option]] = opt.Option
-		}
-
-		readbleDates, err := dates.ConvertToReadable(codedDates)
+		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
 		if err != nil {
-			log.Event(ctx, "failed to convert dates", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dates": codedDates})
+			log.Event(ctx, "failed to get dimension options", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		readbleDates = dates.Sort(readbleDates)
+		fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
+		if err != nil {
+			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			setStatusCode(req, w, err)
+			return
+		}
 
-		for _, date := range readbleDates {
-			lid := labelID{
-				Label: fmt.Sprintf("%s %d", date.Month(), date.Year()),
-				ID:    labelIDMap[date.Format("Jan-06")],
+		versionURL, err := url.Parse(fj.Links.Version.HRef)
+		if err != nil {
+			log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			setStatusCode(req, w, err)
+			return
+		}
+		idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionURL.Path, name)
+		if err != nil {
+			log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL, "name": name})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		var lids []labelID
+
+		if name == "time" {
+
+			var codedDates []string
+			labelIDMap := make(map[string]string)
+			for _, opt := range opts {
+				codedDates = append(codedDates, idNameMap[opt.Option])
+				labelIDMap[idNameMap[opt.Option]] = opt.Option
 			}
 
-			lids = append(lids, lid)
+			readbleDates, err := dates.ConvertToReadable(codedDates)
+			if err != nil {
+				log.Event(ctx, "failed to convert dates", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dates": codedDates})
+				setStatusCode(req, w, err)
+				return
+			}
+
+			readbleDates = dates.Sort(readbleDates)
+
+			for _, date := range readbleDates {
+				lid := labelID{
+					Label: fmt.Sprintf("%s %d", date.Month(), date.Year()),
+					ID:    labelIDMap[date.Format("Jan-06")],
+				}
+
+				lids = append(lids, lid)
+			}
 		}
-	}
 
-	b, err := json.Marshal(lids)
-	if err != nil {
-		log.Event(ctx, "failed to marshal json", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
-		setStatusCode(req, w, err)
-		return
-	}
+		b, err := json.Marshal(lids)
+		if err != nil {
+			log.Event(ctx, "failed to marshal json", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			setStatusCode(req, w, err)
+			return
+		}
 
-	w.Write(b)
+		w.Write(b)
+	})
+
 }
 
 // DimensionSelector controls the render of the range selector template
 // Contains stubbed data for now - page to be populated by the API
-func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
+func (f *Filter) DimensionSelector() http.HandlerFunc {
+	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
+		vars := mux.Vars(req)
+		name := vars["name"]
+		filterID := vars["filterID"]
+		ctx := req.Context()
 
-	vars := mux.Vars(req)
-	name := vars["name"]
-	filterID := vars["filterID"]
-	ctx := req.Context()
-
-	collectionID := getCollectionIDFromContext(ctx)
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
+		fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
+		if err != nil {
+			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			setStatusCode(req, w, err)
+			return
 		}
-	}
 
-	fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
-	if err != nil {
-		log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
-		setStatusCode(req, w, err)
-		return
-	}
+		selectedValues, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
+		if err != nil {
+			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			setStatusCode(req, w, err)
+			return
+		}
 
-	selectedValues, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
-	if err != nil {
-		log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
-		setStatusCode(req, w, err)
-		return
-	}
+		versionURL, err := url.Parse(fj.Links.Version.HRef)
+		if err != nil {
+			log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			setStatusCode(req, w, err)
+			return
+		}
 
-	versionURL, err := url.Parse(fj.Links.Version.HRef)
-	if err != nil {
-		log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
-		setStatusCode(req, w, err)
-		return
-	}
+		datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+		if err != nil {
+			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+			setStatusCode(req, w, err)
+			return
+		}
 
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
-	if err != nil {
-		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
-		setStatusCode(req, w, err)
-		return
-	}
+		dataset, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
+		if err != nil {
+			log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
+			setStatusCode(req, w, err)
+			return
+		}
 
-	dataset, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
-	if err != nil {
-		log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
-		setStatusCode(req, w, err)
-		return
-	}
+		ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, version)
+		if err != nil {
+			log.Event(ctx, "failed to get version", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+			setStatusCode(req, w, err)
+			return
+		}
 
-	ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, version)
-	if err != nil {
-		log.Event(ctx, "failed to get version", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
-		setStatusCode(req, w, err)
-		return
-	}
+		allValues, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name)
+		if err != nil {
+			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
+			setStatusCode(req, w, err)
+			return
+		}
 
-	allValues, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name)
-	if err != nil {
-		log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
-		setStatusCode(req, w, err)
-		return
-	}
+		// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
+		// then the dimension should be populated as a hierarchy
+		if _, err = f.HierarchyClient.GetRoot(ctx, fj.InstanceID, name); err == nil && len(allValues.Items) > 20 {
+			f.Hierarchy()
+			return
+		}
 
-	// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
-	// then the dimension should be populated as a hierarchy
-	if _, err = f.HierarchyClient.GetRoot(ctx, fj.InstanceID, name); err == nil && len(allValues.Items) > 20 {
-		f.Hierarchy(w, req)
-		return
-	}
+		dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
+		if err != nil {
+			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+			setStatusCode(req, w, err)
+			return
+		}
 
-	dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
-	if err != nil {
-		log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
-		setStatusCode(req, w, err)
-		return
-	}
+		if name == "time" {
+			allValues = sortedTime(ctx, allValues)
+		}
 
-	if name == "time" {
-		allValues = sortedTime(ctx, allValues)
-	}
+		f.listSelector(w, req, name, selectedValues, allValues, fj, dataset, dims, datasetID, ver.ReleaseDate)
+	})
 
-	f.listSelector(w, req, name, selectedValues, allValues, fj, dataset, dims, datasetID, ver.ReleaseDate)
 }
 
 type sorting struct {
@@ -447,11 +431,13 @@ func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name str
 }
 
 // DimensionAddAll will add all dimension values to a basket
-func (f *Filter) DimensionAddAll(w http.ResponseWriter, req *http.Request) {
-	vars := mux.Vars(req)
-	name := vars["name"]
-	filterID := vars["filterID"]
-	f.addAll(w, req, fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name))
+func (f *Filter) DimensionAddAll() http.HandlerFunc {
+	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
+		vars := mux.Vars(req)
+		name := vars["name"]
+		filterID := vars["filterID"]
+		f.addAll(w, req, fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name))
+	})
 }
 
 func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL string) {
@@ -511,79 +497,74 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 }
 
 // AddList adds a list of values
-func (f *Filter) AddList(w http.ResponseWriter, req *http.Request) {
+func (f *Filter) AddList() http.HandlerFunc {
+	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
+		vars := mux.Vars(req)
+		name := vars["name"]
+		filterID := vars["filterID"]
+		ctx := req.Context()
 
-	vars := mux.Vars(req)
-	name := vars["name"]
-	filterID := vars["filterID"]
-	ctx := req.Context()
-	collectionID := getCollectionIDFromContext(ctx)
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
-		}
-	}
-
-	if err := req.ParseForm(); err != nil {
-		log.Event(ctx, "failed to parse form", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
-		setStatusCode(req, w, err)
-		return
-	}
-
-	redirectURL := fmt.Sprintf("/filters/%s/dimensions", filterID)
-
-	if len(req.Form["add-all"]) > 0 {
-		redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-		f.addAll(w, req, redirectURL)
-		return
-	}
-
-	if len(req.Form["remove-all"]) > 0 {
-		redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all", filterID, name)
-		http.Redirect(w, req, redirectURL, 302)
-		return
-	}
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	// concurrently remove any fields that have been deselected
-	go func() {
-		opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
-		if err != nil {
-			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+		if err := req.ParseForm(); err != nil {
+			log.Event(ctx, "failed to parse form", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		for _, opt := range opts {
-			if _, ok := req.Form[opt.Option]; !ok {
-				if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, opt.Option); err != nil {
-					log.Event(ctx, "failed to remove dimension values", log.WARN, log.Error(err))
+		redirectURL := fmt.Sprintf("/filters/%s/dimensions", filterID)
+
+		if len(req.Form["add-all"]) > 0 {
+			redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
+			f.addAll(w, req, redirectURL)
+			return
+		}
+
+		if len(req.Form["remove-all"]) > 0 {
+			redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all", filterID, name)
+			http.Redirect(w, req, redirectURL, 302)
+			return
+		}
+
+		var wg sync.WaitGroup
+		wg.Add(1)
+
+		// concurrently remove any fields that have been deselected
+		go func() {
+			opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
+			if err != nil {
+				log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+				setStatusCode(req, w, err)
+				return
+			}
+
+			for _, opt := range opts {
+				if _, ok := req.Form[opt.Option]; !ok {
+					if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, opt.Option); err != nil {
+						log.Event(ctx, "failed to remove dimension values", log.WARN, log.Error(err))
+					}
 				}
 			}
+
+			wg.Done()
+		}()
+
+		wg.Wait()
+
+		var options []string
+		for k := range req.Form {
+			if k == ":uri" || k == "save-and-return" {
+				continue
+			}
+
+			options = append(options, k)
 		}
 
-		wg.Done()
-	}()
-
-	wg.Wait()
-
-	var options []string
-	for k := range req.Form {
-		if k == ":uri" || k == "save-and-return" {
-			continue
+		if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
+			log.Event(ctx, "failed to add dimension values", log.WARN, log.Error(err))
 		}
 
-		options = append(options, k)
-	}
+		http.Redirect(w, req, redirectURL, 302)
+	})
 
-	if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
-		log.Event(ctx, "failed to add dimension values", log.WARN, log.Error(err))
-	}
-
-	http.Redirect(w, req, redirectURL, 302)
 }
 
 func (f *Filter) getDimensionValues(ctx context.Context, userAccessToken, filterID, name string) (values []string, labelIDMap map[string]string, err error) {
@@ -619,62 +600,50 @@ func (f *Filter) getDimensionValues(ctx context.Context, userAccessToken, filter
 }
 
 // DimensionRemoveAll removes all options on a particular dimensions
-func (f *Filter) DimensionRemoveAll(w http.ResponseWriter, req *http.Request) {
+func (f *Filter) DimensionRemoveAll() http.HandlerFunc {
+	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
+		vars := mux.Vars(req)
+		name := vars["name"]
+		filterID := vars["filterID"]
+		ctx := req.Context()
 
-	vars := mux.Vars(req)
-	name := vars["name"]
-	filterID := vars["filterID"]
-	ctx := req.Context()
+		log.Event(ctx, "attempting to remove all options from dimension", log.INFO, log.Data{"dimension": name, "filterID": filterID})
 
-	log.Event(ctx, "attempting to remove all options from dimension", log.INFO, log.Data{"dimension": name, "filterID": filterID})
-
-	collectionID := getCollectionIDFromContext(ctx)
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
+		if err := f.FilterClient.RemoveDimension(req.Context(), userAccessToken, "", collectionID, filterID, name); err != nil {
+			log.Event(ctx, "failed to remove dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			setStatusCode(req, w, err)
+			return
 		}
-	}
 
-	if err := f.FilterClient.RemoveDimension(req.Context(), userAccessToken, "", collectionID, filterID, name); err != nil {
-		log.Event(ctx, "failed to remove dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
-		setStatusCode(req, w, err)
-		return
-	}
+		if err := f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, filterID, name); err != nil {
+			log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			setStatusCode(req, w, err)
+			return
+		}
 
-	if err := f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, filterID, name); err != nil {
-		log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
-		setStatusCode(req, w, err)
-		return
-	}
+		redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
+		http.Redirect(w, req, redirectURL, 302)
+	})
 
-	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-	http.Redirect(w, req, redirectURL, 302)
 }
 
 // DimensionRemoveOne removes an individual option on a dimensions
-func (f *Filter) DimensionRemoveOne(w http.ResponseWriter, req *http.Request) {
+func (f *Filter) DimensionRemoveOne() http.HandlerFunc {
+	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
+		vars := mux.Vars(req)
+		name := vars["name"]
+		filterID := vars["filterID"]
+		option := vars["option"]
+		ctx := req.Context()
 
-	vars := mux.Vars(req)
-	name := vars["name"]
-	filterID := vars["filterID"]
-	option := vars["option"]
-	ctx := req.Context()
-
-	collectionID := getCollectionIDFromContext(ctx)
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
+		if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, option); err != nil {
+			log.Event(ctx, "failed to remove dimension option", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "option": option})
+			setStatusCode(req, w, err)
+			return
 		}
-	}
 
-	if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, option); err != nil {
-		log.Event(ctx, "failed to remove dimension option", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "option": option})
-		setStatusCode(req, w, err)
-		return
-	}
+		redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
+		http.Redirect(w, req, redirectURL, 302)
+	})
 
-	redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-	http.Redirect(w, req, redirectURL, 302)
 }
