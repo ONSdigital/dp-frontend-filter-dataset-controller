@@ -45,7 +45,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, "", "", "", "", filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -101,7 +101,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -129,7 +129,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -158,7 +158,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -188,7 +188,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -219,7 +219,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -251,7 +251,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -286,7 +286,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets",
+						HRef: "http://localhost:23200/v1/datasets",
 					},
 				},
 			}, nil)
