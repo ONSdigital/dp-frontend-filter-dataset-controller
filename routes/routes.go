@@ -13,6 +13,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/go-ns/validator"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
@@ -43,8 +44,13 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients *Clien
 		log.Event(ctx, "failed to validate date rules", log.WARN, log.Error(err))
 	}
 
+	apiRouterVersion, err := helpers.GetAPIRouterVersion(cfg.APIRouterURL)
+	if err != nil {
+		log.Event(ctx, "failed to obtain an api router version. Will assume that it is un-versioned", log.WARN, log.Error(err))
+	}
+
 	filter := handlers.NewFilter(clients.Renderer, clients.Filter, clients.Dataset,
-		clients.Hierarchy, clients.Search, v, cfg.SearchAPIAuthToken, cfg.DownloadServiceURL,
+		clients.Hierarchy, clients.Search, v, cfg.SearchAPIAuthToken, cfg.DownloadServiceURL, apiRouterVersion,
 		cfg.EnableDatasetPreview)
 
 	r.StrictSlash(true).Path("/health").HandlerFunc(clients.HealthcheckHandler)

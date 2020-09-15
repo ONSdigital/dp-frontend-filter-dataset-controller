@@ -43,7 +43,7 @@ func TestUnitFilterOverview(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, mockServiceAuthToken, "", false)
+			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, mockServiceAuthToken, "", "/v1", false)
 			router.Path("/filters/{filterID}/dimensions").HandlerFunc(f.FilterOverview)
 
 			router.ServeHTTP(w, req)
@@ -64,7 +64,7 @@ func TestUnitFilterOverview(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(nil, mockFilterClient, nil, nil, nil, nil, mockServiceAuthToken, "", false)
+			f := NewFilter(nil, mockFilterClient, nil, nil, nil, nil, mockServiceAuthToken, "", "/v1", false)
 			router.Path("/filters/{filterID}/dimensions/clear-all").HandlerFunc(f.FilterOverviewClearAll)
 
 			router.ServeHTTP(w, req)

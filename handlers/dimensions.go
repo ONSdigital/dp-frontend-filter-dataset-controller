@@ -55,10 +55,11 @@ func (f *Filter) GetAllDimensionOptionsJSON(w http.ResponseWriter, req *http.Req
 		setStatusCode(req, w, err)
 		return
 	}
+	versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 
-	idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionURL.Path, name)
+	idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionPath, name)
 	if err != nil {
-		log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL, "name": name})
+		log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath, "name": name})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -158,9 +159,10 @@ func (f *Filter) GetSelectedDimensionOptionsJSON(w http.ResponseWriter, req *htt
 		setStatusCode(req, w, err)
 		return
 	}
-	idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionURL.Path, name)
+	versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
+	idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionPath, name)
 	if err != nil {
-		log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL, "name": name})
+		log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath, "name": name})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -242,10 +244,11 @@ func (f *Filter) DimensionSelector(w http.ResponseWriter, req *http.Request) {
 		setStatusCode(req, w, err)
 		return
 	}
+	versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 	if err != nil {
-		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -427,7 +430,7 @@ func splitCode(id string) (string, string, error) {
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate string) {
 	ctx := req.Context()
-	p := mapper.CreateListSelectorPage(req, name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate)
+	p := mapper.CreateListSelectorPage(req, name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate, f.APIRouterVersion)
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -482,9 +485,11 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 		setStatusCode(req, w, err)
 		return
 	}
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+	versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
+
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 	if err != nil {
-		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -598,8 +603,9 @@ func (f *Filter) getDimensionValues(ctx context.Context, userAccessToken, filter
 	if err != nil {
 		return
 	}
+	versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 	if err != nil {
 		return
 	}

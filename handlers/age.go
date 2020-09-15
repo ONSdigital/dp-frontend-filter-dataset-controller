@@ -221,9 +221,10 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		setStatusCode(req, w, err)
 		return
 	}
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+	versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 	if err != nil {
-		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -269,7 +270,7 @@ func (f *Filter) Age(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	p, err := mapper.CreateAgePage(req, fj, dataset, ver, allValues, selValues, dims, datasetID)
+	p, err := mapper.CreateAgePage(req, fj, dataset, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion)
 	if err != nil {
 		log.Event(ctx, "failed to map data to page", log.ERROR, log.Error(err),
 			log.Data{"filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})

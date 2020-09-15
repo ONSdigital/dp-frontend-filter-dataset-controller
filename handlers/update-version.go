@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/ONSdigital/dp-api-clients-go/headers"
 
@@ -47,10 +48,11 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 		setStatusCode(req, w, err)
 		return
 	}
+	versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 
-	datasetID, _, _, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+	datasetID, _, _, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 	if err != nil {
-		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -68,10 +70,11 @@ func (f *Filter) UseLatest(w http.ResponseWriter, req *http.Request) {
 		setStatusCode(req, w, err)
 		return
 	}
+	latestPath := strings.TrimPrefix(latestVersionURL.Path, f.APIRouterVersion)
 
 	_, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, latestVersionURL.Path)
 	if err != nil {
-		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": latestPath})
 		setStatusCode(req, w, err)
 		return
 	}

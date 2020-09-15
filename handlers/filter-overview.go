@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strings"
 	"unicode"
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
@@ -52,10 +53,11 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		setStatusCode(req, w, err)
 		return
 	}
+	versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 	if err != nil {
-		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -125,14 +127,15 @@ func (f *Filter) FilterOverview(w http.ResponseWriter, req *http.Request) {
 		setStatusCode(req, w, err)
 		return
 	}
+	latestPath := strings.TrimPrefix(latestURL.Path, f.APIRouterVersion)
 
-	p := mapper.CreateFilterOverview(req, dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate)
+	p := mapper.CreateFilterOverview(req, dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate, f.APIRouterVersion)
 
-	if latestURL.Path == versionURL.Path {
+	if latestPath == versionPath {
 		p.Data.IsLatestVersion = true
 	}
 
-	p.Data.LatestVersion.DatasetLandingPageURL = latestURL.Path
+	p.Data.LatestVersion.DatasetLandingPageURL = latestPath
 	p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterID)
 
 	b, err := json.Marshal(p)

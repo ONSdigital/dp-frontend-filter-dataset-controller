@@ -137,9 +137,10 @@ func (f *Filter) OutputPage(w http.ResponseWriter, req *http.Request) {
 		setStatusCode(req, w, err)
 		return
 	}
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+	versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 	if err != nil {
-		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID, "path": versionURL})
+		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID, "path": versionPath})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -163,10 +164,11 @@ func (f *Filter) OutputPage(w http.ResponseWriter, req *http.Request) {
 		setStatusCode(req, w, err)
 		return
 	}
+	latestPath := strings.TrimPrefix(latestURL.Path, f.APIRouterVersion)
 
-	p := mapper.CreatePreviewPage(req, dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate, f.EnableDatasetPreview)
+	p := mapper.CreatePreviewPage(req, dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview)
 
-	if latestURL.Path == versionURL.Path {
+	if latestPath == versionPath {
 		p.Data.IsLatestVersion = true
 	}
 
@@ -207,7 +209,7 @@ func (f *Filter) OutputPage(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	p.Data.LatestVersion.DatasetLandingPageURL = latestURL.Path
+	p.Data.LatestVersion.DatasetLandingPageURL = latestPath
 	p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterID)
 
 	if len(p.Data.Dimensions) > 0 {
