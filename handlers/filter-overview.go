@@ -122,7 +122,7 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 		}
 		latestPath := strings.TrimPrefix(latestURL.Path, f.APIRouterVersion)
 
-		p := mapper.CreateFilterOverview(req, dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate, f.APIRouterVersion)
+		p := mapper.CreateFilterOverview(req, dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang)
 
 		if latestPath == versionPath {
 			p.Data.IsLatestVersion = true

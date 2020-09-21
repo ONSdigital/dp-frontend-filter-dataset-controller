@@ -96,7 +96,7 @@ func (f *Filter) Search() http.HandlerFunc {
 			return
 		}
 
-		p := mapper.CreateHierarchySearchPage(req, searchRes.Items, d, fil, selVals, dims.Items, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion)
+		p := mapper.CreateHierarchySearchPage(req, searchRes.Items, d, fil, selVals, dims.Items, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang)
 
 		b, err := json.Marshal(p)
 		if err != nil {

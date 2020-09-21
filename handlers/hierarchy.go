@@ -302,7 +302,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			return
 		}
 
-		p := mapper.CreateHierarchyPage(req, h, d, fil, selVals, allVals, dims, name, req.URL.Path, datasetID, ver.ReleaseDate, f.APIRouterVersion)
+		p := mapper.CreateHierarchyPage(req, h, d, fil, selVals, allVals, dims, name, req.URL.Path, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang)
 
 		b, err := json.Marshal(p)
 		if err != nil {

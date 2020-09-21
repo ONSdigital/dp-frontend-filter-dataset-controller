@@ -38,7 +38,7 @@ var topLevelGeographies = map[string]bool{
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
 // front end page model
-func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension, datasetDims dataset.VersionDimensionItems, filter filter.Model, dst dataset.DatasetDetails, filterID, datasetID, releaseDate, apiRouterVersion string) filterOverview.Page {
+func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension, datasetDims dataset.VersionDimensionItems, filter filter.Model, dst dataset.DatasetDetails, filterID, datasetID, releaseDate, apiRouterVersion, lang string) filterOverview.Page {
 	var p filterOverview.Page
 	p.BetaBannerEnabled = true
 
@@ -52,6 +52,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 	p.Metadata.Title = "Filter Options"
 	p.ShowFeedbackForm = false
 	p.DatasetId = datasetID
+	p.Language = lang
 
 	disableButton := true
 
@@ -161,7 +162,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 
 // CreateListSelectorPage maps items from API responses to form the model for a
 // dimension list selector page
-func CreateListSelectorPage(req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate, apiRouterVersion string) listSelector.Page {
+func CreateListSelectorPage(req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate, apiRouterVersion, lang string) listSelector.Page {
 	var p listSelector.Page
 	p.BetaBannerEnabled = true
 
@@ -188,6 +189,7 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 	p.Metadata.Title = pageTitle
 	p.ShowFeedbackForm = false
 	p.DatasetId = datasetID
+	p.Language = lang
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
@@ -307,11 +309,12 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 }
 
 // CreatePreviewPage maps data items from API responses to create a preview page
-func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.DatasetDetails, filterOutputID, datasetID, releaseDate, apiRouterVersion string, enableDatasetPreivew bool) previewPage.Page {
+func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.DatasetDetails, filterOutputID, datasetID, releaseDate, apiRouterVersion string, enableDatasetPreivew bool, lang string) previewPage.Page {
 	var p previewPage.Page
 	p.Metadata.Title = "Preview and Download"
 	p.BetaBannerEnabled = true
 	p.EnableDatasetPreview = enableDatasetPreivew
+	p.Language = lang
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
@@ -398,7 +401,7 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 }
 
 // CreateAgePage creates an age selector page based on api responses
-func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID, apiRouterVersion string) (age.Page, error) {
+func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang string) (age.Page, error) {
 	var p age.Page
 	p.BetaBannerEnabled = true
 
@@ -415,6 +418,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 	p.FilterID = f.FilterID
 	p.SearchDisabled = true
 	p.DatasetId = datasetID
+	p.Language = lang
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
@@ -534,7 +538,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 }
 
 // CreateTimePage will create a time selector page based on api response models
-func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID, apiRouterVersion string) (timeModel.Page, error) {
+func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang string) (timeModel.Page, error) {
 	var p timeModel.Page
 	p.BetaBannerEnabled = true
 
@@ -551,6 +555,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 	p.FilterID = f.FilterID
 	p.SearchDisabled = true
 	p.DatasetId = datasetID
+	p.Language = lang
 
 	for _, dim := range dims.Items {
 		if dim.Name == "time" {
@@ -709,7 +714,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 }
 
 // CreateHierarchySearchPage forms a search page based on various api response models
-func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, dims []dataset.VersionDimension, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query, apiRouterVersion string) hierarchy.Page {
+func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, dims []dataset.VersionDimension, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query, apiRouterVersion, lang string) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
 
@@ -729,6 +734,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	p.DatasetId = datasetID
 	p.Data.IsSearchResults = true
 	p.Data.Query = query
+	p.Language = lang
 
 	title := pageTitle
 
@@ -816,9 +822,10 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 }
 
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
-func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, dims dataset.VersionDimensions, name, curPath, datasetID, releaseDate, apiRouterVersion string) hierarchy.Page {
+func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, dims dataset.VersionDimensions, name, curPath, datasetID, releaseDate, apiRouterVersion, lang string) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
+	p.Language = lang
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 

@@ -272,7 +272,7 @@ func (f *Filter) Time() http.HandlerFunc {
 			return
 		}
 
-		p, err := mapper.CreateTimePage(req, fj, dataset, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion)
+		p, err := mapper.CreateTimePage(req, fj, dataset, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion, lang)
 		if err != nil {
 			log.Event(ctx, "failed to map data to page", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})
 			setStatusCode(req, w, err)
