@@ -67,16 +67,16 @@ func (f *Filter) GetAllDimensionOptionsJSON() http.HandlerFunc {
 				labelIDMap[v] = k
 			}
 
-			readbleDates, err := dates.ConvertToReadable(codedDates)
+			readableDates, err := dates.ConvertToReadable(codedDates)
 			if err != nil {
 				log.Event(ctx, "failed to convert dates", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dates": codedDates})
 				setStatusCode(req, w, err)
 				return
 			}
 
-			readbleDates = dates.Sort(readbleDates)
+			readableDates = dates.Sort(readableDates)
 
-			for _, date := range readbleDates {
+			for _, date := range readableDates {
 				lid := labelID{
 					Label: fmt.Sprintf("%s %d", date.Month(), date.Year()),
 					ID:    labelIDMap[date.Format("Jan-06")],
@@ -164,16 +164,16 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 				labelIDMap[idNameMap[opt.Option]] = opt.Option
 			}
 
-			readbleDates, err := dates.ConvertToReadable(codedDates)
+			readableDates, err := dates.ConvertToReadable(codedDates)
 			if err != nil {
 				log.Event(ctx, "failed to convert dates", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dates": codedDates})
 				setStatusCode(req, w, err)
 				return
 			}
 
-			readbleDates = dates.Sort(readbleDates)
+			readableDates = dates.Sort(readableDates)
 
-			for _, date := range readbleDates {
+			for _, date := range readableDates {
 				lid := labelID{
 					Label: fmt.Sprintf("%s %d", date.Month(), date.Year()),
 					ID:    labelIDMap[date.Format("Jan-06")],
@@ -527,7 +527,7 @@ func (f *Filter) AddList() http.HandlerFunc {
 		var wg sync.WaitGroup
 		wg.Add(1)
 
-		// concurrently remove any fields that have been deselected
+		// TODO concurrently remove any fields that have been deselected
 		go func() {
 			opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
 			if err != nil {
