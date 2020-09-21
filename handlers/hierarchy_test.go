@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
+	dprequest "github.com/ONSdigital/dp-net/request"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 
@@ -31,7 +31,6 @@ func TestHierarchyUpdate(t *testing.T) {
 	dimensionName := "myDimension"
 	mockCode := "testCode"
 	testInstanceID := "testInstanceID"
-	ctxWithCollectionID := context.WithValue(context.Background(), CollectionIDHeaderKey, mockCollectionID)
 	filterModel := filter.Model{
 		InstanceID: testInstanceID,
 	}
@@ -79,9 +78,11 @@ func TestHierarchyUpdate(t *testing.T) {
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, dimensionName).Return(hierarchy.Model{}, nil)
 
 			// Prepare request with header
-			req, err := http.NewRequestWithContext(ctxWithCollectionID, http.MethodGet, fmt.Sprintf("/filters/%s/dimensions/%s/update", filterID, dimensionName), nil)
+			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/filters/%s/dimensions/%s/update", filterID, dimensionName), nil)
+			cookie := http.Cookie{Name: dprequest.CollectionIDCookieKey, Value: mockCollectionID}
+			req.AddCookie(&cookie)
 			So(err, ShouldBeNil)
-			req.Header.Add("X-Florence-Token", mockUserAuthToken)
+			req.Header.Add(dprequest.FlorenceHeaderKey, mockUserAuthToken)
 			req.Form = testForm
 
 			w := httptest.NewRecorder()
@@ -89,7 +90,7 @@ func TestHierarchyUpdate(t *testing.T) {
 			// Set handler and perform call
 			router := mux.NewRouter()
 			f := NewFilter(nil, mockFilterClient, nil, mockHierarchyClient, nil, nil, mockSearchAPIAuthToken, "", "/v1", false)
-			router.Path("/filters/{filterID}/dimensions/{name}/update").HandlerFunc(f.HierarchyUpdate)
+			router.Path("/filters/{filterID}/dimensions/{name}/update").HandlerFunc(f.HierarchyUpdate())
 			router.ServeHTTP(w, req)
 
 			So(w.Code, ShouldEqual, http.StatusFound)
@@ -145,9 +146,11 @@ func TestHierarchyUpdate(t *testing.T) {
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, dimensionName, mockCode).Return(modelWithChildren, nil)
 
 			// Prepare request with header and context
-			req, err := http.NewRequestWithContext(ctxWithCollectionID, "GET", fmt.Sprintf("/filters/%s/dimensions/%s/%s/update", filterID, dimensionName, mockCode), nil)
+			req, err := http.NewRequest("GET", fmt.Sprintf("/filters/%s/dimensions/%s/%s/update", filterID, dimensionName, mockCode), nil)
+			cookie := http.Cookie{Name: dprequest.CollectionIDCookieKey, Value: mockCollectionID}
+			req.AddCookie(&cookie)
 			So(err, ShouldBeNil)
-			req.Header.Add("X-Florence-Token", mockUserAuthToken)
+			req.Header.Add(dprequest.FlorenceHeaderKey, mockUserAuthToken)
 			req.Form = testForm
 
 			w := httptest.NewRecorder()
@@ -155,7 +158,7 @@ func TestHierarchyUpdate(t *testing.T) {
 			// Set handler and perform call
 			router := mux.NewRouter()
 			f := NewFilter(nil, mockFilterClient, nil, mockHierarchyClient, nil, nil, mockSearchAPIAuthToken, "", "/v1", false)
-			router.Path("/filters/{filterID}/dimensions/{name}/{code}/update").HandlerFunc(f.HierarchyUpdate)
+			router.Path("/filters/{filterID}/dimensions/{name}/{code}/update").HandlerFunc(f.HierarchyUpdate())
 			router.ServeHTTP(w, req)
 
 			So(w.Code, ShouldEqual, http.StatusFound)
