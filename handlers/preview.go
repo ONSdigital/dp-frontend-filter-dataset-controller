@@ -6,6 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
@@ -14,10 +19,6 @@ import (
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
-	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
 )
 
 // Submit handles the submitting of a filter job through the filter API
@@ -276,8 +277,9 @@ func (f *Filter) GetFilterJob() http.HandlerFunc {
 				setStatusCode(req, w, err)
 				return
 			}
+			downloadPath := strings.TrimPrefix(downloadURL.Path, f.APIRouterVersion)
 
-			download.URL = f.downloadServiceURL + downloadURL.Path
+			download.URL = f.downloadServiceURL + downloadPath
 			prev.Downloads[k] = download
 		}
 
