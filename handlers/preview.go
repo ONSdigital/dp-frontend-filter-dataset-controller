@@ -155,7 +155,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		}
 		latestPath := strings.TrimPrefix(latestURL.Path, f.APIRouterVersion)
 
-		p := mapper.CreatePreviewPage(req, dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview)
+		p := mapper.CreatePreviewPage(req, dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview, lang)
 
 		if latestPath == versionPath {
 			p.Data.IsLatestVersion = true

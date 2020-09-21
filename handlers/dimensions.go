@@ -272,7 +272,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			allValues = sortedTime(ctx, allValues)
 		}
 
-		f.listSelector(w, req, name, selectedValues, allValues, fj, dataset, dims, datasetID, ver.ReleaseDate)
+		f.listSelector(w, req, name, selectedValues, allValues, fj, dataset, dims, datasetID, ver.ReleaseDate, lang)
 	})
 
 }
@@ -410,9 +410,9 @@ func splitCode(id string) (string, string, error) {
 
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
-func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate string) {
+func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate, lang string) {
 	ctx := req.Context()
-	p := mapper.CreateListSelectorPage(req, name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate, f.APIRouterVersion)
+	p := mapper.CreateListSelectorPage(req, name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate, f.APIRouterVersion, lang)
 
 	b, err := json.Marshal(p)
 	if err != nil {

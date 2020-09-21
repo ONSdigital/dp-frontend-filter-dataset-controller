@@ -258,7 +258,7 @@ func (f *Filter) Age() http.HandlerFunc {
 			return
 		}
 
-		p, err := mapper.CreateAgePage(req, fj, dataset, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion)
+		p, err := mapper.CreateAgePage(req, fj, dataset, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion, lang)
 		if err != nil {
 			log.Event(ctx, "failed to map data to page", log.ERROR, log.Error(err),
 				log.Data{"filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})
