@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/headers"
@@ -220,9 +221,10 @@ func (f *Filter) Time() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+		versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
+		datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 		if err != nil {
-			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -270,7 +272,7 @@ func (f *Filter) Time() http.HandlerFunc {
 			return
 		}
 
-		p, err := mapper.CreateTimePage(req, fj, dataset, ver, allValues, selValues, dims, datasetID)
+		p, err := mapper.CreateTimePage(req, fj, dataset, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion)
 		if err != nil {
 			log.Event(ctx, "failed to map data to page", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})
 			setStatusCode(req, w, err)

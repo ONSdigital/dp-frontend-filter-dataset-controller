@@ -5,6 +5,7 @@ import (
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/log.go/log"
@@ -39,10 +40,11 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+		versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 
-		datasetID, _, _, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+		datasetID, _, _, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 		if err != nil {
-			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -60,10 +62,11 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+		latestPath := strings.TrimPrefix(latestVersionURL.Path, f.APIRouterVersion)
 
 		_, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, latestVersionURL.Path)
 		if err != nil {
-			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": latestPath})
 			setStatusCode(req, w, err)
 			return
 		}

@@ -38,7 +38,7 @@ var topLevelGeographies = map[string]bool{
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
 // front end page model
-func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension, datasetDims dataset.VersionDimensionItems, filter filter.Model, dst dataset.DatasetDetails, filterID, datasetID, releaseDate string) filterOverview.Page {
+func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension, datasetDims dataset.VersionDimensionItems, filter filter.Model, dst dataset.DatasetDetails, filterID, datasetID, releaseDate, apiRouterVersion string) filterOverview.Page {
 	var p filterOverview.Page
 	p.BetaBannerEnabled = true
 
@@ -138,10 +138,11 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 	if err != nil {
 		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
 	}
+	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
 	p.IsInFilterBreadcrumb = true
 
-	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionPath)
 
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
@@ -149,7 +150,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: edition,
-		URI:   versionURL.Path,
+		URI:   versionPath,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter options",
@@ -160,7 +161,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 
 // CreateListSelectorPage maps items from API responses to form the model for a
 // dimension list selector page
-func CreateListSelectorPage(req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate string) listSelector.Page {
+func CreateListSelectorPage(req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate, apiRouterVersion string) listSelector.Page {
 	var p listSelector.Page
 	p.BetaBannerEnabled = true
 
@@ -192,10 +193,11 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 	if err != nil {
 		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
 	}
+	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
 	p.IsInFilterBreadcrumb = true
 
-	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionPath)
 
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
@@ -203,7 +205,7 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: edition,
-		URI:   versionURL.Path,
+		URI:   versionPath,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter options",
@@ -305,7 +307,7 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 }
 
 // CreatePreviewPage maps data items from API responses to create a preview page
-func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.DatasetDetails, filterOutputID, datasetID, releaseDate string, enableDatasetPreivew bool) previewPage.Page {
+func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.DatasetDetails, filterOutputID, datasetID, releaseDate, apiRouterVersion string, enableDatasetPreivew bool) previewPage.Page {
 	var p previewPage.Page
 	p.Metadata.Title = "Preview and Download"
 	p.BetaBannerEnabled = true
@@ -325,12 +327,13 @@ func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, fi
 	if err != nil {
 		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
 	}
+	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
-	p.Data.CurrentVersionURL = versionURL.Path
+	p.Data.CurrentVersionURL = versionPath
 
 	p.IsInFilterBreadcrumb = true
 
-	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionPath)
 
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
@@ -338,7 +341,7 @@ func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, fi
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: edition,
-		URI:   versionURL.Path,
+		URI:   versionPath,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter options",
@@ -354,7 +357,7 @@ func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, fi
 	p.DatasetTitle = dst.Title
 	p.Data.DatasetID = datasetID
 	p.DatasetId = datasetID
-	_, p.Data.Edition, _, _ = helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+	_, p.Data.Edition, _, _ = helpers.ExtractDatasetInfoFromPath(versionPath)
 
 	for ext, d := range filter.Downloads {
 		p.Data.Downloads = append(p.Data.Downloads, previewPage.Download{
@@ -395,7 +398,7 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 }
 
 // CreateAgePage creates an age selector page based on api responses
-func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID string) (age.Page, error) {
+func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID, apiRouterVersion string) (age.Page, error) {
 	var p age.Page
 	p.BetaBannerEnabled = true
 
@@ -417,10 +420,11 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 	if err != nil {
 		return p, err
 	}
+	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
 	p.IsInFilterBreadcrumb = true
 
-	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionPath)
 
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: d.Title,
@@ -428,7 +432,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: edition,
-		URI:   versionURL.Path,
+		URI:   versionPath,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter options",
@@ -530,7 +534,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 }
 
 // CreateTimePage will create a time selector page based on api response models
-func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID string) (timeModel.Page, error) {
+func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID, apiRouterVersion string) (timeModel.Page, error) {
 	var p timeModel.Page
 	p.BetaBannerEnabled = true
 
@@ -558,10 +562,11 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 	if err != nil {
 		return p, err
 	}
+	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
 	p.IsInFilterBreadcrumb = true
 
-	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionPath)
 
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: d.Title,
@@ -569,7 +574,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: edition,
-		URI:   versionURL.Path,
+		URI:   versionPath,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter options",
@@ -704,7 +709,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 }
 
 // CreateHierarchySearchPage forms a search page based on various api response models
-func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, dims []dataset.VersionDimension, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query string) hierarchy.Page {
+func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, dims []dataset.VersionDimension, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query, apiRouterVersion string) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
 
@@ -741,11 +746,12 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	if err != nil {
 		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
 	}
+	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
-	p.Data.LandingPageURL = versionURL.Path + "#id-dimensions"
+	p.Data.LandingPageURL = versionPath + "#id-dimensions"
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
-		URI:   versionURL.Path,
+		URI:   versionPath,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter options",
@@ -810,7 +816,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 }
 
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
-func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, dims dataset.VersionDimensions, name, curPath, datasetID, releaseDate string) hierarchy.Page {
+func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, dims dataset.VersionDimensions, name, curPath, datasetID, releaseDate, apiRouterVersion string) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
 
@@ -853,10 +859,11 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 	if err != nil {
 		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
 	}
+	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
 	p.IsInFilterBreadcrumb = true
 
-	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionURL.Path)
+	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionPath)
 
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: dst.Title,
@@ -864,7 +871,7 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: edition,
-		URI:   versionURL.Path,
+		URI:   versionPath,
 	})
 	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
 		Title: "Filter options",

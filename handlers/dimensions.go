@@ -5,21 +5,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	dphandlers "github.com/ONSdigital/dp-net/handlers"
-	"net/http"
-	"net/url"
-	"sort"
-	"strings"
-	"sync"
-
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
+	dphandlers "github.com/ONSdigital/dp-net/handlers"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
+	"net/http"
+	"net/url"
+	"sort"
+	"strings"
 )
 
 type labelID struct {
@@ -48,10 +46,11 @@ func (f *Filter) GetAllDimensionOptionsJSON() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+		versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 
-		idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionURL.Path, name)
+		idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionPath, name)
 		if err != nil {
-			log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL, "name": name})
+			log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath, "name": name})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -146,9 +145,10 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionURL.Path, name)
+		versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
+		idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionPath, name)
 		if err != nil {
-			log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL, "name": name})
+			log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath, "name": name})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -224,10 +224,11 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+		versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 
-		datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+		datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 		if err != nil {
-			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -411,7 +412,7 @@ func splitCode(id string) (string, string, error) {
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate string) {
 	ctx := req.Context()
-	p := mapper.CreateListSelectorPage(req, name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate)
+	p := mapper.CreateListSelectorPage(req, name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate, f.APIRouterVersion)
 
 	b, err := json.Marshal(p)
 	if err != nil {
@@ -468,9 +469,11 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL st
 		setStatusCode(req, w, err)
 		return
 	}
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+	versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
+
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 	if err != nil {
-		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+		log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -524,30 +527,21 @@ func (f *Filter) AddList() http.HandlerFunc {
 			return
 		}
 
-		var wg sync.WaitGroup
-		wg.Add(1)
-
 		// TODO concurrently remove any fields that have been deselected
-		go func() {
-			opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
-			if err != nil {
-				log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
-				setStatusCode(req, w, err)
-				return
-			}
+		opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
+		if err != nil {
+			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			setStatusCode(req, w, err)
+			return
+		}
 
-			for _, opt := range opts {
-				if _, ok := req.Form[opt.Option]; !ok {
-					if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, opt.Option); err != nil {
-						log.Event(ctx, "failed to remove dimension values", log.WARN, log.Error(err))
-					}
+		for _, opt := range opts {
+			if _, ok := req.Form[opt.Option]; !ok {
+				if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, opt.Option); err != nil {
+					log.Event(ctx, "failed to remove dimension values", log.WARN, log.Error(err))
 				}
 			}
-
-			wg.Done()
-		}()
-
-		wg.Wait()
+		}
 
 		var options []string
 		for k := range req.Form {
@@ -579,8 +573,9 @@ func (f *Filter) getDimensionValues(ctx context.Context, userAccessToken, filter
 	if err != nil {
 		return
 	}
+	versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 	if err != nil {
 		return
 	}

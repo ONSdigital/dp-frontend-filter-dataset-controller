@@ -51,9 +51,10 @@ func (f *Filter) Search() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+		versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
+		datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 		if err != nil {
-			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -95,7 +96,7 @@ func (f *Filter) Search() http.HandlerFunc {
 			return
 		}
 
-		p := mapper.CreateHierarchySearchPage(req, searchRes.Items, d, fil, selVals, dims.Items, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"))
+		p := mapper.CreateHierarchySearchPage(req, searchRes.Items, d, fil, selVals, dims.Items, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion)
 
 		b, err := json.Marshal(p)
 		if err != nil {
@@ -145,9 +146,10 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL.Path)
+		versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
+		datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 		if err != nil {
-			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionURL})
+			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
 			setStatusCode(req, w, err)
 			return
 		}
