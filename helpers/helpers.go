@@ -3,6 +3,7 @@ package helpers
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"regexp"
 
 	"github.com/ONSdigital/log.go/log"
@@ -18,4 +19,13 @@ func ExtractDatasetInfoFromPath(ctx context.Context, path string) (datasetID, ed
 		return
 	}
 	return subs[1], subs[2], subs[3], nil
+}
+
+// GetAPIRouterVersion returns the path of the provided url, which corresponds to the api router version
+func GetAPIRouterVersion(rawurl string) (string, error) {
+	apiRouterURL, err := url.Parse(rawurl)
+	if err != nil {
+		return "", err
+	}
+	return apiRouterURL.Path, nil
 }

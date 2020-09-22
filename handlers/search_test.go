@@ -45,7 +45,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, "", "", "", "", filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -61,8 +61,8 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false)
+			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
 
 			router.ServeHTTP(w, req)
 
@@ -84,8 +84,8 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false)
+			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
 
 			router.ServeHTTP(w, req)
 
@@ -101,7 +101,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -111,8 +111,8 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false)
+			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
 
 			router.ServeHTTP(w, req)
 
@@ -129,7 +129,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -140,8 +140,8 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false)
+			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
 
 			router.ServeHTTP(w, req)
 
@@ -158,7 +158,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -170,8 +170,8 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false)
+			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
 
 			router.ServeHTTP(w, req)
 
@@ -188,7 +188,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -201,8 +201,8 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false)
+			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
 
 			router.ServeHTTP(w, req)
 
@@ -219,7 +219,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -233,8 +233,8 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false)
+			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
 
 			router.ServeHTTP(w, req)
 
@@ -251,7 +251,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets/abcde/editions/2017/versions/1",
+						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
@@ -267,8 +267,8 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false)
+			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
 
 			router.ServeHTTP(w, req)
 
@@ -286,7 +286,7 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
-						HRef: "http://localhost:22000/datasets",
+						HRef: "http://localhost:23200/v1/datasets",
 					},
 				},
 			}, nil)
@@ -296,8 +296,8 @@ func TestUnitSearch(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", false)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false)
+			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
 
 			router.ServeHTTP(w, req)
 
