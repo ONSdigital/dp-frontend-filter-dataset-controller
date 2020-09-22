@@ -240,7 +240,7 @@ func (f *Filter) Age() http.HandlerFunc {
 
 		if len(allValues.Items) <= 20 {
 			mux.Vars(req)["name"] = dimensionName
-			f.DimensionSelector()
+			f.DimensionSelector().ServeHTTP(w, req)
 			return
 		}
 
