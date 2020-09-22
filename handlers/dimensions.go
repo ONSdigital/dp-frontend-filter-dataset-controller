@@ -5,19 +5,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+	"sort"
+	"strings"
+
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/headers"
+	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
-	"net/http"
-	"net/url"
-	"sort"
-	"strings"
 )
 
 type labelID struct {
@@ -256,7 +258,13 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 
 		// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
 		// then the dimension should be populated as a hierarchy
-		if _, err = f.HierarchyClient.GetRoot(ctx, fj.InstanceID, name); err == nil && len(allValues.Items) > 20 {
+		isHierarchy, err :=  f.isHierarchicalDimension(ctx, fj.InstanceID, name)
+		if err != nil {
+			setStatusCode(req, w, err)
+			return
+		}
+
+		if isHierarchy && len(allValues.Items) > 20 {
 			f.Hierarchy().ServeHTTP(w, req)
 			return
 		}
@@ -275,6 +283,21 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 		f.listSelector(w, req, name, selectedValues, allValues, fj, dataset, dims, datasetID, ver.ReleaseDate, lang)
 	})
 
+}
+
+func (f *Filter) isHierarchicalDimension(ctx context.Context, instanceID, dimensionName string) (bool, error) {
+	_, err := f.HierarchyClient.GetRoot(ctx, instanceID, dimensionName)
+	if err != nil {
+
+		var getHierarchyErr hierarchy.ErrInvalidHierarchyAPIResponse
+		if errors.Is(err, &getHierarchyErr) && http.StatusNotFound == getHierarchyErr.Code() {
+				return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
 }
 
 type sorting struct {
