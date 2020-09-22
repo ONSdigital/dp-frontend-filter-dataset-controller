@@ -253,7 +253,7 @@ func (f *Filter) Time() http.HandlerFunc {
 		//use normal list format unless a specially recognized time format
 		if len(allValues.Items) <= 20 || !acceptedReg.MatchString(allValues.Items[0].Option) {
 			mux.Vars(req)["name"] = dimensionName
-			f.DimensionSelector()
+			f.DimensionSelector().ServeHTTP(w, req)
 			return
 		}
 
