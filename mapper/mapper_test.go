@@ -20,7 +20,7 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dst := getTestDataset()
 
-		fop := CreateFilterOverview(req, dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992")
+		fop := CreateFilterOverview(req, dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992", "/v1", "en")
 		So(fop.FilterID, ShouldEqual, filter.FilterID)
 		So(fop.SearchDisabled, ShouldBeTrue)
 		So(fop.Data.Dimensions, ShouldHaveLength, 5)
@@ -47,8 +47,11 @@ func TestUnitMapper(t *testing.T) {
 		So(fop.Data.Cancel.URL, ShouldEqual, "/")
 		So(fop.Breadcrumb, ShouldHaveLength, 3)
 		So(fop.Breadcrumb[0].Title, ShouldEqual, dst.Title)
+		So(fop.Breadcrumb[0].URI, ShouldEqual, "/datasets//editions")
 		So(fop.Breadcrumb[1].Title, ShouldEqual, "5678")
+		So(fop.Breadcrumb[1].URI, ShouldEqual, "/datasets/1234/editions/5678/versions/1")
 		So(fop.Breadcrumb[2].Title, ShouldEqual, "Filter options")
+		So(fop.Breadcrumb[2].URI, ShouldEqual, "")
 		So(fop.ShowFeedbackForm, ShouldEqual, false)
 	})
 
@@ -57,14 +60,17 @@ func TestUnitMapper(t *testing.T) {
 		filter := getTestFilter()
 		dataset := getTestDataset()
 
-		pp := CreatePreviewPage(req, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992", false)
+		pp := CreatePreviewPage(req, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992", "/v1", false, "en")
 		So(pp.SearchDisabled, ShouldBeFalse)
 		So(pp.Breadcrumb, ShouldHaveLength, 4)
 		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
+		So(pp.Breadcrumb[0].URI, ShouldEqual, "/datasets//editions")
 		So(pp.Breadcrumb[1].Title, ShouldEqual, "5678")
+		So(pp.Breadcrumb[1].URI, ShouldEqual, "/datasets/1234/editions/5678/versions/1")
 		So(pp.Breadcrumb[2].Title, ShouldEqual, "Filter options")
 		So(pp.Breadcrumb[2].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
 		So(pp.Breadcrumb[3].Title, ShouldEqual, "Preview")
+		So(pp.Breadcrumb[3].URI, ShouldEqual, "")
 		So(pp.Data.FilterID, ShouldEqual, filter.Links.FilterBlueprint.ID)
 		So(pp.ShowFeedbackForm, ShouldEqual, true)
 		if pp.Data.Downloads[0].Extension == "csv" {
@@ -113,17 +119,20 @@ func TestUnitMapper(t *testing.T) {
 
 			filter := getTestFilter()
 
-			p := CreateListSelectorPage(req, "time", selectedValues, allValues, filter, d, dataset.VersionDimensions{}, "12345", "11-11-1992")
+			p := CreateListSelectorPage(req, "time", selectedValues, allValues, filter, d, dataset.VersionDimensions{}, "12345", "11-11-1992", "/v1", "en")
 			So(p.Data.Title, ShouldEqual, "Time")
 			So(p.SearchDisabled, ShouldBeTrue)
 			So(p.FilterID, ShouldEqual, filter.FilterID)
 
 			So(p.Breadcrumb, ShouldHaveLength, 4)
 			So(p.Breadcrumb[0].Title, ShouldEqual, d.Title)
+			So(p.Breadcrumb[0].URI, ShouldEqual, "/datasets//editions")
 			So(p.Breadcrumb[1].Title, ShouldEqual, "5678")
+			So(p.Breadcrumb[1].URI, ShouldEqual, "/datasets/1234/editions/5678/versions/1")
 			So(p.Breadcrumb[2].Title, ShouldEqual, "Filter options")
 			So(p.Breadcrumb[2].URI, ShouldEqual, "/filters/"+filter.Links.FilterBlueprint.ID+"/dimensions")
 			So(p.Breadcrumb[3].Title, ShouldEqual, "Time")
+			So(p.Breadcrumb[3].URI, ShouldEqual, "")
 			So(p.Data.AddFromRange.Label, ShouldEqual, "add time range")
 			So(p.Data.AddFromRange.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time")
 			So(p.Data.SaveAndReturn.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
@@ -158,7 +167,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "2017",
 					},
 				},
-			}, filter.Model{}, dataset.DatasetDetails{}, dataset.VersionDimensions{}, "1234", "today")
+			}, filter.Model{}, dataset.DatasetDetails{}, dataset.VersionDimensions{}, "1234", "today", "/v1", "en")
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
@@ -184,7 +193,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "Ireland",
 					},
 				},
-			}, filter.Model{}, dataset.DatasetDetails{}, dataset.VersionDimensions{}, "1234", "today")
+			}, filter.Model{}, dataset.DatasetDetails{}, dataset.VersionDimensions{}, "1234", "today", "/v1", "en")
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
@@ -252,7 +261,7 @@ func getTestFilter() filter.Model {
 		Version:   "2017",
 		Links: filter.Links{
 			Version: filter.Link{
-				HRef: "/datasets/1234/editions/5678/versions/1",
+				HRef: "/v1/datasets/1234/editions/5678/versions/1",
 			},
 			FilterBlueprint: filter.Link{
 				ID: "12349876",
