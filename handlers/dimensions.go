@@ -258,7 +258,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 
 		// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
 		// then the dimension should be populated as a hierarchy
-		isHierarchy, err :=  f.isHierarchicalDimension(ctx, fj.InstanceID, name)
+		isHierarchy, err := f.isHierarchicalDimension(ctx, fj.InstanceID, name)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -289,10 +289,15 @@ func (f *Filter) isHierarchicalDimension(ctx context.Context, instanceID, dimens
 	_, err := f.HierarchyClient.GetRoot(ctx, instanceID, dimensionName)
 	if err != nil {
 
-		var getHierarchyErr hierarchy.ErrInvalidHierarchyAPIResponse
-		if errors.Is(err, &getHierarchyErr) && http.StatusNotFound == getHierarchyErr.Code() {
-				return false, nil
+		var getHierarchyErr *hierarchy.ErrInvalidHierarchyAPIResponse
+		if errors.As(err, &getHierarchyErr) && http.StatusNotFound == getHierarchyErr.Code() {
+			return false, nil
 		}
+
+		log.Event(ctx, "unexpected error getting hierarchy root for dimension", log.ERROR, log.Error(err), log.Data{
+			"instance_id":    instanceID,
+			"dimension_name": dimensionName,
+		})
 
 		return false, err
 	}
