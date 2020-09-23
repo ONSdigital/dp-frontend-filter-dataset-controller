@@ -295,7 +295,7 @@ func (f *Filter) isHierarchicalDimension(ctx context.Context, instanceID, dimens
 	if err != nil {
 		log.Event(ctx, "error getting hierarchy root", logD, log.WARN, log.Error(err))
 
-		var getHierarchyErr hierarchy.ErrInvalidHierarchyAPIResponse
+		var getHierarchyErr *hierarchy.ErrInvalidHierarchyAPIResponse
 		if errors.As(err, &getHierarchyErr) && http.StatusNotFound == getHierarchyErr.Code() {
 			log.Event(ctx, "dimension is not hierarchical value ignoring error and continuing", logD, log.INFO)
 			return false, nil
