@@ -286,22 +286,19 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 }
 
 func (f *Filter) isHierarchicalDimension(ctx context.Context, instanceID, dimensionName string) (bool, error) {
-	logD := log.Data{
-		"instance_id":    instanceID,
-		"dimension_name": dimensionName,
-	}
-
 	_, err := f.HierarchyClient.GetRoot(ctx, instanceID, dimensionName)
 	if err != nil {
-		log.Event(ctx, "error getting hierarchy root", logD, log.WARN, log.Error(err))
 
 		var getHierarchyErr *hierarchy.ErrInvalidHierarchyAPIResponse
 		if errors.As(err, &getHierarchyErr) && http.StatusNotFound == getHierarchyErr.Code() {
-			log.Event(ctx, "dimension is not hierarchical value ignoring error and continuing", logD, log.INFO)
 			return false, nil
 		}
 
-		log.Event(ctx, "error getting hierarchy root - non expected error", logD, log.ERROR, log.Error(err))
+		log.Event(ctx, "unexpected error getting hierarchy root for dimension", log.ERROR, log.Error(err), log.Data{
+			"instance_id":    instanceID,
+			"dimension_name": dimensionName,
+		})
+
 		return false, err
 	}
 
