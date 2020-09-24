@@ -14,7 +14,6 @@ import (
 	"sync"
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
@@ -62,12 +61,12 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 		}
 
 		if len(req.Form["add-all"]) > 0 {
-			f.addAllHierarchyLevel(w, req, fil, name, code, redirectURI)
+			f.addAllHierarchyLevel(w, req, fil, name, code, redirectURI, userAccessToken, collectionID)
 			return
 		}
 
 		if len(req.Form["remove-all"]) > 0 {
-			f.removeAllHierarchyLevel(w, req, fil, name, code, redirectURI)
+			f.removeAllHierarchyLevel(w, req, fil, name, code, redirectURI, userAccessToken, collectionID)
 			return
 		}
 
@@ -147,16 +146,10 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 	})
 }
 
-func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI string) {
+func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID string) {
 
 	ctx := req.Context()
-	collectionID := getCollectionIDFromContext(ctx)
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "failed to retrieve auth header", log.ERROR, log.Error(err))
-		}
-	}
+	var err error
 
 	var h hierarchy.Model
 	if len(code) > 0 {
@@ -185,17 +178,10 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 	http.Redirect(w, req, redirectURI, 302)
 }
 
-func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI string) {
+func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID string) {
 	ctx := req.Context()
-	collectionID := getCollectionIDFromContext(ctx)
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "failed to retrieve auth header", log.ERROR, log.Error(err))
-		}
-	}
-
 	var h hierarchy.Model
+	var err error
 
 	if len(code) > 0 {
 		h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)

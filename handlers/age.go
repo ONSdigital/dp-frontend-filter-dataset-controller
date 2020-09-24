@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ONSdigital/dp-api-clients-go/headers"
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
 	"github.com/ONSdigital/log.go/log"
 
@@ -61,11 +60,11 @@ func (f *Filter) UpdateAge() http.HandlerFunc {
 				log.Event(ctx, "failed to add all ages option", log.WARN, log.Error(err), log.Data{"age_case": "all"})
 			}
 		case "range":
-			if err := f.addAgeRange(filterID, req); err != nil {
+			if err := f.addAgeRange(filterID, userAccessToken, collectionID, req); err != nil {
 				log.Event(ctx, "failed to add age range", log.WARN, log.Error(err), log.Data{"age_case": "range"})
 			}
 		case "list":
-			if err := f.addAgeList(filterID, req); err != nil {
+			if err := f.addAgeList(filterID, userAccessToken, collectionID, req); err != nil {
 				log.Event(ctx, "failed to add age list", log.WARN, log.Error(err), log.Data{"age_case": "list"})
 			}
 		}
@@ -75,16 +74,9 @@ func (f *Filter) UpdateAge() http.HandlerFunc {
 	})
 }
 
-func (f *Filter) addAgeList(filterID string, req *http.Request) error {
+func (f *Filter) addAgeList(filterID, userAccessToken, collectionID string, req *http.Request) error {
 	ctx := req.Context()
-	collectionID := getCollectionIDFromContext(ctx)
 	dimensionName := "age"
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
-		}
-	}
 	opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName)
 	if err != nil {
 		return err
@@ -107,7 +99,6 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 		}
 
 		options = append(options, k)
-
 	}
 
 	if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options); err != nil {
@@ -117,7 +108,7 @@ func (f *Filter) addAgeList(filterID string, req *http.Request) error {
 	return nil
 }
 
-func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
+func (f *Filter) addAgeRange(filterID, userAccessToken, collectionID string, req *http.Request) error {
 	youngest := req.Form.Get("youngest")
 	oldest := req.Form.Get("oldest")
 
@@ -130,15 +121,8 @@ func (f *Filter) addAgeRange(filterID string, req *http.Request) error {
 	if oldestHasPlus {
 		oldest = strings.Trim(oldest, "+")
 	}
-	collectionID := getCollectionIDFromContext(ctx)
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
-		}
-	}
 
-	values, labelIDMap, err := f.getDimensionValues(ctx, userAccessToken, filterID, dimensionName)
+	values, labelIDMap, err := f.getDimensionValues(ctx, userAccessToken, collectionID, filterID, dimensionName)
 	if err != nil {
 		return err
 	}
