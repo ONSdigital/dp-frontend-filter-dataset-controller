@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ONSdigital/dp-api-clients-go/headers"
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
@@ -63,15 +62,15 @@ func (f *Filter) UpdateTime() http.HandlerFunc {
 				log.Event(ctx, "failed to add dimension value", log.ERROR, log.Error(err))
 			}
 		case "single":
-			if err := f.addSingleTime(filterID, req); err != nil {
+			if err := f.addSingleTime(filterID, userAccessToken, collectionID, req); err != nil {
 				log.Event(ctx, "failed to add single time", log.ERROR, log.Error(err))
 			}
 		case "range":
-			if err := f.addTimeRange(filterID, req); err != nil {
+			if err := f.addTimeRange(filterID, userAccessToken, collectionID, req); err != nil {
 				log.Event(ctx, "failed to add range of times", log.ERROR, log.Error(err))
 			}
 		case "list":
-			if err := f.addTimeList(filterID, req); err != nil {
+			if err := f.addTimeList(filterID, userAccessToken, collectionID, req); err != nil {
 				log.Event(ctx, "failed to add list of times", log.ERROR, log.Error(err))
 			}
 		}
@@ -82,20 +81,12 @@ func (f *Filter) UpdateTime() http.HandlerFunc {
 
 }
 
-func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
+func (f *Filter) addSingleTime(filterID, userAccessToken, collectionID string, req *http.Request) error {
 	ctx := req.Context()
 
 	month := req.Form.Get("month-single")
 	year := req.Form.Get("year-single")
 	dimensionName := "time"
-
-	collectionID := getCollectionIDFromContext(ctx)
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
-		}
-	}
 
 	date, err := time.Parse("January 2006", fmt.Sprintf("%s %s", month, year))
 	if err != nil {
@@ -105,17 +96,9 @@ func (f *Filter) addSingleTime(filterID string, req *http.Request) error {
 	return f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, date.Format("Jan-06"))
 }
 
-func (f *Filter) addTimeList(filterID string, req *http.Request) error {
+func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req *http.Request) error {
 	ctx := req.Context()
-	collectionID := getCollectionIDFromContext(ctx)
 	dimensionName := "time"
-
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
-		}
-	}
 
 	opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName)
 	if err != nil {
@@ -148,7 +131,7 @@ func (f *Filter) addTimeList(filterID string, req *http.Request) error {
 	return nil
 }
 
-func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
+func (f *Filter) addTimeRange(filterID, userAccessToken, collectionID string, req *http.Request) error {
 	startMonth := req.Form.Get("start-month")
 	startYear := req.Form.Get("start-year")
 	endMonth := req.Form.Get("end-month")
@@ -156,15 +139,7 @@ func (f *Filter) addTimeRange(filterID string, req *http.Request) error {
 	ctx := req.Context()
 	dimensionName := "time"
 
-	collectionID := getCollectionIDFromContext(ctx)
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
-		}
-	}
-
-	values, labelIDMap, err := f.getDimensionValues(ctx, userAccessToken, filterID, dimensionName)
+	values, labelIDMap, err := f.getDimensionValues(ctx, userAccessToken, collectionID, filterID, dimensionName)
 	if err != nil {
 		return err
 	}

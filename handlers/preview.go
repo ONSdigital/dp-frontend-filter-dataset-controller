@@ -175,7 +175,9 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			return
 		}
 
-		size, err := f.getMetadataTextSize(req.Context(), userAccessToken, datasetID, edition, version, metadata, dims)
+		// todo: only call the dataset API for each dimensions options once
+		// is currently being called by f.getMetadataTextSize and the for loop below
+		size, err := f.getMetadataTextSize(req.Context(), userAccessToken, collectionID, datasetID, edition, version, metadata, dims)
 		if err != nil {
 			log.Event(ctx, "failed to get metadata text size", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
@@ -295,9 +297,8 @@ func (f *Filter) GetFilterJob() http.HandlerFunc {
 
 }
 
-func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.VersionDimensions) (int, error) {
+func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, collectionID, datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.VersionDimensions) (int, error) {
 	var b bytes.Buffer
-	collectionID := getCollectionIDFromContext(ctx)
 
 	b.WriteString(metadata.ToString())
 	b.WriteString("Dimensions:\n")
