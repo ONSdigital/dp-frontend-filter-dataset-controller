@@ -12,7 +12,6 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
@@ -50,7 +49,7 @@ func (f *Filter) GetAllDimensionOptionsJSON() http.HandlerFunc {
 		}
 		versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 
-		idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionPath, name)
+		idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, collectionID, versionPath, name)
 		if err != nil {
 			log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath, "name": name})
 			setStatusCode(req, w, err)
@@ -99,12 +98,8 @@ func (f *Filter) GetAllDimensionOptionsJSON() http.HandlerFunc {
 
 }
 
-func (f *Filter) getIDNameMap(ctx context.Context, userAccessToken, versionURL, dimension string) (map[string]string, error) {
+func (f *Filter) getIDNameMap(ctx context.Context, userAccessToken, collectionID, versionURL, dimension string) (map[string]string, error) {
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL)
-	collectionID := getCollectionIDFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
 
 	idNameMap := make(map[string]string)
 	opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension)
@@ -148,7 +143,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 			return
 		}
 		versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
-		idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, versionPath, name)
+		idNameMap, err := f.getIDNameMap(req.Context(), userAccessToken, collectionID, versionPath, name)
 		if err != nil {
 			log.Event(ctx, "failed to get name map", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath, "name": name})
 			setStatusCode(req, w, err)
@@ -465,24 +460,16 @@ func (f *Filter) DimensionAddAll() http.HandlerFunc {
 		vars := mux.Vars(req)
 		name := vars["name"]
 		filterID := vars["filterID"]
-		f.addAll(w, req, fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name))
+		f.addAll(w, req, fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name), collectionID, userAccessToken)
 	})
 }
 
-func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL string) {
+func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, userAccessToken, collectionID string) {
 
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
 	ctx := req.Context()
-
-	collectionID := getCollectionIDFromContext(ctx)
-	userAccessToken, err := headers.GetUserAuthToken(req)
-	if err != nil {
-		if headers.IsNotErrNotFound(err) {
-			log.Event(ctx, "error getting access token header", log.WARN, log.Error(err))
-		}
-	}
 
 	fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 	if err != nil {
@@ -545,7 +532,7 @@ func (f *Filter) AddList() http.HandlerFunc {
 
 		if len(req.Form["add-all"]) > 0 {
 			redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-			f.addAll(w, req, redirectURL)
+			f.addAll(w, req, redirectURL, userAccessToken, collectionID)
 			return
 		}
 
@@ -589,9 +576,8 @@ func (f *Filter) AddList() http.HandlerFunc {
 
 }
 
-func (f *Filter) getDimensionValues(ctx context.Context, userAccessToken, filterID, name string) (values []string, labelIDMap map[string]string, err error) {
+func (f *Filter) getDimensionValues(ctx context.Context, userAccessToken, collectionID, filterID, name string) (values []string, labelIDMap map[string]string, err error) {
 
-	collectionID := getCollectionIDFromContext(ctx)
 	fj, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
 	if err != nil {
 		return
