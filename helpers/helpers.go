@@ -29,3 +29,13 @@ func GetAPIRouterVersion(rawurl string) (string, error) {
 	}
 	return apiRouterURL.Path, nil
 }
+
+// StringInSlice will check if a string is in a slice and return a corresponding boolean value
+func StringInSlice(str string, slice []string) bool {
+	for _, sliceStr := range slice {
+		if sliceStr == str {
+			return true
+		}
+	}
+	return false
+}

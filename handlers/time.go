@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -96,6 +97,7 @@ func (f *Filter) addSingleTime(filterID, userAccessToken, collectionID string, r
 	return f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, date.Format("Jan-06"))
 }
 
+// addTimeList will save form time grouped list form data to the filter
 func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req *http.Request) error {
 	ctx := req.Context()
 	dimensionName := "time"
@@ -114,17 +116,46 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 		}
 	}
 
+	var selectedMonths []string
 	var options []string
+	startYearStr := req.Form.Get("start-year-grouped")
+	endYearStr := req.Form.Get("end-year-grouped")
+	startYearInt, err := strconv.Atoi(startYearStr)
+	if err != nil {
+		log.Event(ctx, "failed to convert filter start year string to integer", log.ERROR, log.Error(err))
+		return err
+	}
+	endYearInt, err := strconv.Atoi(endYearStr)
+	if err != nil {
+		log.Event(ctx, "failed to convert filter end year string to integer", log.ERROR, log.Error(err))
+		return err
+	}
+
 	for k := range req.Form {
-		if _, err := time.Parse("Jan-06", k); err != nil {
+		if _, err := time.Parse("January", k); err != nil {
 			continue
 		}
+		selectedMonths = append(selectedMonths, k)
+	}
 
-		options = append(options, k)
+	for year := startYearInt; year <= endYearInt; year++ {
+		yearStr := strconv.Itoa(year)
+		for _, month := range selectedMonths {
+			monthYearComboArr := []string{month, yearStr}
+			monthYearComboStr := strings.Join(monthYearComboArr, " ")
+			monthYearComboTime, err := time.Parse("January 2006", monthYearComboStr)
+			if err != nil {
+				log.Event(ctx, "failed to convert filtered month and year combo to time format", log.ERROR, log.Error(err))
+				return err
+			}
+			monthYearCombo := monthYearComboTime.Format("Jan-06")
+			options = append(options, monthYearCombo)
+		}
 	}
 
 	if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options); err != nil {
 		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err))
+		return err
 	}
 
 	// Should we not be returning error?

@@ -16,6 +16,8 @@ import (
 	"github.com/ONSdigital/dp-cookies/cookies"
 	"github.com/ONSdigital/dp-frontend-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
+	fdHelpers "github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
+
 	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/age"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
@@ -545,7 +547,6 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
-	log.Event(ctx, "mapping api responses to time page model", log.INFO, log.Data{"filterID": f.FilterID, "datasetID": datasetID})
 
 	if _, err := time.Parse("Jan-06", allVals.Items[0].Option); err == nil {
 		p.Data.Type = "month"
@@ -709,6 +710,49 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 		p.Data.SelectedEndMonth = selDates[len(selDates)-1].Month().String()
 		p.Data.SelectedEndYear = fmt.Sprintf("%d", selDates[len(selDates)-1].Year())
 	}
+	var minYear, maxYear string
+	var selectedMonths []string
+	for _, selVal := range selVals {
+		month, err := time.Parse("Jan-06", selVal.Option)
+		if err != nil {
+			log.Event(ctx, "unable to convert date to month value", log.ERROR, log.Error(err))
+			continue
+		}
+		monthStr := month.Format("January")
+		if !fdHelpers.StringInSlice(monthStr, selectedMonths) {
+			selectedMonths = append(selectedMonths, monthStr)
+		}
+		yearStr := month.Format("2006")
+		if minYear == "" {
+			minYear = yearStr
+		}
+		if maxYear == "" {
+			maxYear = yearStr
+		}
+		yearInt, err := strconv.Atoi(yearStr)
+		maxYearInt, err := strconv.Atoi(maxYear)
+		minYearInt, err := strconv.Atoi(minYear)
+		if yearInt > maxYearInt {
+			maxYear = yearStr
+		} else if yearInt < minYearInt {
+			minYear = yearStr
+		}
+	}
+	var listOfAllMonths []timeModel.Month
+	for i := 0; i < 12; i++ {
+		monthName := time.Month(i + 1).String()
+		singleMonth := timeModel.Month{
+			Name:       monthName,
+			IsSelected: fdHelpers.StringInSlice(monthName, selectedMonths),
+		}
+		listOfAllMonths = append(listOfAllMonths, singleMonth)
+	}
+	GroupedSelection := timeModel.GroupedSelection{
+		Months:    listOfAllMonths,
+		YearStart: minYear,
+		YearEnd:   maxYear,
+	}
+	p.Data.GroupedSelection = GroupedSelection
 
 	return p, nil
 }
