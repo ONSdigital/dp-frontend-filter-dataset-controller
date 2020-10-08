@@ -719,7 +719,8 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 			continue
 		}
 		monthStr := month.Format("January")
-		if !fdHelpers.StringInSlice(monthStr, selectedMonths) {
+		_, found := fdHelpers.StringInSlice(monthStr, selectedMonths)
+		if !found {
 			selectedMonths = append(selectedMonths, monthStr)
 		}
 		yearStr := month.Format("2006")
@@ -730,8 +731,20 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 			maxYear = yearStr
 		}
 		yearInt, err := strconv.Atoi(yearStr)
+		if err != nil{
+			log.Event(ctx, "unable to convert year string to int for comparison", log.ERROR, log.Error(err))
+			continue
+		}
 		maxYearInt, err := strconv.Atoi(maxYear)
+		if err != nil{
+			log.Event(ctx, "unable to convert max year string to int for comparison", log.ERROR, log.Error(err))
+			continue
+		}
 		minYearInt, err := strconv.Atoi(minYear)
+		if err != nil{
+			log.Event(ctx, "unable to convert min year string to int for comparison", log.ERROR, log.Error(err))
+			continue
+		}
 		if yearInt > maxYearInt {
 			maxYear = yearStr
 		} else if yearInt < minYearInt {
@@ -739,11 +752,13 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 		}
 	}
 	var listOfAllMonths []timeModel.Month
-	for i := 0; i < 12; i++ {
+	numberOfMonthsInAYear := 12
+	for i := 0; i < numberOfMonthsInAYear; i++ {
 		monthName := time.Month(i + 1).String()
+		_, isSelected := fdHelpers.StringInSlice(monthName, selectedMonths)
 		singleMonth := timeModel.Month{
 			Name:       monthName,
-			IsSelected: fdHelpers.StringInSlice(monthName, selectedMonths),
+			IsSelected: isSelected,
 		}
 		listOfAllMonths = append(listOfAllMonths, singleMonth)
 	}

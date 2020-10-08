@@ -116,7 +116,6 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 		}
 	}
 
-	var selectedMonths []string
 	var options []string
 	startYearStr := req.Form.Get("start-year-grouped")
 	endYearStr := req.Form.Get("end-year-grouped")
@@ -131,18 +130,12 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 		return err
 	}
 
-	for k := range req.Form {
-		if _, err := time.Parse("January", k); err != nil {
-			continue
-		}
-		selectedMonths = append(selectedMonths, k)
-	}
+	selectedMonths := req.Form["months"]
 
 	for year := startYearInt; year <= endYearInt; year++ {
 		yearStr := strconv.Itoa(year)
 		for _, month := range selectedMonths {
-			monthYearComboArr := []string{month, yearStr}
-			monthYearComboStr := strings.Join(monthYearComboArr, " ")
+			monthYearComboStr  := fmt.Sprintf("%s %s", month, yearStr)
 			monthYearComboTime, err := time.Parse("January 2006", monthYearComboStr)
 			if err != nil {
 				log.Event(ctx, "failed to convert filtered month and year combo to time format", log.ERROR, log.Error(err))
