@@ -53,3 +53,97 @@ func TestGetAPIRouterVersion(t *testing.T) {
 		So(version, ShouldEqual, "")
 	})
 }
+
+// TestStringInSlice tests the helper function TestStringInSlice
+func TestStringInSlice(t *testing.T) {
+	Convey("given a slice", t, func() {
+		subjectSlice := []string{"foo", "Bar", "bAz", "quX", "QUUX", "COrGE", "gRaUlT", "GaRpLy", "WALdo", "frED", "pl ugh", "xyzzy1", "thud-", "", "gRaUlT"}
+		Convey("and a string that the slice contains it should find said string", func() {
+			testString := "foo"
+			index, isFound := StringInSlice(testString, subjectSlice)
+			So(isFound, ShouldEqual, true)
+			So(index, ShouldEqual, 0)
+			Convey("it should be case sensitive and only yield true for exact matches", func() {
+				testString = "Bar"
+				index, isFound = StringInSlice(testString, subjectSlice)
+				So(isFound, ShouldEqual, true)
+				So(index, ShouldEqual, 1)
+				Convey("even if there is a random case difference in the middle of the string", func() {
+					testString = "bAz"
+					index, isFound = StringInSlice(testString, subjectSlice)
+					So(isFound, ShouldEqual, true)
+					So(index, ShouldEqual, 2)
+				})
+				Convey("or a space", func() {
+					testString = "pl ugh"
+					index, isFound = StringInSlice(testString, subjectSlice)
+					So(isFound, ShouldEqual, true)
+					So(index, ShouldEqual, 10)
+				})
+				Convey("or a numerical value represented as a char", func() {
+					testString = "xyzzy1"
+					index, isFound = StringInSlice(testString, subjectSlice)
+					So(isFound, ShouldEqual, true)
+					So(index, ShouldEqual, 11)
+				})
+				Convey("or a symbolic character represented as a char", func() {
+					testString = "thud-"
+					index, isFound = StringInSlice(testString, subjectSlice)
+					So(isFound, ShouldEqual, true)
+					So(index, ShouldEqual, 12)
+				})
+				Convey("or even a completely empty string", func() {
+					testString = ""
+					index, isFound = StringInSlice(testString, subjectSlice)
+					So(isFound, ShouldEqual, true)
+					So(index, ShouldEqual, 13)
+				})
+			})
+			Convey("it should return the index of the first found position in the array if there are multiple", func() {
+				testString = "gRaUlT"
+				index, isFound = StringInSlice(testString, subjectSlice)
+				So(isFound, ShouldEqual, true)
+				So(index, ShouldEqual, 6)
+			})
+			Convey("it should be case sensitive and yield false for any other value", func() {
+				Convey("like if the initial capital letter isn't considered", func() {
+					testString = "bar"
+					index, isFound = StringInSlice(testString, subjectSlice)
+					So(isFound, ShouldEqual, false)
+					So(index, ShouldEqual, -1)
+				})
+				Convey("or a random capital in the middle of the string isn't considered", func() {
+					testString = "baz"
+					index, isFound = StringInSlice(testString, subjectSlice)
+					So(isFound, ShouldEqual, false)
+					So(index, ShouldEqual, -1)
+				})
+				Convey("or a space in a string is missing", func() {
+					testString = "plugh"
+					index, isFound = StringInSlice(testString, subjectSlice)
+					So(isFound, ShouldEqual, false)
+					So(index, ShouldEqual, -1)
+				})
+				Convey("or a numeral represented as a string char is missing", func() {
+					testString = "xyzzy"
+					index, isFound = StringInSlice(testString, subjectSlice)
+					So(isFound, ShouldEqual, false)
+					So(index, ShouldEqual, -1)
+
+				})
+				Convey("or a symbol represented as a char is missing", func() {
+					testString = "thud"
+					index, isFound = StringInSlice(testString, subjectSlice)
+					So(isFound, ShouldEqual, false)
+					So(index, ShouldEqual, -1)
+				})
+				Convey("or if a space char slips in and shouldn't be there", func() {
+					testString = " "
+					index, isFound = StringInSlice(testString, subjectSlice)
+					So(isFound, ShouldEqual, false)
+					So(index, ShouldEqual, -1)
+				})
+			})
+		})
+	})
+}
