@@ -1,14 +1,15 @@
 package mapper
 
 import (
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-frontend-models/model"
+	timeModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time"
+	dprequest "github.com/ONSdigital/dp-net/request"
 	. "github.com/smartystreets/goconvey/convey"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 func TestUnitMapper(t *testing.T) {
@@ -231,6 +232,67 @@ func getTestDimensions() []filter.ModelDimension {
 	}
 }
 
+func getTestDatasetOptions() dataset.Options {
+	return dataset.Options{Items: []dataset.Option{
+		{
+			DimensionID: "time",
+			Label:       "Apr-05",
+			Links: dataset.Links{
+				CodeList: dataset.Link{
+					URL: "http://api.localhost:23200/v1/code-lists/mmm-yy",
+					ID:  "mmm-yy",
+				},
+				Version: dataset.Link{
+					URL: "http://api.localhost:23200/v1/datasets/cpih01/editions/time-series/versions/7",
+					ID:  "7",
+				},
+				Code: dataset.Link{
+					URL: "http://api.localhost:23200/v1/code-lists/mmm-yy/codes/Month",
+					ID:  "Month",
+				},
+			},
+			Option: "Apr-05",
+		},
+		{
+			DimensionID: "time",
+			Label:       "Apr-06",
+			Links: dataset.Links{
+				CodeList: dataset.Link{
+					URL: "http://api.localhost:23200/v1/code-lists/mmm-yy",
+					ID:  "mmm-yy",
+				},
+				Version: dataset.Link{
+					URL: "http://api.localhost:23200/v1/datasets/cpih01/editions/time-series/versions/7",
+					ID:  "7",
+				},
+				Code: dataset.Link{
+					URL: "http://api.localhost:23200/v1/code-lists/mmm-yy/codes/Month",
+					ID:  "Month",
+				},
+			},
+			Option: "Apr-06",
+		},
+		{
+			DimensionID: "time",
+			Label:       "Apr-07",
+			Links: dataset.Links{
+				CodeList: dataset.Link{
+					URL: "http://api.localhost:23200/v1/code-lists/mmm-yy",
+					ID:  "mmm-yy",
+				},
+				Version: dataset.Link{
+					URL: "http://api.localhost:23200/v1/datasets/cpih01/editions/time-series/versions/7",
+					ID:  "7",
+				},
+				Code: dataset.Link{
+					URL: "http://api.localhost:23200/v1/code-lists/mmm-yy/codes/Month",
+					ID:  "Month",
+				},
+			},
+			Option: "Apr-07",
+		}}}
+}
+
 func getTestDatasetDimensions() []dataset.VersionDimension {
 	return []dataset.VersionDimension{
 		{
@@ -315,4 +377,99 @@ func TestUnitMapCookiesPreferences(t *testing.T) {
 		So(pageModel.CookiesPolicy.Essential, ShouldEqual, true)
 		So(pageModel.CookiesPolicy.Usage, ShouldEqual, true)
 	})
+}
+
+func TestCreateTimePage(t *testing.T) {
+	Convey("maps filter to page model correctly", t, func() {
+		desiredPageModel := timeModel.Page{
+			Page: model.Page{},
+			Data: timeModel.Data{
+				LatestTime:         timeModel.Value{},
+				FirstTime:          timeModel.Value{},
+				Values:             nil,
+				Months:             []string{"Select", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"},
+				Years:              []string{"Select", "2005", "2006", "2007"},
+				CheckedRadio:       "",
+				FormAction:         timeModel.Link{},
+				SelectedStartMonth: "",
+				SelectedStartYear:  "",
+				SelectedEndMonth:   "",
+				SelectedEndYear:    "",
+				Type:               "",
+				DatasetTitle:       "",
+				GroupedSelection: timeModel.GroupedSelection{
+					Months: []timeModel.Month{
+						{
+							Name:       "January",
+							IsSelected: false,
+						},
+						{
+							Name:       "February",
+							IsSelected: false,
+						},
+						{
+							Name:       "March",
+							IsSelected: false,
+						},
+						{
+							Name:       "April",
+							IsSelected: false,
+						},
+						{
+							Name:       "May",
+							IsSelected: false,
+						},
+						{
+							Name:       "June",
+							IsSelected: false,
+						},
+						{
+							Name:       "July",
+							IsSelected: false,
+						},
+						{
+							Name:       "August",
+							IsSelected: false,
+						},
+						{
+							Name:       "September",
+							IsSelected: false,
+						},
+						{
+							Name:       "October",
+							IsSelected: false,
+						},
+						{
+							Name:       "November",
+							IsSelected: false,
+						},
+						{
+							Name:       "December",
+							IsSelected: false,
+						},
+					},
+					YearStart: "",
+					YearEnd:   "",
+				},
+			},
+			FilterID: "",
+		}
+		req := httptest.NewRequest("", "/", nil)
+		filterModel := getTestFilter()
+		datasetDetails := getTestDataset()
+		// Never actually used in the mapper but func requires it so leaving blank until needed in a test
+		datasetVersion := dataset.Version{}
+		options := getTestDatasetOptions()
+		dimensionOptions := []filter.DimensionOption{{}}
+		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+		datasetID := "cpih01"
+		apiRouterVersion := "v1"
+		lang := dprequest.DefaultLang
+		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, dimensionOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		So(err, ShouldBeNil)
+		So(timeModelPage.Data.GroupedSelection, ShouldResemble, desiredPageModel.Data.GroupedSelection)
+		So(timeModelPage.Data.Months, ShouldResemble, desiredPageModel.Data.Months)
+		So(timeModelPage.Data.Years, ShouldResemble, desiredPageModel.Data.Years)
+	})
+
 }
