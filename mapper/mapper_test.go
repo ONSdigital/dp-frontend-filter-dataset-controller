@@ -1,15 +1,16 @@
 package mapper
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-frontend-models/model"
 	timeModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time"
 	dprequest "github.com/ONSdigital/dp-net/request"
 	. "github.com/smartystreets/goconvey/convey"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestUnitMapper(t *testing.T) {
@@ -53,7 +54,6 @@ func TestUnitMapper(t *testing.T) {
 		So(fop.Breadcrumb[1].URI, ShouldEqual, "/datasets/1234/editions/5678/versions/1")
 		So(fop.Breadcrumb[2].Title, ShouldEqual, "Filter options")
 		So(fop.Breadcrumb[2].URI, ShouldEqual, "")
-		So(fop.ShowFeedbackForm, ShouldEqual, false)
 	})
 
 	Convey("test CreatePreviewPage correctly maps to previewPage frontend model", t, func() {
@@ -73,7 +73,6 @@ func TestUnitMapper(t *testing.T) {
 		So(pp.Breadcrumb[3].Title, ShouldEqual, "Preview")
 		So(pp.Breadcrumb[3].URI, ShouldEqual, "")
 		So(pp.Data.FilterID, ShouldEqual, filter.Links.FilterBlueprint.ID)
-		So(pp.ShowFeedbackForm, ShouldEqual, true)
 		if pp.Data.Downloads[0].Extension == "csv" {
 			So(pp.Data.Downloads[0].Extension, ShouldEqual, "csv")
 			So(pp.Data.Downloads[0].Size, ShouldEqual, "362783")
@@ -149,7 +148,6 @@ func TestUnitMapper(t *testing.T) {
 			So(p.Data.RangeData.Values[2].Label, ShouldEqual, "Apr-10")
 			So(p.Data.RangeData.Values[2].IsSelected, ShouldBeFalse)
 			So(p.Data.FiltersAmount, ShouldEqual, 2)
-			So(p.ShowFeedbackForm, ShouldEqual, false)
 		})
 
 		Convey("correctly orders the time values into ascending numeric order", func() {

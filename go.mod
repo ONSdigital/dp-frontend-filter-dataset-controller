@@ -6,7 +6,7 @@ require (
 	github.com/ONSdigital/dp-api-clients-go v1.30.0
 	github.com/ONSdigital/dp-cookies v0.1.0
 	github.com/ONSdigital/dp-frontend-dataset-controller v1.10.1-0.20200813150831-2a0297570ab5
-	github.com/ONSdigital/dp-frontend-models v1.8.0
+	github.com/ONSdigital/dp-frontend-models v1.9.1
 	github.com/ONSdigital/dp-healthcheck v1.0.5
 	github.com/ONSdigital/dp-net v1.0.9
 	github.com/ONSdigital/go-ns v0.0.0-20200511161740-afc39066ee62
