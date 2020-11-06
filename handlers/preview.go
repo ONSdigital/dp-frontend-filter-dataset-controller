@@ -157,7 +157,17 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 
 		p := mapper.CreatePreviewPage(req, dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview, lang)
 
-		if latestPath == versionPath {
+		editionDetails, err := f.DatasetClient.GetEdition(req.Context(), userAccessToken, "", collectionID, datasetID, edition)
+		if err != nil {
+			log.Event(ctx, "failed to get edition details", log.ERROR, log.Error(err), log.Data{"dataset": datasetID, "edition": edition})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		latestVersionInEdition := editionDetails.Links.LatestVersion.ID
+		latestVersionInEditionPath := fmt.Sprintf("/datasets/%s/editions/%s/versions/%s", datasetID, edition, latestVersionInEdition)
+
+		if latestVersionInEditionPath == versionPath {
 			p.Data.IsLatestVersion = true
 		}
 

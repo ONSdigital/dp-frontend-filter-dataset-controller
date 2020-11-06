@@ -354,7 +354,7 @@ func (mr *MockDatasetClientMockRecorder) GetVersionMetadata(ctx, userAuthToken, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersionMetadata", reflect.TypeOf((*MockDatasetClient)(nil).GetVersionMetadata), ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version)
 }
 
-// GetVersionMetadata mocks base method
+// GetEdition mocks base method
 func (m *MockDatasetClient) GetEdition(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition string) (dataset.Edition, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEdition", ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition)
@@ -363,7 +363,7 @@ func (m *MockDatasetClient) GetEdition(ctx context.Context, userAuthToken, servi
 	return ret0, ret1
 }
 
-// GetVersionMetadata indicates an expected call of GetVersionMetadata
+// GetEdition indicates an expected call of GetEdition
 func (mr *MockDatasetClientMockRecorder) GetEdition(ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEdition", reflect.TypeOf((*MockDatasetClient)(nil).GetEdition), ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition)

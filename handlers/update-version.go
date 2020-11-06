@@ -52,7 +52,7 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 
 		editionDetails, err := f.DatasetClient.GetEdition(req.Context(), userAccessToken, "", collectionID, datasetID, edition)
 		if err != nil {
-			log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
+			log.Event(ctx, "failed to get edition details", log.ERROR, log.Error(err), log.Data{"dataset": datasetID, "edition": edition})
 			setStatusCode(req, w, err)
 			return
 		}

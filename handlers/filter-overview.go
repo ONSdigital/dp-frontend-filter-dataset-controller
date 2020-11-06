@@ -114,21 +114,23 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 			return
 		}
 
-		latestURL, err := url.Parse(dataset.Links.LatestVersion.URL)
+		p := mapper.CreateFilterOverview(req, dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang)
+
+		editionDetails, err := f.DatasetClient.GetEdition(req.Context(), userAccessToken, "", collectionID, datasetID, edition)
 		if err != nil {
-			log.Event(ctx, "failed to parse latest version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Event(ctx, "failed to get edition details", log.ERROR, log.Error(err), log.Data{"dataset": datasetID, "edition": edition})
 			setStatusCode(req, w, err)
 			return
 		}
-		latestPath := strings.TrimPrefix(latestURL.Path, f.APIRouterVersion)
 
-		p := mapper.CreateFilterOverview(req, dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang)
+		latestVersionInEdition := editionDetails.Links.LatestVersion.ID
+		latestVersionInEditionPath := fmt.Sprintf("/datasets/%s/editions/%s/versions/%s", datasetID, edition, latestVersionInEdition)
 
-		if latestPath == versionPath {
+		if latestVersionInEditionPath == versionPath {
 			p.Data.IsLatestVersion = true
 		}
 
-		p.Data.LatestVersion.DatasetLandingPageURL = latestPath
+		p.Data.LatestVersion.DatasetLandingPageURL = latestVersionInEditionPath
 		p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterID)
 
 		b, err := json.Marshal(p)
