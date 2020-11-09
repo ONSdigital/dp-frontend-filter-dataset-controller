@@ -57,11 +57,9 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 			return
 		}
 
-		latestVersionInEdition := editionDetails.Links.LatestVersion.ID
-
-		newFilterID, err := f.FilterClient.CreateBlueprint(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, string(latestVersionInEdition), []string{})
+		newFilterID, err := f.FilterClient.CreateBlueprint(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, string(editionDetails.Links.LatestVersion.ID), []string{})
 		if err != nil {
-			log.Event(ctx, "failed to create filter blueprint", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": latestVersionInEdition})
+			log.Event(ctx, "failed to create filter blueprint", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": editionDetails.Links.LatestVersion.ID})
 			setStatusCode(req, w, err)
 			return
 		}

@@ -123,9 +123,7 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 			return
 		}
 
-		latestVersionInEdition := editionDetails.Links.LatestVersion.ID
-		latestVersionInEditionPath := fmt.Sprintf("/datasets/%s/editions/%s/versions/%s", datasetID, edition, latestVersionInEdition)
-
+		latestVersionInEditionPath := fmt.Sprintf("/datasets/%s/editions/%s/versions/%s", datasetID, edition, editionDetails.Links.LatestVersion.ID)
 		if latestVersionInEditionPath == versionPath {
 			p.Data.IsLatestVersion = true
 		}
