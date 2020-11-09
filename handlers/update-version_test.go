@@ -18,7 +18,7 @@ func TestUseLatest(t *testing.T) {
 	mockDownloadToken := ""
 	mockUserAuthToken := ""
 	mockCollectionID := ""
-	filterID := "12345"
+	filterID := "current-filter-id"
 	mockNewFilterID := "new-filter-id"
 
 	mockCtrl := gomock.NewController(t)
@@ -36,7 +36,7 @@ func TestUseLatest(t *testing.T) {
 			{DimensionOptionsURL: "/123", Option: "monday"},
 		}
 
-		// Mock the calls made in the UseLatest method
+		// Mock the calls that are expected to be made in the UseLatest method
 		mockFilterClient := NewMockFilterClient(mockCtrl)
 		mockDatasetClient := NewMockDatasetClient(mockCtrl)
 		mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadToken, mockCollectionID, filterID).Return(filter.Model{Links: filter.Links{Version: filter.Link{HRef: "/v1/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"}}}, nil)
@@ -49,9 +49,10 @@ func TestUseLatest(t *testing.T) {
 
 		mockRenderer := NewMockRenderer(mockCtrl)
 		f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, mockServiceAuthToken, "", "/v1", false)
+
 		router := mux.NewRouter()
 		router.Path("/filters/{filterID}/use-latest-version").HandlerFunc(f.UseLatest())
-		req := httptest.NewRequest("GET", "/filters/12345/use-latest-version", nil)
+		req := httptest.NewRequest("GET", "/filters/current-filter-id/use-latest-version", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
