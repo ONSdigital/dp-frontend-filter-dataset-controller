@@ -52,7 +52,6 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 	p.FilterID = filterID
 	p.DatasetTitle = dst.Title
 	p.Metadata.Title = "Filter Options"
-	p.ShowFeedbackForm = false
 	p.DatasetId = datasetID
 	p.Language = lang
 
@@ -189,7 +188,6 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 	p.DatasetTitle = dst.Title
 	p.Data.Title = pageTitle
 	p.Metadata.Title = pageTitle
-	p.ShowFeedbackForm = false
 	p.DatasetId = datasetID
 	p.Language = lang
 
@@ -324,7 +322,6 @@ func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, fi
 	log.Event(ctx, "mapping api responses to preview page model", log.INFO, log.Data{"filterOutputID": filterOutputID, "datasetID": datasetID})
 
 	p.SearchDisabled = false
-	p.ShowFeedbackForm = true
 	p.ReleaseDate = releaseDate
 	p.Data.UnitOfMeasurement = dst.UnitOfMeasure
 
@@ -731,17 +728,17 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 			maxYear = yearStr
 		}
 		yearInt, err := strconv.Atoi(yearStr)
-		if err != nil{
+		if err != nil {
 			log.Event(ctx, "unable to convert year string to int for comparison", log.ERROR, log.Error(err))
 			continue
 		}
 		maxYearInt, err := strconv.Atoi(maxYear)
-		if err != nil{
+		if err != nil {
 			log.Event(ctx, "unable to convert max year string to int for comparison", log.ERROR, log.Error(err))
 			continue
 		}
 		minYearInt, err := strconv.Atoi(minYear)
-		if err != nil{
+		if err != nil {
 			log.Event(ctx, "unable to convert min year string to int for comparison", log.ERROR, log.Error(err))
 			continue
 		}
