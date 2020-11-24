@@ -248,6 +248,20 @@ func (mr *MockFilterClientMockRecorder) SetDimensionValues(ctx, userAuthToken, s
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDimensionValues", reflect.TypeOf((*MockFilterClient)(nil).SetDimensionValues), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, options)
 }
 
+// PatchDimensionValues mocks base method
+func (m *MockFilterClient) PatchDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, addValues, removeValues []string, batchSize int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PatchDimensionValues", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, addValues, removeValues, batchSize)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PatchDimensionValues indicates an expected call of PatchDimensionValues
+func (mr *MockFilterClientMockRecorder) PatchDimensionValues(ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, addValues, removeValues, batchSize interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchDimensionValues", reflect.TypeOf((*MockFilterClient)(nil).PatchDimensionValues), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, addValues, removeValues, batchSize)
+}
+
 // UpdateBlueprint mocks base method
 func (m_2 *MockFilterClient) UpdateBlueprint(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID string, m filter.Model, doSubmit bool) (filter.Model, error) {
 	m_2.ctrl.T.Helper()

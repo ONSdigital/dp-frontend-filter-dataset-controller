@@ -104,29 +104,29 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 			// TODO when PATCH endpoint is implemented in Filter API, we can send an array of delete operations for all options found in child items but not in the request form
 			// without needing to do a GetDimensionOptions.
 
-			opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
-			if err != nil {
-				log.Event(ctx, "failed to get dimension options", log.ERROR, log.Error(err))
-			}
-
-			// removeOptions := []string{}
-			// for _, hv := range h.Children {
-			// 	if _, ok := req.Form[hv.Links.Self.ID]; !ok {
-			// 		removeOptions = append(removeOptions, hv.Links.Self.ID)
-			// 	}
+			// opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
+			// if err != nil {
+			// 	log.Event(ctx, "failed to get dimension options", log.ERROR, log.Error(err))
 			// }
 
+			removeOptions := []string{}
 			for _, hv := range h.Children {
-				for _, opt := range opts {
-					if opt.Option == hv.Links.Self.ID {
-						if _, ok := req.Form[hv.Links.Self.ID]; !ok {
-							if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, hv.Links.Self.ID); err != nil {
-								log.Event(ctx, "failed to remove dimension value", log.ERROR, log.Error(err))
-							}
-						}
-					}
+				if _, ok := req.Form[hv.Links.Self.ID]; !ok {
+					removeOptions = append(removeOptions, hv.Links.Self.ID)
 				}
 			}
+
+			// for _, hv := range h.Children {
+			// 	for _, opt := range opts {
+			// 		if opt.Option == hv.Links.Self.ID {
+			// 			if _, ok := req.Form[hv.Links.Self.ID]; !ok {
+			// 				if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, hv.Links.Self.ID); err != nil {
+			// 					log.Event(ctx, "failed to remove dimension value", log.ERROR, log.Error(err))
+			// 				}
+			// 			}
+			// 		}
+			// 	}
+			// }
 		}()
 
 		for k := range req.Form {

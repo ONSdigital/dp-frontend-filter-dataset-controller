@@ -11,7 +11,6 @@ require (
 	github.com/ONSdigital/dp-net v1.0.10
 	github.com/ONSdigital/go-ns v0.0.0-20200511161740-afc39066ee62
 	github.com/ONSdigital/log.go v1.0.1
-	github.com/aws/aws-sdk-go v1.35.33 // indirect
 	github.com/golang/mock v1.4.4
 	github.com/gorilla/mux v1.8.0
 	github.com/justinas/alice v1.2.0
