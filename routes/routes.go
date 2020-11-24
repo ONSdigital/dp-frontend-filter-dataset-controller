@@ -51,7 +51,7 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients *Clien
 
 	filter := handlers.NewFilter(clients.Renderer, clients.Filter, clients.Dataset,
 		clients.Hierarchy, clients.Search, v, cfg.SearchAPIAuthToken, cfg.DownloadServiceURL, apiRouterVersion,
-		cfg.EnableDatasetPreview)
+		cfg.EnableDatasetPreview, cfg.BatchSizeLimit)
 
 	r.StrictSlash(true).Path("/health").HandlerFunc(clients.HealthcheckHandler)
 

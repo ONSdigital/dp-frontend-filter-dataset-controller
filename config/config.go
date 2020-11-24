@@ -18,6 +18,7 @@ type Config struct {
 	EnableDatasetPreview       bool          `envconfig:"ENABLE_DATASET_PREVIEW"`
 	EnableProfiler             bool          `envconfig:"ENABLE_PROFILER"`
 	PprofToken                 string        `envconfig:"PPROF_TOKEN" json:"-"`
+	BatchSizeLimit             int           `envconfig:"BATCH_SIZE_LIMIT"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
@@ -42,6 +43,7 @@ func Get() (cfg *Config, err error) {
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
+		BatchSizeLimit:             1000,
 	}
 
 	return cfg, envconfig.Process("", cfg)

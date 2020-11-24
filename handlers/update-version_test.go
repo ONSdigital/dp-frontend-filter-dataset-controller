@@ -20,6 +20,7 @@ func TestUseLatest(t *testing.T) {
 	mockCollectionID := ""
 	filterID := "current-filter-id"
 	mockNewFilterID := "new-filter-id"
+	batchSize := 100
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -48,7 +49,7 @@ func TestUseLatest(t *testing.T) {
 		mockFilterClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockNewFilterID, "Day", []string{mockDimensionOption[0].Option}).Return(nil)
 
 		mockRenderer := NewMockRenderer(mockCtrl)
-		f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, mockServiceAuthToken, "", "/v1", false)
+		f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
 
 		router := mux.NewRouter()
 		router.Path("/filters/{filterID}/use-latest-version").HandlerFunc(f.UseLatest())

@@ -22,6 +22,7 @@ func TestUpdateTime(t *testing.T) {
 	const mockServiceAuthToken = ""
 	const mockCollectionID = "Bar"
 	const mockFilterID = ""
+	batchSize := 100
 	Convey("test update time function", t, func() {
 		Convey("given a valid list of options there should be no errors but be a redirect", func() {
 			mockClient := NewMockFilterClient(mockCtrl)
@@ -37,7 +38,7 @@ func TestUpdateTime(t *testing.T) {
 			req.Header.Add(dprequest.FlorenceHeaderKey, mockUserAuthToken)
 			req.Header.Add(dprequest.CollectionIDHeaderKey, mockCollectionID)
 			w := httptest.NewRecorder()
-			f := NewFilter(nil, mockClient, nil, nil, nil, nil, mockServiceAuthToken, "", "/v1", false)
+			f := NewFilter(nil, mockClient, nil, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
 			f.UpdateTime().ServeHTTP(w, req)
 
 			So(w.Code, ShouldEqual, 302)

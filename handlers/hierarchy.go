@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
-	"sync"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
@@ -71,63 +70,37 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 			return
 		}
 
-		var wg sync.WaitGroup
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
-			var h hierarchy.Model
-			var err error
-			if len(code) > 0 {
-				h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
+		var h hierarchy.Model
+		if len(code) > 0 {
+			h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
+		} else {
+			if name == "geography" {
+				h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
 			} else {
-				if name == "geography" {
-					h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
-				} else {
-					h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
-				}
-
-				// We include the value on the root as a selectable item, so append
-				// the value on the root to the child to see if it has been removed by
-				// the user
-				h.Children = append(h.Children, hierarchy.Child{
-					Links: h.Links,
-				})
-			}
-			if err != nil {
-				log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
-				setStatusCode(req, w, err)
-				return
+				h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
 			}
 
-			// TODO when PATCH endpoint is implemented in Filter API, we can send an array of delete operations for all options found in child items but not in the request form
-			// without needing to do a GetDimensionOptions.
+			// We include the value on the root as a selectable item, so append
+			// the value on the root to the child to see if it has been removed by
+			// the user
+			h.Children = append(h.Children, hierarchy.Child{
+				Links: h.Links,
+			})
+		}
+		if err != nil {
+			log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
+			setStatusCode(req, w, err)
+			return
+		}
 
-			// opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
-			// if err != nil {
-			// 	log.Event(ctx, "failed to get dimension options", log.ERROR, log.Error(err))
-			// }
-
-			removeOptions := []string{}
-			for _, hv := range h.Children {
-				if _, ok := req.Form[hv.Links.Self.ID]; !ok {
-					removeOptions = append(removeOptions, hv.Links.Self.ID)
-				}
+		removeOptions := []string{}
+		for _, hv := range h.Children {
+			if _, ok := req.Form[hv.Links.Self.ID]; !ok {
+				removeOptions = append(removeOptions, hv.Links.Self.ID)
 			}
+		}
 
-			// for _, hv := range h.Children {
-			// 	for _, opt := range opts {
-			// 		if opt.Option == hv.Links.Self.ID {
-			// 			if _, ok := req.Form[hv.Links.Self.ID]; !ok {
-			// 				if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, hv.Links.Self.ID); err != nil {
-			// 					log.Event(ctx, "failed to remove dimension value", log.ERROR, log.Error(err))
-			// 				}
-			// 			}
-			// 		}
-			// 	}
-			// }
-		}()
+		addOptions := []string{}
 
 		for k := range req.Form {
 			if _, foundSpecial := specialFormVars[k]; foundSpecial {
@@ -141,15 +114,15 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 				continue
 			}
 
-			// TODO when PATCH endpoint is implemented in Filter API, we can send an array of add operations for all options in the request form.
-			// instead of individual calls to AddDimensionValue
-
-			if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, k); err != nil {
-				log.Event(ctx, "failed to add dimension value", log.ERROR, log.Error(err))
-			}
+			addOptions = append(addOptions, k)
 		}
 
-		wg.Wait()
+		err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize)
+		if err != nil {
+			log.Event(ctx, "failed to patch dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
+			setStatusCode(req, w, err)
+			return
+		}
 		http.Redirect(w, req, redirectURI, 302)
 	})
 }

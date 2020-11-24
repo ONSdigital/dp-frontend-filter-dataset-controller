@@ -31,6 +31,7 @@ func TestHierarchyUpdate(t *testing.T) {
 	dimensionName := "myDimension"
 	mockCode := "testCode"
 	testInstanceID := "testInstanceID"
+	batchSize := 100
 	filterModel := filter.Model{
 		InstanceID: testInstanceID,
 	}
@@ -39,23 +40,6 @@ func TestHierarchyUpdate(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	Convey("Given that filter API has three options for the dimension under test", t, func() {
-
-		// dimension options originally existing in filter API before the test
-		dimensionOptions := []filter.DimensionOption{
-			{
-				Option:              "opt1",
-				DimensionOptionsURL: "http://dimension.opt1.1.co.uk",
-			},
-			{
-				Option:              "opt2",
-				DimensionOptionsURL: "http://dimension.opt1.2.co.uk",
-			},
-			{
-				Option:              "opt3",
-				DimensionOptionsURL: "http://dimension.opt1.3.co.uk",
-			},
-		}
-
 		Convey("HierarchyUpdate called with a form containing new and overlapping options results in the union of options being sent tot filter API, one by one", func() {
 
 			// Options comming from the request form
@@ -68,10 +52,8 @@ func TestHierarchyUpdate(t *testing.T) {
 			// We call FilterAPI AddDimensionValue for each provided option in the form
 			mockFilterClient := NewMockFilterClient(mockCtrl)
 			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
-			mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName).Return(dimensionOptions, nil)
-			mockFilterClient.EXPECT().AddDimensionValue(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, "opt3").Return(nil)
-			mockFilterClient.EXPECT().AddDimensionValue(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, "opt4").Return(nil)
-			mockFilterClient.EXPECT().AddDimensionValue(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, "opt5").Return(nil)
+			mockFilterClient.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
+				ItemsEq([]string{"opt3", "opt4", "opt5"}), []string{""}, batchSize).Return(nil)
 
 			// HierarchyClient mock expecting GetRoot
 			mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
@@ -89,7 +71,7 @@ func TestHierarchyUpdate(t *testing.T) {
 
 			// Set handler and perform call
 			router := mux.NewRouter()
-			f := NewFilter(nil, mockFilterClient, nil, mockHierarchyClient, nil, nil, mockSearchAPIAuthToken, "", "/v1", false)
+			f := NewFilter(nil, mockFilterClient, nil, mockHierarchyClient, nil, nil, mockSearchAPIAuthToken, "", "/v1", false, batchSize)
 			router.Path("/filters/{filterID}/dimensions/{name}/update").HandlerFunc(f.HierarchyUpdate())
 			router.ServeHTTP(w, req)
 
@@ -98,7 +80,7 @@ func TestHierarchyUpdate(t *testing.T) {
 		})
 
 		Convey("HierarchyUpdate with code and called against a model with children, "+
-			"results in only options present in children and not in the request being removed from the existing filter API options", func() {
+			"results in only options present in children and not in the request being removed from the filter API options", func() {
 
 			// Options comming from the request form
 			testForm := url.Values{
@@ -123,23 +105,13 @@ func TestHierarchyUpdate(t *testing.T) {
 				},
 			}
 
-			// dimension option NOT present in filter API before test and neither in form values
-			childN := hierarchy.Child{
-				Links: hierarchy.Links{
-					Self: hierarchy.Link{
-						ID: "optN",
-					},
-				},
-			}
-
-			modelWithChildren := hierarchy.Model{Children: []hierarchy.Child{child1, child2, childN}}
+			modelWithChildren := hierarchy.Model{Children: []hierarchy.Child{child1, child2}}
 
 			// We call FilterAPI AddDimensionValue for the option provided in the form, and RemoveDimensionValue for the opt1 because it is present in children but not in request form
 			mockFilterClient := NewMockFilterClient(mockCtrl)
 			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
-			mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName).Return(dimensionOptions, nil)
-			mockFilterClient.EXPECT().RemoveDimensionValue(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, "opt1").Return(nil)
-			mockFilterClient.EXPECT().AddDimensionValue(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, "opt2").Return(nil)
+			mockFilterClient.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
+				ItemsEq([]string{"opt2"}), []string{"opt1"}, batchSize).Return(nil)
 
 			// HierarchyClient mock expecting GetChild, returns child model with self link
 			mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
@@ -157,7 +129,7 @@ func TestHierarchyUpdate(t *testing.T) {
 
 			// Set handler and perform call
 			router := mux.NewRouter()
-			f := NewFilter(nil, mockFilterClient, nil, mockHierarchyClient, nil, nil, mockSearchAPIAuthToken, "", "/v1", false)
+			f := NewFilter(nil, mockFilterClient, nil, mockHierarchyClient, nil, nil, mockSearchAPIAuthToken, "", "/v1", false, batchSize)
 			router.Path("/filters/{filterID}/dimensions/{name}/{code}/update").HandlerFunc(f.HierarchyUpdate())
 			router.ServeHTTP(w, req)
 
