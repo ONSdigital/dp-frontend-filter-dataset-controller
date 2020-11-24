@@ -505,7 +505,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 		options = append(options, val.Option)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options); err != nil {
+	if err := f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options); err != nil {
 		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
@@ -567,7 +567,7 @@ func (f *Filter) AddList() http.HandlerFunc {
 			options = append(options, k)
 		}
 
-		if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
+		if err := f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
 			log.Event(ctx, "failed to add dimension values", log.WARN, log.Error(err))
 		}
 

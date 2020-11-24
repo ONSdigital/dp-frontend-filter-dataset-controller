@@ -15,6 +15,57 @@ import (
 	reflect "reflect"
 )
 
+// MockClientError is a mock of ClientError interface
+type MockClientError struct {
+	ctrl     *gomock.Controller
+	recorder *MockClientErrorMockRecorder
+}
+
+// MockClientErrorMockRecorder is the mock recorder for MockClientError
+type MockClientErrorMockRecorder struct {
+	mock *MockClientError
+}
+
+// NewMockClientError creates a new mock instance
+func NewMockClientError(ctrl *gomock.Controller) *MockClientError {
+	mock := &MockClientError{ctrl: ctrl}
+	mock.recorder = &MockClientErrorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockClientError) EXPECT() *MockClientErrorMockRecorder {
+	return m.recorder
+}
+
+// Error mocks base method
+func (m *MockClientError) Error() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Error")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Error indicates an expected call of Error
+func (mr *MockClientErrorMockRecorder) Error() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockClientError)(nil).Error))
+}
+
+// Code mocks base method
+func (m *MockClientError) Code() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Code")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Code indicates an expected call of Code
+func (mr *MockClientErrorMockRecorder) Code() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Code", reflect.TypeOf((*MockClientError)(nil).Code))
+}
+
 // MockFilterClient is a mock of FilterClient interface
 type MockFilterClient struct {
 	ctrl     *gomock.Controller
@@ -183,18 +234,18 @@ func (mr *MockFilterClientMockRecorder) AddDimension(ctx, userAuthToken, service
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDimension", reflect.TypeOf((*MockFilterClient)(nil).AddDimension), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name)
 }
 
-// AddDimensionValues mocks base method
-func (m *MockFilterClient) AddDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, options []string) error {
+// SetDimensionValues mocks base method
+func (m *MockFilterClient) SetDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, options []string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddDimensionValues", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, options)
+	ret := m.ctrl.Call(m, "SetDimensionValues", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, options)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// AddDimensionValues indicates an expected call of AddDimensionValues
-func (mr *MockFilterClientMockRecorder) AddDimensionValues(ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, options interface{}) *gomock.Call {
+// SetDimensionValues indicates an expected call of SetDimensionValues
+func (mr *MockFilterClientMockRecorder) SetDimensionValues(ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDimensionValues", reflect.TypeOf((*MockFilterClient)(nil).AddDimensionValues), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDimensionValues", reflect.TypeOf((*MockFilterClient)(nil).SetDimensionValues), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, options)
 }
 
 // UpdateBlueprint mocks base method

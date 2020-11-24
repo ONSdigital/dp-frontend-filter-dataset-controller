@@ -3,17 +3,18 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
+	"regexp"
+	"strings"
+	"sync"
+
 	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
-	"net/http"
-	"net/url"
-	"regexp"
-	"strings"
-	"sync"
 )
 
 // Search handles a users search, calling various APIs to form a search results
@@ -166,7 +167,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 			for _, item := range searchRes.Items {
 				options = append(options, item.Code)
 			}
-			if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
+			if err := f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
 				log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 				setStatusCode(req, w, err)
 				return

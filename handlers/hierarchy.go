@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
-	dphandlers "github.com/ONSdigital/dp-net/handlers"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
+	dphandlers "github.com/ONSdigital/dp-net/handlers"
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
@@ -108,6 +109,13 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 				log.Event(ctx, "failed to get dimension options", log.ERROR, log.Error(err))
 			}
 
+			// removeOptions := []string{}
+			// for _, hv := range h.Children {
+			// 	if _, ok := req.Form[hv.Links.Self.ID]; !ok {
+			// 		removeOptions = append(removeOptions, hv.Links.Self.ID)
+			// 	}
+			// }
+
 			for _, hv := range h.Children {
 				for _, opt := range opts {
 					if opt.Option == hv.Links.Self.ID {
@@ -171,7 +179,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 	for _, child := range h.Children {
 		options = append(options, child.Links.Self.ID)
 	}
-	if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, "", collectionID, fil.FilterID, name, options); err != nil {
+	if err := f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, fil.FilterID, name, options); err != nil {
 		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err))
 	}
 

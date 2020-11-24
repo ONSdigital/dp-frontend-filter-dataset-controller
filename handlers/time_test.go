@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"fmt"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	dprequest "github.com/ONSdigital/dp-net/request"
 	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 func TestUpdateTime(t *testing.T) {
@@ -27,7 +28,7 @@ func TestUpdateTime(t *testing.T) {
 			mockClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "time").Return(nil)
 			mockClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "time").Return(nil)
 			mockClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "time").Return([]filter.DimensionOption{}, nil)
-			mockClient.EXPECT().AddDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "time", options).Return(nil) // Might not be able to use gomock.Any() here
+			mockClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "time", options).Return(nil) // Might not be able to use gomock.Any() here
 			target := fmt.Sprintf("/filters/%s/dimensions/time/update", mockFilterID)
 			formData := "latest-option=Nov-17&latest-month=November&latest-year=2017&month-single=Select&year-single=Select&start-month=Select&start-year=Select&end-month=Select&end-year=Select&time-selection=list&months=August&start-year-grouped=2011&end-year-grouped=2012&save-and-return=Save+and+return"
 			reader := strings.NewReader(formData)

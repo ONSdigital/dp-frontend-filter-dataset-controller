@@ -135,7 +135,7 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 	for year := startYearInt; year <= endYearInt; year++ {
 		yearStr := strconv.Itoa(year)
 		for _, month := range selectedMonths {
-			monthYearComboStr  := fmt.Sprintf("%s %s", month, yearStr)
+			monthYearComboStr := fmt.Sprintf("%s %s", month, yearStr)
 			monthYearComboTime, err := time.Parse("January 2006", monthYearComboStr)
 			if err != nil {
 				log.Event(ctx, "failed to convert filtered month and year combo to time format", log.ERROR, log.Error(err))
@@ -146,7 +146,7 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 		}
 	}
 
-	if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options); err != nil {
+	if err := f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options); err != nil {
 		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err))
 		return err
 	}
@@ -196,7 +196,7 @@ func (f *Filter) addTimeRange(filterID, userAccessToken, collectionID string, re
 		}
 	}
 
-	return f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options)
+	return f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options)
 }
 
 // Time specifically handles the data for the time dimension page

@@ -14,7 +14,7 @@ import (
 
 // ClientError implements error interface with additional code method
 type ClientError interface {
-	error
+	Error() string
 	Code() int
 }
 
@@ -30,7 +30,7 @@ type FilterClient interface {
 	RemoveDimensionValue(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name, value string) error
 	RemoveDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (err error)
 	AddDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (err error)
-	AddDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, options []string) error
+	SetDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, options []string) error
 	UpdateBlueprint(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID string, m filter.Model, doSubmit bool) (filter.Model, error)
 	CreateBlueprint(context.Context, string, string, string, string, string, string, string, []string) (string, error)
 	GetPreview(context.Context, string, string, string, string, string) (filter.Preview, error)

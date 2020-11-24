@@ -101,7 +101,7 @@ func (f *Filter) addAgeList(filterID, userAccessToken, collectionID string, req 
 		options = append(options, k)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options); err != nil {
+	if err := f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options); err != nil {
 		log.Event(ctx, "failed to add dimension options", log.ERROR, log.Error(err))
 	}
 
@@ -169,7 +169,7 @@ func (f *Filter) addAgeRange(filterID, userAccessToken, collectionID string, req
 			isInRange = false
 		}
 	}
-	return f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options)
+	return f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options)
 }
 
 // Age is a handler which will create age values on a filter job

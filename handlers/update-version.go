@@ -83,7 +83,7 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 				vals = append(vals, val.Option)
 			}
 
-			if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, "", collectionID, newFilterID, dim.Name, vals); err != nil {
+			if err := f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, newFilterID, dim.Name, vals); err != nil {
 				log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": newFilterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
 				return
