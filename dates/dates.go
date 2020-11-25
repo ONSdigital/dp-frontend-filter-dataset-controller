@@ -21,7 +21,7 @@ func (p TimeSlice) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }
 
-// ConvertToReadable takes a list of dates in the format yyyy.mm and converts to
+// ConvertToReadable takes a list of dates in the format Jan-06 and converts to
 // a list of time.Time
 func ConvertToReadable(dates []string) ([]time.Time, error) {
 	var readableDates []time.Time

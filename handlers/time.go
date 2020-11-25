@@ -102,20 +102,6 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 	ctx := req.Context()
 	dimensionName := "time"
 
-	opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName)
-	if err != nil {
-		return err
-	}
-
-	// Remove any unselected times
-	for _, opt := range opts {
-		if _, ok := req.Form[opt.Option]; !ok {
-			if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, opt.Option); err != nil {
-				log.Event(ctx, "failed to remove dimension value", log.WARN, log.Error(err))
-			}
-		}
-	}
-
 	var options []string
 	startYearStr := req.Form.Get("start-year-grouped")
 	endYearStr := req.Form.Get("end-year-grouped")
