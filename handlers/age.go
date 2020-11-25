@@ -77,18 +77,6 @@ func (f *Filter) UpdateAge() http.HandlerFunc {
 func (f *Filter) addAgeList(filterID, userAccessToken, collectionID string, req *http.Request) error {
 	ctx := req.Context()
 	dimensionName := "age"
-	opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName)
-	if err != nil {
-		return err
-	}
-	// Remove any unselected ages
-	for _, opt := range opts {
-		if _, ok := req.Form[opt.Option]; !ok {
-			if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, opt.Option); err != nil {
-				log.Event(ctx, "failed to remove dimension options", log.WARN, log.Error(err))
-			}
-		}
-	}
 
 	var options []string
 	for k := range req.Form {
