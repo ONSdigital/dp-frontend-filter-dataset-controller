@@ -70,29 +70,14 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 			return
 		}
 
-		var h hierarchy.Model
-		if len(code) > 0 {
-			h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
-		} else {
-			if name == "geography" {
-				h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
-			} else {
-				h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
-			}
-
-			// We include the value on the root as a selectable item, so append
-			// the value on the root to the child to see if it has been removed by
-			// the user
-			h.Children = append(h.Children, hierarchy.Child{
-				Links: h.Links,
-			})
-		}
+		h, err := f.buildHierarchyModel(ctx, fil, name, code)
 		if err != nil {
 			log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
 			setStatusCode(req, w, err)
 			return
 		}
 
+		// obtain options to remove from unselected values (not provided in form)
 		removeOptions := []string{}
 		for _, hv := range h.Children {
 			if _, ok := req.Form[hv.Links.Self.ID]; !ok {
@@ -100,8 +85,8 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 			}
 		}
 
+		// obtain options to add, ignoring any special form vars or redirect values
 		addOptions := []string{}
-
 		for k := range req.Form {
 			if _, foundSpecial := specialFormVars[k]; foundSpecial {
 				continue
@@ -125,6 +110,25 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 		}
 		http.Redirect(w, req, redirectURI, 302)
 	})
+}
+
+func (f *Filter) buildHierarchyModel(ctx context.Context, fil filter.Model, name, code string) (h hierarchy.Model, err error) {
+	if len(code) > 0 {
+		return f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
+	}
+	if name == "geography" {
+		h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
+	} else {
+		h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
+	}
+
+	// We include the value on the root as a selectable item, so append
+	// the value on the root to the child to see if it has been removed by
+	// the user
+	h.Children = append(h.Children, hierarchy.Child{
+		Links: h.Links,
+	})
+	return h, err
 }
 
 func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID string) {
