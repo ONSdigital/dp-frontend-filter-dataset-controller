@@ -68,12 +68,12 @@ func TestUpdateTime(t *testing.T) {
 			}
 			datasetOptions := dataset.Options{
 				Items: []dataset.Option{
-					{Label: "Jan-00", Option: "January2000"},
-					{Label: "Feb-00", Option: "February2000"},
-					{Label: "Mar-00", Option: "March2000"},
+					{Label: "Jan-00", Option: "Jan-00"},
+					{Label: "Feb-00", Option: "Feb-00"},
+					{Label: "Mar-00", Option: "Mar-00"},
 				},
 			}
-			filterOptions := []string{"January2000", "February2000", "March2000"}
+			filterOptions := []string{"Jan-00", "Feb-00", "Mar-00"}
 			mockFilterClient := NewMockFilterClient(mockCtrl)
 			mockDatasetClient := NewMockDatasetClient(mockCtrl)
 			mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "time").Return(nil)
