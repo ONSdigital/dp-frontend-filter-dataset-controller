@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strings"
-	"sync"
 
 	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
@@ -118,7 +116,7 @@ func (f *Filter) Search() http.HandlerFunc {
 
 }
 
-// SearchUpdate will update a dimension based on selected search resultss
+// SearchUpdate will update a dimension based on selected search results
 func (f *Filter) SearchUpdate() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
 		ctx := req.Context()
@@ -168,7 +166,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 				options = append(options, item.Code)
 			}
 			if err := f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
-				log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+				log.Event(ctx, "failed to add all dimension options", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 				setStatusCode(req, w, err)
 				return
 			}
@@ -176,57 +174,48 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 		}
 
 		if len(req.Form["remove-all"]) > 0 {
+			options := []string{}
 			for _, item := range searchRes.Items {
-				if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, item.Code); err != nil {
-					log.Event(ctx, "failed to remove dimension option", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "option": item.Code})
-					setStatusCode(req, w, err)
-				}
+				options = append(options, item.Code)
 			}
-
+			if err := f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, []string{}, options, f.BatchSize); err != nil {
+				log.Event(ctx, "failed to remove all dimension options, via patch", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+				setStatusCode(req, w, err)
+				return
+			}
 			return
 		}
 
-		var wg sync.WaitGroup
-		wg.Add(1)
+		// get all available dimension options from filter API
+		opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
+		if err != nil {
+			log.Event(ctx, "failed to retrieve dimension options", log.WARN, log.Error(err))
+			setStatusCode(req, w, err)
+			return
+		}
 
-		go func() {
-
-			opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
-			if err != nil {
-				log.Event(ctx, "failed to retrieve dimension options", log.WARN, log.Error(err))
-			}
-
-			for _, item := range searchRes.Items {
-				for _, opt := range opts {
-					if opt.Option == item.Code {
-						if _, ok := req.Form[item.Code]; !ok {
-							if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, item.Code); err != nil {
-								log.Event(ctx, "failed to remove dimension value", log.WARN, log.Error(err))
-							}
-						}
+		// create list of options to remove
+		removeOptions := []string{}
+		for _, item := range searchRes.Items {
+			for _, opt := range opts {
+				if opt.Option == item.Code {
+					if _, ok := req.Form[item.Code]; !ok {
+						removeOptions = append(removeOptions, item.Code)
 					}
 				}
 			}
+		}
 
-			wg.Done()
-		}()
+		// get options to add and overwrite redirectURI, if provided in the form
+		var addOptions []string
+		addOptions = getOptionsAndRedirect(req.Form, &redirectURI)
 
-		for k := range req.Form {
-			if k == "save-and-return" || k == ":uri" {
-				continue
-			}
-
-			if strings.Contains(k, "redirect:") {
-				redirectReg := regexp.MustCompile(`^redirect:(.+)$`)
-				redirectSubs := redirectReg.FindStringSubmatch(k)
-				redirectURI = redirectSubs[1]
-				continue
-			}
-
-			if err := f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, k); err != nil {
-				log.Event(ctx, "failed to add dimension value", log.WARN, log.Error(err))
-				continue
-			}
+		// sent the PATCH with options to add and remove
+		err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize)
+		if err != nil {
+			log.Event(ctx, "failed to patch dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			setStatusCode(req, w, err)
+			return
 		}
 
 		http.Redirect(w, req, redirectURI, 302)

@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -11,6 +13,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/search"
+	dprequest "github.com/ONSdigital/dp-net/request"
 	gomock "github.com/golang/mock/gomock"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -20,10 +23,11 @@ func TestUnitSearch(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	mockServiceAuthToken := ""
-	mockDownloadServiceToken := ""
-	mockUserAuthToken := ""
-	mockCollectionID := ""
+	ctx := gomock.Any()
+
+	mockUserAuthToken := "testUserAuthToken"
+	mockServiceAuthToken := "testServiceAuthToken"
+	mockCollectionID := "testCollectionID"
 
 	filterID := "12345"
 	datasetID := "abcde"
@@ -33,279 +37,293 @@ func TestUnitSearch(t *testing.T) {
 	query := "Newport"
 	batchSize := 100
 	expectedHTML := "<html>Search Results</html>"
-	ctx := gomock.Any()
 
-	Convey("test Search", t, func() {
-		Convey("test search can successfully load a page", func() {
+	Convey("Given a set of mocks for filter, dataset, search and renderer clients", t, func() {
 
-			mfc := NewMockFilterClient(mockCtrl)
-			mdc := NewMockDatasetClient(mockCtrl)
-			msc := NewMockSearchClient(mockCtrl)
-			mrc := NewMockRenderer(mockCtrl)
+		mfc := NewMockFilterClient(mockCtrl)
+		mdc := NewMockDatasetClient(mockCtrl)
+		msc := NewMockSearchClient(mockCtrl)
+		mrc := NewMockRenderer(mockCtrl)
 
-			mfc.EXPECT().GetJobState(ctx, "", "", "", "", filterID).Return(filter.Model{
+		callSearch := func() *httptest.ResponseRecorder {
+			target := fmt.Sprintf("/filters/%s/dimensions/%s/search?q=%s", filterID, name, query)
+			req := httptest.NewRequest(http.MethodGet, target, nil)
+			req.Header.Add(dprequest.FlorenceHeaderKey, mockUserAuthToken)
+			req.Header.Add(dprequest.CollectionIDHeaderKey, mockCollectionID)
+			w := httptest.NewRecorder()
+			router := mux.NewRouter()
+			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods(http.MethodGet).HandlerFunc(f.Search())
+			router.ServeHTTP(w, req)
+			return w
+		}
+
+		expectedSearchClientConfigs := []search.Config{
+			{
+				InternalToken: mockServiceAuthToken,
+				FlorenceToken: mockUserAuthToken,
+			},
+		}
+
+		Convey("Then search can successfully load a page", func() {
+			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
-			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
-			mdc.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version).Return(dataset.VersionDimensions{}, nil)
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, nil)
-			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query).Return(&search.Model{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
+			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
+			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
+			mdc.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version).Return(dataset.VersionDimensions{}, nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, nil)
+			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query, expectedSearchClientConfigs).Return(&search.Model{}, nil)
 			mrc.EXPECT().Do("dataset-filter/hierarchy", gomock.Any()).Return([]byte(expectedHTML), nil)
 
-			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
-			w := httptest.NewRecorder()
-
-			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
-
-			router.ServeHTTP(w, req)
-
+			w := callSearch()
 			So(w.Code, ShouldEqual, http.StatusOK)
 			So(w.Body.String(), ShouldEqual, expectedHTML)
 
 		})
 
-		Convey("test search can returns server error if GetJobState errors", func() {
+		Convey("Then search returns server error if GetJobState errors", func() {
+			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{}, errors.New("get job state error"))
 
-			mfc := NewMockFilterClient(mockCtrl)
-			mdc := NewMockDatasetClient(mockCtrl)
-			msc := NewMockSearchClient(mockCtrl)
-			mrc := NewMockRenderer(mockCtrl)
-
-			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{}, errors.New("get job state error"))
-
-			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
-			w := httptest.NewRecorder()
-
-			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
-
-			router.ServeHTTP(w, req)
-
+			w := callSearch()
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
 		})
-		Convey("test search can returns server error if GetDimensionOptions errors", func() {
 
-			mfc := NewMockFilterClient(mockCtrl)
-			mdc := NewMockDatasetClient(mockCtrl)
-			msc := NewMockSearchClient(mockCtrl)
-			mrc := NewMockRenderer(mockCtrl)
-
-			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
+		Convey("Then search returns server error if GetDimensionOptions errors", func() {
+			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, errors.New("get dimensions options error"))
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, errors.New("get dimensions options error"))
 
-			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
-			w := httptest.NewRecorder()
-
-			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
-
-			router.ServeHTTP(w, req)
-
+			w := callSearch()
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
-
 		})
-		Convey("test search can returns server error if Dataset Get errors", func() {
 
-			mfc := NewMockFilterClient(mockCtrl)
-			mdc := NewMockDatasetClient(mockCtrl)
-			msc := NewMockSearchClient(mockCtrl)
-			mrc := NewMockRenderer(mockCtrl)
-
-			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
+		Convey("Then search returns server error if Dataset Get errors", func() {
+			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, errors.New("dataset get error"))
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
+			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, errors.New("dataset get error"))
 
-			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
-			w := httptest.NewRecorder()
-
-			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
-
-			router.ServeHTTP(w, req)
-
+			w := callSearch()
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
-
 		})
-		Convey("test search can returns server error if GetVersion errors", func() {
 
-			mfc := NewMockFilterClient(mockCtrl)
-			mdc := NewMockDatasetClient(mockCtrl)
-			msc := NewMockSearchClient(mockCtrl)
-			mrc := NewMockRenderer(mockCtrl)
-
-			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
+		Convey("Then search returns server error if GetVersion errors", func() {
+			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
-			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, errors.New("get version error"))
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
+			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
+			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, errors.New("get version error"))
 
-			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
-			w := httptest.NewRecorder()
-
-			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
-
-			router.ServeHTTP(w, req)
-
+			w := callSearch()
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
-
 		})
-		Convey("test search can returns server error if GetOptions errors", func() {
 
-			mfc := NewMockFilterClient(mockCtrl)
-			mdc := NewMockDatasetClient(mockCtrl)
-			msc := NewMockSearchClient(mockCtrl)
-			mrc := NewMockRenderer(mockCtrl)
-
-			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
+		Convey("Then search returns server error if GetOptions errors", func() {
+			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
-			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, errors.New("get options error"))
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
+			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
+			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, errors.New("get options error"))
 
-			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
-			w := httptest.NewRecorder()
-
-			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
-
-			router.ServeHTTP(w, req)
-
+			w := callSearch()
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
 		})
 
-		Convey("test search can returns server error if search api call errors", func() {
-
-			mfc := NewMockFilterClient(mockCtrl)
-			mdc := NewMockDatasetClient(mockCtrl)
-			msc := NewMockSearchClient(mockCtrl)
-			mrc := NewMockRenderer(mockCtrl)
-
-			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
+		Convey("Then search returns server error if search api call errors", func() {
+			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
-			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, nil)
-			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query).Return(&search.Model{}, errors.New("search api error"))
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
+			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
+			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, nil)
+			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query, expectedSearchClientConfigs).Return(&search.Model{}, errors.New("search api error"))
 
-			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
-			w := httptest.NewRecorder()
-
-			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
-
-			router.ServeHTTP(w, req)
-
+			w := callSearch()
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
-
 		})
-		Convey("test search can returns server error if renderer errors", func() {
 
-			mfc := NewMockFilterClient(mockCtrl)
-			mdc := NewMockDatasetClient(mockCtrl)
-			msc := NewMockSearchClient(mockCtrl)
-			mrc := NewMockRenderer(mockCtrl)
-
-			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
+		Convey("Then search returns server error if renderer errors", func() {
+			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
-			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, nil)
-			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query).Return(&search.Model{}, nil)
-			mdc.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, datasetID, edition, version).Return(dataset.VersionDimensions{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
+			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
+			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name).Return(dataset.Options{}, nil)
+			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query, expectedSearchClientConfigs).Return(&search.Model{}, nil)
+			mdc.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version).Return(dataset.VersionDimensions{}, nil)
 			mrc.EXPECT().Do("dataset-filter/hierarchy", gomock.Any()).Return([]byte(expectedHTML), errors.New("renderer error"))
 
-			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
-			w := httptest.NewRecorder()
-
-			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
-
-			router.ServeHTTP(w, req)
+			w := callSearch()
 
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
-
 		})
 
-		Convey("test error returned if version url cannot be parsed", func() {
-
-			mfc := NewMockFilterClient(mockCtrl)
-			mdc := NewMockDatasetClient(mockCtrl)
-			msc := NewMockSearchClient(mockCtrl)
-			mrc := NewMockRenderer(mockCtrl)
-
-			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadServiceToken, mockCollectionID, filterID).Return(filter.Model{
+		Convey("Then search returns internal server error if version url cannot be parsed", func() {
+			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
 					Version: filter.Link{
 						HRef: "http://localhost:23200/v1/datasets",
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, nil)
 
-			req := httptest.NewRequest("GET", "/filters/12345/dimensions/aggregate/search?q=Newport", nil)
+			w := callSearch()
+			So(w.Code, ShouldEqual, http.StatusInternalServerError)
+		})
+	})
+}
+
+func TestSearchUpdate(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	ctx := gomock.Any()
+
+	mockUserAuthToken := "testUserAuthToken"
+	mockServiceAuthToken := "testServiceAuthToken"
+	mockCollectionID := "testCollectionID"
+
+	filterID := "12345"
+	name := "aggregate"
+	batchSize := 100
+
+	Convey("Given a set of mocks for filter, dataset, search and renderer clients", t, func() {
+
+		mfc := NewMockFilterClient(mockCtrl)
+		mdc := NewMockDatasetClient(mockCtrl)
+		msc := NewMockSearchClient(mockCtrl)
+		mrc := NewMockRenderer(mockCtrl)
+
+		callSearchUpdate := func(formData string) *httptest.ResponseRecorder {
+			target := fmt.Sprintf("/filters/%s/dimensions/%s/search/update", filterID, name)
+			reader := strings.NewReader(formData)
+			req := httptest.NewRequest(http.MethodPost, target, reader)
+			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			req.Header.Add(dprequest.FlorenceHeaderKey, mockUserAuthToken)
+			req.Header.Add(dprequest.CollectionIDHeaderKey, mockCollectionID)
 			w := httptest.NewRecorder()
-
 			router := mux.NewRouter()
 			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
-			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
-
+			router.Path("/filters/{filterID}/dimensions/{name}/search/update").HandlerFunc(f.SearchUpdate())
 			router.ServeHTTP(w, req)
+			return w
+		}
 
-			So(w.Code, ShouldEqual, http.StatusInternalServerError)
+		filterModel := filter.Model{
+			Links: filter.Links{
+				Version: filter.Link{
+					HRef: "http://localhost:23200/v1/datasets/cpih01/editions/time-series/versions/1",
+				},
+			},
+		}
 
+		Convey("When the request form includes 'add-all', all dimension values are set and the user is redirected", func() {
+			searchModel := &search.Model{
+				Items: []search.Item{
+					{Code: "clothing-1"},
+					{Code: "clothing-2"},
+					{Code: "clothing-3"},
+				},
+			}
+			options := []string{"clothing-1", "clothing-2", "clothing-3"}
+			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing").Return(searchModel, nil)
+			mfc.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, ItemsEq(options)).Return(nil)
+			formData := "q=clothing&cpih1dim1G30100=on&cpih1dim1G30200=on&save-and-return=Save+and+return&add-all=true"
+			w := callSearchUpdate(formData)
+			So(w.Code, ShouldEqual, http.StatusOK)
 		})
 
-	})
+		Convey("When the request form includes 'remove-all', all dimension values are removed and the user is redirected", func() {
+			searchModel := &search.Model{
+				Items: []search.Item{
+					{Code: "clothing-1"},
+					{Code: "clothing-2"},
+					{Code: "clothing-3"},
+				},
+			}
+			options := []string{"clothing-1", "clothing-2", "clothing-3"}
+			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing").Return(searchModel, nil)
+			mfc.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, []string{}, ItemsEq(options), batchSize).Return(nil)
+			formData := "q=clothing&cpih1dim1G30100=on&cpih1dim1G30200=on&save-and-return=Save+and+return&remove-all=true"
+			w := callSearchUpdate(formData)
+			So(w.Code, ShouldEqual, http.StatusOK)
+		})
 
+		Convey("When the request doesn't contain add-all or remove-all, then the selected options are added and the unselected are removed, in a single PATCH call. The user is redirected", func() {
+			searchModel := &search.Model{
+				Items: []search.Item{
+					{Code: "clothing-1"},
+					{Code: "clothing-2"},
+					{Code: "clothing-3"},
+					{Code: "clothing-4"},
+				},
+			}
+			filterOptions := []filter.DimensionOption{
+				{Option: "clothing-1"},
+				{Option: "clothing-2"},
+				{Option: "clothing-3"},
+				{Option: "clothing-4"},
+				{Option: "clothing-5"},
+			}
+			expectedAddOptions := []string{"clothing-1", "clothing-2", "clothing-3"}
+			expectedRemoveOptions := []string{"clothing-4"}
+			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing").Return(searchModel, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name).Return(filterOptions, nil)
+			mfc.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name,
+				ItemsEq(expectedAddOptions), ItemsEq(expectedRemoveOptions), batchSize).Return(nil)
+			formData := "q=clothing&clothing-1=on&clothing-2=on&clothing-3=on&save-and-return=Save+and+return"
+			w := callSearchUpdate(formData)
+			So(w.Code, ShouldEqual, http.StatusFound)
+		})
+
+		Convey("When GetDimensionOptions fails with a generic error, then the execution is aborted and an Internal Server Error is returned.", func() {
+			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing").Return(&search.Model{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, errors.New("Error getting dimention options"))
+			formData := "q=clothing&clothing-1=on&clothing-2=on&clothing-3=on&save-and-return=Save+and+return"
+			w := callSearchUpdate(formData)
+			So(w.Code, ShouldEqual, http.StatusInternalServerError)
+		})
+	})
 }

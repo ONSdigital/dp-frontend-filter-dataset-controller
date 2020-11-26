@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strings"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
@@ -18,13 +17,6 @@ import (
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
 )
-
-// these form vars are not regular input fields, but transmit meta form info
-var specialFormVars = map[string]bool{
-	"save-and-return": true,
-	":uri":            true,
-	"q":               true,
-}
 
 // HierarchyUpdate controls the updating of a hierarchy job
 func (f *Filter) HierarchyUpdate() http.HandlerFunc {
@@ -85,22 +77,9 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 			}
 		}
 
-		// obtain options to add, ignoring any special form vars or redirect values
-		addOptions := []string{}
-		for k := range req.Form {
-			if _, foundSpecial := specialFormVars[k]; foundSpecial {
-				continue
-			}
-
-			if strings.Contains(k, "redirect:") {
-				redirectReg := regexp.MustCompile(`^redirect:(.+)$`)
-				redirectSubs := redirectReg.FindStringSubmatch(k)
-				redirectURI = redirectSubs[1]
-				continue
-			}
-
-			addOptions = append(addOptions, k)
-		}
+		// get options to add and overwrite redirectURI, if provided in the form
+		var addOptions []string
+		addOptions = getOptionsAndRedirect(req.Form, &redirectURI)
 
 		err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize)
 		if err != nil {

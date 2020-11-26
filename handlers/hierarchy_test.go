@@ -23,10 +23,15 @@ const (
 )
 
 func TestHierarchyUpdate(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
 	ctx := gomock.Any()
+
 	mockSearchAPIAuthToken := "testServiceAuthToken"
 	mockUserAuthToken := "testUserAuthToken"
 	mockCollectionID := "testCollectionID"
+
 	filterID := "12345"
 	dimensionName := "myDimension"
 	mockCode := "testCode"
@@ -35,9 +40,6 @@ func TestHierarchyUpdate(t *testing.T) {
 	filterModel := filter.Model{
 		InstanceID: testInstanceID,
 	}
-
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
 
 	Convey("Given that filter API has three options for the dimension under test", t, func() {
 		Convey("HierarchyUpdate called with a form containing new and overlapping options results in the union of options being sent tot filter API, one by one", func() {
@@ -138,28 +140,4 @@ func TestHierarchyUpdate(t *testing.T) {
 		})
 	})
 
-}
-
-// go-mock tailored matcher to compare lists of strings ignoring order
-type itemsEq struct{ expected []string }
-
-func ItemsEq(expected []string) gomock.Matcher {
-	return &itemsEq{expected}
-}
-
-func (i *itemsEq) Matches(x interface{}) bool {
-	mExpected := make(map[string]struct{})
-	for _, e := range i.expected {
-		mExpected[e] = struct{}{}
-	}
-	for _, val := range x.([]string) {
-		if _, found := mExpected[val]; !found {
-			return false
-		}
-	}
-	return true
-}
-
-func (i *itemsEq) String() string {
-	return fmt.Sprintf("%v (in any order)", i.expected)
 }
