@@ -125,6 +125,11 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 			return
 		}
 
+		var searchConfig []search.Config
+		if len(req.Header.Get("X-Florence-Token")) > 0 {
+			searchConfig = append(searchConfig, search.Config{InternalToken: f.SearchAPIAuthToken, FlorenceToken: req.Header.Get("X-Florence-Token")})
+		}
+
 		vars := mux.Vars(req)
 		filterID := vars["filterID"]
 		name := vars["name"]
@@ -153,7 +158,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 			return
 		}
 
-		searchRes, err := f.SearchClient.Dimension(ctx, datasetID, edition, version, name, q)
+		searchRes, err := f.SearchClient.Dimension(ctx, datasetID, edition, version, name, q, searchConfig...)
 		if err != nil {
 			log.Event(ctx, "failed to retrieve dimension search result, redirecting", log.ERROR, log.Error(err))
 			http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions", filterID), 302)

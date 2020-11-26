@@ -92,7 +92,7 @@ func TestHierarchyUpdate(t *testing.T) {
 			// dimension option present in filter API before test and NOT in form values
 			child1 := hierarchy.Child{
 				Links: hierarchy.Links{
-					Self: hierarchy.Link{
+					Code: hierarchy.Link{
 						ID: "opt1",
 					},
 				},
@@ -101,7 +101,7 @@ func TestHierarchyUpdate(t *testing.T) {
 			// dimension option present in filter API before test and also in form values
 			child2 := hierarchy.Child{
 				Links: hierarchy.Links{
-					Self: hierarchy.Link{
+					Code: hierarchy.Link{
 						ID: "opt2",
 					},
 				},

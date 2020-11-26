@@ -72,8 +72,8 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 		// obtain options to remove from unselected values (not provided in form)
 		removeOptions := []string{}
 		for _, hv := range h.Children {
-			if _, ok := req.Form[hv.Links.Self.ID]; !ok {
-				removeOptions = append(removeOptions, hv.Links.Self.ID)
+			if _, ok := req.Form[hv.Links.Code.ID]; !ok {
+				removeOptions = append(removeOptions, hv.Links.Code.ID)
 			}
 		}
 

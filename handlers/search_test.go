@@ -247,6 +247,13 @@ func TestSearchUpdate(t *testing.T) {
 			return w
 		}
 
+		expectedSearchClientConfigs := []search.Config{
+			{
+				InternalToken: mockServiceAuthToken,
+				FlorenceToken: mockUserAuthToken,
+			},
+		}
+
 		filterModel := filter.Model{
 			Links: filter.Links{
 				Version: filter.Link{
@@ -265,7 +272,7 @@ func TestSearchUpdate(t *testing.T) {
 			}
 			options := []string{"clothing-1", "clothing-2", "clothing-3"}
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
-			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing").Return(searchModel, nil)
+			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing", expectedSearchClientConfigs).Return(searchModel, nil)
 			mfc.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, ItemsEq(options)).Return(nil)
 			formData := "q=clothing&cpih1dim1G30100=on&cpih1dim1G30200=on&save-and-return=Save+and+return&add-all=true"
 			w := callSearchUpdate(formData)
@@ -282,7 +289,7 @@ func TestSearchUpdate(t *testing.T) {
 			}
 			options := []string{"clothing-1", "clothing-2", "clothing-3"}
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
-			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing").Return(searchModel, nil)
+			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing", expectedSearchClientConfigs).Return(searchModel, nil)
 			mfc.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, []string{}, ItemsEq(options), batchSize).Return(nil)
 			formData := "q=clothing&cpih1dim1G30100=on&cpih1dim1G30200=on&save-and-return=Save+and+return&remove-all=true"
 			w := callSearchUpdate(formData)
@@ -308,7 +315,7 @@ func TestSearchUpdate(t *testing.T) {
 			expectedAddOptions := []string{"clothing-1", "clothing-2", "clothing-3"}
 			expectedRemoveOptions := []string{"clothing-4"}
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
-			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing").Return(searchModel, nil)
+			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing", expectedSearchClientConfigs).Return(searchModel, nil)
 			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name).Return(filterOptions, nil)
 			mfc.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name,
 				ItemsEq(expectedAddOptions), ItemsEq(expectedRemoveOptions), batchSize).Return(nil)
@@ -319,7 +326,7 @@ func TestSearchUpdate(t *testing.T) {
 
 		Convey("When GetDimensionOptions fails with a generic error, then the execution is aborted and an Internal Server Error is returned.", func() {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
-			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing").Return(&search.Model{}, nil)
+			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing", expectedSearchClientConfigs).Return(&search.Model{}, nil)
 			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name).Return([]filter.DimensionOption{}, errors.New("Error getting dimention options"))
 			formData := "q=clothing&clothing-1=on&clothing-2=on&clothing-3=on&save-and-return=Save+and+return"
 			w := callSearchUpdate(formData)
