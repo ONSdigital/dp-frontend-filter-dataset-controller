@@ -133,7 +133,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 
 	var options []string
 	for _, child := range h.Children {
-		options = append(options, child.Links.Self.ID)
+		options = append(options, child.Links.Code.ID)
 	}
 	if err := f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, fil.FilterID, name, options); err != nil {
 		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err))
@@ -162,10 +162,15 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
+	// list of dimensions to remove created from children code links
+	removeOptions := []string{}
 	for _, child := range h.Children {
-		if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, fil.FilterID, name, child.Links.Self.ID); err != nil {
-			log.Event(ctx, "failed to remove dimension value", log.ERROR, log.Error(err))
-		}
+		removeOptions = append(removeOptions, child.Links.Code.ID)
+	}
+
+	// remove all items
+	if err := f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, fil.FilterID, name, []string{}, removeOptions, f.BatchSize); err != nil {
+		log.Event(ctx, "failed to remove dimension values using a patch", log.ERROR, log.Error(err), log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code, "options": removeOptions})
 	}
 
 	http.Redirect(w, req, redirectURI, 302)
