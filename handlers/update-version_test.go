@@ -33,8 +33,14 @@ func TestUseLatest(t *testing.T) {
 			},
 		}
 
-		mockDimensionOption := []filter.DimensionOption{
-			{DimensionOptionsURL: "/123", Option: "monday"},
+		mockDimensionOption := filter.DimensionOptions{
+			Items: []filter.DimensionOption{
+				{DimensionOptionsURL: "/123", Option: "monday"},
+			},
+			Count:      1,
+			TotalCount: 1,
+			Offset:     0,
+			Limit:      0,
 		}
 
 		// Mock the calls that are expected to be made in the UseLatest method
@@ -45,8 +51,8 @@ func TestUseLatest(t *testing.T) {
 		mockDatasetClient.EXPECT().GetEdition(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016").Return(dataset.Edition{Links: mockEditionLinks}, nil)
 		mockFilterClient.EXPECT().CreateBlueprint(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "2", []string{}).Return(mockNewFilterID, nil)
 		mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockNewFilterID, "Day").Return(nil)
-		mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day").Return(mockDimensionOption, nil)
-		mockFilterClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockNewFilterID, "Day", []string{mockDimensionOption[0].Option}).Return(nil)
+		mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day", 0, 0).Return(mockDimensionOption, nil)
+		mockFilterClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockNewFilterID, "Day", []string{mockDimensionOption.Items[0].Option}).Return(nil)
 
 		mockRenderer := NewMockRenderer(mockCtrl)
 		f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)

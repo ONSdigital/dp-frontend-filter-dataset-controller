@@ -202,7 +202,7 @@ func (f *Filter) Age() http.HandlerFunc {
 			return
 		}
 
-		allValues, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName)
+		allValues, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, 0, 0)
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
 				log.Data{"dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -216,7 +216,7 @@ func (f *Filter) Age() http.HandlerFunc {
 			return
 		}
 
-		selValues, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName)
+		selValues, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName, 0, 0)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
 			setStatusCode(req, w, err)
@@ -230,7 +230,7 @@ func (f *Filter) Age() http.HandlerFunc {
 			return
 		}
 
-		p, err := mapper.CreateAgePage(req, fj, dataset, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion, lang)
+		p, err := mapper.CreateAgePage(req, fj, dataset, ver, allValues, selValues.Items, dims, datasetID, f.APIRouterVersion, lang)
 		if err != nil {
 			log.Event(ctx, "failed to map data to page", log.ERROR, log.Error(err),
 				log.Data{"filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})

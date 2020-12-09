@@ -102,7 +102,7 @@ func (f *Filter) getIDNameMap(ctx context.Context, userAccessToken, collectionID
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL)
 
 	idNameMap := make(map[string]string)
-	opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension)
+	opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name, 0, 0)
 		if err != nil {
 			log.Event(ctx, "failed to get dimension options", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
@@ -156,7 +156,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 
 			var codedDates []string
 			labelIDMap := make(map[string]string)
-			for _, opt := range opts {
+			for _, opt := range opts.Items {
 				codedDates = append(codedDates, idNameMap[opt.Option])
 				labelIDMap[idNameMap[opt.Option]] = opt.Option
 			}
@@ -208,7 +208,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		selectedValues, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
+		selectedValues, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name, 0, 0)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
@@ -244,7 +244,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		allValues, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name)
+		allValues, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name, 0, 0)
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
@@ -275,7 +275,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			allValues = sortedTime(ctx, allValues)
 		}
 
-		f.listSelector(w, req, name, selectedValues, allValues, fj, dataset, dims, datasetID, ver.ReleaseDate, lang)
+		f.listSelector(w, req, name, selectedValues.Items, allValues, fj, dataset, dims, datasetID, ver.ReleaseDate, lang)
 	})
 
 }
@@ -493,7 +493,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 		return
 	}
 
-	vals, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name)
+	vals, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name, 0, 0)
 	if err != nil {
 		log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
@@ -543,14 +543,14 @@ func (f *Filter) AddList() http.HandlerFunc {
 		}
 
 		// TODO concurrently remove any fields that have been deselected
-		opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name, 0, 0)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		for _, opt := range opts {
+		for _, opt := range opts.Items {
 			if _, ok := req.Form[opt.Option]; !ok {
 				if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, opt.Option); err != nil {
 					log.Event(ctx, "failed to remove dimension values", log.WARN, log.Error(err))
@@ -594,7 +594,7 @@ func (f *Filter) getDimensionValues(ctx context.Context, userAccessToken, collec
 		return
 	}
 
-	vals, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name)
+	vals, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, 0, 0)
 	if err != nil {
 		return
 	}

@@ -37,7 +37,7 @@ func (f *Filter) Search() http.HandlerFunc {
 			return
 		}
 
-		selVals, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
+		selVals, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name, 0, 0)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
@@ -71,7 +71,7 @@ func (f *Filter) Search() http.HandlerFunc {
 			return
 		}
 
-		allVals, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name)
+		allVals, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, 0, 0)
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
 				log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -95,7 +95,7 @@ func (f *Filter) Search() http.HandlerFunc {
 			return
 		}
 
-		p := mapper.CreateHierarchySearchPage(req, searchRes.Items, d, fil, selVals, dims.Items, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang)
+		p := mapper.CreateHierarchySearchPage(req, searchRes.Items, d, fil, selVals.Items, dims.Items, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang)
 
 		b, err := json.Marshal(p)
 		if err != nil {
@@ -192,7 +192,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 		}
 
 		// get all available dimension options from filter API
-		opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name, 0, 0)
 		if err != nil {
 			log.Event(ctx, "failed to retrieve dimension options", log.WARN, log.Error(err))
 			setStatusCode(req, w, err)
@@ -202,7 +202,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 		// create list of options to remove
 		removeOptions := []string{}
 		for _, item := range searchRes.Items {
-			for _, opt := range opts {
+			for _, opt := range opts.Items {
 				if opt.Option == item.Code {
 					if _, ok := req.Form[item.Code]; !ok {
 						removeOptions = append(removeOptions, item.Code)

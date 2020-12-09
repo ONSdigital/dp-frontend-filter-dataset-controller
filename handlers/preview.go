@@ -193,7 +193,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		}
 
 		for _, dim := range dims.Items {
-			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name)
+			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, 0, 0)
 			if err != nil {
 				log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
 				setStatusCode(req, w, err)
@@ -311,7 +311,7 @@ func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, colle
 	b.WriteString(metadata.ToString())
 	b.WriteString("Dimensions:\n")
 	for _, dimension := range dimensions.Items {
-		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name)
+		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name, 0, 0)
 		if err != nil {
 			return 0, err
 		}

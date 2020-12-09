@@ -71,7 +71,7 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 				return
 			}
 
-			dimValues, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name)
+			dimValues, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, 0, 0)
 			if err != nil {
 				log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
@@ -79,7 +79,7 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 			}
 
 			var vals []string
-			for _, val := range dimValues {
+			for _, val := range dimValues.Items {
 				vals = append(vals, val.Option)
 			}
 

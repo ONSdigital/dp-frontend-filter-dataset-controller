@@ -65,7 +65,7 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 		dimensionIDNameLookup := make(map[string]map[string]string)
 		for _, dim := range datasetDimensions.Items {
 			idNameLookup := make(map[string]string)
-			options, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name)
+			options, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, 0, 0)
 			if err != nil {
 				log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
 				setStatusCode(req, w, err)
@@ -80,15 +80,15 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 
 		var dimensions FilterModelDimensions
 		for _, dim := range dims {
-			var vals []filter.DimensionOption
-			vals, err = f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name)
+			var vals filter.DimensionOptions
+			vals, err = f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, 0, 0)
 			if err != nil {
 				log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
 				return
 			}
 			var values []string
-			for _, val := range vals {
+			for _, val := range vals.Items {
 				values = append(values, dimensionIDNameLookup[dim.Name][val.Option])
 			}
 
