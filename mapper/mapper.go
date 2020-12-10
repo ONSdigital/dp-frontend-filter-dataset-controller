@@ -399,6 +399,14 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 	return lookup
 }
 
+func getIDNameLookupFromHierarchy(vals hierarchyClient.Model) map[string]string {
+	lookup := make(map[string]string)
+	for _, val := range vals.Children {
+		lookup[val.Links.Self.ID] = val.Label
+	}
+	return lookup
+}
+
 // CreateAgePage creates an age selector page based on api responses
 func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang string) (age.Page, error) {
 	var p age.Page
@@ -878,7 +886,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 }
 
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
-func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, allVals dataset.Options, dims dataset.VersionDimensions, name, curPath, datasetID, releaseDate, apiRouterVersion, lang string) hierarchy.Page {
+func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selVals filter.DimensionOptions, dims dataset.VersionDimensions, name, curPath, datasetID, releaseDate, apiRouterVersion, lang string) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
 	p.Language = lang
@@ -1020,9 +1028,9 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 	}
 	p.Data.RemoveAll.URL = curPath + "/remove-all"
 
-	idLabelMap := getIDNameLookup(allVals)
+	idLabelMap := getIDNameLookupFromHierarchy(h)
 
-	for _, val := range selVals {
+	for _, val := range selVals.Items {
 		p.Data.FiltersAdded = append(p.Data.FiltersAdded, hierarchy.Filter{
 			Label:     idLabelMap[val.Option],
 			RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, val.Option),
@@ -1032,7 +1040,7 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 
 	if h.HasData && len(h.Breadcrumbs) == 0 {
 		var selected bool
-		for _, val := range selVals {
+		for _, val := range selVals.Items {
 			if val.Option == h.Links.Code.ID {
 				selected = true
 			}
@@ -1050,7 +1058,7 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 
 	for _, child := range h.Children {
 		var selected bool
-		for _, val := range selVals {
+		for _, val := range selVals.Items {
 			if val.Option == child.Links.Code.ID {
 				selected = true
 			}

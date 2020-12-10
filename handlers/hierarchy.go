@@ -201,6 +201,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 				h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
 			}
 		}
+
 		if err != nil {
 			log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
 			setStatusCode(req, w, err)
@@ -241,14 +242,6 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			return
 		}
 
-		allVals, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name, 0, 0)
-		if err != nil {
-			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
-				log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
-			setStatusCode(req, w, err)
-			return
-		}
-
 		dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
@@ -257,7 +250,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			return
 		}
 
-		p := mapper.CreateHierarchyPage(req, h, d, fil, selVals.Items, allVals, dims, name, req.URL.Path, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang)
+		p := mapper.CreateHierarchyPage(req, h, d, fil, selVals, dims, name, req.URL.Path, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang)
 
 		b, err := json.Marshal(p)
 		if err != nil {

@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	dprequest "github.com/ONSdigital/dp-net/request"
@@ -22,6 +23,125 @@ const (
 	CollectionIDHeaderKey  = "Collection-Id"
 	FlorenceTokenHeaderKey = "X-Florence-Token"
 )
+
+func TestHierarchy(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	ctx := gomock.Any()
+
+	mockSearchAPIAuthToken := "testServiceAuthToken"
+	mockUserAuthToken := "testUserAuthToken"
+	mockCollectionID := "testCollectionID"
+	mockDatasetID := "testDatasetID"
+	mockEdition := "testEdition"
+	mockVersion := "testVersion"
+	mockCode := "testCode"
+
+	filterID := "12345"
+	dimensionName := "myDimension"
+	testInstanceID := "testInstanceID"
+	batchSize := 100
+	filterModel := filter.Model{
+		InstanceID: testInstanceID,
+		FilterID:   filterID,
+		Links: filter.Links{
+			Version: filter.Link{
+				HRef: fmt.Sprintf("http://localhost:1234/v1/datasets/%s/editions/%s/versions/%s", mockDatasetID, mockEdition, mockVersion),
+			},
+		},
+	}
+
+	Convey("Given a set of mocked clients and models", t, func() {
+
+		mockFilterClient := NewMockFilterClient(mockCtrl)
+		mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
+		mockDatasetClient := NewMockDatasetClient(mockCtrl)
+		mockRenderer := NewMockRenderer(mockCtrl)
+
+		testSelectedOptions := filter.DimensionOptions{
+			Items: []filter.DimensionOption{
+				{Option: "op1"},
+				{Option: "op2"},
+			},
+			Count:      2,
+			TotalCount: 2,
+			Limit:      0,
+			Offset:     0,
+		}
+
+		testVersion := dataset.Version{
+			ReleaseDate: "testRelease",
+		}
+
+		testVersionDimensions := dataset.VersionDimensions{
+			Items: dataset.VersionDimensionItems{
+				dataset.VersionDimension{
+					ID:          "testDimension",
+					Name:        "DimensionName",
+					Label:       "DimensionLabel",
+					Description: "This is mocked Dimension for testing",
+				},
+			},
+		}
+
+		testDatasetDetails := dataset.DatasetDetails{
+			ID:    "datasetID",
+			Title: "datasetTitle",
+		}
+
+		// prepare request for provided url and form, then perform the call with a response writer, which is returned
+		callHierarchy := func(url string) *httptest.ResponseRecorder {
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			So(err, ShouldBeNil)
+			cookie := http.Cookie{Name: dprequest.CollectionIDCookieKey, Value: mockCollectionID}
+			req.AddCookie(&cookie)
+			req.Header.Add(dprequest.FlorenceHeaderKey, mockUserAuthToken)
+
+			router := mux.NewRouter()
+			w := httptest.NewRecorder()
+			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, mockHierarchyClient, nil, nil, mockSearchAPIAuthToken, "", "/v1", false, batchSize)
+			router.Path("/filters/{filterID}/dimensions/{name}").HandlerFunc(f.Hierarchy())
+			router.Path("/filters/{filterID}/dimensions/{name}/{code}").HandlerFunc(f.Hierarchy())
+			router.ServeHTTP(w, req)
+			return w
+		}
+
+		Convey("Hierarchy called for the root node calls the expected methods and returns the expected marshlled hierarchy page", func() {
+			testTemplate := []byte{1, 2, 3, 4, 5}
+			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, dimensionName).Return(hierarchy.Model{}, nil)
+			mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, 0, 0).Return(testSelectedOptions, nil)
+			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID).Return(testDatasetDetails, nil)
+			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersion, nil)
+			mockDatasetClient.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersionDimensions, nil)
+			mockRenderer.EXPECT().Do(gomock.Eq("dataset-filter/hierarchy"), gomock.Any()).Return(testTemplate, nil)
+
+			w := callHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s", filterID, dimensionName))
+
+			So(w.Code, ShouldEqual, http.StatusOK)
+			So(w.Body.Bytes(), ShouldResemble, testTemplate)
+		})
+
+		Convey("Hierarchy called for the child node calls the expected methods and returns the expected marshlled hierarchy page", func() {
+			testTemplate := []byte{1, 2, 3, 4, 5}
+			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, dimensionName, mockCode).Return(hierarchy.Model{}, nil)
+			mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName, 0, 0).Return(testSelectedOptions, nil)
+			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID).Return(testDatasetDetails, nil)
+			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersion, nil)
+			mockDatasetClient.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersionDimensions, nil)
+			mockRenderer.EXPECT().Do(gomock.Eq("dataset-filter/hierarchy"), gomock.Any()).Return(testTemplate, nil)
+
+			w := callHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s/%s", filterID, dimensionName, mockCode))
+
+			So(w.Code, ShouldEqual, http.StatusOK)
+			So(w.Body.Bytes(), ShouldResemble, testTemplate)
+		})
+
+	})
+
+}
 
 func TestHierarchyUpdate(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
