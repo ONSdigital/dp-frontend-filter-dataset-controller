@@ -778,7 +778,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 }
 
 // CreateHierarchySearchPage forms a search page based on various api response models
-func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selVals []filter.DimensionOption, dims []dataset.VersionDimension, allVals dataset.Options, name, curPath, datasetID, releaseDate, referrer, query, apiRouterVersion, lang string) hierarchy.Page {
+func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selectedIDLabelMap map[string]string, dims []dataset.VersionDimension, name, curPath, datasetID, releaseDate, referrer, query, apiRouterVersion, lang string) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
 
@@ -844,13 +844,11 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	p.Data.AddAllFilters.URL = curPath + "/add-all"
 	p.Data.RemoveAll.URL = curPath + "/remove-all"
 
-	idLabelMap := getIDNameLookup(allVals)
-
-	for _, val := range selVals {
+	for option, label := range selectedIDLabelMap {
 		p.Data.FiltersAdded = append(p.Data.FiltersAdded, hierarchy.Filter{
-			Label:     idLabelMap[val.Option],
-			RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, val.Option),
-			ID:        val.Option,
+			Label:     label,
+			RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, option),
+			ID:        option,
 		})
 	}
 
@@ -859,13 +857,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	} else {
 
 		for _, item := range items {
-			var selected bool
-			for _, val := range selVals {
-				if val.Option == item.Code {
-					selected = true
-				}
-			}
-
+			_, selected := selectedIDLabelMap[item.Code]
 			p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
 				Label:    item.Label,
 				ID:       item.Code,
