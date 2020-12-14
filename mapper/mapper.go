@@ -778,7 +778,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 }
 
 // CreateHierarchySearchPage forms a search page based on various api response models
-func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selectedIDLabelMap map[string]string, dims []dataset.VersionDimension, name, curPath, datasetID, releaseDate, referrer, query, apiRouterVersion, lang string) hierarchy.Page {
+func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selectedValueLabels map[string]string, dims []dataset.VersionDimension, name, curPath, datasetID, releaseDate, referrer, query, apiRouterVersion, lang string) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
 
@@ -844,7 +844,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	p.Data.AddAllFilters.URL = curPath + "/add-all"
 	p.Data.RemoveAll.URL = curPath + "/remove-all"
 
-	for option, label := range selectedIDLabelMap {
+	for option, label := range selectedValueLabels {
 		p.Data.FiltersAdded = append(p.Data.FiltersAdded, hierarchy.Filter{
 			Label:     label,
 			RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, option),
@@ -857,7 +857,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	} else {
 
 		for _, item := range items {
-			_, selected := selectedIDLabelMap[item.Code]
+			_, selected := selectedValueLabels[item.Code]
 			p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
 				Label:    item.Label,
 				ID:       item.Code,
@@ -878,7 +878,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 }
 
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
-func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selVals filter.DimensionOptions, dims dataset.VersionDimensions, name, curPath, datasetID, releaseDate, apiRouterVersion, lang string) hierarchy.Page {
+func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selectedValueLabels map[string]string, dims dataset.VersionDimensions, name, curPath, datasetID, releaseDate, apiRouterVersion, lang string) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
 	p.Language = lang
@@ -1020,24 +1020,16 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 	}
 	p.Data.RemoveAll.URL = curPath + "/remove-all"
 
-	idLabelMap := getIDNameLookupFromHierarchy(h)
-
-	for _, val := range selVals.Items {
+	for option, label := range selectedValueLabels {
 		p.Data.FiltersAdded = append(p.Data.FiltersAdded, hierarchy.Filter{
-			Label:     idLabelMap[val.Option],
-			RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, val.Option),
-			ID:        val.Option,
+			Label:     label,
+			RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, option),
+			ID:        option,
 		})
 	}
 
 	if h.HasData && len(h.Breadcrumbs) == 0 {
-		var selected bool
-		for _, val := range selVals.Items {
-			if val.Option == h.Links.Code.ID {
-				selected = true
-			}
-		}
-
+		_, selected := selectedValueLabels[h.Links.Code.ID]
 		p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
 			Label:    h.Label,
 			ID:       h.Links.Code.ID,
@@ -1049,12 +1041,7 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 	}
 
 	for _, child := range h.Children {
-		var selected bool
-		for _, val := range selVals.Items {
-			if val.Option == child.Links.Code.ID {
-				selected = true
-			}
-		}
+		_, selected := selectedValueLabels[child.Links.Code.ID]
 		p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
 			Label:    child.Label,
 			ID:       child.Links.Code.ID,

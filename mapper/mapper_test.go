@@ -437,14 +437,9 @@ func TestCreateHierarchyPage(t *testing.T) {
 			},
 			FiltersAdded: []hierarchyModel.Filter{
 				{
-					Label:     "",
+					Label:     "This is option 1",
 					RemoveURL: "//remove/op1",
 					ID:        "op1",
-				},
-				{
-					Label:     "",
-					RemoveURL: "//remove/op2",
-					ID:        "op2",
 				},
 			},
 			RemoveAll: hierarchyModel.Link{
@@ -455,16 +450,7 @@ func TestCreateHierarchyPage(t *testing.T) {
 		}
 		testHierarchyPage.FilterID = "12349876"
 
-		testSelectedOptions := filter.DimensionOptions{
-			Items: []filter.DimensionOption{
-				{Option: "op1"},
-				{Option: "op2"},
-			},
-			Count:      2,
-			TotalCount: 2,
-			Limit:      0,
-			Offset:     0,
-		}
+		testSelectedOptions := map[string]string{"op1": "This is option 1"}
 
 		testVersion := dataset.Version{
 			ReleaseDate: "testRelease",

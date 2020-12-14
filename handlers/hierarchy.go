@@ -250,7 +250,15 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			return
 		}
 
-		p := mapper.CreateHierarchyPage(req, h, d, fil, selVals, dims, name, req.URL.Path, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang)
+		selectedValueLabels, err := f.getIDNameLookupFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, name, selVals)
+		if err != nil {
+			log.Event(ctx, "failed to get options from dataset client for the selected values", log.ERROR, log.Error(err),
+				log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		p := mapper.CreateHierarchyPage(req, h, d, fil, selectedValueLabels, dims, name, req.URL.Path, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang)
 
 		b, err := json.Marshal(p)
 		if err != nil {
