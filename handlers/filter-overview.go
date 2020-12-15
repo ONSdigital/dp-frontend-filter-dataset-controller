@@ -62,42 +62,33 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 			return
 		}
 
-		dimensionIDNameLookup := make(map[string]map[string]string)
-		for _, dim := range datasetDimensions.Items {
-			idNameLookup := make(map[string]string)
-			options, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, 0, 0)
+		// get selected options from filter API for each dimension and then get the labels from dataset API for each option
+		var dimensions FilterModelDimensions
+		for _, dim := range dims {
+			selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, 0, 0)
+			if err != nil {
+				log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
+				setStatusCode(req, w, err)
+				return
+			}
+
+			selValsLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, dim.Name, selVals)
 			if err != nil {
 				log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
 				setStatusCode(req, w, err)
 				return
 			}
 
-			for _, opt := range options.Items {
-				idNameLookup[opt.Option] = opt.Label
-			}
-			dimensionIDNameLookup[dim.Name] = idNameLookup
-		}
-
-		var dimensions FilterModelDimensions
-		for _, dim := range dims {
-			var vals filter.DimensionOptions
-			vals, err = f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, 0, 0)
-			if err != nil {
-				log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
-				setStatusCode(req, w, err)
-				return
-			}
-			var values []string
-			for _, val := range vals.Items {
-				values = append(values, dimensionIDNameLookup[dim.Name][val.Option])
+			labels := []string{}
+			for _, label := range selValsLabelMap {
+				labels = append(labels, label)
 			}
 
 			dimensions = append(dimensions, filter.ModelDimension{
 				Name:   dim.Name,
-				Values: values,
+				Values: labels,
 			})
 		}
-
 		sort.Sort(dimensions)
 
 		dataset, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
