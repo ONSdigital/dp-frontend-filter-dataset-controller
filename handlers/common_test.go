@@ -120,6 +120,53 @@ func TestGetIDNameLookupFromDatasetAPI(t *testing.T) {
 	})
 }
 
+func TestGetDimensionOptionsFromFilterAPI(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	ctx := context.Background()
+	mockUserAuthToken := "testUserAuthToken"
+	mockServiceAuthToken := "testServiceAuthToken"
+	mockCollectionID := "testCollectionID"
+
+	filterID := "testFilter"
+	name := "aggregate"
+
+	Convey("Given a filter initialised with a mocked FilterClient ", t, func() {
+		mfc := NewMockFilterClient(mockCtrl)
+
+		Convey("given that the number of filter options is smaller than a batch, then all options are returned after a single batch getDimensionOptions call", func() {
+			batchSize := 100
+			f := NewFilter(nil, mfc, nil, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filterOptions(0, batchSize), nil)
+			opts, err := f.GetDimensionOptionsFromFilterAPI(ctx, mockUserAuthToken, mockCollectionID, filterID, name)
+			So(err, ShouldBeNil)
+			So(opts, ShouldResemble, filterOptions(0, 0))
+		})
+
+		Convey("given that the number of filter options is greater than a batch, then all options are returned after multiple batch getDimensionOptions calls", func() {
+			batchSize := 3
+			f := NewFilter(nil, mfc, nil, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filterOptions(0, batchSize), nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, batchSize, batchSize).Return(filterOptions(batchSize, batchSize), nil)
+			opts, err := f.GetDimensionOptionsFromFilterAPI(ctx, mockUserAuthToken, mockCollectionID, filterID, name)
+			So(err, ShouldBeNil)
+			So(opts, ShouldResemble, filterOptions(0, 0))
+		})
+
+		Convey("if filter API GetDimensionOptions returns an error, the same error is returned and the next batch is not requested", func() {
+			batchSize := 2
+			f := NewFilter(nil, mfc, nil, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			expectedErr := errors.New("error getting options from Filter API")
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filter.DimensionOptions{}, expectedErr)
+			opts, err := f.GetDimensionOptionsFromFilterAPI(ctx, mockUserAuthToken, mockCollectionID, filterID, name)
+			So(err, ShouldResemble, expectedErr)
+			So(opts, ShouldResemble, filter.DimensionOptions{})
+		})
+
+	})
+}
+
 // datasetOptions returns a mocked dataset.Options struct according to the provided offset and limit
 func datasetOptions(offset, limit int) dataset.Options {
 	allItems := []dataset.Option{
@@ -149,20 +196,48 @@ func datasetOptions(offset, limit int) dataset.Options {
 		Limit:      limit,
 		TotalCount: len(allItems),
 	}
-	o.Items = slice(allItems, offset, limit)
+	o.Items = sliceDatasetOptions(allItems, offset, limit)
 	o.Count = len(o.Items)
 	return o
 }
 
-func slice(full []dataset.Option, offset, limit int) (sliced []dataset.Option) {
+// filterOptions returns a mocked filter.Options struct according to the provided offset and limit
+func filterOptions(offset, limit int) filter.DimensionOptions {
+	allItems := []filter.DimensionOption{
+		{Option: "op1"},
+		{Option: "op2"},
+		{Option: "op3"},
+		{Option: "op4"},
+		{Option: "op5"},
+	}
+	o := filter.DimensionOptions{
+		Offset:     offset,
+		Limit:      limit,
+		TotalCount: len(allItems),
+	}
+	o.Items = sliceFilterOptions(allItems, offset, limit)
+	o.Count = len(o.Items)
+	return o
+}
+
+func sliceDatasetOptions(full []dataset.Option, offset, limit int) (sliced []dataset.Option) {
+	if offset > len(full) {
+		return []dataset.Option{}
+	}
 	end := offset + limit
 	if limit == 0 || end > len(full) {
 		end = len(full)
 	}
+	return full[offset:end]
+}
 
+func sliceFilterOptions(full []filter.DimensionOption, offset, limit int) (sliced []filter.DimensionOption) {
 	if offset > len(full) {
-		return []dataset.Option{}
+		return []filter.DimensionOption{}
 	}
-
+	end := offset + limit
+	if limit == 0 || end > len(full) {
+		end = len(full)
+	}
 	return full[offset:end]
 }

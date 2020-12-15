@@ -73,7 +73,7 @@ func TestUnitSearch(t *testing.T) {
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, 0).Return(filter.DimensionOptions{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filter.DimensionOptions{}, nil)
 			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
 			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version).Return(dataset.VersionDimensions{}, nil)
@@ -102,7 +102,7 @@ func TestUnitSearch(t *testing.T) {
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, 0).Return(filter.DimensionOptions{}, errors.New("get dimensions options error"))
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filter.DimensionOptions{}, errors.New("get dimensions options error"))
 
 			w := callSearch()
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
@@ -116,7 +116,7 @@ func TestUnitSearch(t *testing.T) {
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, 0).Return(filter.DimensionOptions{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filter.DimensionOptions{}, nil)
 			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, errors.New("dataset get error"))
 
 			w := callSearch()
@@ -131,7 +131,7 @@ func TestUnitSearch(t *testing.T) {
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, 0).Return(filter.DimensionOptions{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filter.DimensionOptions{}, nil)
 			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
 			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, errors.New("get version error"))
 
@@ -147,7 +147,7 @@ func TestUnitSearch(t *testing.T) {
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, 0).Return(filter.DimensionOptions{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filter.DimensionOptions{}, nil)
 			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
 			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(dataset.Options{}, errors.New("get options error"))
@@ -164,7 +164,7 @@ func TestUnitSearch(t *testing.T) {
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, 0).Return(filter.DimensionOptions{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filter.DimensionOptions{}, nil)
 			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
 			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(dataset.Options{}, nil)
@@ -182,7 +182,7 @@ func TestUnitSearch(t *testing.T) {
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, 0).Return(filter.DimensionOptions{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filter.DimensionOptions{}, nil)
 			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
 			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(dataset.Options{}, nil)
@@ -203,7 +203,7 @@ func TestUnitSearch(t *testing.T) {
 					},
 				},
 			}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, 0).Return(filter.DimensionOptions{}, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filter.DimensionOptions{}, nil)
 
 			w := callSearch()
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
@@ -322,7 +322,7 @@ func TestSearchUpdate(t *testing.T) {
 			expectedRemoveOptions := []string{"clothing-4"}
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
 			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing", expectedSearchClientConfigs).Return(searchModel, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, 0).Return(filterOptions, nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filterOptions, nil)
 			mfc.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name,
 				ItemsEq(expectedAddOptions), ItemsEq(expectedRemoveOptions), batchSize).Return(nil)
 			formData := "q=clothing&clothing-1=on&clothing-2=on&clothing-3=on&save-and-return=Save+and+return"
@@ -333,7 +333,7 @@ func TestSearchUpdate(t *testing.T) {
 		Convey("When GetDimensionOptions fails with a generic error, then the execution is aborted and an Internal Server Error is returned.", func() {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
 			msc.EXPECT().Dimension(ctx, "cpih01", "time-series", "1", name, "clothing", expectedSearchClientConfigs).Return(&search.Model{}, nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, 0).Return(filter.DimensionOptions{}, errors.New("Error getting dimention options"))
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filter.DimensionOptions{}, errors.New("Error getting dimention options"))
 			formData := "q=clothing&clothing-1=on&clothing-2=on&clothing-3=on&save-and-return=Save+and+return"
 			w := callSearchUpdate(formData)
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)

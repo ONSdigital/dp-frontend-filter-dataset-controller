@@ -216,7 +216,7 @@ func (f *Filter) Age() http.HandlerFunc {
 			return
 		}
 
-		selValues, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName, 0, 0)
+		selValues, err := f.GetDimensionOptionsFromFilterAPI(ctx, userAccessToken, collectionID, filterID, dimensionName)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
 			setStatusCode(req, w, err)

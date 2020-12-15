@@ -208,7 +208,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			return
 		}
 
-		selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name, 0, 0)
+		selVals, err := f.GetDimensionOptionsFromFilterAPI(req.Context(), userAccessToken, collectionID, filterID, name)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)

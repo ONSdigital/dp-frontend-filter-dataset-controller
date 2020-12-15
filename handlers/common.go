@@ -89,6 +89,40 @@ func (f *Filter) getIDNameLookupFromDatasetAPI(ctx context.Context, userAccessTo
 	return idLabelMap, errors.New("could not find all required filter options in dataset API")
 }
 
+// GetDimensionOptionsFromFilterAPI gets the filter options for a dimension from filter API in batches
+func (f *Filter) GetDimensionOptionsFromFilterAPI(ctx context.Context, userAccessToken, collectionID, filterID, dimensionName string) (opts filter.DimensionOptions, err error) {
+
+	// initialise an empty options struct
+	opts = filter.DimensionOptions{}
+
+	// call filterAPI GetDimensionOptions with pagination until we obtain all values
+	offset := 0
+	totalCount := 1
+	for offset < totalCount {
+		// get options batch from filter API
+		batchOpts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName, offset, f.BatchSize)
+		if err != nil {
+			return opts, err
+		}
+
+		// (first iteration only) - set totalCount
+		if offset == 0 {
+			totalCount = batchOpts.TotalCount
+			opts.TotalCount = batchOpts.TotalCount
+		}
+
+		// append options for the current batch
+		opts.Items = append(opts.Items, batchOpts.Items...)
+
+		// set offset for the next iteration
+		offset += f.BatchSize
+	}
+
+	// batch processing completed, return all accumulated options
+	opts.Count = len(opts.Items)
+	return opts, nil
+}
+
 // -- TESTING UTILITIES
 
 // go-mock tailored matcher to compare lists of strings ignoring order

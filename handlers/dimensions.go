@@ -122,7 +122,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name, 0, 0)
+		opts, err := f.GetDimensionOptionsFromFilterAPI(req.Context(), userAccessToken, collectionID, filterID, name)
 		if err != nil {
 			log.Event(ctx, "failed to get dimension options", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
@@ -208,7 +208,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		selectedValues, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name, 0, 0)
+		selectedValues, err := f.GetDimensionOptionsFromFilterAPI(req.Context(), userAccessToken, collectionID, filterID, name)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
@@ -542,8 +542,8 @@ func (f *Filter) AddList() http.HandlerFunc {
 			return
 		}
 
-		// TODO concurrently remove any fields that have been deselected
-		opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name, 0, 0)
+		// TODO remove any fields that have been deselected via patch call (call patch for each batch of options)
+		opts, err := f.GetDimensionOptionsFromFilterAPI(ctx, userAccessToken, collectionID, filterID, name)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
