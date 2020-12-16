@@ -168,6 +168,55 @@ func TestGetDimensionOptionsFromFilterAPI(t *testing.T) {
 	})
 }
 
+func TestGetDimensionOptionsFromDataseAPI(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	ctx := context.Background()
+	mockUserAuthToken := "testUserAuthToken"
+	mockServiceAuthToken := "testServiceAuthToken"
+	mockCollectionID := "testCollectionID"
+
+	datasetID := "abcde"
+	name := "aggregate"
+	edition := "2017"
+	version := "1"
+
+	Convey("Given a filter initialised with a mocked DatasetClient ", t, func() {
+		mdc := NewMockDatasetClient(mockCtrl)
+
+		Convey("given that the number of dataset options is smaller than a batch, then all options are returned after a single batch getOptions call", func() {
+			batchSize := 100
+			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(datasetOptions(0, batchSize), nil)
+			opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name)
+			So(err, ShouldBeNil)
+			So(opts, ShouldResemble, datasetOptions(0, 0))
+		})
+
+		Convey("given that the number of dataset options is greater than a batch, then all options are returned after multiple batch getOptions calls", func() {
+			batchSize := 3
+			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(datasetOptions(0, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, batchSize, batchSize).Return(datasetOptions(batchSize, batchSize), nil)
+			opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name)
+			So(err, ShouldBeNil)
+			So(opts, ShouldResemble, datasetOptions(0, 0))
+		})
+
+		Convey("if dataset API GetOptions returns an error, the same error is returned and the next batch is not requested", func() {
+			batchSize := 2
+			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			expectedErr := errors.New("error getting options from Dataset API")
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(dataset.Options{}, expectedErr)
+			opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name)
+			So(err, ShouldResemble, expectedErr)
+			So(opts, ShouldResemble, dataset.Options{})
+		})
+
+	})
+}
+
 // datasetOptions returns a mocked dataset.Options struct according to the provided offset and limit
 func datasetOptions(offset, limit int) dataset.Options {
 	allItems := []dataset.Option{
