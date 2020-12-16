@@ -210,13 +210,6 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		selectedValues, err := f.GetDimensionOptionsFromFilterAPI(req.Context(), userAccessToken, collectionID, filterID, name)
-		if err != nil {
-			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
-			setStatusCode(req, w, err)
-			return
-		}
-
 		versionURL, err := url.Parse(fj.Links.Version.HRef)
 		if err != nil {
 			log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
@@ -246,13 +239,6 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		allValues, err := f.GetDimensionOptionsFromDatasetAPI(req.Context(), userAccessToken, collectionID, datasetID, edition, version, name)
-		if err != nil {
-			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
-			setStatusCode(req, w, err)
-			return
-		}
-
 		// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
 		// then the dimension should be populated as a hierarchy
 		isHierarchy, err := f.isHierarchicalDimension(ctx, fj.InstanceID, name)
@@ -261,8 +247,30 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		if isHierarchy && allValues.TotalCount > maxNumOptionsOnPage {
+		// count number of options in dataset API
+		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, 0, 1)
+		if err != nil {
+			setStatusCode(req, w, err)
+			return
+		}
+
+		// if there are more than maxNumOptionsOnPage, then we need to use the hierarchy model
+		if isHierarchy && opts.TotalCount > maxNumOptionsOnPage {
 			f.Hierarchy().ServeHTTP(w, req)
+			return
+		}
+
+		selectedValues, err := f.GetDimensionOptionsFromFilterAPI(req.Context(), userAccessToken, collectionID, filterID, name)
+		if err != nil {
+			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		allValues, err := f.GetDimensionOptionsFromDatasetAPI(req.Context(), userAccessToken, collectionID, datasetID, edition, version, name)
+		if err != nil {
+			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
+			setStatusCode(req, w, err)
 			return
 		}
 
