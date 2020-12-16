@@ -21,6 +21,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const maxNumOptionsOnPage = 20
+
 type labelID struct {
 	Label string `json:"label"`
 	ID    string `json:"id"`
@@ -244,7 +246,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		allValues, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name, 0, 0)
+		allValues, err := f.GetDimensionOptionsFromDatasetAPI(req.Context(), userAccessToken, collectionID, datasetID, edition, version, name)
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
@@ -259,7 +261,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		if isHierarchy && len(allValues.Items) > 20 {
+		if isHierarchy && allValues.TotalCount > maxNumOptionsOnPage {
 			f.Hierarchy().ServeHTTP(w, req)
 			return
 		}

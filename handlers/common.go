@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 )
 
@@ -91,21 +92,51 @@ func (f *Filter) getIDNameLookupFromDatasetAPI(ctx context.Context, userAccessTo
 func (f *Filter) GetDimensionOptionsFromFilterAPI(ctx context.Context, userAccessToken, collectionID, filterID, dimensionName string) (opts filter.DimensionOptions, err error) {
 
 	// initialise an empty options struct
-	opts = filter.DimensionOptions{}
+	opts = filter.DimensionOptions{TotalCount: 1}
 
 	// call filterAPI GetDimensionOptions with pagination until we obtain all values
 	offset := 0
-	totalCount := 1
-	for offset < totalCount {
+	for offset < opts.TotalCount {
 		// get options batch from filter API
 		batchOpts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName, offset, f.BatchSize)
 		if err != nil {
-			return opts, err
+			return filter.DimensionOptions{}, err
 		}
 
 		// (first iteration only) - set totalCount
 		if offset == 0 {
-			totalCount = batchOpts.TotalCount
+			opts.TotalCount = batchOpts.TotalCount
+		}
+
+		// append options for the current batch
+		opts.Items = append(opts.Items, batchOpts.Items...)
+
+		// set offset for the next iteration
+		offset += f.BatchSize
+	}
+
+	// batch processing completed, return all accumulated options
+	opts.Count = len(opts.Items)
+	return opts, nil
+}
+
+// GetDimensionOptionsFromDatasetAPI gets the filter options for a dimension from filter API in batches
+func (f *Filter) GetDimensionOptionsFromDatasetAPI(ctx context.Context, userAccessToken, collectionID, datasetID, edition, version, dimensionName string) (opts dataset.Options, err error) {
+
+	// initialise an empty options struct
+	opts = dataset.Options{TotalCount: 1}
+
+	// call datasetAPI GetOptions with pagination until we obtain all values
+	offset := 0
+	for offset < opts.TotalCount {
+		// get batch
+		batchOpts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, offset, f.BatchSize)
+		if err != nil {
+			return dataset.Options{}, err
+		}
+
+		// (first iteration only) - set totalCount
+		if offset == 0 {
 			opts.TotalCount = batchOpts.TotalCount
 		}
 
