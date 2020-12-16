@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
@@ -240,4 +241,32 @@ func sliceFilterOptions(full []filter.DimensionOption, offset, limit int) (slice
 		end = len(full)
 	}
 	return full[offset:end]
+}
+
+// go-mock tailored matcher to compare lists of strings ignoring order
+type itemsEq struct{ expected []string }
+
+// ItemsEq checks if 2 slices contain the same items in any order
+func ItemsEq(expected []string) gomock.Matcher {
+	return &itemsEq{expected}
+}
+
+func (i *itemsEq) Matches(x interface{}) bool {
+	if len(x.([]string)) != len(i.expected) {
+		return false
+	}
+	mExpected := make(map[string]struct{})
+	for _, e := range i.expected {
+		mExpected[e] = struct{}{}
+	}
+	for _, val := range x.([]string) {
+		if _, found := mExpected[val]; !found {
+			return false
+		}
+	}
+	return true
+}
+
+func (i *itemsEq) String() string {
+	return fmt.Sprintf("%v (in any order)", i.expected)
 }

@@ -3,13 +3,11 @@ package handlers
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
-	gomock "github.com/golang/mock/gomock"
 )
 
 // these form vars are not regular input fields, but transmit meta form info
@@ -68,7 +66,7 @@ func (f *Filter) getIDNameLookupFromDatasetAPI(ctx context.Context, userAccessTo
 			totalCount = options.TotalCount
 		}
 
-		// iterate bath items and found values options and labels
+		// iterate items in batch and populate labels in idLabelMap
 		for _, opt := range options.Items {
 			if _, found := idLabelMap[opt.Option]; found {
 				idLabelMap[opt.Option] = opt.Label
@@ -121,34 +119,4 @@ func (f *Filter) GetDimensionOptionsFromFilterAPI(ctx context.Context, userAcces
 	// batch processing completed, return all accumulated options
 	opts.Count = len(opts.Items)
 	return opts, nil
-}
-
-// -- TESTING UTILITIES
-
-// go-mock tailored matcher to compare lists of strings ignoring order
-type itemsEq struct{ expected []string }
-
-// ItemsEq checks if 2 slices contain the same items in any order
-func ItemsEq(expected []string) gomock.Matcher {
-	return &itemsEq{expected}
-}
-
-func (i *itemsEq) Matches(x interface{}) bool {
-	if len(x.([]string)) != len(i.expected) {
-		return false
-	}
-	mExpected := make(map[string]struct{})
-	for _, e := range i.expected {
-		mExpected[e] = struct{}{}
-	}
-	for _, val := range x.([]string) {
-		if _, found := mExpected[val]; !found {
-			return false
-		}
-	}
-	return true
-}
-
-func (i *itemsEq) String() string {
-	return fmt.Sprintf("%v (in any order)", i.expected)
 }
