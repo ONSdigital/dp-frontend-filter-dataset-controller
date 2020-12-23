@@ -408,7 +408,7 @@ func getIDNameLookupFromHierarchy(vals hierarchyClient.Model) map[string]string 
 }
 
 // CreateAgePage creates an age selector page based on api responses
-func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang string) (age.Page, error) {
+func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals filter.DimensionOptions, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang string) (age.Page, error) {
 	var p age.Page
 	p.BetaBannerEnabled = true
 
@@ -479,7 +479,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 	for _, ageVal := range ages {
 		var isSelected bool
 		ageString := strconv.Itoa(ageVal)
-		for _, selVal := range selVals {
+		for _, selVal := range selVals.Items {
 			if selVal.Option == labelIDs[ageString] {
 				isSelected = true
 			}
@@ -496,7 +496,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 
 	if len(p.Data.Oldest) > 0 {
 		var isSelected bool
-		for _, selVal := range selVals {
+		for _, selVal := range selVals.Items {
 			if selVal.Option == labelIDs[p.Data.Oldest] {
 				isSelected = true
 			}

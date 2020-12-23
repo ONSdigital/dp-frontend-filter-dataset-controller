@@ -21,8 +21,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const maxNumOptionsOnPage = 20
-
 type labelID struct {
 	Label string `json:"label"`
 	ID    string `json:"id"`
@@ -104,7 +102,8 @@ func (f *Filter) getIDNameMap(ctx context.Context, userAccessToken, collectionID
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL)
 
 	idNameMap := make(map[string]string)
-	opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension, dataset.QueryParams{})
+
+	opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, dimension)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +254,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 		}
 
 		// if there are more than maxNumOptionsOnPage, then we need to use the hierarchy model
-		if isHierarchy && opts.TotalCount > maxNumOptionsOnPage {
+		if isHierarchy && opts.TotalCount > MaxNumOptionsOnPage {
 			f.Hierarchy().ServeHTTP(w, req)
 			return
 		}
@@ -503,20 +502,23 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 		return
 	}
 
-	vals, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name, dataset.QueryParams{})
-	if err != nil {
-		log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
-		setStatusCode(req, w, err)
-		return
+	// function to add each batch of dataset dimension options to filter API
+	processBatch := func(batch dataset.Options) error {
+		var options []string
+		for _, item := range batch.Items {
+			options = append(options, item.Option)
+		}
+		// first batch, will overwrite any existing values in filter API
+		if batch.Offset == 0 {
+			return f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options)
+		}
+		// the rest of batches will be added to the existing items in filter API via patch operations
+		return f.FilterClient.PatchDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options, []string{}, f.BatchSize)
 	}
 
-	var options []string
-	for _, val := range vals.Items {
-		options = append(options, val.Option)
-	}
-
-	if err := f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options); err != nil {
-		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+	// call dataset API GetOptions in batches, and process each batch to add the options to filter API
+	if err := f.BatchProcessDimensionOptionsFromDatasetAPI(req.Context(), userAccessToken, collectionID, datasetID, edition, version, name, processBatch); err != nil {
+		log.Event(ctx, "failed to process options from dataset api", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}

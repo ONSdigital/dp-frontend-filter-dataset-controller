@@ -11,6 +11,10 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 )
 
+// MaxNumOptionsOnPage is the maximum number of options that will be presented on a screen.
+// If more options need to be presented, then the hierarchy will be used, if possible.
+const MaxNumOptionsOnPage = 20
+
 // these form vars are not regular input fields, but transmit meta form info
 var specialFormVars = map[string]bool{
 	"save-and-return": true,
@@ -126,36 +130,56 @@ func (f *Filter) GetDimensionOptionsFromFilterAPI(ctx context.Context, userAcces
 	return opts, nil
 }
 
-// GetDimensionOptionsFromDatasetAPI gets the filter options for a dimension from filter API in batches
+// GetDimensionOptionsFromDatasetAPI gets the dataset options for a dimension from dataset API in batches and returns the accumulated options.
+// Note: This method might be memory intensive for datasets with large amounts of options
 func (f *Filter) GetDimensionOptionsFromDatasetAPI(ctx context.Context, userAccessToken, collectionID, datasetID, edition, version, dimensionName string) (opts dataset.Options, err error) {
 
-	// initialise an empty options struct
-	opts = dataset.Options{TotalCount: 1}
+	// function to aggregate items
+	processBatch := func(batch dataset.Options) error {
+		if batch.Offset == 0 {
+			opts.TotalCount = batch.TotalCount
+		}
+		opts.Items = append(opts.Items, batch.Items...)
+		return nil
+	}
 
-	// call datasetAPI GetOptions with pagination until we obtain all values
+	// call dataset API GetOptions in bathes and aggregate them
+	if err := f.BatchProcessDimensionOptionsFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, dimensionName, processBatch); err != nil {
+		return dataset.Options{}, err
+	}
+
+	opts.Count = len(opts.Items)
+	return opts, nil
+}
+
+// BatchProcessDimensionOptionsFromDatasetAPI gets the dataset options for a dimension from dataset API in batches, and calls the provided function for each batch.
+func (f *Filter) BatchProcessDimensionOptionsFromDatasetAPI(ctx context.Context, userAccessToken, collectionID, datasetID, edition, version, dimensionName string, processBatch func(dataset.Options) error) (err error) {
 	offset := 0
-	for offset < opts.TotalCount {
+	totalCount := 1
+	for offset < totalCount {
+
 		// get batch
-		batchOpts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, dataset.QueryParams{Offset: offset, Limit: f.BatchSize})
+		batch, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, dataset.QueryParams{Offset: offset, Limit: f.BatchSize})
 		if err != nil {
-			return dataset.Options{}, err
+			return err
 		}
 
 		// (first iteration only) - set totalCount
 		if offset == 0 {
-			opts.TotalCount = batchOpts.TotalCount
+			totalCount = batch.TotalCount
 		}
 
-		// append options for the current batch
-		opts.Items = append(opts.Items, batchOpts.Items...)
+		// process batch by calling the provided function
+		if err := processBatch(batch); err != nil {
+			return err
+		}
 
 		// set offset for the next iteration
 		offset += f.BatchSize
 	}
 
-	// batch processing completed, return all accumulated options
-	opts.Count = len(opts.Items)
-	return opts, nil
+	// batch processing completed
+	return nil
 }
 
 func min(x, y int) int {

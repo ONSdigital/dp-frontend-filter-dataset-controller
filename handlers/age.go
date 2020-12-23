@@ -203,7 +203,7 @@ func (f *Filter) Age() http.HandlerFunc {
 			return
 		}
 
-		allValues, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, dataset.QueryParams{})
+		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, dataset.QueryParams{Offset: 0, Limit: 1})
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
 				log.Data{"dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -211,9 +211,17 @@ func (f *Filter) Age() http.HandlerFunc {
 			return
 		}
 
-		if len(allValues.Items) <= 20 {
+		if opts.TotalCount <= MaxNumOptionsOnPage {
 			mux.Vars(req)["name"] = dimensionName
 			f.DimensionSelector().ServeHTTP(w, req)
+			return
+		}
+
+		dims, err := f.DatasetClient.GetVersionDimensions(ctx, userAccessToken, "", collectionID, datasetID, edition, version)
+		if err != nil {
+			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
+				log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+			setStatusCode(req, w, err)
 			return
 		}
 
@@ -223,15 +231,16 @@ func (f *Filter) Age() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		dims, err := f.DatasetClient.GetVersionDimensions(ctx, userAccessToken, "", collectionID, datasetID, edition, version)
+
+		allValues, err := f.GetDimensionOptionsFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, dimensionName)
 		if err != nil {
-			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
-				log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
+				log.Data{"dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		p, err := mapper.CreateAgePage(req, fj, datasetDetails, ver, allValues, selValues.Items, dims, datasetID, f.APIRouterVersion, lang)
+		p, err := mapper.CreateAgePage(req, fj, datasetDetails, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion, lang)
 		if err != nil {
 			log.Event(ctx, "failed to map data to page", log.ERROR, log.Error(err),
 				log.Data{"filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})
