@@ -7,6 +7,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
@@ -21,6 +22,13 @@ func TestUseLatest(t *testing.T) {
 	filterID := "current-filter-id"
 	mockNewFilterID := "new-filter-id"
 	batchSize := 100
+
+	cfg := &config.Config{
+		SearchAPIAuthToken:   mockServiceAuthToken,
+		DownloadServiceURL:   "",
+		BatchSizeLimit:       batchSize,
+		EnableDatasetPreview: false,
+	}
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -55,7 +63,7 @@ func TestUseLatest(t *testing.T) {
 		mockFilterClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockNewFilterID, "Day", []string{mockDimensionOption.Items[0].Option}).Return(nil)
 
 		mockRenderer := NewMockRenderer(mockCtrl)
-		f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+		f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, "/v1", cfg)
 
 		router := mux.NewRouter()
 		router.Path("/filters/{filterID}/use-latest-version").HandlerFunc(f.UseLatest())

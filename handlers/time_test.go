@@ -8,6 +8,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	dprequest "github.com/ONSdigital/dp-net/request"
 	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
@@ -22,6 +23,13 @@ func TestUpdateTime(t *testing.T) {
 	const mockFilterID = ""
 	const batchSize = 100
 
+	cfg := &config.Config{
+		SearchAPIAuthToken:   mockServiceAuthToken,
+		DownloadServiceURL:   "",
+		BatchSizeLimit:       batchSize,
+		EnableDatasetPreview: false,
+	}
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	ctx := gomock.Any()
@@ -34,7 +42,7 @@ func TestUpdateTime(t *testing.T) {
 		req.Header.Add(dprequest.FlorenceHeaderKey, mockUserAuthToken)
 		req.Header.Add(dprequest.CollectionIDHeaderKey, mockCollectionID)
 		w := httptest.NewRecorder()
-		f := NewFilter(nil, mockFilterClient, mockDatasetClient, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+		f := NewFilter(nil, mockFilterClient, mockDatasetClient, nil, nil, nil, "/v1", cfg)
 		f.UpdateTime().ServeHTTP(w, req)
 		return w
 	}

@@ -19,6 +19,7 @@ type Config struct {
 	EnableProfiler             bool          `envconfig:"ENABLE_PROFILER"`
 	PprofToken                 string        `envconfig:"PPROF_TOKEN" json:"-"`
 	BatchSizeLimit             int           `envconfig:"BATCH_SIZE_LIMIT"`
+	MaxDatasetOptions          int           `envconfig:"MAX_DATASET_OPTIONS"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`

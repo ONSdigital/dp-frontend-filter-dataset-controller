@@ -8,6 +8,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	gomock "github.com/golang/mock/gomock"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -27,96 +28,93 @@ func TestGetIDNameLookupFromDatasetAPI(t *testing.T) {
 	edition := "2017"
 	version := "1"
 
+	cfg := &config.Config{
+		SearchAPIAuthToken:   mockServiceAuthToken,
+		DownloadServiceURL:   "",
+		EnableDatasetPreview: false,
+	}
+
 	Convey("Given a filter initialised with a mocked DatasetClient ", t, func() {
 		mdc := NewMockDatasetClient(mockCtrl)
 
 		Convey("a set of existing filter dimension options is correctly mapped to lables returned by dataset API GetOptions", func() {
-			batchSize := 100
-			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			maxDatasetOptions := 100
+			cfg.MaxDatasetOptions = maxDatasetOptions
+			f := NewFilter(nil, nil, mdc, nil, nil, nil, "/v1", cfg)
 			filterOptions := filter.DimensionOptions{
 				Items: []filter.DimensionOption{
 					{Option: "op1"},
 					{Option: "op2"},
 				},
 			}
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
+				dataset.QueryParams{IDs: []string{"op1", "op2"}}).Return(datasetOptionsFrmIDs([]string{"op1", "op2"}), nil)
 			idLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name, filterOptions)
 			So(err, ShouldBeNil)
 			So(idLabelMap, ShouldResemble, map[string]string{
-				"op1": "This is option 1",
-				"op2": "This is option 2",
+				"op1": "This is option op1",
+				"op2": "This is option op2",
 			})
 		})
 
 		Convey("a set of existing filter dimension options is correctly mapped to lables returned by dataset API GetOptions in multiple batches", func() {
-			batchSize := 3
-			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			maxDatasetOptions := 2
+			cfg.MaxDatasetOptions = maxDatasetOptions
+			f := NewFilter(nil, nil, mdc, nil, nil, nil, "/v1", cfg)
 			filterOptions := filter.DimensionOptions{
 				Items: []filter.DimensionOption{
 					{Option: "op1"}, // belongs to first batch
-					{Option: "op4"}, // belongs to second batch
+					{Option: "op4"}, // belongs to first batch
 					{Option: "op5"}, // belongs to second batch
 				},
 			}
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: batchSize, Limit: batchSize}).Return(datasetOptions(batchSize, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
+				dataset.QueryParams{IDs: []string{"op1", "op4"}}).Return(datasetOptionsFrmIDs([]string{"op1", "op4"}), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
+				dataset.QueryParams{IDs: []string{"op5"}}).Return(datasetOptionsFrmIDs([]string{"op5"}), nil)
 			idLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name, filterOptions)
 			So(err, ShouldBeNil)
 			So(idLabelMap, ShouldResemble, map[string]string{
-				"op1": "This is option 1",
-				"op4": "This is option 4",
-				"op5": "This is option 5",
-			})
-		})
-
-		Convey("a set of existing filter dimension options is correctly mapped to lables returned by dataset API GetOptions and no further batches are executed if all items have been found", func() {
-			batchSize := 3
-			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
-			filterOptions := filter.DimensionOptions{
-				Items: []filter.DimensionOption{
-					{Option: "op1"}, // belongs to first batch
-					{Option: "op2"}, // belongs to first batch
-				},
-			}
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
-			idLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name, filterOptions)
-			So(err, ShouldBeNil)
-			So(idLabelMap, ShouldResemble, map[string]string{
-				"op1": "This is option 1",
-				"op2": "This is option 2",
+				"op1": "This is option op1",
+				"op4": "This is option op4",
+				"op5": "This is option op5",
 			})
 		})
 
 		Convey("a set of filter dimension options containing inexistent options returns the expected error, but the existing dimensions are correctly mapped", func() {
-			batchSize := 100
-			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			maxDatasetOptions := 100
+			cfg.MaxDatasetOptions = maxDatasetOptions
+			f := NewFilter(nil, nil, mdc, nil, nil, nil, "/v1", cfg)
 			filterOptions := filter.DimensionOptions{
 				Items: []filter.DimensionOption{
 					{Option: "op1"},
 					{Option: "inexistent"},
 				},
 			}
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
+				dataset.QueryParams{IDs: []string{"op1", "inexistent"}}).Return(datasetOptionsFrmIDs([]string{"op1"}), nil)
 			expectedErr := errors.New("could not find all required filter options in dataset API")
 			idLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name, filterOptions)
 			So(err, ShouldResemble, expectedErr)
 			So(idLabelMap, ShouldResemble, map[string]string{
-				"op1":        "This is option 1",
+				"op1":        "This is option op1",
 				"inexistent": "",
 			})
 		})
 
 		Convey("if dataset API GetOptions returns an error, the same error is returned and the next batch is not requested", func() {
-			batchSize := 2
-			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			maxDatasetOptions := 1
+			cfg.MaxDatasetOptions = maxDatasetOptions
+			f := NewFilter(nil, nil, mdc, nil, nil, nil, "/v1", cfg)
 			filterOptions := filter.DimensionOptions{
-				Items: []filter.DimensionOption{{Option: "op1"}},
+				Items: []filter.DimensionOption{{Option: "op1"}, {Option: "op2"}},
 			}
 			expectedErr := errors.New("error getting options from Dataset API")
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(dataset.Options{}, expectedErr)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
+				dataset.QueryParams{IDs: []string{"op1"}}).Return(dataset.Options{}, expectedErr)
 			idLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name, filterOptions)
 			So(err, ShouldResemble, expectedErr)
-			So(idLabelMap, ShouldResemble, map[string]string{"op1": ""})
+			So(idLabelMap, ShouldResemble, map[string]string{"op1": "", "op2": ""})
 		})
 	})
 }
@@ -133,12 +131,19 @@ func TestGetDimensionOptionsFromFilterAPI(t *testing.T) {
 	filterID := "testFilter"
 	name := "aggregate"
 
+	cfg := &config.Config{
+		SearchAPIAuthToken:   mockServiceAuthToken,
+		DownloadServiceURL:   "",
+		EnableDatasetPreview: false,
+	}
+
 	Convey("Given a filter initialised with a mocked FilterClient ", t, func() {
 		mfc := NewMockFilterClient(mockCtrl)
 
 		Convey("given that the number of filter options is smaller than a batch, then all options are returned after a single batch getDimensionOptions call", func() {
 			batchSize := 100
-			f := NewFilter(nil, mfc, nil, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			cfg.BatchSizeLimit = batchSize
+			f := NewFilter(nil, mfc, nil, nil, nil, nil, "/v1", cfg)
 			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filterOptions(0, batchSize), nil)
 			opts, err := f.GetDimensionOptionsFromFilterAPI(ctx, mockUserAuthToken, mockCollectionID, filterID, name)
 			So(err, ShouldBeNil)
@@ -147,7 +152,8 @@ func TestGetDimensionOptionsFromFilterAPI(t *testing.T) {
 
 		Convey("given that the number of filter options is greater than a batch, then all options are returned after multiple batch getDimensionOptions calls", func() {
 			batchSize := 3
-			f := NewFilter(nil, mfc, nil, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			cfg.BatchSizeLimit = batchSize
+			f := NewFilter(nil, mfc, nil, nil, nil, nil, "/v1", cfg)
 			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filterOptions(0, batchSize), nil)
 			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, batchSize, batchSize).Return(filterOptions(batchSize, batchSize), nil)
 			opts, err := f.GetDimensionOptionsFromFilterAPI(ctx, mockUserAuthToken, mockCollectionID, filterID, name)
@@ -157,7 +163,8 @@ func TestGetDimensionOptionsFromFilterAPI(t *testing.T) {
 
 		Convey("if filter API GetDimensionOptions returns an error, the same error is returned and the next batch is not requested", func() {
 			batchSize := 2
-			f := NewFilter(nil, mfc, nil, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			cfg.BatchSizeLimit = batchSize
+			f := NewFilter(nil, mfc, nil, nil, nil, nil, "/v1", cfg)
 			expectedErr := errors.New("error getting options from Filter API")
 			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filter.DimensionOptions{}, expectedErr)
 			opts, err := f.GetDimensionOptionsFromFilterAPI(ctx, mockUserAuthToken, mockCollectionID, filterID, name)
@@ -182,12 +189,19 @@ func TestGetDimensionOptionsFromDataseAPI(t *testing.T) {
 	edition := "2017"
 	version := "1"
 
+	cfg := &config.Config{
+		SearchAPIAuthToken:   mockServiceAuthToken,
+		DownloadServiceURL:   "",
+		EnableDatasetPreview: false,
+	}
+
 	Convey("Given a filter initialised with a mocked DatasetClient ", t, func() {
 		mdc := NewMockDatasetClient(mockCtrl)
 
 		Convey("given that the number of dataset options is smaller than a batch, then all options are returned after a single batch getOptions call", func() {
 			batchSize := 100
-			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			cfg.BatchSizeLimit = batchSize
+			f := NewFilter(nil, nil, mdc, nil, nil, nil, "/v1", cfg)
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
 			opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name)
 			So(err, ShouldBeNil)
@@ -196,7 +210,8 @@ func TestGetDimensionOptionsFromDataseAPI(t *testing.T) {
 
 		Convey("given that the number of dataset options is greater than a batch, then all options are returned after multiple batch getOptions calls", func() {
 			batchSize := 3
-			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			cfg.BatchSizeLimit = batchSize
+			f := NewFilter(nil, nil, mdc, nil, nil, nil, "/v1", cfg)
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: batchSize, Limit: batchSize}).Return(datasetOptions(batchSize, batchSize), nil)
 			opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name)
@@ -206,7 +221,8 @@ func TestGetDimensionOptionsFromDataseAPI(t *testing.T) {
 
 		Convey("if dataset API GetOptions returns an error, the same error is returned and the next batch is not requested", func() {
 			batchSize := 2
-			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
+			cfg.BatchSizeLimit = batchSize
+			f := NewFilter(nil, nil, mdc, nil, nil, nil, "/v1", cfg)
 			expectedErr := errors.New("error getting options from Dataset API")
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(dataset.Options{}, expectedErr)
 			opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name)
@@ -217,27 +233,46 @@ func TestGetDimensionOptionsFromDataseAPI(t *testing.T) {
 	})
 }
 
+// datasetOptionsFrmIDs returns a mocked dataset.Options struct according to the provided list of IDs
+func datasetOptionsFrmIDs(ids []string) dataset.Options {
+	items := []dataset.Option{}
+	for _, id := range ids {
+		items = append(items, dataset.Option{
+			Label:  fmt.Sprintf("This is option %s", id),
+			Option: id,
+		})
+	}
+	o := dataset.Options{
+		Offset:     0,
+		Limit:      0,
+		TotalCount: len(items),
+	}
+	o.Items = items
+	o.Count = len(o.Items)
+	return o
+}
+
 // datasetOptions returns a mocked dataset.Options struct according to the provided offset and limit
 func datasetOptions(offset, limit int) dataset.Options {
 	allItems := []dataset.Option{
 		{
-			Label:  "This is option 1",
+			Label:  "This is option op1",
 			Option: "op1",
 		},
 		{
-			Label:  "This is option 2",
+			Label:  "This is option op2",
 			Option: "op2",
 		},
 		{
-			Label:  "This is option 3",
+			Label:  "This is option op3",
 			Option: "op3",
 		},
 		{
-			Label:  "This is option 4",
+			Label:  "This is option op4",
 			Option: "op4",
 		},
 		{
-			Label:  "This is option 5",
+			Label:  "This is option op5",
 			Option: "op5",
 		},
 	}
