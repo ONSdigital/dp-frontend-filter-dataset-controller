@@ -57,7 +57,7 @@ func (f *Filter) getIDNameLookupFromDatasetAPI(ctx context.Context, userAccessTo
 	foundCount := 0
 	for offset < totalCount {
 		// get options batch from dataset API
-		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, offset, f.BatchSize)
+		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: offset, Limit: f.BatchSize})
 		if err != nil {
 			return idLabelMap, err
 		}
@@ -130,7 +130,7 @@ func (f *Filter) GetDimensionOptionsFromDatasetAPI(ctx context.Context, userAcce
 	offset := 0
 	for offset < opts.TotalCount {
 		// get batch
-		batchOpts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, offset, f.BatchSize)
+		batchOpts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, dataset.QueryParams{Offset: offset, Limit: f.BatchSize})
 		if err != nil {
 			return dataset.Options{}, err
 		}

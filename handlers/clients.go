@@ -43,7 +43,7 @@ type DatasetClient interface {
 	Get(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID string) (m dataset.DatasetDetails, err error)
 	GetVersion(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, datasetID, edition, version string) (m dataset.Version, err error)
 	GetVersionDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, id, edition, version string) (m dataset.VersionDimensions, err error)
-	GetOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension string, offset, limit int) (m dataset.Options, err error)
+	GetOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension string, q dataset.QueryParams) (m dataset.Options, err error)
 	GetVersionMetadata(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version string) (m dataset.Metadata, err error)
 	GetEdition(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition string) (m dataset.Edition, err error)
 }

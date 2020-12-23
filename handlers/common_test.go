@@ -39,7 +39,7 @@ func TestGetIDNameLookupFromDatasetAPI(t *testing.T) {
 					{Option: "op2"},
 				},
 			}
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(datasetOptions(0, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
 			idLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name, filterOptions)
 			So(err, ShouldBeNil)
 			So(idLabelMap, ShouldResemble, map[string]string{
@@ -58,8 +58,8 @@ func TestGetIDNameLookupFromDatasetAPI(t *testing.T) {
 					{Option: "op5"}, // belongs to second batch
 				},
 			}
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(datasetOptions(0, batchSize), nil)
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, batchSize, batchSize).Return(datasetOptions(batchSize, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: batchSize, Limit: batchSize}).Return(datasetOptions(batchSize, batchSize), nil)
 			idLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name, filterOptions)
 			So(err, ShouldBeNil)
 			So(idLabelMap, ShouldResemble, map[string]string{
@@ -78,7 +78,7 @@ func TestGetIDNameLookupFromDatasetAPI(t *testing.T) {
 					{Option: "op2"}, // belongs to first batch
 				},
 			}
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(datasetOptions(0, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
 			idLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name, filterOptions)
 			So(err, ShouldBeNil)
 			So(idLabelMap, ShouldResemble, map[string]string{
@@ -96,7 +96,7 @@ func TestGetIDNameLookupFromDatasetAPI(t *testing.T) {
 					{Option: "inexistent"},
 				},
 			}
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(datasetOptions(0, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
 			expectedErr := errors.New("could not find all required filter options in dataset API")
 			idLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name, filterOptions)
 			So(err, ShouldResemble, expectedErr)
@@ -113,7 +113,7 @@ func TestGetIDNameLookupFromDatasetAPI(t *testing.T) {
 				Items: []filter.DimensionOption{{Option: "op1"}},
 			}
 			expectedErr := errors.New("error getting options from Dataset API")
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(dataset.Options{}, expectedErr)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(dataset.Options{}, expectedErr)
 			idLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name, filterOptions)
 			So(err, ShouldResemble, expectedErr)
 			So(idLabelMap, ShouldResemble, map[string]string{"op1": ""})
@@ -188,7 +188,7 @@ func TestGetDimensionOptionsFromDataseAPI(t *testing.T) {
 		Convey("given that the number of dataset options is smaller than a batch, then all options are returned after a single batch getOptions call", func() {
 			batchSize := 100
 			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(datasetOptions(0, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
 			opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name)
 			So(err, ShouldBeNil)
 			So(opts, ShouldResemble, datasetOptions(0, 0))
@@ -197,8 +197,8 @@ func TestGetDimensionOptionsFromDataseAPI(t *testing.T) {
 		Convey("given that the number of dataset options is greater than a batch, then all options are returned after multiple batch getOptions calls", func() {
 			batchSize := 3
 			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(datasetOptions(0, batchSize), nil)
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, batchSize, batchSize).Return(datasetOptions(batchSize, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: batchSize, Limit: batchSize}).Return(datasetOptions(batchSize, batchSize), nil)
 			opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name)
 			So(err, ShouldBeNil)
 			So(opts, ShouldResemble, datasetOptions(0, 0))
@@ -208,7 +208,7 @@ func TestGetDimensionOptionsFromDataseAPI(t *testing.T) {
 			batchSize := 2
 			f := NewFilter(nil, nil, mdc, nil, nil, nil, mockServiceAuthToken, "", "/v1", false, batchSize)
 			expectedErr := errors.New("error getting options from Dataset API")
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, 0, batchSize).Return(dataset.Options{}, expectedErr)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(dataset.Options{}, expectedErr)
 			opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name)
 			So(err, ShouldResemble, expectedErr)
 			So(opts, ShouldResemble, dataset.Options{})

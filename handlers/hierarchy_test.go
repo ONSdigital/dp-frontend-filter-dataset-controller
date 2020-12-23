@@ -127,7 +127,7 @@ func TestHierarchy(t *testing.T) {
 			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID).Return(testDatasetDetails, nil)
 			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersion, nil)
 			mockDatasetClient.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersionDimensions, nil)
-			mockDatasetClient.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion, dimensionName, 0, batchSize).Return(testDatasetOptions, nil)
+			mockDatasetClient.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion, dimensionName, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(testDatasetOptions, nil)
 			mockRenderer.EXPECT().Do(gomock.Eq("dataset-filter/hierarchy"), gomock.Any()).Return(testTemplate, nil)
 
 			w := callHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s", filterID, dimensionName))
@@ -144,7 +144,7 @@ func TestHierarchy(t *testing.T) {
 			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID).Return(testDatasetDetails, nil)
 			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersion, nil)
 			mockDatasetClient.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersionDimensions, nil)
-			mockDatasetClient.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion, dimensionName, 0, batchSize).Return(testDatasetOptions, nil)
+			mockDatasetClient.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion, dimensionName, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(testDatasetOptions, nil)
 			mockRenderer.EXPECT().Do(gomock.Eq("dataset-filter/hierarchy"), gomock.Any()).Return(testTemplate, nil)
 
 			w := callHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s/%s", filterID, dimensionName, mockCode))
@@ -160,7 +160,7 @@ func TestHierarchy(t *testing.T) {
 			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID).Return(testDatasetDetails, nil)
 			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersion, nil)
 			mockDatasetClient.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersionDimensions, nil)
-			mockDatasetClient.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion, dimensionName, 0, batchSize).Return(dataset.Options{}, errors.New("error in DatasetAPI"))
+			mockDatasetClient.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion, dimensionName, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(dataset.Options{}, errors.New("error in DatasetAPI"))
 
 			w := callHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s", filterID, dimensionName))
 

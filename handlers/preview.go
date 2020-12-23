@@ -134,7 +134,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			return
 		}
 
-		dataset, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
+		datasetDetails, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
 		if err != nil {
 			log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
 			setStatusCode(req, w, err)
@@ -147,7 +147,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			return
 		}
 
-		latestURL, err := url.Parse(dataset.Links.LatestVersion.URL)
+		latestURL, err := url.Parse(datasetDetails.Links.LatestVersion.URL)
 		if err != nil {
 			log.Event(ctx, "failed to parse latest version href", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
 			setStatusCode(req, w, err)
@@ -155,7 +155,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		}
 		latestPath := strings.TrimPrefix(latestURL.Path, f.APIRouterVersion)
 
-		p := mapper.CreatePreviewPage(req, dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview, lang)
+		p := mapper.CreatePreviewPage(req, dimensions, fj, datasetDetails, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview, lang)
 
 		editionDetails, err := f.DatasetClient.GetEdition(req.Context(), userAccessToken, "", collectionID, datasetID, edition)
 		if err != nil {
@@ -193,7 +193,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		}
 
 		for _, dim := range dims.Items {
-			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, 0, 0)
+			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, dataset.QueryParams{})
 			if err != nil {
 				log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
 				setStatusCode(req, w, err)
@@ -311,7 +311,7 @@ func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, colle
 	b.WriteString(metadata.ToString())
 	b.WriteString("Dimensions:\n")
 	for _, dimension := range dimensions.Items {
-		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name, 0, 0)
+		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name, dataset.QueryParams{})
 		if err != nil {
 			return 0, err
 		}

@@ -104,7 +104,7 @@ func (f *Filter) getIDNameMap(ctx context.Context, userAccessToken, collectionID
 	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL)
 
 	idNameMap := make(map[string]string)
-	opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension, 0, 0)
+	opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension, dataset.QueryParams{})
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		dataset, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
+		datasetDetails, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
 		if err != nil {
 			log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
 			setStatusCode(req, w, err)
@@ -248,7 +248,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 		}
 
 		// count number of options in dataset API
-		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, 0, 1)
+		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: 1})
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -285,7 +285,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			allValues = sortedTime(ctx, allValues)
 		}
 
-		f.listSelector(w, req, name, selectedValues.Items, allValues, fj, dataset, dims, datasetID, ver.ReleaseDate, lang)
+		f.listSelector(w, req, name, selectedValues.Items, allValues, fj, datasetDetails, dims, datasetID, ver.ReleaseDate, lang)
 	})
 
 }
@@ -503,7 +503,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 		return
 	}
 
-	vals, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name, 0, 0)
+	vals, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name, dataset.QueryParams{})
 	if err != nil {
 		log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 		setStatusCode(req, w, err)
@@ -604,7 +604,7 @@ func (f *Filter) getDimensionValues(ctx context.Context, userAccessToken, collec
 		return
 	}
 
-	vals, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, 0, 0)
+	vals, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, dataset.QueryParams{})
 	if err != nil {
 		return
 	}
