@@ -44,7 +44,8 @@ func Get() (cfg *Config, err error) {
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
-		BatchSizeLimit:             1000,
+		BatchSizeLimit:             1000, // maximum limit value to get items from APIs in a single call
+		MaxDatasetOptions:          200,  // maximum number of IDs that will be requested to dataset API in a single call as query parmeters
 	}
 
 	return cfg, envconfig.Process("", cfg)
