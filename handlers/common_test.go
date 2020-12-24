@@ -48,7 +48,7 @@ func TestGetIDNameLookupFromDatasetAPI(t *testing.T) {
 				},
 			}
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
-				dataset.QueryParams{IDs: []string{"op1", "op2"}}).Return(datasetOptionsFrmIDs([]string{"op1", "op2"}), nil)
+				dataset.QueryParams{IDs: []string{"op1", "op2"}}).Return(datasetOptionsFromIDs([]string{"op1", "op2"}), nil)
 			idLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name, filterOptions)
 			So(err, ShouldBeNil)
 			So(idLabelMap, ShouldResemble, map[string]string{
@@ -69,9 +69,9 @@ func TestGetIDNameLookupFromDatasetAPI(t *testing.T) {
 				},
 			}
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
-				dataset.QueryParams{IDs: []string{"op1", "op4"}}).Return(datasetOptionsFrmIDs([]string{"op1", "op4"}), nil)
+				dataset.QueryParams{IDs: []string{"op1", "op4"}}).Return(datasetOptionsFromIDs([]string{"op1", "op4"}), nil)
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
-				dataset.QueryParams{IDs: []string{"op5"}}).Return(datasetOptionsFrmIDs([]string{"op5"}), nil)
+				dataset.QueryParams{IDs: []string{"op5"}}).Return(datasetOptionsFromIDs([]string{"op5"}), nil)
 			idLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name, filterOptions)
 			So(err, ShouldBeNil)
 			So(idLabelMap, ShouldResemble, map[string]string{
@@ -92,7 +92,7 @@ func TestGetIDNameLookupFromDatasetAPI(t *testing.T) {
 				},
 			}
 			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
-				dataset.QueryParams{IDs: []string{"op1", "inexistent"}}).Return(datasetOptionsFrmIDs([]string{"op1"}), nil)
+				dataset.QueryParams{IDs: []string{"op1", "inexistent"}}).Return(datasetOptionsFromIDs([]string{"op1"}), nil)
 			expectedErr := errors.New("could not find all required filter options in dataset API")
 			idLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name, filterOptions)
 			So(err, ShouldResemble, expectedErr)
@@ -241,8 +241,8 @@ func TestGetDimensionOptionsFromDataseAPI(t *testing.T) {
 	})
 }
 
-// datasetOptionsFrmIDs returns a mocked dataset.Options struct according to the provided list of IDs
-func datasetOptionsFrmIDs(ids []string) dataset.Options {
+// datasetOptionsFromIDs returns a mocked dataset.Options struct according to the provided list of IDs
+func datasetOptionsFromIDs(ids []string) dataset.Options {
 	items := []dataset.Option{}
 	for _, id := range ids {
 		items = append(items, dataset.Option{

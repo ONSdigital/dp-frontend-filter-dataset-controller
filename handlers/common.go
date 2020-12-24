@@ -101,33 +101,54 @@ func (f *Filter) getIDNameLookupFromDatasetAPI(ctx context.Context, userAccessTo
 // GetDimensionOptionsFromFilterAPI gets the filter options for a dimension from filter API in batches
 func (f *Filter) GetDimensionOptionsFromFilterAPI(ctx context.Context, userAccessToken, collectionID, filterID, dimensionName string) (opts filter.DimensionOptions, err error) {
 
-	// initialise an empty options struct
-	opts = filter.DimensionOptions{TotalCount: 1}
+	// function to aggregate items
+	processBatch := func(batch filter.DimensionOptions) error {
+		if batch.Offset == 0 {
+			opts.TotalCount = batch.TotalCount
+		}
+		opts.Items = append(opts.Items, batch.Items...)
+		return nil
+	}
 
-	// call filterAPI GetDimensionOptions with pagination until we obtain all values
+	// call filter API GetOptions in bathes and aggregate the responses
+	if err := f.BatchProcessDimensionOptionsFromFilterAPI(ctx, userAccessToken, collectionID, filterID, dimensionName, processBatch); err != nil {
+		return filter.DimensionOptions{}, err
+	}
+
+	opts.Count = len(opts.Items)
+	return opts, nil
+}
+
+// BatchProcessDimensionOptionsFromFilterAPI gets the filter options for a dimension from filter API in batches, and calls the provided function for each batch.
+// TODO - consider moving this method do dp-api-clients-go
+func (f *Filter) BatchProcessDimensionOptionsFromFilterAPI(ctx context.Context, userAccessToken, collectionID, filterID, dimensionName string, processBatch func(filter.DimensionOptions) error) (err error) {
 	offset := 0
-	for offset < opts.TotalCount {
-		// get options batch from filter API
-		batchOpts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName, filter.QueryParams{Offset: offset, Limit: f.BatchSize})
+	totalCount := 1
+	for offset < totalCount {
+
+		// get batch
+		batch, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName, filter.QueryParams{Offset: offset, Limit: f.BatchSize})
 		if err != nil {
-			return filter.DimensionOptions{}, err
+			return err
 		}
 
 		// (first iteration only) - set totalCount
 		if offset == 0 {
-			opts.TotalCount = batchOpts.TotalCount
+			totalCount = batch.TotalCount
 		}
 
-		// append options for the current batch
-		opts.Items = append(opts.Items, batchOpts.Items...)
+		// process batch by calling the provided function
+		if err := processBatch(batch); err != nil {
+			return err
+		}
 
 		// set offset for the next iteration
 		offset += f.BatchSize
 	}
 
-	// batch processing completed, return all accumulated options
-	opts.Count = len(opts.Items)
-	return opts, nil
+	// batch processing completed
+	return nil
+
 }
 
 // GetDimensionOptionsFromDatasetAPI gets the dataset options for a dimension from dataset API in batches and returns the accumulated options.
@@ -143,7 +164,7 @@ func (f *Filter) GetDimensionOptionsFromDatasetAPI(ctx context.Context, userAcce
 		return nil
 	}
 
-	// call dataset API GetOptions in bathes and aggregate them
+	// call dataset API GetOptions in bathes and aggregate the responses
 	if err := f.BatchProcessDimensionOptionsFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, dimensionName, processBatch); err != nil {
 		return dataset.Options{}, err
 	}
@@ -153,6 +174,7 @@ func (f *Filter) GetDimensionOptionsFromDatasetAPI(ctx context.Context, userAcce
 }
 
 // BatchProcessDimensionOptionsFromDatasetAPI gets the dataset options for a dimension from dataset API in batches, and calls the provided function for each batch.
+// TODO - consider moving this method do dp-api-clients-go
 func (f *Filter) BatchProcessDimensionOptionsFromDatasetAPI(ctx context.Context, userAccessToken, collectionID, datasetID, edition, version, dimensionName string, processBatch func(dataset.Options) error) (err error) {
 	offset := 0
 	totalCount := 1

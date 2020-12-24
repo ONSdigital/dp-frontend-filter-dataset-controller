@@ -91,7 +91,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			}
 
 			indexOfFirstLabelColumn := markingsColumnCount + 2 // +1 for observation, +1 for first codelist column
-			dimensions = []filter.ModelDimension{filter.ModelDimension{Name: "Values"}}
+			dimensions = []filter.ModelDimension{{Name: "Values"}}
 			// add markings column headers
 			for i := 1; i <= markingsColumnCount; i++ {
 				dimensions = append(dimensions, filter.ModelDimension{Name: prev.Headers[i]})

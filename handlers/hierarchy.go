@@ -176,6 +176,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 	http.Redirect(w, req, redirectURI, 302)
 }
 
+// Hierarchy controls the creation of a hierarchy page
 func (f *Filter) Hierarchy() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
 		vars := mux.Vars(req)

@@ -526,7 +526,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 	http.Redirect(w, req, redirectURL, 302)
 }
 
-// AddList adds a list of values
+// AddList sets a list of values, removing any existing value.
 func (f *Filter) AddList() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
 		vars := mux.Vars(req)
@@ -552,22 +552,6 @@ func (f *Filter) AddList() http.HandlerFunc {
 			redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all", filterID, name)
 			http.Redirect(w, req, redirectURL, 302)
 			return
-		}
-
-		// TODO remove any fields that have been deselected via patch call (call patch for each batch of options)
-		opts, err := f.GetDimensionOptionsFromFilterAPI(ctx, userAccessToken, collectionID, filterID, name)
-		if err != nil {
-			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
-			setStatusCode(req, w, err)
-			return
-		}
-
-		for _, opt := range opts.Items {
-			if _, ok := req.Form[opt.Option]; !ok {
-				if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, opt.Option); err != nil {
-					log.Event(ctx, "failed to remove dimension values", log.WARN, log.Error(err))
-				}
-			}
 		}
 
 		var options []string
