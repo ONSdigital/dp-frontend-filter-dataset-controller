@@ -94,7 +94,7 @@ func TestUpdateAge(t *testing.T) {
 		mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age").Return(nil)
 		mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age").Return(nil)
 		mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, "", mockCollectionID, mockFilterID).Return(expectedFilterModel, nil)
-		mockDatasetClient.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "mid-year-pop-est", "mid-2019-april-2020-geography", "1", "age", dataset.QueryParams{}).Return(datasetOptions, nil)
+		mockDatasetClient.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "mid-year-pop-est", "mid-2019-april-2020-geography", "1", "age", dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions, nil)
 		mockFilterClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age", filterOptions).Return(nil)
 		formData := "all-ages-option=total&age-selection=range&youngest-age=0&oldest-age=90%2B&youngest=18&oldest=24&save-and-return=Save+and+return"
 		w := callAgeUpdate(formData, mockFilterClient, mockDatasetClient)

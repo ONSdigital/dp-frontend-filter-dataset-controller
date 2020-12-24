@@ -203,6 +203,7 @@ func (f *Filter) Age() http.HandlerFunc {
 			return
 		}
 
+		// count number of options for the dimension in dataset API
 		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, dataset.QueryParams{Offset: 0, Limit: 1})
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),

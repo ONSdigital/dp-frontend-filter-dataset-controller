@@ -192,15 +192,16 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			return
 		}
 
+		// count number of options for each dimension in dataset API to check if any dimension has a single option
 		for _, dim := range dims.Items {
-			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, dataset.QueryParams{})
+			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, dataset.QueryParams{Offset: 0, Limit: 1})
 			if err != nil {
 				log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
 				setStatusCode(req, w, err)
 				return
 			}
 
-			if len(opts.Items) == 1 {
+			if opts.TotalCount == 1 {
 				p.Data.SingleValueDimensions = append(p.Data.SingleValueDimensions, previewPage.Dimension{
 					Name:   strings.Title(dim.Name),
 					Values: []string{opts.Items[0].Label},
@@ -311,7 +312,7 @@ func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, colle
 	b.WriteString(metadata.ToString())
 	b.WriteString("Dimensions:\n")
 	for _, dimension := range dimensions.Items {
-		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name, dataset.QueryParams{})
+		options, err := f.GetDimensionOptionsFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, dimension.Name)
 		if err != nil {
 			return 0, err
 		}

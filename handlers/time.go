@@ -228,7 +228,8 @@ func (f *Filter) Time() http.HandlerFunc {
 			return
 		}
 
-		allValues, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, dataset.QueryParams{})
+		// count number of options for the dimension in dataset API
+		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, dataset.QueryParams{Offset: 0, Limit: 1})
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
 				log.Data{"dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -237,9 +238,17 @@ func (f *Filter) Time() http.HandlerFunc {
 		}
 
 		//use normal list format unless a specially recognized time format
-		if len(allValues.Items) <= 20 || !acceptedReg.MatchString(allValues.Items[0].Option) {
+		if opts.TotalCount <= MaxNumOptionsOnPage || !acceptedReg.MatchString(opts.Items[0].Option) {
 			mux.Vars(req)["name"] = dimensionName
 			f.DimensionSelector().ServeHTTP(w, req)
+			return
+		}
+
+		dims, err := f.DatasetClient.GetVersionDimensions(ctx, userAccessToken, "", collectionID, datasetID, edition, version)
+		if err != nil {
+			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
+				log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+			setStatusCode(req, w, err)
 			return
 		}
 
@@ -250,10 +259,10 @@ func (f *Filter) Time() http.HandlerFunc {
 			return
 		}
 
-		dims, err := f.DatasetClient.GetVersionDimensions(ctx, userAccessToken, "", collectionID, datasetID, edition, version)
+		allValues, err := f.GetDimensionOptionsFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, dimensionName)
 		if err != nil {
-			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
-				log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
+				log.Data{"dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}

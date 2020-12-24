@@ -246,7 +246,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		// count number of options in dataset API
+		// count number of options for the dimension in dataset API
 		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: 1})
 		if err != nil {
 			setStatusCode(req, w, err)
@@ -256,6 +256,13 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 		// if there are more than maxNumOptionsOnPage, then we need to use the hierarchy model
 		if isHierarchy && opts.TotalCount > MaxNumOptionsOnPage {
 			f.Hierarchy().ServeHTTP(w, req)
+			return
+		}
+
+		dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
+		if err != nil {
+			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+			setStatusCode(req, w, err)
 			return
 		}
 
@@ -269,13 +276,6 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 		allValues, err := f.GetDimensionOptionsFromDatasetAPI(req.Context(), userAccessToken, collectionID, datasetID, edition, version, name)
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
-			setStatusCode(req, w, err)
-			return
-		}
-
-		dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
-		if err != nil {
-			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -606,7 +606,7 @@ func (f *Filter) getDimensionValues(ctx context.Context, userAccessToken, collec
 		return
 	}
 
-	vals, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, dataset.QueryParams{})
+	vals, err := f.GetDimensionOptionsFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, name)
 	if err != nil {
 		return
 	}
