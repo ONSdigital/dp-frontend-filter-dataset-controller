@@ -144,7 +144,8 @@ func TestGetDimensionOptionsFromFilterAPI(t *testing.T) {
 			batchSize := 100
 			cfg.BatchSizeLimit = batchSize
 			f := NewFilter(nil, mfc, nil, nil, nil, nil, "/v1", cfg)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filterOptions(0, batchSize), nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name,
+				filter.QueryParams{Offset: 0, Limit: batchSize}).Return(filterOptions(0, batchSize), nil)
 			opts, err := f.GetDimensionOptionsFromFilterAPI(ctx, mockUserAuthToken, mockCollectionID, filterID, name)
 			So(err, ShouldBeNil)
 			So(opts, ShouldResemble, filterOptions(0, 0))
@@ -154,8 +155,10 @@ func TestGetDimensionOptionsFromFilterAPI(t *testing.T) {
 			batchSize := 3
 			cfg.BatchSizeLimit = batchSize
 			f := NewFilter(nil, mfc, nil, nil, nil, nil, "/v1", cfg)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filterOptions(0, batchSize), nil)
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, batchSize, batchSize).Return(filterOptions(batchSize, batchSize), nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name,
+				filter.QueryParams{Offset: 0, Limit: batchSize}).Return(filterOptions(0, batchSize), nil)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name,
+				filter.QueryParams{Offset: batchSize, Limit: batchSize}).Return(filterOptions(batchSize, batchSize), nil)
 			opts, err := f.GetDimensionOptionsFromFilterAPI(ctx, mockUserAuthToken, mockCollectionID, filterID, name)
 			So(err, ShouldBeNil)
 			So(opts, ShouldResemble, filterOptions(0, 0))
@@ -166,7 +169,8 @@ func TestGetDimensionOptionsFromFilterAPI(t *testing.T) {
 			cfg.BatchSizeLimit = batchSize
 			f := NewFilter(nil, mfc, nil, nil, nil, nil, "/v1", cfg)
 			expectedErr := errors.New("error getting options from Filter API")
-			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name, 0, batchSize).Return(filter.DimensionOptions{}, expectedErr)
+			mfc.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name,
+				filter.QueryParams{Offset: 0, Limit: batchSize}).Return(filter.DimensionOptions{}, expectedErr)
 			opts, err := f.GetDimensionOptionsFromFilterAPI(ctx, mockUserAuthToken, mockCollectionID, filterID, name)
 			So(err, ShouldResemble, expectedErr)
 			So(opts, ShouldResemble, filter.DimensionOptions{})
@@ -202,7 +206,8 @@ func TestGetDimensionOptionsFromDataseAPI(t *testing.T) {
 			batchSize := 100
 			cfg.BatchSizeLimit = batchSize
 			f := NewFilter(nil, nil, mdc, nil, nil, nil, "/v1", cfg)
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
+				dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
 			opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name)
 			So(err, ShouldBeNil)
 			So(opts, ShouldResemble, datasetOptions(0, 0))
@@ -212,8 +217,10 @@ func TestGetDimensionOptionsFromDataseAPI(t *testing.T) {
 			batchSize := 3
 			cfg.BatchSizeLimit = batchSize
 			f := NewFilter(nil, nil, mdc, nil, nil, nil, "/v1", cfg)
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: batchSize, Limit: batchSize}).Return(datasetOptions(batchSize, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
+				dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions(0, batchSize), nil)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
+				dataset.QueryParams{Offset: batchSize, Limit: batchSize}).Return(datasetOptions(batchSize, batchSize), nil)
 			opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name)
 			So(err, ShouldBeNil)
 			So(opts, ShouldResemble, datasetOptions(0, 0))
@@ -224,7 +231,8 @@ func TestGetDimensionOptionsFromDataseAPI(t *testing.T) {
 			cfg.BatchSizeLimit = batchSize
 			f := NewFilter(nil, nil, mdc, nil, nil, nil, "/v1", cfg)
 			expectedErr := errors.New("error getting options from Dataset API")
-			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(dataset.Options{}, expectedErr)
+			mdc.EXPECT().GetOptions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
+				dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(dataset.Options{}, expectedErr)
 			opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, mockUserAuthToken, mockCollectionID, datasetID, edition, version, name)
 			So(err, ShouldResemble, expectedErr)
 			So(opts, ShouldResemble, dataset.Options{})

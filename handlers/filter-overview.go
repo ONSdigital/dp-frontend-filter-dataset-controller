@@ -26,7 +26,7 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID)
+		dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, filter.QueryParams{})
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
@@ -64,7 +64,7 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 
 		// get selected options from filter API for each dimension and then get the labels from dataset API for each option
 		var dimensions FilterModelDimensions
-		for _, dim := range dims {
+		for _, dim := range dims.Items {
 			selVals, err := f.GetDimensionOptionsFromFilterAPI(req.Context(), userAccessToken, collectionID, filterID, dim.Name)
 			if err != nil {
 				log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
@@ -148,13 +148,13 @@ func (f *Filter) FilterOverviewClearAll() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID)
+		dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, filter.QueryParams{})
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err))
 			return
 		}
 
-		for _, dim := range dims {
+		for _, dim := range dims.Items {
 			if err := f.FilterClient.RemoveDimension(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name); err != nil {
 				log.Event(ctx, "failed to remove dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)

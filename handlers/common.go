@@ -108,7 +108,7 @@ func (f *Filter) GetDimensionOptionsFromFilterAPI(ctx context.Context, userAcces
 	offset := 0
 	for offset < opts.TotalCount {
 		// get options batch from filter API
-		batchOpts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName, offset, f.BatchSize)
+		batchOpts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName, filter.QueryParams{Offset: offset, Limit: f.BatchSize})
 		if err != nil {
 			return filter.DimensionOptions{}, err
 		}
