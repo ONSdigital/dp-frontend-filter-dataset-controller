@@ -66,26 +66,27 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 		}
 
 		for _, dim := range dims.Items {
+
+			// Copy dimension to new filter
 			if err := f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, newFilterID, dim.Name); err != nil {
 				log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
 				return
 			}
 
-			dimValues, err := f.GetDimensionOptionsFromFilterAPI(req.Context(), userAccessToken, collectionID, filterID, dim.Name)
-			if err != nil {
-				log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
-				setStatusCode(req, w, err)
-				return
+			// Copy each batch of options to the new filter dimension via PATCH operations.
+			// We don't need to 'set' options because we start form an empty dimension.
+			processBatch := func(batch filter.DimensionOptions) error {
+				var vals []string
+				for _, val := range batch.Items {
+					vals = append(vals, val.Option)
+				}
+				return f.FilterClient.PatchDimensionValues(req.Context(), userAccessToken, "", collectionID, newFilterID, dim.Name, vals, []string{}, f.BatchSize)
 			}
 
-			var vals []string
-			for _, val := range dimValues.Items {
-				vals = append(vals, val.Option)
-			}
-
-			if err := f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, newFilterID, dim.Name, vals); err != nil {
-				log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": newFilterID, "dimension": dim.Name})
+			// Call filter API GetOptions in bathes and aggregate the responses
+			if err := f.BatchProcessDimensionOptionsFromFilterAPI(req.Context(), userAccessToken, collectionID, filterID, dim.Name, processBatch); err != nil {
+				log.Event(ctx, "failed to get and process options from filter client in batches", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
 				return
 			}

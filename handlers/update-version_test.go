@@ -65,7 +65,7 @@ func TestUseLatest(t *testing.T) {
 		mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockNewFilterID, "Day").Return(nil)
 		mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day",
 			filter.QueryParams{Offset: 0, Limit: batchSize}).Return(mockDimensionOption, nil)
-		mockFilterClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockNewFilterID, "Day", []string{mockDimensionOption.Items[0].Option}).Return(nil)
+		mockFilterClient.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockNewFilterID, "Day", []string{mockDimensionOption.Items[0].Option}, []string{}, batchSize).Return(nil)
 
 		mockRenderer := NewMockRenderer(mockCtrl)
 		f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, "/v1", cfg)
