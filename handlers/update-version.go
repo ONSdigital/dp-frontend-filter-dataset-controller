@@ -84,7 +84,7 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 				return f.FilterClient.PatchDimensionValues(req.Context(), userAccessToken, "", collectionID, newFilterID, dim.Name, vals, []string{}, f.BatchSize)
 			}
 
-			// Call filter API GetOptions in bathes and aggregate the responses
+			// Call filter API GetOptions in batches and aggregate the responses
 			if err := f.BatchProcessDimensionOptionsFromFilterAPI(req.Context(), userAccessToken, collectionID, filterID, dim.Name, processBatch); err != nil {
 				log.Event(ctx, "failed to get and process options from filter client in batches", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)

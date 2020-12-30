@@ -110,7 +110,7 @@ func (f *Filter) GetDimensionOptionsFromFilterAPI(ctx context.Context, userAcces
 		return nil
 	}
 
-	// call filter API GetOptions in bathes and aggregate the responses
+	// call filter API GetOptions in batches and aggregate the responses
 	if err := f.BatchProcessDimensionOptionsFromFilterAPI(ctx, userAccessToken, collectionID, filterID, dimensionName, processBatch); err != nil {
 		return filter.DimensionOptions{}, err
 	}
@@ -164,7 +164,7 @@ func (f *Filter) GetDimensionOptionsFromDatasetAPI(ctx context.Context, userAcce
 		return nil
 	}
 
-	// call dataset API GetOptions in bathes and aggregate the responses
+	// call dataset API GetOptions in batches and aggregate the responses
 	if err := f.BatchProcessDimensionOptionsFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, dimensionName, processBatch); err != nil {
 		return dataset.Options{}, err
 	}
