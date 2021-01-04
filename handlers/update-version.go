@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -75,17 +76,10 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 			}
 
 			// Copy each batch of options to the new filter dimension via PATCH operations.
-			// We don't need to 'set' options because we start form an empty dimension.
-			processBatch := func(batch filter.DimensionOptions) error {
-				var vals []string
-				for _, val := range batch.Items {
-					vals = append(vals, val.Option)
-				}
-				return f.FilterClient.PatchDimensionValues(req.Context(), userAccessToken, "", collectionID, newFilterID, dim.Name, vals, []string{}, f.BatchSize)
-			}
+			processBatch := f.batchAddOptions(req.Context(), userAccessToken, collectionID, newFilterID, dim.Name)
 
 			// Call filter API GetOptions in batches and aggregate the responses
-			if err := f.BatchProcessDimensionOptionsFromFilterAPI(req.Context(), userAccessToken, collectionID, filterID, dim.Name, processBatch); err != nil {
+			if err := f.FilterClient.GetDimensionOptionsBatchProcess(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, processBatch, f.BatchSize, f.BatchMaxWorkers); err != nil {
 				log.Event(ctx, "failed to get and process options from filter client in batches", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
 				return
@@ -96,4 +90,15 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 		http.Redirect(w, req, redirectURL, 302)
 	})
 
+}
+
+// batchAddOptions generates a batch processor to add the dimension options for each provided batch to filter API, by calling the patch endpoint.
+func (f *Filter) batchAddOptions(ctx context.Context, userAccessToken, collectionID, filterID, dimensionName string) filter.DimensionOptionsBatchProcessor {
+	return func(batch filter.DimensionOptions) (forceAbort bool, err error) {
+		var vals []string
+		for _, val := range batch.Items {
+			vals = append(vals, val.Option)
+		}
+		return false, f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, vals, []string{}, f.BatchSize)
+	}
 }

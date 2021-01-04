@@ -22,6 +22,7 @@ func TestUnitFilterOverview(t *testing.T) {
 	mockCollectionID := ""
 	filterID := "12345"
 	batchSize := 100
+	maxWorkers := 25
 
 	cfg := &config.Config{
 		SearchAPIAuthToken:   mockServiceAuthToken,
@@ -29,6 +30,7 @@ func TestUnitFilterOverview(t *testing.T) {
 		BatchSizeLimit:       batchSize,
 		MaxDatasetOptions:    3,
 		EnableDatasetPreview: false,
+		BatchMaxWorkers:      maxWorkers,
 	}
 
 	mockCtrl := gomock.NewController(t)
@@ -70,12 +72,9 @@ func TestUnitFilterOverview(t *testing.T) {
 				filter.Dimensions{
 					Items: []filter.Dimension{{Name: "geography"}, {Name: "Day"}, {Name: "Goods and Services"}},
 				}, nil)
-			mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day",
-				filter.QueryParams{Offset: 0, Limit: batchSize}).Return(filter.DimensionOptions{}, nil)
-			mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Goods and Services",
-				filter.QueryParams{Offset: 0, Limit: batchSize}).Return(filter.DimensionOptions{}, nil)
-			mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "geography",
-				filter.QueryParams{Offset: 0, Limit: batchSize}).Return(filterGeographyOptions, nil)
+			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day", batchSize, maxWorkers).Return(filter.DimensionOptions{}, nil)
+			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Goods and Services", batchSize, maxWorkers).Return(filter.DimensionOptions{}, nil)
+			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "geography", batchSize, maxWorkers).Return(filterGeographyOptions, nil)
 			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadToken, mockCollectionID, filterID).Return(filter.Model{Links: filter.Links{Version: filter.Link{HRef: "/v1/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"}}}, nil)
 
 			// expected calls to dataset api: get options only for options that were found in filter api. Get, GetVersion and GetEdition

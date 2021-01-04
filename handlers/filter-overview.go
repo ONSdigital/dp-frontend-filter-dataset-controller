@@ -65,7 +65,7 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 		// get selected options from filter API for each dimension and then get the labels from dataset API for each option
 		var dimensions FilterModelDimensions
 		for _, dim := range dims.Items {
-			selVals, err := f.GetDimensionOptionsFromFilterAPI(req.Context(), userAccessToken, collectionID, filterID, dim.Name)
+			selVals, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, f.BatchSize, f.BatchMaxWorkers)
 			if err != nil {
 				log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)

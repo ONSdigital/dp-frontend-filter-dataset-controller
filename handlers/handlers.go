@@ -21,6 +21,7 @@ type Filter struct {
 	EnableDatasetPreview bool
 	APIRouterVersion     string
 	BatchSize            int
+	BatchMaxWorkers      int
 	maxDatasetOptions    int
 }
 
@@ -39,6 +40,7 @@ func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient
 		EnableDatasetPreview: cfg.EnableDatasetPreview,
 		SearchAPIAuthToken:   cfg.SearchAPIAuthToken,
 		BatchSize:            cfg.BatchSizeLimit,
+		BatchMaxWorkers:      cfg.BatchMaxWorkers,
 		maxDatasetOptions:    cfg.MaxDatasetOptions,
 	}
 }

@@ -103,7 +103,7 @@ func (f *Filter) getIDNameMap(ctx context.Context, userAccessToken, collectionID
 
 	idNameMap := make(map[string]string)
 
-	opts, err := f.GetDimensionOptionsFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, dimension)
+	opts, err := f.DatasetClient.GetOptionsInBatches(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension, f.BatchSize, f.BatchMaxWorkers)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		opts, err := f.GetDimensionOptionsFromFilterAPI(req.Context(), userAccessToken, collectionID, filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get dimension options", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
@@ -266,14 +266,14 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		selectedValues, err := f.GetDimensionOptionsFromFilterAPI(req.Context(), userAccessToken, collectionID, filterID, name)
+		selectedValues, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		allValues, err := f.GetDimensionOptionsFromDatasetAPI(req.Context(), userAccessToken, collectionID, datasetID, edition, version, name)
+		allValues, err := f.DatasetClient.GetOptionsInBatches(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
@@ -503,21 +503,22 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 	}
 
 	// function to add each batch of dataset dimension options to filter API
-	processBatch := func(batch dataset.Options) error {
+	processBatch := func(batch dataset.Options) (forceAbort bool, err error) {
 		var options []string
 		for _, item := range batch.Items {
 			options = append(options, item.Option)
 		}
 		// first batch, will overwrite any existing values in filter API
 		if batch.Offset == 0 {
-			return f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options)
+			return false, f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options)
 		}
 		// the rest of batches will be added to the existing items in filter API via patch operations
-		return f.FilterClient.PatchDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options, []string{}, f.BatchSize)
+		return false, f.FilterClient.PatchDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options, []string{}, f.BatchSize)
 	}
 
 	// call dataset API GetOptions in batches, and process each batch to add the options to filter API
-	if err := f.BatchProcessDimensionOptionsFromDatasetAPI(req.Context(), userAccessToken, collectionID, datasetID, edition, version, name, processBatch); err != nil {
+	if err := f.DatasetClient.GetOptionsBatchProcess(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name, processBatch, f.BatchSize, f.BatchMaxWorkers); err != nil {
+
 		log.Event(ctx, "failed to process options from dataset api", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
@@ -590,7 +591,7 @@ func (f *Filter) getDimensionValues(ctx context.Context, userAccessToken, collec
 		return
 	}
 
-	vals, err := f.GetDimensionOptionsFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, name)
+	vals, err := f.DatasetClient.GetOptionsInBatches(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, f.BatchSize, f.BatchMaxWorkers)
 	if err != nil {
 		return
 	}

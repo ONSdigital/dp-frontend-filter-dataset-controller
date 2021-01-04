@@ -133,6 +133,35 @@ func (mr *MockFilterClientMockRecorder) GetDimensionOptions(ctx, userAuthToken, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensionOptions", reflect.TypeOf((*MockFilterClient)(nil).GetDimensionOptions), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, q)
 }
 
+// GetDimensionOptionsInBatches mocks base method
+func (m *MockFilterClient) GetDimensionOptionsInBatches(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, batchSize, maxWorkers int) (filter.DimensionOptions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDimensionOptionsInBatches", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, batchSize, maxWorkers)
+	ret0, _ := ret[0].(filter.DimensionOptions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDimensionOptionsInBatches indicates an expected call of GetDimensionOptionsInBatches
+func (mr *MockFilterClientMockRecorder) GetDimensionOptionsInBatches(ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, batchSize, maxWorkers interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensionOptionsInBatches", reflect.TypeOf((*MockFilterClient)(nil).GetDimensionOptionsInBatches), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, batchSize, maxWorkers)
+}
+
+// GetDimensionOptionsBatchProcess mocks base method
+func (m *MockFilterClient) GetDimensionOptionsBatchProcess(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, processBatch filter.DimensionOptionsBatchProcessor, batchSize, maxWorkers int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDimensionOptionsBatchProcess", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, processBatch, batchSize, maxWorkers)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// GetDimensionOptionsBatchProcess indicates an expected call of GetDimensionOptionsBatchProcess
+func (mr *MockFilterClientMockRecorder) GetDimensionOptionsBatchProcess(ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, processBatch, batchSize, maxWorkers interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensionOptionsBatchProcess", reflect.TypeOf((*MockFilterClient)(nil).GetDimensionOptionsBatchProcess), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, processBatch, batchSize, maxWorkers)
+}
+
 // GetJobState mocks base method
 func (m *MockFilterClient) GetJobState(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, filterID string) (filter.Model, error) {
 	m.ctrl.T.Helper()
@@ -402,6 +431,35 @@ func (m *MockDatasetClient) GetOptions(ctx context.Context, userAuthToken, servi
 func (mr *MockDatasetClientMockRecorder) GetOptions(ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension, q interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptions", reflect.TypeOf((*MockDatasetClient)(nil).GetOptions), ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension, q)
+}
+
+// GetOptionsInBatches mocks base method
+func (m *MockDatasetClient) GetOptionsInBatches(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension string, batchSize, maxWorkers int) (dataset.Options, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOptionsInBatches", ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, batchSize, maxWorkers)
+	ret0, _ := ret[0].(dataset.Options)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOptionsInBatches indicates an expected call of GetOptionsInBatches
+func (mr *MockDatasetClientMockRecorder) GetOptionsInBatches(ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, batchSize, maxWorkers interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptionsInBatches", reflect.TypeOf((*MockDatasetClient)(nil).GetOptionsInBatches), ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, batchSize, maxWorkers)
+}
+
+// GetOptionsBatchProcess mocks base method
+func (m *MockDatasetClient) GetOptionsBatchProcess(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension string, processBatch dataset.OptionsBatchProcessor, batchSize, maxWorkers int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOptionsBatchProcess", ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, processBatch, batchSize, maxWorkers)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// GetOptionsBatchProcess indicates an expected call of GetOptionsBatchProcess
+func (mr *MockDatasetClientMockRecorder) GetOptionsBatchProcess(ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, processBatch, batchSize, maxWorkers interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptionsBatchProcess", reflect.TypeOf((*MockDatasetClient)(nil).GetOptionsBatchProcess), ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, processBatch, batchSize, maxWorkers)
 }
 
 // GetVersionMetadata mocks base method

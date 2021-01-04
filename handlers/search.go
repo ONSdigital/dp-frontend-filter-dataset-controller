@@ -37,7 +37,7 @@ func (f *Filter) Search() http.HandlerFunc {
 			return
 		}
 
-		selVals, err := f.GetDimensionOptionsFromFilterAPI(ctx, userAccessToken, collectionID, filterID, name)
+		selVals, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
@@ -192,7 +192,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 		}
 
 		// get all available dimension options from filter API
-		opts, err := f.GetDimensionOptionsFromFilterAPI(ctx, userAccessToken, collectionID, filterID, name)
+		opts, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to retrieve dimension options", log.WARN, log.Error(err))
 			setStatusCode(req, w, err)

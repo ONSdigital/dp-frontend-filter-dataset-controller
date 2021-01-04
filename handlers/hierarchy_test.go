@@ -43,6 +43,7 @@ func TestHierarchy(t *testing.T) {
 	dimensionName := "myDimension"
 	testInstanceID := "testInstanceID"
 	batchSize := 100
+	maxWorkers := 25
 	filterModel := filter.Model{
 		InstanceID: testInstanceID,
 		FilterID:   filterID,
@@ -57,6 +58,7 @@ func TestHierarchy(t *testing.T) {
 		SearchAPIAuthToken:   mockSearchAPIAuthToken,
 		DownloadServiceURL:   "",
 		BatchSizeLimit:       batchSize,
+		BatchMaxWorkers:      maxWorkers,
 		MaxDatasetOptions:    10,
 		EnableDatasetPreview: false,
 	}
@@ -132,8 +134,8 @@ func TestHierarchy(t *testing.T) {
 			testTemplate := []byte{1, 2, 3, 4, 5}
 			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, dimensionName).Return(hierarchy.Model{}, nil)
-			mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
-				filter.QueryParams{Offset: 0, Limit: batchSize}).Return(testSelectedOptions, nil)
+			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
+				batchSize, maxWorkers).Return(testSelectedOptions, nil)
 			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID).Return(testDatasetDetails, nil)
 			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersion, nil)
 			mockDatasetClient.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersionDimensions, nil)
@@ -151,8 +153,8 @@ func TestHierarchy(t *testing.T) {
 			testTemplate := []byte{1, 2, 3, 4, 5}
 			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, dimensionName, mockCode).Return(hierarchy.Model{}, nil)
-			mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
-				filter.QueryParams{Offset: 0, Limit: batchSize}).Return(testSelectedOptions, nil)
+			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
+				batchSize, maxWorkers).Return(testSelectedOptions, nil)
 			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID).Return(testDatasetDetails, nil)
 			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersion, nil)
 			mockDatasetClient.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersionDimensions, nil)
@@ -169,8 +171,8 @@ func TestHierarchy(t *testing.T) {
 		Convey("Hierarchy called for the root node calls the expected methods. If dataset GetOption fails, an InternalServerError status code is returned", func() {
 			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, dimensionName).Return(hierarchy.Model{}, nil)
-			mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
-				filter.QueryParams{Offset: 0, Limit: batchSize}).Return(testSelectedOptions, nil)
+			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
+				batchSize, maxWorkers).Return(testSelectedOptions, nil)
 			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID).Return(testDatasetDetails, nil)
 			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersion, nil)
 			mockDatasetClient.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersionDimensions, nil)

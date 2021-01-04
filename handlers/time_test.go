@@ -22,11 +22,13 @@ func TestUpdateTime(t *testing.T) {
 	const mockCollectionID = "Bar"
 	const mockFilterID = ""
 	const batchSize = 100
+	const maxWorkers = 25
 
 	cfg := &config.Config{
 		SearchAPIAuthToken:   mockServiceAuthToken,
 		DownloadServiceURL:   "",
 		BatchSizeLimit:       batchSize,
+		BatchMaxWorkers:      maxWorkers,
 		EnableDatasetPreview: false,
 	}
 
@@ -101,8 +103,8 @@ func TestUpdateTime(t *testing.T) {
 		mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "time").Return(nil)
 		mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "time").Return(nil)
 		mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, "", mockCollectionID, mockFilterID).Return(expectedFilterModel, nil)
-		mockDatasetClient.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "abcde", "2017", "1", "time",
-			dataset.QueryParams{Offset: 0, Limit: batchSize}).Return(datasetOptions, nil)
+		mockDatasetClient.EXPECT().GetOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "abcde", "2017", "1", "time",
+			batchSize, maxWorkers).Return(datasetOptions, nil)
 		mockFilterClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "time", filterOptions).Return(nil)
 		formData := "latest-option=Jul-20&latest-month=July&latest-year=2020&first-year=1988&first-month=January&month-single=Select&year-single=Select&time-selection=range&start-month=January&start-year=2000&end-month=March&end-year=2000&start-year-grouped=Select&end-year-grouped=Select&save-and-return=Save+and+return"
 		w := callTimeUpdate(formData, mockFilterClient, mockDatasetClient)
