@@ -23,12 +23,13 @@ func TestUnitFilterOverview(t *testing.T) {
 	filterID := "12345"
 	batchSize := 100
 	maxWorkers := 25
+	maxDatasetOptions := 3
 
 	cfg := &config.Config{
 		SearchAPIAuthToken:   mockServiceAuthToken,
 		DownloadServiceURL:   "",
 		BatchSizeLimit:       batchSize,
-		MaxDatasetOptions:    3,
+		MaxDatasetOptions:    maxDatasetOptions,
 		EnableDatasetPreview: false,
 		BatchMaxWorkers:      maxWorkers,
 	}
@@ -42,20 +43,6 @@ func TestUnitFilterOverview(t *testing.T) {
 			Items: []filter.DimensionOption{
 				{
 					Option: "geoUK",
-				},
-			},
-			Count:      1,
-			TotalCount: 1,
-			Offset:     0,
-			Limit:      0,
-		}
-
-		datasetGeographyOptions := dataset.Options{
-			Items: []dataset.Option{
-				{
-					DimensionID: "geography",
-					Label:       "UK",
-					Option:      "geoUK",
 				},
 			},
 			Count:      1,
@@ -81,8 +68,8 @@ func TestUnitFilterOverview(t *testing.T) {
 			mockDatasetClient := NewMockDatasetClient(mockCtrl)
 			mockDatasetClient.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1").Return(dataset.VersionDimensions{
 				Items: []dataset.VersionDimension{{Name: "geography"}, {Name: "Day"}, {Name: "Goods and services"}, {Name: "unused"}}}, nil)
-			mockDatasetClient.EXPECT().GetOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1", "geography",
-				dataset.QueryParams{IDs: []string{"geoUK"}}).Return(datasetGeographyOptions, nil)
+			mockDatasetClient.EXPECT().GetOptionsBatchProcess(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1", "geography",
+				&[]string{"geoUK"}, gomock.Any(), maxDatasetOptions, maxWorkers).Return(nil)
 			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c").Return(dataset.DatasetDetails{Contacts: &[]dataset.Contact{{Name: "Matt"}}}, nil)
 			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1").Return(dataset.Version{}, nil)
 			mockDatasetClient.EXPECT().GetEdition(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016").Return(dataset.Edition{}, nil)

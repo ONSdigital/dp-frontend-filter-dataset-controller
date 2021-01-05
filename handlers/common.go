@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"errors"
 	"net/url"
 	"regexp"
 	"strings"
@@ -44,7 +43,7 @@ func getOptionsAndRedirect(form url.Values, redirectURI *string) (options []stri
 }
 
 // getIDNameLookupFromDatasetAPI creates a map of option keys and labels from the provided filter options,
-// getting the labels for the provided IDs from DatasetAPI.
+// concurrently getting the labels for the provided IDs from DatasetAPI.
 // Note that this method may be expensive if lots of filterOptions are provided, if you can get the labels from some other available source, it would be preferred.
 func (f *Filter) getIDNameLookupFromDatasetAPI(ctx context.Context, userAccessToken, collectionID, datasetID, edition, version, name string,
 	filterOptions filter.DimensionOptions) (idLabelMap map[string]string, err error) {
@@ -54,53 +53,27 @@ func (f *Filter) getIDNameLookupFromDatasetAPI(ctx context.Context, userAccessTo
 		return map[string]string{}, nil
 	}
 
-	// initialise map of options to find, allocating empty strings for all values.
+	// generate the complete list of IDs that will need to be requested
+	optionIDs := make([]string, len(filterOptions.Items))
+	for i, opt := range filterOptions.Items {
+		optionIDs[i] = opt.Option
+	}
+
+	// initialise map of options to find and a batch processor that will map option IDs to Labels
 	idLabelMap = make(map[string]string, len(filterOptions.Items))
-	for _, option := range filterOptions.Items {
-		idLabelMap[option.Option] = ""
-	}
+	processBatch := generateOptionMapperBatchProcessor(&idLabelMap)
 
-	// call datasetAPI GetOptions by IDs in batches until we find all required values
-	offset := 0
-	foundCount := 0
-	for offset < len(filterOptions.Items) {
-		// get batch of option IDs to obtain
-		batchOpts := []string{}
-		bachEnd := min(len(filterOptions.Items), offset+f.maxDatasetOptions)
-		for _, opt := range filterOptions.Items[offset:bachEnd] {
-			batchOpts = append(batchOpts, opt.Option)
-		}
-
-		// get options batch from dataset API
-		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, dataset.QueryParams{IDs: batchOpts})
-		if err != nil {
-			return idLabelMap, err
-		}
-
-		// iterate items in batch and populate labels in idLabelMap
-		for _, opt := range options.Items {
-			if _, found := idLabelMap[opt.Option]; found {
-				idLabelMap[opt.Option] = opt.Label
-				foundCount++
-			}
-		}
-
-		// return if we have found all the required options
-		if foundCount == len(idLabelMap) {
-			return idLabelMap, nil
-		}
-
-		// set offset for the next iteration
-		offset += f.maxDatasetOptions
-	}
-
-	// return error because some value(s) could not be found
-	return idLabelMap, errors.New("could not find all required filter options in dataset API")
+	// call dataset API GetOptionsBatchProcess with the batch processor
+	err = f.DatasetClient.GetOptionsBatchProcess(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, &optionIDs, processBatch, f.maxDatasetOptions, f.BatchMaxWorkers)
+	return idLabelMap, err
 }
 
-func min(x, y int) int {
-	if x < y {
-		return x
+// generateOptionMapperBatchProcessor maps the batch option IDs to labels into the provided idLabelMap
+var generateOptionMapperBatchProcessor = func(idLabelMap *map[string]string) dataset.OptionsBatchProcessor {
+	return func(batch dataset.Options) (forceAbort bool, err error) {
+		for _, opt := range batch.Items {
+			(*idLabelMap)[opt.Option] = opt.Label
+		}
+		return false, nil
 	}
-	return y
 }

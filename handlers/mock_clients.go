@@ -449,17 +449,17 @@ func (mr *MockDatasetClientMockRecorder) GetOptionsInBatches(ctx, userAuthToken,
 }
 
 // GetOptionsBatchProcess mocks base method
-func (m *MockDatasetClient) GetOptionsBatchProcess(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension string, processBatch dataset.OptionsBatchProcessor, batchSize, maxWorkers int) error {
+func (m *MockDatasetClient) GetOptionsBatchProcess(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension string, optionIDs *[]string, processBatch dataset.OptionsBatchProcessor, batchSize, maxWorkers int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOptionsBatchProcess", ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, processBatch, batchSize, maxWorkers)
+	ret := m.ctrl.Call(m, "GetOptionsBatchProcess", ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, optionIDs, processBatch, batchSize, maxWorkers)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // GetOptionsBatchProcess indicates an expected call of GetOptionsBatchProcess
-func (mr *MockDatasetClientMockRecorder) GetOptionsBatchProcess(ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, processBatch, batchSize, maxWorkers interface{}) *gomock.Call {
+func (mr *MockDatasetClientMockRecorder) GetOptionsBatchProcess(ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, optionIDs, processBatch, batchSize, maxWorkers interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptionsBatchProcess", reflect.TypeOf((*MockDatasetClient)(nil).GetOptionsBatchProcess), ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, processBatch, batchSize, maxWorkers)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptionsBatchProcess", reflect.TypeOf((*MockDatasetClient)(nil).GetOptionsBatchProcess), ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, optionIDs, processBatch, batchSize, maxWorkers)
 }
 
 // GetVersionMetadata mocks base method
