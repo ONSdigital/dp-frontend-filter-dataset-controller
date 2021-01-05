@@ -46,7 +46,7 @@ func Get() (cfg *Config, err error) {
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		BatchSizeLimit:             1000, // maximum limit value to get items from APIs in a single call
-		BatchMaxWorkers:            25,   // maximum number of concurrent go-routines requesting items concurrently from APIs with pagination
+		BatchMaxWorkers:            100,  // maximum number of concurrent go-routines requesting items concurrently from APIs with pagination
 		MaxDatasetOptions:          200,  // maximum number of IDs that will be requested to dataset API in a single call as query parmeters
 	}
 
