@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
@@ -197,6 +198,21 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) DimensionSelector() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
+
+		var tAllVals, tSelVals time.Duration
+		t0 := time.Now()
+
+		logTime := func() {
+			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
+				"method":              "dimensions.DimensionSelector",
+				"whole":               time.Since(t0),
+				"get_dataset_options": tAllVals,
+				"get_filter_options":  tSelVals,
+			})
+		}
+
+		defer logTime()
+
 		vars := mux.Vars(req)
 		name := vars["name"]
 		filterID := vars["filterID"]
@@ -266,19 +282,23 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
+		t1 := time.Now()
 		selectedValues, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
+		tSelVals = time.Since(t1)
 
+		t2 := time.Now()
 		allValues, err := f.DatasetClient.GetOptionsInBatches(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
+		tAllVals = time.Since(t2)
 
 		if name == "time" {
 			allValues = sortedTime(ctx, allValues)
@@ -475,6 +495,19 @@ func (f *Filter) DimensionAddAll() http.HandlerFunc {
 
 func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, userAccessToken, collectionID string) {
 
+	var tOptionsBatchPatch time.Duration
+	t0 := time.Now()
+
+	logTime := func() {
+		log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
+			"method":              "dimensions.addAll",
+			"whole":               time.Since(t0),
+			"options_batch_patch": tOptionsBatchPatch,
+		})
+	}
+
+	defer logTime()
+
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
@@ -516,14 +549,17 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 		return false, f.FilterClient.PatchDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options, []string{}, f.BatchSize)
 	}
 
+	t1 := time.Now()
 	// call dataset API GetOptions in batches, and process each batch to add the options to filter API
 	if err := f.DatasetClient.GetOptionsBatchProcess(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name, nil, processBatch, f.BatchSize, f.BatchMaxWorkers); err != nil {
 		log.Event(ctx, "failed to process options from dataset api", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}
+	tOptionsBatchPatch = time.Since(t1)
 
 	http.Redirect(w, req, redirectURL, 302)
+
 }
 
 // AddList sets a list of values, removing any existing value.

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
@@ -19,6 +20,24 @@ import (
 // hierarchy page
 func (f *Filter) Search() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
+
+		var tGetFilterOptions, tGetDatasetVersion, tGetOptionsLookup, tSearchDimension, tDatasetDimensions time.Duration
+		t0 := time.Now()
+
+		logTime := func() {
+			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
+				"method":               "search.Search",
+				"whole":                time.Since(t0),
+				"get_filter_options":   tGetFilterOptions,
+				"dataset_version":      tGetDatasetVersion,
+				"get_options_lookup":   tGetOptionsLookup,
+				"search_get_dimension": tSearchDimension,
+				"dataset_dimensions":   tDatasetDimensions,
+			})
+		}
+
+		defer logTime()
+
 		ctx := req.Context()
 		vars := mux.Vars(req)
 		filterID := vars["filterID"]
@@ -37,12 +56,14 @@ func (f *Filter) Search() http.HandlerFunc {
 			return
 		}
 
+		t1 := time.Now()
 		selVals, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
+		tGetFilterOptions = time.Since(t1)
 
 		versionURL, err := url.Parse(fil.Links.Version.HRef)
 		if err != nil {
@@ -58,6 +79,7 @@ func (f *Filter) Search() http.HandlerFunc {
 			return
 		}
 
+		t2 := time.Now()
 		d, err := f.DatasetClient.Get(ctx, userAccessToken, "", collectionID, datasetID)
 		if err != nil {
 			log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
@@ -70,7 +92,9 @@ func (f *Filter) Search() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+		tGetDatasetVersion = time.Since(t2)
 
+		t3 := time.Now()
 		selValsLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, name, selVals)
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client for the selected values", log.ERROR, log.Error(err),
@@ -78,7 +102,9 @@ func (f *Filter) Search() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+		tGetOptionsLookup = time.Since(t3)
 
+		t4 := time.Now()
 		searchRes, err := f.SearchClient.Dimension(ctx, datasetID, edition, version, name, q, searchConfig...)
 		if err != nil {
 			log.Event(ctx, "failed to get dimension from search client", log.ERROR, log.Error(err),
@@ -86,7 +112,9 @@ func (f *Filter) Search() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+		tSearchDimension = time.Since(t4)
 
+		t5 := time.Now()
 		dims, err := f.DatasetClient.GetVersionDimensions(ctx, userAccessToken, "", collectionID, datasetID, edition, version)
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
@@ -94,6 +122,7 @@ func (f *Filter) Search() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+		tDatasetDimensions = time.Since(t5)
 
 		p := mapper.CreateHierarchySearchPage(req, searchRes.Items, d, fil, selValsLabelMap, dims.Items, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang)
 
@@ -119,6 +148,24 @@ func (f *Filter) Search() http.HandlerFunc {
 // SearchUpdate will update a dimension based on selected search results
 func (f *Filter) SearchUpdate() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
+
+		var tSearchDimension, tAddAll, tRemoveAll, tGetDatasetOptions, tPatchOptions time.Duration
+		t0 := time.Now()
+
+		logTime := func() {
+			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
+				"method":               "search.SearchUpdate",
+				"whole":                time.Since(t0),
+				"add_all":              tAddAll,
+				"remove_all":           tRemoveAll,
+				"get_dataset_options":  tGetDatasetOptions,
+				"search_get_dimension": tSearchDimension,
+				"patch_options":        tPatchOptions,
+			})
+		}
+
+		defer logTime()
+
 		ctx := req.Context()
 		if err := req.ParseForm(); err != nil {
 			log.Event(ctx, "failed to parse request form", log.ERROR, log.Error(err))
@@ -158,14 +205,17 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 			return
 		}
 
+		t1 := time.Now()
 		searchRes, err := f.SearchClient.Dimension(ctx, datasetID, edition, version, name, q, searchConfig...)
 		if err != nil {
 			log.Event(ctx, "failed to retrieve dimension search result, redirecting", log.ERROR, log.Error(err))
 			http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions", filterID), 302)
 			return
 		}
+		tSearchDimension = time.Since(t1)
 
 		if len(req.Form["add-all"]) > 0 {
+			t2 := time.Now()
 			var options []string
 			for _, item := range searchRes.Items {
 				options = append(options, item.Code)
@@ -175,10 +225,12 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 				setStatusCode(req, w, err)
 				return
 			}
+			tAddAll = time.Since(t2)
 			return
 		}
 
 		if len(req.Form["remove-all"]) > 0 {
+			t3 := time.Now()
 			options := []string{}
 			for _, item := range searchRes.Items {
 				options = append(options, item.Code)
@@ -188,9 +240,11 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 				setStatusCode(req, w, err)
 				return
 			}
+			tRemoveAll = time.Since(t3)
 			return
 		}
 
+		t4 := time.Now()
 		// get all available dimension options from filter API
 		opts, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
@@ -198,6 +252,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+		tGetDatasetOptions = time.Since(t4)
 
 		// create list of options to remove
 		removeOptions := []string{}
@@ -215,6 +270,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 		var addOptions []string
 		addOptions = getOptionsAndRedirect(req.Form, &redirectURI)
 
+		t5 := time.Now()
 		// sent the PATCH with options to add and remove
 		err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize)
 		if err != nil {
@@ -222,6 +278,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+		tPatchOptions = time.Since(t5)
 
 		http.Redirect(w, req, redirectURI, 302)
 	})

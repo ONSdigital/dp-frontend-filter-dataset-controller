@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
@@ -21,6 +22,19 @@ import (
 // HierarchyUpdate controls the updating of a hierarchy job
 func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
+
+		var tPatch time.Duration
+		t0 := time.Now()
+
+		logTime := func() {
+			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
+				"method":        "hierarchy.HierarchyUpdate",
+				"whole":         time.Since(t0),
+				"options_patch": tPatch,
+			})
+		}
+
+		defer logTime()
 
 		vars := mux.Vars(req)
 		filterID := vars["filterID"]
@@ -81,12 +95,15 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 		var addOptions []string
 		addOptions = getOptionsAndRedirect(req.Form, &redirectURI)
 
+		t1 := time.Now()
 		err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize)
 		if err != nil {
 			log.Event(ctx, "failed to patch dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
 			setStatusCode(req, w, err)
 			return
 		}
+		tPatch = time.Since(t1)
+
 		http.Redirect(w, req, redirectURI, 302)
 	})
 }
@@ -179,6 +196,22 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 // Hierarchy controls the creation of a hierarchy page
 func (f *Filter) Hierarchy() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
+
+		var tGetFilterOptions, tGetDatasetVersionDimensions, tGetOptionsLookup time.Duration
+		t0 := time.Now()
+
+		logTime := func() {
+			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
+				"method":                     "hierarchy.Hierarchy",
+				"whole":                      time.Since(t0),
+				"get_filter_options":         tGetFilterOptions,
+				"dataset_version_dimensions": tGetDatasetVersionDimensions,
+				"get_options_lookup":         tGetOptionsLookup,
+			})
+		}
+
+		defer logTime()
+
 		vars := mux.Vars(req)
 		filterID := vars["filterID"]
 		name := vars["name"]
@@ -209,12 +242,14 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			return
 		}
 
+		t1 := time.Now()
 		selVals, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
+		tGetFilterOptions = time.Since(t1)
 
 		versionURL, err := url.Parse(fil.Links.Version.HRef)
 		if err != nil {
@@ -230,6 +265,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			return
 		}
 
+		t2 := time.Now()
 		d, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
 		if err != nil {
 			log.Event(req.Context(), "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
@@ -250,7 +286,9 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+		tGetDatasetVersionDimensions = time.Since(t2)
 
+		t3 := time.Now()
 		selValsLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, name, selVals)
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client for the selected values", log.ERROR, log.Error(err),
@@ -258,6 +296,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+		tGetOptionsLookup = time.Since(t3)
 
 		p := mapper.CreateHierarchyPage(req, h, d, fil, selValsLabelMap, dims, name, req.URL.Path, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang)
 
