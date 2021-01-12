@@ -30,8 +30,8 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 		logTime := func() {
 			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
 				"method":                          "filter-overview.FilterOverview",
-				"whole":                           time.Since(t0),
-				"get_get_all_options_and_lookups": tGetAllOptionsAndLookups,
+				"whole":                           time.Since(t0).Seconds(),
+				"get_get_all_options_and_lookups": tGetAllOptionsAndLookups.Seconds(),
 			})
 		}
 

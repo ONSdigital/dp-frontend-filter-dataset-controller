@@ -29,8 +29,8 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 		logTime := func() {
 			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
 				"method":        "hierarchy.HierarchyUpdate",
-				"whole":         time.Since(t0),
-				"options_patch": tPatch,
+				"whole":         time.Since(t0).Seconds(),
+				"options_patch": tPatch.Seconds(),
 			})
 		}
 
@@ -203,10 +203,10 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 		logTime := func() {
 			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
 				"method":                     "hierarchy.Hierarchy",
-				"whole":                      time.Since(t0),
-				"get_filter_options":         tGetFilterOptions,
-				"dataset_version_dimensions": tGetDatasetVersionDimensions,
-				"get_options_lookup":         tGetOptionsLookup,
+				"whole":                      time.Since(t0).Seconds(),
+				"get_filter_options":         tGetFilterOptions.Seconds(),
+				"dataset_version_dimensions": tGetDatasetVersionDimensions.Seconds(),
+				"get_options_lookup":         tGetOptionsLookup.Seconds(),
 			})
 		}
 

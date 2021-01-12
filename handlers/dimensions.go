@@ -205,9 +205,9 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 		logTime := func() {
 			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
 				"method":              "dimensions.DimensionSelector",
-				"whole":               time.Since(t0),
-				"get_dataset_options": tAllVals,
-				"get_filter_options":  tSelVals,
+				"whole":               time.Since(t0).Seconds(),
+				"get_dataset_options": tAllVals.Seconds(),
+				"get_filter_options":  tSelVals.Seconds(),
 			})
 		}
 
@@ -501,8 +501,8 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 	logTime := func() {
 		log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
 			"method":              "dimensions.addAll",
-			"whole":               time.Since(t0),
-			"options_batch_patch": tOptionsBatchPatch,
+			"whole":               time.Since(t0).Seconds(),
+			"options_batch_patch": tOptionsBatchPatch.Seconds(),
 		})
 	}
 
