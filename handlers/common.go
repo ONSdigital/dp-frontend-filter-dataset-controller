@@ -49,7 +49,7 @@ func (f *Filter) getIDNameLookupFromDatasetAPI(ctx context.Context, userAccessTo
 	filterOptions filter.DimensionOptions) (idLabelMap map[string]string, err error) {
 
 	// if no items are provided, return straight away (nothing to map)
-	if filterOptions.Items == nil {
+	if filterOptions.Items == nil || len(filterOptions.Items) == 0 {
 		return map[string]string{}, nil
 	}
 
