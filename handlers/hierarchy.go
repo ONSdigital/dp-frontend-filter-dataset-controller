@@ -23,14 +23,17 @@ import (
 func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
 
-		var tPatch time.Duration
+		var tGetJobState, tRemoveAllHierarchyLevel, tBuildHierarchyModel, tPatch time.Duration
 		t0 := time.Now()
 
 		logTime := func() {
 			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
-				"method":        "hierarchy.HierarchyUpdate",
-				"whole":         time.Since(t0).Seconds(),
-				"options_patch": tPatch.Seconds(),
+				"method":                     "hierarchy.HierarchyUpdate",
+				"whole":                      fmtDuration(time.Since(t0)),
+				"filter_get_job_state":       fmtDuration(tGetJobState),
+				"remove_all_hierarchy_level": fmtDuration(tRemoveAllHierarchyLevel),
+				"build_hierarchy_model":      fmtDuration(tBuildHierarchyModel),
+				"options_patch":              fmtDuration(tPatch),
 			})
 		}
 
@@ -59,12 +62,14 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 			}
 		}
 
+		t := time.Now()
 		fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
+		tGetJobState = time.Since(t)
 
 		if len(req.Form["add-all"]) > 0 {
 			f.addAllHierarchyLevel(w, req, fil, name, code, redirectURI, userAccessToken, collectionID)
@@ -72,16 +77,20 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 		}
 
 		if len(req.Form["remove-all"]) > 0 {
+			t := time.Now()
 			f.removeAllHierarchyLevel(w, req, fil, name, code, redirectURI, userAccessToken, collectionID)
+			tRemoveAllHierarchyLevel = time.Since(t)
 			return
 		}
 
+		t = time.Now()
 		h, err := f.buildHierarchyModel(ctx, fil, name, code)
 		if err != nil {
 			log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
 			setStatusCode(req, w, err)
 			return
 		}
+		tBuildHierarchyModel = time.Since(t)
 
 		// obtain options to remove from unselected values (not provided in form)
 		removeOptions := []string{}
@@ -203,10 +212,10 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 		logTime := func() {
 			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
 				"method":                     "hierarchy.Hierarchy",
-				"whole":                      time.Since(t0).Seconds(),
-				"get_filter_options":         tGetFilterOptions.Seconds(),
-				"dataset_version_dimensions": tGetDatasetVersionDimensions.Seconds(),
-				"get_options_lookup":         tGetOptionsLookup.Seconds(),
+				"whole":                      fmtDuration(time.Since(t0)),
+				"get_filter_options":         fmtDuration(tGetFilterOptions),
+				"dataset_version_dimensions": fmtDuration(tGetDatasetVersionDimensions),
+				"get_options_lookup":         fmtDuration(tGetOptionsLookup),
 			})
 		}
 

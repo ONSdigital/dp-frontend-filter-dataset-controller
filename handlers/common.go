@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
@@ -76,4 +78,8 @@ var generateOptionMapperBatchProcessor = func(idLabelMap *map[string]string) dat
 		}
 		return false, nil
 	}
+}
+
+func fmtDuration(d time.Duration) string {
+	return fmt.Sprintf("%.3f", d.Seconds())
 }

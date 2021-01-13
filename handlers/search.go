@@ -27,12 +27,12 @@ func (f *Filter) Search() http.HandlerFunc {
 		logTime := func() {
 			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
 				"method":               "search.Search",
-				"whole":                time.Since(t0).Seconds(),
-				"get_filter_options":   tGetFilterOptions.Seconds(),
-				"dataset_version":      tGetDatasetVersion.Seconds(),
-				"get_options_lookup":   tGetOptionsLookup.Seconds(),
-				"search_get_dimension": tSearchDimension.Seconds(),
-				"dataset_dimensions":   tDatasetDimensions.Seconds(),
+				"whole":                fmtDuration(time.Since(t0)),
+				"get_filter_options":   fmtDuration(tGetFilterOptions),
+				"dataset_version":      fmtDuration(tGetDatasetVersion),
+				"get_options_lookup":   fmtDuration(tGetOptionsLookup),
+				"search_get_dimension": fmtDuration(tSearchDimension),
+				"dataset_dimensions":   fmtDuration(tDatasetDimensions),
 			})
 		}
 
@@ -155,12 +155,12 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 		logTime := func() {
 			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
 				"method":               "search.SearchUpdate",
-				"whole":                time.Since(t0).Seconds(),
-				"add_all":              tAddAll.Seconds(),
-				"remove_all":           tRemoveAll.Seconds(),
-				"get_dataset_options":  tGetDatasetOptions.Seconds(),
-				"search_get_dimension": tSearchDimension.Seconds(),
-				"patch_options":        tPatchOptions.Seconds(),
+				"whole":                fmtDuration(time.Since(t0)),
+				"add_all":              fmtDuration(tAddAll),
+				"remove_all":           fmtDuration(tRemoveAll),
+				"get_dataset_options":  fmtDuration(tGetDatasetOptions),
+				"search_get_dimension": fmtDuration(tSearchDimension),
+				"patch_options":        fmtDuration(tPatchOptions),
 			})
 		}
 

@@ -199,15 +199,20 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 func (f *Filter) DimensionSelector() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
 
-		var tAllVals, tSelVals time.Duration
+		var tGetJobState, tGetDataset, tGetVersion, tIsHierarchy, tGetDimensions, tAllVals, tSelVals time.Duration
 		t0 := time.Now()
 
 		logTime := func() {
 			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
-				"method":              "dimensions.DimensionSelector",
-				"whole":               time.Since(t0).Seconds(),
-				"get_dataset_options": tAllVals.Seconds(),
-				"get_filter_options":  tSelVals.Seconds(),
+				"method":                    "dimensions.DimensionSelector",
+				"whole":                     fmtDuration(time.Since(t0)),
+				"filter_get_job_state":      fmtDuration(tGetJobState),
+				"datset_get_dataset":        fmtDuration(tGetDataset),
+				"dataset_get_version":       fmtDuration(tGetVersion),
+				"dataset_get_options":       fmtDuration(tAllVals),
+				"filter_get_options":        fmtDuration(tSelVals),
+				"dataset_get_dimensions":    fmtDuration(tGetDimensions),
+				"is_hierarchical_dimension": fmtDuration(tIsHierarchy),
 			})
 		}
 
@@ -218,12 +223,14 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
+		t := time.Now()
 		fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
+		tGetJobState = time.Since(t)
 
 		versionURL, err := url.Parse(fj.Links.Version.HRef)
 		if err != nil {
@@ -240,27 +247,33 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
+		t = time.Now()
 		datasetDetails, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
 		if err != nil {
 			log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
 			setStatusCode(req, w, err)
 			return
 		}
+		tGetDataset = time.Since(t)
 
+		t = time.Now()
 		ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, version)
 		if err != nil {
 			log.Event(ctx, "failed to get version", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
+		tGetVersion = time.Since(t)
 
 		// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
 		// then the dimension should be populated as a hierarchy
+		t = time.Now()
 		isHierarchy, err := f.isHierarchicalDimension(ctx, fj.InstanceID, name)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
 		}
+		tIsHierarchy = time.Since(t)
 
 		// count number of options for the dimension in dataset API
 		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: 1})
@@ -275,12 +288,14 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
+		t = time.Now()
 		dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
+		tGetDimensions = time.Since(t)
 
 		t1 := time.Now()
 		selectedValues, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
@@ -501,8 +516,8 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 	logTime := func() {
 		log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
 			"method":              "dimensions.addAll",
-			"whole":               time.Since(t0).Seconds(),
-			"options_batch_patch": tOptionsBatchPatch.Seconds(),
+			"whole":               fmtDuration(time.Since(t0)),
+			"options_batch_patch": fmtDuration(tOptionsBatchPatch),
 		})
 	}
 
