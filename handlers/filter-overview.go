@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
@@ -22,6 +23,20 @@ import (
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) FilterOverview() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
+
+		var tGetAllOptionsAndLookups time.Duration
+		t0 := time.Now()
+
+		logTime := func() {
+			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
+				"method":                          "filter-overview.FilterOverview",
+				"whole":                           time.Since(t0).Seconds(),
+				"get_get_all_options_and_lookups": tGetAllOptionsAndLookups.Seconds(),
+			})
+		}
+
+		defer logTime()
+
 		vars := mux.Vars(req)
 		filterID := vars["filterID"]
 		ctx := req.Context()
@@ -62,6 +77,7 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 			return
 		}
 
+		t1 := time.Now()
 		// get selected options from filter API for each dimension and then get the labels from dataset API for each option
 		var dimensions FilterModelDimensions
 		for _, dim := range dims.Items {
@@ -89,6 +105,7 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 				Values: labels,
 			})
 		}
+		tGetAllOptionsAndLookups = time.Since(t1)
 		sort.Sort(dimensions)
 
 		dataset, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
