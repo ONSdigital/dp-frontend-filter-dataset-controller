@@ -199,20 +199,20 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 func (f *Filter) DimensionSelector() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
 
-		var tGetJobState, tGetDataset, tGetVersion, tIsHierarchy, tGetDimensions, tAllVals, tSelVals time.Duration
+		var tGetJobState, tGetDataset, tGetVersion, tHierarchyGetRoot, tGetDimensions, tAllVals, tSelVals time.Duration
 		t0 := time.Now()
 
 		logTime := func() {
 			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
-				"method":                    "dimensions.DimensionSelector",
-				"whole":                     fmtDuration(time.Since(t0)),
-				"filter_get_job_state":      fmtDuration(tGetJobState),
-				"datset_get_dataset":        fmtDuration(tGetDataset),
-				"dataset_get_version":       fmtDuration(tGetVersion),
-				"dataset_get_options":       fmtDuration(tAllVals),
-				"filter_get_options":        fmtDuration(tSelVals),
-				"dataset_get_dimensions":    fmtDuration(tGetDimensions),
-				"is_hierarchical_dimension": fmtDuration(tIsHierarchy),
+				"method":                 "dimensions.DimensionSelector",
+				"whole":                  fmtDuration(time.Since(t0)),
+				"filter_get_job_state":   fmtDuration(tGetJobState),
+				"datset_get_dataset":     fmtDuration(tGetDataset),
+				"dataset_get_version":    fmtDuration(tGetVersion),
+				"dataset_get_options":    fmtDuration(tAllVals),
+				"filter_get_options":     fmtDuration(tSelVals),
+				"dataset_get_dimensions": fmtDuration(tGetDimensions),
+				"hierarchy_get_root":     fmtDuration(tHierarchyGetRoot),
 			})
 		}
 
@@ -273,7 +273,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		tIsHierarchy = time.Since(t)
+		tHierarchyGetRoot = time.Since(t)
 
 		// count number of options for the dimension in dataset API
 		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: 1})
