@@ -406,6 +406,7 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 	if err != nil {
 		return
 	}
+	tGetChildren = map[string]time.Duration{}
 
 	if root.HasData {
 		h.Label = root.Label
