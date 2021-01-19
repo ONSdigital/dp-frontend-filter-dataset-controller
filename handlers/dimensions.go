@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
@@ -198,39 +197,17 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) DimensionSelector() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
-
-		var tGetJobState, tGetDataset, tGetVersion, tHierarchyGetRoot, tGetDimensions, tAllVals, tSelVals time.Duration
-		t0 := time.Now()
-
-		logTime := func() {
-			log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
-				"method":                 "dimensions.DimensionSelector",
-				"whole":                  fmtDuration(time.Since(t0)),
-				"filter_get_job_state":   fmtDuration(tGetJobState),
-				"datset_get_dataset":     fmtDuration(tGetDataset),
-				"dataset_get_version":    fmtDuration(tGetVersion),
-				"dataset_get_options":    fmtDuration(tAllVals),
-				"filter_get_options":     fmtDuration(tSelVals),
-				"dataset_get_dimensions": fmtDuration(tGetDimensions),
-				"hierarchy_get_root":     fmtDuration(tHierarchyGetRoot),
-			})
-		}
-
-		defer logTime()
-
 		vars := mux.Vars(req)
 		name := vars["name"]
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		t := time.Now()
 		fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
-		tGetJobState = time.Since(t)
 
 		versionURL, err := url.Parse(fj.Links.Version.HRef)
 		if err != nil {
@@ -247,33 +224,27 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		t = time.Now()
 		datasetDetails, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
 		if err != nil {
 			log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
 			setStatusCode(req, w, err)
 			return
 		}
-		tGetDataset = time.Since(t)
 
-		t = time.Now()
 		ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, version)
 		if err != nil {
 			log.Event(ctx, "failed to get version", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
-		tGetVersion = time.Since(t)
 
 		// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
 		// then the dimension should be populated as a hierarchy
-		t = time.Now()
 		isHierarchy, err := f.isHierarchicalDimension(ctx, fj.InstanceID, name)
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
 		}
-		tHierarchyGetRoot = time.Since(t)
 
 		// count number of options for the dimension in dataset API
 		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: 1})
@@ -288,32 +259,26 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		t = time.Now()
 		dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
-		tGetDimensions = time.Since(t)
 
-		t1 := time.Now()
 		selectedValues, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
-		tSelVals = time.Since(t1)
 
-		t2 := time.Now()
 		allValues, err := f.DatasetClient.GetOptionsInBatches(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
-		tAllVals = time.Since(t2)
 
 		if name == "time" {
 			allValues = sortedTime(ctx, allValues)
@@ -510,19 +475,6 @@ func (f *Filter) DimensionAddAll() http.HandlerFunc {
 
 func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, userAccessToken, collectionID string) {
 
-	var tOptionsBatchPatch time.Duration
-	t0 := time.Now()
-
-	logTime := func() {
-		log.Event(nil, "+++ PERFORMANCE TEST", log.Data{
-			"method":              "dimensions.addAll",
-			"whole":               fmtDuration(time.Since(t0)),
-			"options_batch_patch": fmtDuration(tOptionsBatchPatch),
-		})
-	}
-
-	defer logTime()
-
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
@@ -564,17 +516,14 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 		return false, f.FilterClient.PatchDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options, []string{}, f.BatchSize)
 	}
 
-	t1 := time.Now()
 	// call dataset API GetOptions in batches, and process each batch to add the options to filter API
 	if err := f.DatasetClient.GetOptionsBatchProcess(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name, nil, processBatch, f.BatchSize, f.BatchMaxWorkers); err != nil {
 		log.Event(ctx, "failed to process options from dataset api", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 		setStatusCode(req, w, err)
 		return
 	}
-	tOptionsBatchPatch = time.Since(t1)
 
 	http.Redirect(w, req, redirectURL, 302)
-
 }
 
 // AddList sets a list of values, removing any existing value.

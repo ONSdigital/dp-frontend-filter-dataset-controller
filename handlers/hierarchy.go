@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
@@ -22,27 +21,6 @@ import (
 // HierarchyUpdate controls the updating of a hierarchy job
 func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
-
-		var tGetJobState, tPatch, tHierarchyGetRoot, tFilterPutOptions time.Duration
-		tHierarchyGetChildren := map[string]time.Duration{}
-		t0 := time.Now()
-
-		logTime := func() {
-			logData := log.Data{
-				"method":               "hierarchy.HierarchyUpdate",
-				"whole":                fmtDuration(time.Since(t0)),
-				"filter_get_job_state": fmtDuration(tGetJobState),
-				"hierarchy_get_root":   fmtDuration(tHierarchyGetRoot),
-				"filter_patch_options": fmtDuration(tPatch),
-				"filter_put_options":   fmtDuration(tFilterPutOptions),
-			}
-			for code, tGetChild := range tHierarchyGetChildren {
-				logData[fmt.Sprintf("hierarchy_get_child_%s", code)] = fmtDuration(tGetChild)
-			}
-			log.Event(nil, "+++ PERFORMANCE TEST", logData)
-		}
-
-		defer logTime()
 
 		vars := mux.Vars(req)
 		filterID := vars["filterID"]
@@ -67,27 +45,24 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 			}
 		}
 
-		t := time.Now()
 		fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
-		tGetJobState = time.Since(t)
 
 		if len(req.Form["add-all"]) > 0 {
-			tHierarchyGetRoot, tHierarchyGetChildren, tFilterPutOptions = f.addAllHierarchyLevel(w, req, fil, name, code, redirectURI, userAccessToken, collectionID)
+			f.addAllHierarchyLevel(w, req, fil, name, code, redirectURI, userAccessToken, collectionID)
 			return
 		}
 
 		if len(req.Form["remove-all"]) > 0 {
-			tHierarchyGetRoot, tHierarchyGetChildren, tPatch = f.removeAllHierarchyLevel(w, req, fil, name, code, redirectURI, userAccessToken, collectionID)
+			f.removeAllHierarchyLevel(w, req, fil, name, code, redirectURI, userAccessToken, collectionID)
 			return
 		}
 
-		var h hierarchy.Model
-		h, err, tHierarchyGetRoot, tHierarchyGetChildren = f.buildHierarchyModel(ctx, fil, name, code)
+		h, err := f.buildHierarchyModel(ctx, fil, name, code)
 		if err != nil {
 			log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
 			setStatusCode(req, w, err)
@@ -106,34 +81,24 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 		var addOptions []string
 		addOptions = getOptionsAndRedirect(req.Form, &redirectURI)
 
-		t1 := time.Now()
 		err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize)
 		if err != nil {
 			log.Event(ctx, "failed to patch dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
 			setStatusCode(req, w, err)
 			return
 		}
-		tPatch = time.Since(t1)
-
 		http.Redirect(w, req, redirectURI, 302)
 	})
 }
 
-func (f *Filter) buildHierarchyModel(ctx context.Context, fil filter.Model, name, code string) (h hierarchy.Model, err error, tGetRoot time.Duration, tGetChildren map[string]time.Duration) {
-	tGetChildren = map[string]time.Duration{}
-
+func (f *Filter) buildHierarchyModel(ctx context.Context, fil filter.Model, name, code string) (h hierarchy.Model, err error) {
 	if len(code) > 0 {
-		t := time.Now()
-		c, err := f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
-		tGetChildren[code] = time.Since(t)
-		return c, err, tGetRoot, tGetChildren
+		return f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
 	}
 	if name == "geography" {
-		h, err, tGetRoot, tGetChildren = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
+		h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
 	} else {
-		t := time.Now()
 		h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
-		tGetRoot = time.Since(t)
 	}
 
 	// We include the value on the root as a selectable item, so append
@@ -142,27 +107,22 @@ func (f *Filter) buildHierarchyModel(ctx context.Context, fil filter.Model, name
 	h.Children = append(h.Children, hierarchy.Child{
 		Links: h.Links,
 	})
-	return h, err, tGetRoot, tGetChildren
+	return h, err
 }
 
-func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID string) (tGetRoot time.Duration, tGetChildren map[string]time.Duration, tPut time.Duration) {
-	tGetChildren = map[string]time.Duration{}
+func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID string) {
 
 	ctx := req.Context()
 	var err error
 
 	var h hierarchy.Model
 	if len(code) > 0 {
-		t := time.Now()
 		h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
-		tGetChildren[code] = time.Since(t)
 	} else {
 		if name == "geography" {
-			h, err, tGetRoot, tGetChildren = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
+			h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
 		} else {
-			t := time.Now()
 			h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
-			tGetRoot = time.Since(t)
 		}
 	}
 	if err != nil {
@@ -175,34 +135,25 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 	for _, child := range h.Children {
 		options = append(options, child.Links.Code.ID)
 	}
-	t := time.Now()
 	if err := f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, fil.FilterID, name, options); err != nil {
 		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err))
 	}
-	tPut = time.Since(t)
 
 	http.Redirect(w, req, redirectURI, 302)
-	return
 }
 
-func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID string) (tGetRoot time.Duration, tGetChildren map[string]time.Duration, tPatch time.Duration) {
-	tGetChildren = map[string]time.Duration{}
-
+func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID string) {
 	ctx := req.Context()
 	var h hierarchy.Model
 	var err error
 
 	if len(code) > 0 {
-		t := time.Now()
 		h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
-		tGetChildren[code] = time.Since(t)
 	} else {
 		if name == "geography" {
-			h, err, tGetRoot, tGetChildren = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
+			h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
 		} else {
-			t := time.Now()
 			h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
-			tGetRoot = time.Since(t)
 		}
 	}
 	if err != nil {
@@ -218,43 +169,16 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 	}
 
 	// remove all items
-	t := time.Now()
 	if err := f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, fil.FilterID, name, []string{}, removeOptions, f.BatchSize); err != nil {
 		log.Event(ctx, "failed to remove dimension values using a patch", log.ERROR, log.Error(err), log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code, "options": removeOptions})
 	}
-	tPatch = time.Since(t)
 
 	http.Redirect(w, req, redirectURI, 302)
-	return
 }
 
 // Hierarchy controls the creation of a hierarchy page
 func (f *Filter) Hierarchy() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
-
-		var tHierarchyGetRoot, tGetFilterOptions, tDatasetGet, tDatasetGetVersion, tDatasetGetDimensions, tGetOptionsLookup time.Duration
-		tHierarchyGetChildren := map[string]time.Duration{}
-		t0 := time.Now()
-
-		logTime := func() {
-			logData := log.Data{
-				"method":                 "hierarchy.Hierarchy",
-				"whole":                  fmtDuration(time.Since(t0)),
-				"hierarchy_get_root":     fmtDuration(tHierarchyGetRoot),
-				"filter_get_options":     fmtDuration(tGetFilterOptions),
-				"dataset_get":            fmtDuration(tDatasetGet),
-				"dataset_get_version":    fmtDuration(tDatasetGetVersion),
-				"dataset_get_dimensions": fmtDuration(tDatasetGetDimensions),
-				"get_options_lookup":     fmtDuration(tGetOptionsLookup),
-			}
-			for code, tGetChild := range tHierarchyGetChildren {
-				logData[fmt.Sprintf("hierarchy_get_child_%s", code)] = fmtDuration(tGetChild)
-			}
-			log.Event(nil, "+++ PERFORMANCE TEST", logData)
-		}
-
-		defer logTime()
-
 		vars := mux.Vars(req)
 		filterID := vars["filterID"]
 		name := vars["name"]
@@ -270,16 +194,12 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 
 		var h hierarchy.Model
 		if len(code) > 0 {
-			t := time.Now()
 			h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
-			tHierarchyGetChildren[code] = time.Since(t)
 		} else {
 			if name == "geography" {
-				h, err, tHierarchyGetRoot, tHierarchyGetChildren = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
+				h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
 			} else {
-				t := time.Now()
 				h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
-				tHierarchyGetRoot = time.Since(t)
 			}
 		}
 
@@ -289,14 +209,12 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			return
 		}
 
-		t1 := time.Now()
 		selVals, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
-		tGetFilterOptions = time.Since(t1)
 
 		versionURL, err := url.Parse(fil.Links.Version.HRef)
 		if err != nil {
@@ -312,25 +230,19 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			return
 		}
 
-		t := time.Now()
 		d, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
 		if err != nil {
 			log.Event(req.Context(), "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
 			setStatusCode(req, w, err)
 			return
 		}
-		tDatasetGet = time.Since(t)
-
-		t = time.Now()
 		ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, version)
 		if err != nil {
 			log.Event(req.Context(), "failed to get version", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
-		tDatasetGetVersion = time.Since(t)
 
-		t = time.Now()
 		dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
@@ -338,9 +250,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		tDatasetGetDimensions = time.Since(t)
 
-		t3 := time.Now()
 		selValsLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, name, selVals)
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client for the selected values", log.ERROR, log.Error(err),
@@ -348,7 +258,6 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		tGetOptionsLookup = time.Since(t3)
 
 		p := mapper.CreateHierarchyPage(req, h, d, fil, selValsLabelMap, dims, name, req.URL.Path, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang)
 
@@ -399,14 +308,11 @@ func (n flatNodes) addWithChildren(val hierarchy.Child, i int) {
 
 // Flatten the geography hierarchy - please note this will only work for this particular hierarchy,
 // need helper functions for other geog hierarchies too.
-func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string) (h hierarchy.Model, err error, tGetRoot time.Duration, tGetChildren map[string]time.Duration) {
-	t := time.Now()
+func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string) (h hierarchy.Model, err error) {
 	root, err := f.HierarchyClient.GetRoot(ctx, instanceID, "geography")
-	tGetRoot = time.Since(t)
 	if err != nil {
 		return
 	}
-	tGetChildren = map[string]time.Duration{}
 
 	if root.HasData {
 		h.Label = root.Label
@@ -424,24 +330,20 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 		if val.Links.Code.ID == nodes.order[0] {
 			nodes.addWithoutChildren(val, 0)
 
-			t = time.Now()
 			child, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", val.Links.Code.ID)
 			if err != nil {
-				return h, err, tGetRoot, tGetChildren
+				return h, err
 			}
-			tGetChildren[val.Links.Code.ID] = time.Since(t)
 
 			for _, childVal := range child.Children {
 
 				if childVal.Links.Code.ID == nodes.order[1] {
 					nodes.addWithoutChildren(childVal, 1)
 
-					t = time.Now()
 					grandChild, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", childVal.Links.Code.ID)
 					if err != nil {
-						return h, err, tGetRoot, tGetChildren
+						return h, err
 					}
-					tGetChildren[val.Links.Code.ID] = time.Since(t)
 
 					for _, grandChildVal := range grandChild.Children {
 						if grandChildVal.Links.Code.ID == nodes.order[2] {
@@ -479,5 +381,5 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 	}
 
 	h.Children = children
-	return h, err, tGetRoot, tGetChildren
+	return h, err
 }
