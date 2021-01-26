@@ -3,8 +3,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/ONSdigital/dp-api-clients-go v1.1.0/go.mod h1:9lqor0I7caCnRWr04gU/r7x5dqxgoODob8L48q+cE4E=
 github.com/ONSdigital/dp-api-clients-go v1.28.0/go.mod h1:iyJy6uRL4B6OYOJA0XMr5UHt6+Q8XmN9uwmURO+9Oj4=
 github.com/ONSdigital/dp-api-clients-go v1.29.0/go.mod h1:iyJy6uRL4B6OYOJA0XMr5UHt6+Q8XmN9uwmURO+9Oj4=
-github.com/ONSdigital/dp-api-clients-go v1.32.6 h1:jLAhlSAFx8iV9P9K5TBEkzQMnl3gxAT5IzvyKSE3tQ0=
-github.com/ONSdigital/dp-api-clients-go v1.32.6/go.mod h1:0pUK3MN1v7DTjq0JSAD+DqbsZ8AVTodrXSXgJecg9Pw=
+github.com/ONSdigital/dp-api-clients-go v1.32.10 h1:oH3+9PHPn4EFr/m4tEdLi/yW1W6vu5t+gNE8qPzr0lM=
+github.com/ONSdigital/dp-api-clients-go v1.32.10/go.mod h1:0pUK3MN1v7DTjq0JSAD+DqbsZ8AVTodrXSXgJecg9Pw=
 github.com/ONSdigital/dp-cookies v0.1.0 h1:dP9wN8slCCr3nkybFmGIMXPsEjKHNIKi2iRjMi9E2bY=
 github.com/ONSdigital/dp-cookies v0.1.0/go.mod h1:7HvRBm+mU0xz2pryTa+vwphKxe5HYpXtmPe/e6FEIJU=
 github.com/ONSdigital/dp-frontend-dataset-controller v1.17.0 h1:jMM5drrwcOK5H0DTL8JpLOZm2rw+VJrz+vI9h2GQ8nQ=
