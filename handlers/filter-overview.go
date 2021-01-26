@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -26,16 +27,25 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, filter.QueryParams{})
+		dims, eTag0, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, filter.QueryParams{})
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
+		fj, eTag1, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		// TODO we might want to retry this handler if eTags don't match
+		if eTag0 != eTag1 {
+			err := errors.New("inconsistent filter data")
+			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between calls", log.ERROR, log.Error(err),
+				log.Data{"filter_id": filterID, "e_tag_0": eTag0, "e_tag_1": eTag1})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -65,9 +75,18 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 		// get selected options from filter API for each dimension and then get the labels from dataset API for each option
 		var dimensions FilterModelDimensions
 		for _, dim := range dims.Items {
-			selVals, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, f.BatchSize, f.BatchMaxWorkers)
+			selVals, eTag2, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, f.BatchSize, f.BatchMaxWorkers)
 			if err != nil {
 				log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
+				setStatusCode(req, w, err)
+				return
+			}
+
+			// TODO we might want to retry this handler if eTags don't match
+			if eTag2 != eTag1 {
+				err := errors.New("inconsistent filter data")
+				log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between calls", log.ERROR, log.Error(err),
+					log.Data{"filter_id": filterID, "e_tag_1": eTag1, "e_tag_2": eTag2})
 				setStatusCode(req, w, err)
 				return
 			}
@@ -148,20 +167,22 @@ func (f *Filter) FilterOverviewClearAll() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, filter.QueryParams{})
+		dims, eTag, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, filter.QueryParams{})
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err))
 			return
 		}
 
 		for _, dim := range dims.Items {
-			if err := f.FilterClient.RemoveDimension(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name); err != nil {
+			eTag, err = f.FilterClient.RemoveDimension(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, eTag)
+			if err != nil {
 				log.Event(ctx, "failed to remove dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
 				return
 			}
 
-			if err := f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name); err != nil {
+			eTag, err = f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, eTag)
+			if err != nil {
 				log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
 				return

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/headers"
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
 	"github.com/ONSdigital/log.go/log"
 
@@ -27,12 +28,14 @@ func (f *Filter) UpdateAge() http.HandlerFunc {
 		filterID := vars["filterID"]
 		dimensionName := "age"
 
-		if err := f.FilterClient.RemoveDimension(ctx, userAccessToken, "", collectionID, filterID, dimensionName); err != nil {
+		eTag, err := f.FilterClient.RemoveDimension(ctx, userAccessToken, "", collectionID, filterID, dimensionName, headers.IfMatchAnyETag)
+		if err != nil {
 			log.Event(ctx, "failed to remove dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
 			setStatusCode(req, w, err)
 			return
 		}
-		if err := f.FilterClient.AddDimension(ctx, userAccessToken, "", collectionID, filterID, dimensionName); err != nil {
+		eTag, err = f.FilterClient.AddDimension(ctx, userAccessToken, "", collectionID, filterID, dimensionName, eTag)
+		if err != nil {
 			log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
 			setStatusCode(req, w, err)
 			return

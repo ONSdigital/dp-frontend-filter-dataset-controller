@@ -21,22 +21,22 @@ type ClientError interface {
 // FilterClient contains the methods expected for a filter client
 type FilterClient interface {
 	Checker(ctx context.Context, check *health.CheckState) error
-	GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID string, q filter.QueryParams) (dims filter.Dimensions, err error)
-	GetDimensionOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, q filter.QueryParams) (fdv filter.DimensionOptions, err error)
-	GetDimensionOptionsInBatches(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, batchSize, maxWorkers int) (opts filter.DimensionOptions, err error)
-	GetDimensionOptionsBatchProcess(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, processBatch filter.DimensionOptionsBatchProcessor, batchSize, maxWorkers int) (err error)
-	GetJobState(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, filterID string) (f filter.Model, err error)
+	GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID string, q filter.QueryParams) (dims filter.Dimensions, eTag string, err error)
+	GetDimensionOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, q filter.QueryParams) (opts filter.DimensionOptions, eTag string, err error)
+	GetDimensionOptionsInBatches(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, batchSize, maxWorkers int) (opts filter.DimensionOptions, eTag string, err error)
+	GetDimensionOptionsBatchProcess(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, processBatch filter.DimensionOptionsBatchProcessor, batchSize, maxWorkers int, checkETag bool) (eTag string, err error)
+	GetJobState(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, filterID string) (f filter.Model, eTag string, err error)
 	GetOutput(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, filterOutputID string) (f filter.Model, err error)
-	GetDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (dim filter.Dimension, err error)
-	AddDimensionValue(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name, value string) error
-	RemoveDimensionValue(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name, value string) error
-	RemoveDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (err error)
-	AddDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (err error)
-	SetDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, options []string) error
-	PatchDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, addValues, removeValues []string, batchSize int) error
-	UpdateBlueprint(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID string, m filter.Model, doSubmit bool) (filter.Model, error)
-	CreateBlueprint(context.Context, string, string, string, string, string, string, string, []string) (string, error)
-	GetPreview(context.Context, string, string, string, string, string) (filter.Preview, error)
+	GetDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) (dim filter.Dimension, eTag string, err error)
+	AddDimensionValue(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name, value, ifMatch string) (eTag string, err error)
+	RemoveDimensionValue(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name, value, ifMatch string) (eTag string, err error)
+	RemoveDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name, ifMatch string) (eTag string, err error)
+	AddDimension(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, id, name, ifMatch string) (eTag string, err error)
+	SetDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, options []string, ifMatch string) (eTag string, err error)
+	PatchDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, addValues, removeValues []string, batchSize int, ifMatch string) (latestETag string, err error)
+	UpdateBlueprint(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID string, m filter.Model, doSubmit bool, ifMatch string) (filter.Model, string, error)
+	CreateBlueprint(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, datasetID, edition, version string, names []string) (filterID, eTag string, err error)
+	GetPreview(ctx context.Context, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, filterOutputID string) (p filter.Preview, err error)
 }
 
 // DatasetClient is an interface with methods required for a dataset client

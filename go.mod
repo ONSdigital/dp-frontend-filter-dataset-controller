@@ -18,3 +18,5 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/smartystreets/goconvey v1.6.4
 )
+
+replace github.com/ONSdigital/dp-api-clients-go => ../dp-api-clients-go

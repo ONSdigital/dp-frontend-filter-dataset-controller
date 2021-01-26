@@ -34,14 +34,14 @@ func (f Filter) Submit() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
+		fil, eTag, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		mdl, err := f.FilterClient.UpdateBlueprint(req.Context(), userAccessToken, "", "", collectionID, fil, true)
+		mdl, _, err := f.FilterClient.UpdateBlueprint(req.Context(), userAccessToken, "", "", collectionID, fil, true, eTag)
 		if err != nil {
 			log.Event(ctx, "failed to submit filter blueprint", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
