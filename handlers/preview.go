@@ -21,6 +21,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// maxMetadataOptions is the maximum number of options per dimension for which the metadata.txt file size will be calculated
+const maxMetadataOptions = 1000
+
+// errTooManyOptions is an error returned when a request can't complete because the dimension has too many options
+var errTooManyOptions = errors.New("too many options in dimension")
+
 // Submit handles the submitting of a filter job through the filter API
 func (f Filter) Submit() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
@@ -91,7 +97,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			}
 
 			indexOfFirstLabelColumn := markingsColumnCount + 2 // +1 for observation, +1 for first codelist column
-			dimensions = []filter.ModelDimension{filter.ModelDimension{Name: "Values"}}
+			dimensions = []filter.ModelDimension{{Name: "Values"}}
 			// add markings column headers
 			for i := 1; i <= markingsColumnCount; i++ {
 				dimensions = append(dimensions, filter.ModelDimension{Name: prev.Headers[i]})
@@ -134,7 +140,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			return
 		}
 
-		dataset, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
+		datasetDetails, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
 		if err != nil {
 			log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
 			setStatusCode(req, w, err)
@@ -147,7 +153,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			return
 		}
 
-		latestURL, err := url.Parse(dataset.Links.LatestVersion.URL)
+		latestURL, err := url.Parse(datasetDetails.Links.LatestVersion.URL)
 		if err != nil {
 			log.Event(ctx, "failed to parse latest version href", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
 			setStatusCode(req, w, err)
@@ -155,7 +161,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		}
 		latestPath := strings.TrimPrefix(latestURL.Path, f.APIRouterVersion)
 
-		p := mapper.CreatePreviewPage(req, dimensions, fj, dataset, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview, lang)
+		p := mapper.CreatePreviewPage(req, dimensions, fj, datasetDetails, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview, lang)
 
 		editionDetails, err := f.DatasetClient.GetEdition(req.Context(), userAccessToken, "", collectionID, datasetID, edition)
 		if err != nil {
@@ -187,20 +193,24 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		// is currently being called by f.getMetadataTextSize and the for loop below
 		size, err := f.getMetadataTextSize(req.Context(), userAccessToken, collectionID, datasetID, edition, version, metadata, dims)
 		if err != nil {
-			log.Event(ctx, "failed to get metadata text size", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
-			setStatusCode(req, w, err)
-			return
+			if err != errTooManyOptions {
+				log.Event(ctx, "failed to get metadata text size", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+				setStatusCode(req, w, err)
+				return
+			}
+			log.Event(ctx, "failed to get metadata text size because at least a dimension has too many options", log.WARN, log.Data{"dataset_id": datasetID, "edition": edition, "version": version, "max_metadata_options": maxMetadataOptions})
 		}
 
+		// count number of options for each dimension in dataset API to check if any dimension has a single option
 		for _, dim := range dims.Items {
-			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name)
+			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, dataset.QueryParams{Offset: 0, Limit: 1})
 			if err != nil {
 				log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
 				setStatusCode(req, w, err)
 				return
 			}
 
-			if len(opts.Items) == 1 {
+			if opts.TotalCount == 1 {
 				p.Data.SingleValueDimensions = append(p.Data.SingleValueDimensions, previewPage.Dimension{
 					Name:   strings.Title(dim.Name),
 					Values: []string{opts.Items[0].Label},
@@ -310,13 +320,19 @@ func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, colle
 
 	b.WriteString(metadata.ToString())
 	b.WriteString("Dimensions:\n")
+
 	for _, dimension := range dimensions.Items {
-		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name)
+		q := dataset.QueryParams{Offset: 0, Limit: maxMetadataOptions}
+		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name, q)
 		if err != nil {
 			return 0, err
+		}
+		if options.TotalCount > maxMetadataOptions {
+			return 0, errTooManyOptions
 		}
 
 		b.WriteString(options.String())
 	}
+
 	return len(b.Bytes()), nil
 }

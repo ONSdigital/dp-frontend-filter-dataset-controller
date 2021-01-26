@@ -7,7 +7,9 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/dp-frontend-models/model"
+	hierarchyModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/hierarchy"
 	timeModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time"
 	dprequest "github.com/ONSdigital/dp-net/request"
 	. "github.com/smartystreets/goconvey/convey"
@@ -374,6 +376,108 @@ func TestUnitMapCookiesPreferences(t *testing.T) {
 		So(pageModel.CookiesPreferencesSet, ShouldEqual, true)
 		So(pageModel.CookiesPolicy.Essential, ShouldEqual, true)
 		So(pageModel.CookiesPolicy.Usage, ShouldEqual, true)
+	})
+}
+
+func TestCreateHierarchyPage(t *testing.T) {
+	Convey("CreateHierarchyPage maps the hierarchy data to the page model correctly", t, func() {
+		var testHierarchyPage hierarchyModel.Page
+		testHierarchyPage.Page = model.Page{
+			Type:      "type",
+			DatasetId: "datasetID",
+			HasJSONLD: false,
+			FeatureFlags: model.FeatureFlags{
+				HideCookieBanner: false,
+			},
+			CookiesPolicy: model.CookiesPolicy{
+				Essential: true,
+				Usage:     false,
+			},
+			CookiesPreferencesSet:            false,
+			BetaBannerEnabled:                true,
+			SiteDomain:                       "",
+			SearchDisabled:                   true,
+			URI:                              "",
+			Taxonomy:                         nil,
+			ReleaseDate:                      "",
+			IsInFilterBreadcrumb:             true,
+			Language:                         "en",
+			IncludeAssetsIntegrityAttributes: false,
+			DatasetTitle:                     "datasetTitle",
+			Metadata: model.Metadata{
+				Title:       "Filter Options - DatasetTitle",
+				Description: "",
+				ServiceName: "",
+				Keywords:    nil,
+			},
+			Breadcrumb: []model.TaxonomyNode{
+				{Title: "datasetTitle", URI: "/datasets/datasetID/editions"},
+				{Title: "5678", URI: "/v1/datasets/1234/editions/5678/versions/1"},
+				{Title: "Filter options", URI: "/filters/12349876/dimensions"},
+				{Title: "DatasetTitle", URI: ""},
+			},
+			PatternLibraryAssetsPath: "",
+		}
+
+		testHierarchyPage.Data = hierarchyModel.Hierarchy{
+			Title: "DatasetTitle",
+			SaveAndReturn: hierarchyModel.Link{
+				URL:   "//update",
+				Label: "",
+			},
+			Cancel: hierarchyModel.Link{
+				URL:   "/filters/12349876/dimensions",
+				Label: "",
+			},
+			FiltersAmount: "",
+			FilterList:    nil,
+			AddAllFilters: hierarchyModel.AddAll{
+				Amount: "0",
+				URL:    "//add-all",
+			},
+			FiltersAdded: []hierarchyModel.Filter{
+				{
+					Label:     "This is option 1",
+					RemoveURL: "//remove/op1",
+					ID:        "op1",
+				},
+			},
+			RemoveAll: hierarchyModel.Link{
+				URL: "//remove-all",
+			},
+			DimensionName: "DatasetTitle",
+			SearchURL:     "/filters/12349876/dimensions/datasetTitle/search",
+		}
+		testHierarchyPage.FilterID = "12349876"
+
+		testSelectedOptions := map[string]string{"op1": "This is option 1"}
+
+		testVersion := dataset.Version{
+			ReleaseDate: "testRelease",
+		}
+
+		testVersionDimensions := dataset.VersionDimensions{
+			Items: dataset.VersionDimensionItems{
+				dataset.VersionDimension{
+					ID:          "testDimension",
+					Name:        "DimensionName",
+					Label:       "DimensionLabel",
+					Description: "This is mocked Dimension for testing",
+				},
+			},
+		}
+
+		testDatasetDetails := dataset.DatasetDetails{
+			ID:    "datasetID",
+			Title: "datasetTitle",
+		}
+
+		req := httptest.NewRequest("", "/", nil)
+		filterModel := getTestFilter()
+		apiRouterVersion := "v1"
+		lang := dprequest.DefaultLang
+		hierarchyPageModel := CreateHierarchyPage(req, hierarchy.Model{}, testDatasetDetails, filterModel, testSelectedOptions, testVersionDimensions, testDatasetDetails.Title, req.URL.Path, testDatasetDetails.ID, testVersion.ReleaseDate, apiRouterVersion, lang)
+		So(hierarchyPageModel, ShouldResemble, testHierarchyPage)
 	})
 }
 

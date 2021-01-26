@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
 	"github.com/ONSdigital/log.go/log"
 
@@ -77,18 +78,6 @@ func (f *Filter) UpdateAge() http.HandlerFunc {
 func (f *Filter) addAgeList(filterID, userAccessToken, collectionID string, req *http.Request) error {
 	ctx := req.Context()
 	dimensionName := "age"
-	opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName)
-	if err != nil {
-		return err
-	}
-	// Remove any unselected ages
-	for _, opt := range opts {
-		if _, ok := req.Form[opt.Option]; !ok {
-			if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, opt.Option); err != nil {
-				log.Event(ctx, "failed to remove dimension options", log.WARN, log.Error(err))
-			}
-		}
-	}
 
 	var options []string
 	for k := range req.Form {
@@ -101,7 +90,7 @@ func (f *Filter) addAgeList(filterID, userAccessToken, collectionID string, req 
 		options = append(options, k)
 	}
 
-	if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options); err != nil {
+	if err := f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options); err != nil {
 		log.Event(ctx, "failed to add dimension options", log.ERROR, log.Error(err))
 	}
 
@@ -169,7 +158,7 @@ func (f *Filter) addAgeRange(filterID, userAccessToken, collectionID string, req
 			isInRange = false
 		}
 	}
-	return f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options)
+	return f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options)
 }
 
 // Age is a handler which will create age values on a filter job
@@ -201,7 +190,7 @@ func (f *Filter) Age() http.HandlerFunc {
 			return
 		}
 
-		dataset, err := f.DatasetClient.Get(ctx, userAccessToken, "", collectionID, datasetID)
+		datasetDetails, err := f.DatasetClient.Get(ctx, userAccessToken, "", collectionID, datasetID)
 		if err != nil {
 			log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
 			setStatusCode(req, w, err)
@@ -214,7 +203,9 @@ func (f *Filter) Age() http.HandlerFunc {
 			return
 		}
 
-		allValues, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName)
+		// count number of options for the dimension in dataset API
+		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName,
+			dataset.QueryParams{Offset: 0, Limit: 1})
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
 				log.Data{"dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -222,18 +213,12 @@ func (f *Filter) Age() http.HandlerFunc {
 			return
 		}
 
-		if len(allValues.Items) <= 20 {
+		if opts.TotalCount <= MaxNumOptionsOnPage {
 			mux.Vars(req)["name"] = dimensionName
 			f.DimensionSelector().ServeHTTP(w, req)
 			return
 		}
 
-		selValues, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName)
-		if err != nil {
-			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
-			setStatusCode(req, w, err)
-			return
-		}
 		dims, err := f.DatasetClient.GetVersionDimensions(ctx, userAccessToken, "", collectionID, datasetID, edition, version)
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
@@ -242,7 +227,22 @@ func (f *Filter) Age() http.HandlerFunc {
 			return
 		}
 
-		p, err := mapper.CreateAgePage(req, fj, dataset, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion, lang)
+		selValues, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, dimensionName, f.BatchSize, f.BatchMaxWorkers)
+		if err != nil {
+			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		allValues, err := f.DatasetClient.GetOptionsInBatches(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, f.BatchSize, f.BatchMaxWorkers)
+		if err != nil {
+			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
+				log.Data{"dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		p, err := mapper.CreateAgePage(req, fj, datasetDetails, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion, lang)
 		if err != nil {
 			log.Event(ctx, "failed to map data to page", log.ERROR, log.Error(err),
 				log.Data{"filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})

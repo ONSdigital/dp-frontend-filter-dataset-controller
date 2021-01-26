@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/log.go/log"
 )
 
@@ -19,12 +20,14 @@ type Filter struct {
 	downloadServiceURL   string
 	EnableDatasetPreview bool
 	APIRouterVersion     string
+	BatchSize            int
+	BatchMaxWorkers      int
+	maxDatasetOptions    int
 }
 
 // NewFilter creates a new instance of Filter
 func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient,
-	sc SearchClient, val Validator, searchAPIAuthToken, downloadServiceURL, apiRouterVersion string, enableDatasetPreview bool) *Filter {
-
+	sc SearchClient, val Validator, apiRouterVersion string, cfg *config.Config) *Filter {
 	return &Filter{
 		Renderer:             r,
 		FilterClient:         fc,
@@ -32,10 +35,13 @@ func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient
 		HierarchyClient:      hc,
 		SearchClient:         sc,
 		val:                  val,
-		downloadServiceURL:   downloadServiceURL,
-		EnableDatasetPreview: enableDatasetPreview,
-		SearchAPIAuthToken:   searchAPIAuthToken,
 		APIRouterVersion:     apiRouterVersion,
+		downloadServiceURL:   cfg.DownloadServiceURL,
+		EnableDatasetPreview: cfg.EnableDatasetPreview,
+		SearchAPIAuthToken:   cfg.SearchAPIAuthToken,
+		BatchSize:            cfg.BatchSizeLimit,
+		BatchMaxWorkers:      cfg.BatchMaxWorkers,
+		maxDatasetOptions:    cfg.MaxDatasetOptions,
 	}
 }
 

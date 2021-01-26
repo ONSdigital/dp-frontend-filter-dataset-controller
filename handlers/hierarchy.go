@@ -4,27 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
-	"net/http"
-	"net/url"
-	"regexp"
-	"strings"
-	"sync"
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
 )
-
-// these form vars are not regular input fields, but transmit meta form info
-var specialFormVars = map[string]bool{
-	"save-and-return": true,
-	":uri":            true,
-	"q":               true,
-}
 
 // HierarchyUpdate controls the updating of a hierarchy job
 func (f *Filter) HierarchyUpdate() http.HandlerFunc {
@@ -70,80 +62,52 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 			return
 		}
 
-		var wg sync.WaitGroup
-		wg.Add(1)
+		h, err := f.buildHierarchyModel(ctx, fil, name, code)
+		if err != nil {
+			log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
+			setStatusCode(req, w, err)
+			return
+		}
 
-		go func() {
-			defer wg.Done()
-
-			var h hierarchy.Model
-			var err error
-			if len(code) > 0 {
-				h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
-			} else {
-				if name == "geography" {
-					h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
-				} else {
-					h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
-				}
-
-				// We include the value on the root as a selectable item, so append
-				// the value on the root to the child to see if it has been removed by
-				// the user
-				h.Children = append(h.Children, hierarchy.Child{
-					Links: h.Links,
-				})
-			}
-			if err != nil {
-				log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
-				setStatusCode(req, w, err)
-				return
-			}
-
-			// TODO when PATCH endpoint is implemented in Filter API, we can send an array of delete operations for all options found in child items but not in the request form
-			// without needing to do a GetDimensionOptions.
-
-			opts, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
-			if err != nil {
-				log.Event(ctx, "failed to get dimension options", log.ERROR, log.Error(err))
-			}
-
-			for _, hv := range h.Children {
-				for _, opt := range opts {
-					if opt.Option == hv.Links.Self.ID {
-						if _, ok := req.Form[hv.Links.Self.ID]; !ok {
-							if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, hv.Links.Self.ID); err != nil {
-								log.Event(ctx, "failed to remove dimension value", log.ERROR, log.Error(err))
-							}
-						}
-					}
-				}
-			}
-		}()
-
-		for k := range req.Form {
-			if _, foundSpecial := specialFormVars[k]; foundSpecial {
-				continue
-			}
-
-			if strings.Contains(k, "redirect:") {
-				redirectReg := regexp.MustCompile(`^redirect:(.+)$`)
-				redirectSubs := redirectReg.FindStringSubmatch(k)
-				redirectURI = redirectSubs[1]
-				continue
-			}
-
-			// TODO when PATCH endpoint is implemented in Filter API, we can send an array of add operations for all options in the request form.
-			// instead of individual calls to AddDimensionValue
-
-			if err := f.FilterClient.AddDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, k); err != nil {
-				log.Event(ctx, "failed to add dimension value", log.ERROR, log.Error(err))
+		// obtain options to remove from unselected values (not provided in form)
+		removeOptions := []string{}
+		for _, hv := range h.Children {
+			if _, ok := req.Form[hv.Links.Code.ID]; !ok {
+				removeOptions = append(removeOptions, hv.Links.Code.ID)
 			}
 		}
 
-		wg.Wait()
+		// get options to add and overwrite redirectURI, if provided in the form
+		var addOptions []string
+		addOptions = getOptionsAndRedirect(req.Form, &redirectURI)
+
+		err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize)
+		if err != nil {
+			log.Event(ctx, "failed to patch dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
+			setStatusCode(req, w, err)
+			return
+		}
 		http.Redirect(w, req, redirectURI, 302)
 	})
+}
+
+func (f *Filter) buildHierarchyModel(ctx context.Context, fil filter.Model, name, code string) (h hierarchy.Model, err error) {
+	if len(code) > 0 {
+		return f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
+	}
+	if name == "geography" {
+		h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
+	} else {
+		h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
+	}
+
+	// We include the value on the root as a selectable item, so append
+	// the value on the root to the child to see if it has been removed by
+	// the user
+	h.Children = append(h.Children, hierarchy.Child{
+		Links: h.Links,
+	})
+	return h, err
 }
 
 func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID string) {
@@ -169,9 +133,9 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 
 	var options []string
 	for _, child := range h.Children {
-		options = append(options, child.Links.Self.ID)
+		options = append(options, child.Links.Code.ID)
 	}
-	if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, "", collectionID, fil.FilterID, name, options); err != nil {
+	if err := f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, fil.FilterID, name, options); err != nil {
 		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err))
 	}
 
@@ -198,15 +162,21 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
+	// list of dimensions to remove created from children code links
+	removeOptions := []string{}
 	for _, child := range h.Children {
-		if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, fil.FilterID, name, child.Links.Self.ID); err != nil {
-			log.Event(ctx, "failed to remove dimension value", log.ERROR, log.Error(err))
-		}
+		removeOptions = append(removeOptions, child.Links.Code.ID)
+	}
+
+	// remove all items
+	if err := f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, fil.FilterID, name, []string{}, removeOptions, f.BatchSize); err != nil {
+		log.Event(ctx, "failed to remove dimension values using a patch", log.ERROR, log.Error(err), log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code, "options": removeOptions})
 	}
 
 	http.Redirect(w, req, redirectURI, 302)
 }
 
+// Hierarchy controls the creation of a hierarchy page
 func (f *Filter) Hierarchy() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
 		vars := mux.Vars(req)
@@ -232,13 +202,14 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 				h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
 			}
 		}
+
 		if err != nil {
 			log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		selVals, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, name)
+		selVals, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
@@ -272,14 +243,6 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			return
 		}
 
-		allVals, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, name)
-		if err != nil {
-			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
-				log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
-			setStatusCode(req, w, err)
-			return
-		}
-
 		dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
@@ -288,7 +251,15 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			return
 		}
 
-		p := mapper.CreateHierarchyPage(req, h, d, fil, selVals, allVals, dims, name, req.URL.Path, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang)
+		selValsLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, name, selVals)
+		if err != nil {
+			log.Event(ctx, "failed to get options from dataset client for the selected values", log.ERROR, log.Error(err),
+				log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		p := mapper.CreateHierarchyPage(req, h, d, fil, selValsLabelMap, dims, name, req.URL.Path, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang)
 
 		b, err := json.Marshal(p)
 		if err != nil {

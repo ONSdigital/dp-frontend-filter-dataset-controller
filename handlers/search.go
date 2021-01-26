@@ -3,17 +3,16 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+
 	"github.com/ONSdigital/dp-api-clients-go/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
-	"net/http"
-	"net/url"
-	"regexp"
-	"strings"
-	"sync"
 )
 
 // Search handles a users search, calling various APIs to form a search results
@@ -38,7 +37,7 @@ func (f *Filter) Search() http.HandlerFunc {
 			return
 		}
 
-		selVals, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
+		selVals, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
@@ -72,9 +71,9 @@ func (f *Filter) Search() http.HandlerFunc {
 			return
 		}
 
-		allVals, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name)
+		selValsLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, name, selVals)
 		if err != nil {
-			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
+			log.Event(ctx, "failed to get options from dataset client for the selected values", log.ERROR, log.Error(err),
 				log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
@@ -96,7 +95,7 @@ func (f *Filter) Search() http.HandlerFunc {
 			return
 		}
 
-		p := mapper.CreateHierarchySearchPage(req, searchRes.Items, d, fil, selVals, dims.Items, allVals, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang)
+		p := mapper.CreateHierarchySearchPage(req, searchRes.Items, d, fil, selValsLabelMap, dims.Items, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang)
 
 		b, err := json.Marshal(p)
 		if err != nil {
@@ -117,13 +116,18 @@ func (f *Filter) Search() http.HandlerFunc {
 
 }
 
-// SearchUpdate will update a dimension based on selected search resultss
+// SearchUpdate will update a dimension based on selected search results
 func (f *Filter) SearchUpdate() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
 		ctx := req.Context()
 		if err := req.ParseForm(); err != nil {
 			log.Event(ctx, "failed to parse request form", log.ERROR, log.Error(err))
 			return
+		}
+
+		var searchConfig []search.Config
+		if len(req.Header.Get("X-Florence-Token")) > 0 {
+			searchConfig = append(searchConfig, search.Config{InternalToken: f.SearchAPIAuthToken, FlorenceToken: req.Header.Get("X-Florence-Token")})
 		}
 
 		vars := mux.Vars(req)
@@ -154,7 +158,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 			return
 		}
 
-		searchRes, err := f.SearchClient.Dimension(ctx, datasetID, edition, version, name, q)
+		searchRes, err := f.SearchClient.Dimension(ctx, datasetID, edition, version, name, q, searchConfig...)
 		if err != nil {
 			log.Event(ctx, "failed to retrieve dimension search result, redirecting", log.ERROR, log.Error(err))
 			http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions", filterID), 302)
@@ -166,8 +170,8 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 			for _, item := range searchRes.Items {
 				options = append(options, item.Code)
 			}
-			if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
-				log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			if err := f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
+				log.Event(ctx, "failed to add all dimension options", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 				setStatusCode(req, w, err)
 				return
 			}
@@ -175,57 +179,48 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 		}
 
 		if len(req.Form["remove-all"]) > 0 {
+			options := []string{}
 			for _, item := range searchRes.Items {
-				if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, item.Code); err != nil {
-					log.Event(ctx, "failed to remove dimension option", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "option": item.Code})
-					setStatusCode(req, w, err)
-				}
+				options = append(options, item.Code)
 			}
-
+			if err := f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, []string{}, options, f.BatchSize); err != nil {
+				log.Event(ctx, "failed to remove all dimension options, via patch", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+				setStatusCode(req, w, err)
+				return
+			}
 			return
 		}
 
-		var wg sync.WaitGroup
-		wg.Add(1)
+		// get all available dimension options from filter API
+		opts, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
+		if err != nil {
+			log.Event(ctx, "failed to retrieve dimension options", log.WARN, log.Error(err))
+			setStatusCode(req, w, err)
+			return
+		}
 
-		go func() {
-
-			opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, name)
-			if err != nil {
-				log.Event(ctx, "failed to retrieve dimension options", log.WARN, log.Error(err))
-			}
-
-			for _, item := range searchRes.Items {
-				for _, opt := range opts {
-					if opt.Option == item.Code {
-						if _, ok := req.Form[item.Code]; !ok {
-							if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, item.Code); err != nil {
-								log.Event(ctx, "failed to remove dimension value", log.WARN, log.Error(err))
-							}
-						}
+		// create list of options to remove
+		removeOptions := []string{}
+		for _, item := range searchRes.Items {
+			for _, opt := range opts.Items {
+				if opt.Option == item.Code {
+					if _, ok := req.Form[item.Code]; !ok {
+						removeOptions = append(removeOptions, item.Code)
 					}
 				}
 			}
+		}
 
-			wg.Done()
-		}()
+		// get options to add and overwrite redirectURI, if provided in the form
+		var addOptions []string
+		addOptions = getOptionsAndRedirect(req.Form, &redirectURI)
 
-		for k := range req.Form {
-			if k == "save-and-return" || k == ":uri" {
-				continue
-			}
-
-			if strings.Contains(k, "redirect:") {
-				redirectReg := regexp.MustCompile(`^redirect:(.+)$`)
-				redirectSubs := redirectReg.FindStringSubmatch(k)
-				redirectURI = redirectSubs[1]
-				continue
-			}
-
-			if err := f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, name, k); err != nil {
-				log.Event(ctx, "failed to add dimension value", log.WARN, log.Error(err))
-				continue
-			}
+		// sent the PATCH with options to add and remove
+		err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize)
+		if err != nil {
+			log.Event(ctx, "failed to patch dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			setStatusCode(req, w, err)
+			return
 		}
 
 		http.Redirect(w, req, redirectURI, 302)

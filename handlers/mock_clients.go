@@ -15,6 +15,57 @@ import (
 	reflect "reflect"
 )
 
+// MockClientError is a mock of ClientError interface
+type MockClientError struct {
+	ctrl     *gomock.Controller
+	recorder *MockClientErrorMockRecorder
+}
+
+// MockClientErrorMockRecorder is the mock recorder for MockClientError
+type MockClientErrorMockRecorder struct {
+	mock *MockClientError
+}
+
+// NewMockClientError creates a new mock instance
+func NewMockClientError(ctrl *gomock.Controller) *MockClientError {
+	mock := &MockClientError{ctrl: ctrl}
+	mock.recorder = &MockClientErrorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockClientError) EXPECT() *MockClientErrorMockRecorder {
+	return m.recorder
+}
+
+// Error mocks base method
+func (m *MockClientError) Error() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Error")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Error indicates an expected call of Error
+func (mr *MockClientErrorMockRecorder) Error() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockClientError)(nil).Error))
+}
+
+// Code mocks base method
+func (m *MockClientError) Code() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Code")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Code indicates an expected call of Code
+func (mr *MockClientErrorMockRecorder) Code() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Code", reflect.TypeOf((*MockClientError)(nil).Code))
+}
+
 // MockFilterClient is a mock of FilterClient interface
 type MockFilterClient struct {
 	ctrl     *gomock.Controller
@@ -53,33 +104,62 @@ func (mr *MockFilterClientMockRecorder) Checker(ctx, check interface{}) *gomock.
 }
 
 // GetDimensions mocks base method
-func (m *MockFilterClient) GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID string) ([]filter.Dimension, error) {
+func (m *MockFilterClient) GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID string, q filter.QueryParams) (filter.Dimensions, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDimensions", ctx, userAuthToken, serviceAuthToken, collectionID, filterID)
-	ret0, _ := ret[0].([]filter.Dimension)
+	ret := m.ctrl.Call(m, "GetDimensions", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, q)
+	ret0, _ := ret[0].(filter.Dimensions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetDimensions indicates an expected call of GetDimensions
-func (mr *MockFilterClientMockRecorder) GetDimensions(ctx, userAuthToken, serviceAuthToken, collectionID, filterID interface{}) *gomock.Call {
+func (mr *MockFilterClientMockRecorder) GetDimensions(ctx, userAuthToken, serviceAuthToken, collectionID, filterID, q interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensions", reflect.TypeOf((*MockFilterClient)(nil).GetDimensions), ctx, userAuthToken, serviceAuthToken, collectionID, filterID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensions", reflect.TypeOf((*MockFilterClient)(nil).GetDimensions), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, q)
 }
 
 // GetDimensionOptions mocks base method
-func (m *MockFilterClient) GetDimensionOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string) ([]filter.DimensionOption, error) {
+func (m *MockFilterClient) GetDimensionOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, q filter.QueryParams) (filter.DimensionOptions, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDimensionOptions", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name)
-	ret0, _ := ret[0].([]filter.DimensionOption)
+	ret := m.ctrl.Call(m, "GetDimensionOptions", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, q)
+	ret0, _ := ret[0].(filter.DimensionOptions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetDimensionOptions indicates an expected call of GetDimensionOptions
-func (mr *MockFilterClientMockRecorder) GetDimensionOptions(ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name interface{}) *gomock.Call {
+func (mr *MockFilterClientMockRecorder) GetDimensionOptions(ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, q interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensionOptions", reflect.TypeOf((*MockFilterClient)(nil).GetDimensionOptions), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensionOptions", reflect.TypeOf((*MockFilterClient)(nil).GetDimensionOptions), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, q)
+}
+
+// GetDimensionOptionsInBatches mocks base method
+func (m *MockFilterClient) GetDimensionOptionsInBatches(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, batchSize, maxWorkers int) (filter.DimensionOptions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDimensionOptionsInBatches", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, batchSize, maxWorkers)
+	ret0, _ := ret[0].(filter.DimensionOptions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDimensionOptionsInBatches indicates an expected call of GetDimensionOptionsInBatches
+func (mr *MockFilterClientMockRecorder) GetDimensionOptionsInBatches(ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, batchSize, maxWorkers interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensionOptionsInBatches", reflect.TypeOf((*MockFilterClient)(nil).GetDimensionOptionsInBatches), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, batchSize, maxWorkers)
+}
+
+// GetDimensionOptionsBatchProcess mocks base method
+func (m *MockFilterClient) GetDimensionOptionsBatchProcess(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, processBatch filter.DimensionOptionsBatchProcessor, batchSize, maxWorkers int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDimensionOptionsBatchProcess", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, processBatch, batchSize, maxWorkers)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// GetDimensionOptionsBatchProcess indicates an expected call of GetDimensionOptionsBatchProcess
+func (mr *MockFilterClientMockRecorder) GetDimensionOptionsBatchProcess(ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, processBatch, batchSize, maxWorkers interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDimensionOptionsBatchProcess", reflect.TypeOf((*MockFilterClient)(nil).GetDimensionOptionsBatchProcess), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, processBatch, batchSize, maxWorkers)
 }
 
 // GetJobState mocks base method
@@ -183,18 +263,32 @@ func (mr *MockFilterClientMockRecorder) AddDimension(ctx, userAuthToken, service
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDimension", reflect.TypeOf((*MockFilterClient)(nil).AddDimension), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name)
 }
 
-// AddDimensionValues mocks base method
-func (m *MockFilterClient) AddDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, options []string) error {
+// SetDimensionValues mocks base method
+func (m *MockFilterClient) SetDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, options []string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddDimensionValues", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, options)
+	ret := m.ctrl.Call(m, "SetDimensionValues", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, options)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// AddDimensionValues indicates an expected call of AddDimensionValues
-func (mr *MockFilterClientMockRecorder) AddDimensionValues(ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, options interface{}) *gomock.Call {
+// SetDimensionValues indicates an expected call of SetDimensionValues
+func (mr *MockFilterClientMockRecorder) SetDimensionValues(ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDimensionValues", reflect.TypeOf((*MockFilterClient)(nil).AddDimensionValues), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDimensionValues", reflect.TypeOf((*MockFilterClient)(nil).SetDimensionValues), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, options)
+}
+
+// PatchDimensionValues mocks base method
+func (m *MockFilterClient) PatchDimensionValues(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, addValues, removeValues []string, batchSize int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PatchDimensionValues", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, addValues, removeValues, batchSize)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PatchDimensionValues indicates an expected call of PatchDimensionValues
+func (mr *MockFilterClientMockRecorder) PatchDimensionValues(ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, addValues, removeValues, batchSize interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchDimensionValues", reflect.TypeOf((*MockFilterClient)(nil).PatchDimensionValues), ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, addValues, removeValues, batchSize)
 }
 
 // UpdateBlueprint mocks base method
@@ -325,18 +419,47 @@ func (mr *MockDatasetClientMockRecorder) GetVersionDimensions(ctx, userAuthToken
 }
 
 // GetOptions mocks base method
-func (m *MockDatasetClient) GetOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension string) (dataset.Options, error) {
+func (m *MockDatasetClient) GetOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension string, q dataset.QueryParams) (dataset.Options, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOptions", ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension)
+	ret := m.ctrl.Call(m, "GetOptions", ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension, q)
 	ret0, _ := ret[0].(dataset.Options)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOptions indicates an expected call of GetOptions
-func (mr *MockDatasetClientMockRecorder) GetOptions(ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension interface{}) *gomock.Call {
+func (mr *MockDatasetClientMockRecorder) GetOptions(ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension, q interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptions", reflect.TypeOf((*MockDatasetClient)(nil).GetOptions), ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptions", reflect.TypeOf((*MockDatasetClient)(nil).GetOptions), ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension, q)
+}
+
+// GetOptionsInBatches mocks base method
+func (m *MockDatasetClient) GetOptionsInBatches(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension string, batchSize, maxWorkers int) (dataset.Options, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOptionsInBatches", ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, batchSize, maxWorkers)
+	ret0, _ := ret[0].(dataset.Options)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOptionsInBatches indicates an expected call of GetOptionsInBatches
+func (mr *MockDatasetClientMockRecorder) GetOptionsInBatches(ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, batchSize, maxWorkers interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptionsInBatches", reflect.TypeOf((*MockDatasetClient)(nil).GetOptionsInBatches), ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, batchSize, maxWorkers)
+}
+
+// GetOptionsBatchProcess mocks base method
+func (m *MockDatasetClient) GetOptionsBatchProcess(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension string, optionIDs *[]string, processBatch dataset.OptionsBatchProcessor, batchSize, maxWorkers int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOptionsBatchProcess", ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, optionIDs, processBatch, batchSize, maxWorkers)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// GetOptionsBatchProcess indicates an expected call of GetOptionsBatchProcess
+func (mr *MockDatasetClientMockRecorder) GetOptionsBatchProcess(ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, optionIDs, processBatch, batchSize, maxWorkers interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOptionsBatchProcess", reflect.TypeOf((*MockDatasetClient)(nil).GetOptionsBatchProcess), ctx, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension, optionIDs, processBatch, batchSize, maxWorkers)
 }
 
 // GetVersionMetadata mocks base method

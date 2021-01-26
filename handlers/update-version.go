@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 
+	"github.com/ONSdigital/dp-api-clients-go/filter"
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
@@ -28,7 +30,7 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 			return
 		}
 
-		dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID)
+		dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, filter.QueryParams{})
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
@@ -64,27 +66,21 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 			return
 		}
 
-		for _, dim := range dims {
+		for _, dim := range dims.Items {
+
+			// Copy dimension to new filter
 			if err := f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, newFilterID, dim.Name); err != nil {
 				log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
 				return
 			}
 
-			dimValues, err := f.FilterClient.GetDimensionOptions(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name)
-			if err != nil {
-				log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
-				setStatusCode(req, w, err)
-				return
-			}
+			// Copy each batch of options to the new filter dimension via PATCH operations.
+			processBatch := f.batchAddOptions(req.Context(), userAccessToken, collectionID, newFilterID, dim.Name)
 
-			var vals []string
-			for _, val := range dimValues {
-				vals = append(vals, val.Option)
-			}
-
-			if err := f.FilterClient.AddDimensionValues(req.Context(), userAccessToken, "", collectionID, newFilterID, dim.Name, vals); err != nil {
-				log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": newFilterID, "dimension": dim.Name})
+			// Call filter API GetOptions in batches and aggregate the responses
+			if err := f.FilterClient.GetDimensionOptionsBatchProcess(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, processBatch, f.BatchSize, f.BatchMaxWorkers); err != nil {
+				log.Event(ctx, "failed to get and process options from filter client in batches", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
 				return
 			}
@@ -94,4 +90,15 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 		http.Redirect(w, req, redirectURL, 302)
 	})
 
+}
+
+// batchAddOptions generates a batch processor to add the dimension options for each provided batch to filter API, by calling the patch endpoint.
+func (f *Filter) batchAddOptions(ctx context.Context, userAccessToken, collectionID, filterID, dimensionName string) filter.DimensionOptionsBatchProcessor {
+	return func(batch filter.DimensionOptions) (forceAbort bool, err error) {
+		var vals []string
+		for _, val := range batch.Items {
+			vals = append(vals, val.Option)
+		}
+		return false, f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, vals, []string{}, f.BatchSize)
+	}
 }

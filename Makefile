@@ -4,14 +4,12 @@ BUILD_TIME=$(shell date +%s)
 GIT_COMMIT=$(shell git rev-parse HEAD)
 VERSION ?= $(shell git tag --points-at HEAD | grep ^v | head -n 1)
 
-export SERVICE_AUTH_TOKEN=POsElEqMI3wc7fk7n8JLzqxWUGyeOpJE6t9H90vzVwQvo1Nin0Fq9hTK6UEjm4rc
-
 .PHONY: all
 all: audit test build
 
 .PHONY: audit
 audit:
-	nancy go.sum
+	go list -m all | nancy sleuth
 
 .PHONY: build
 build:

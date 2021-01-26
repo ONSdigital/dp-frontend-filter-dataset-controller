@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
@@ -20,6 +22,16 @@ func TestUseLatest(t *testing.T) {
 	mockCollectionID := ""
 	filterID := "current-filter-id"
 	mockNewFilterID := "new-filter-id"
+	batchSize := 100
+	maxWorkers := 25
+
+	cfg := &config.Config{
+		SearchAPIAuthToken:   mockServiceAuthToken,
+		DownloadServiceURL:   "",
+		BatchSizeLimit:       batchSize,
+		BatchMaxWorkers:      maxWorkers,
+		EnableDatasetPreview: false,
+	}
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -32,23 +44,22 @@ func TestUseLatest(t *testing.T) {
 			},
 		}
 
-		mockDimensionOption := []filter.DimensionOption{
-			{DimensionOptionsURL: "/123", Option: "monday"},
-		}
-
 		// Mock the calls that are expected to be made in the UseLatest method
 		mockFilterClient := NewMockFilterClient(mockCtrl)
 		mockDatasetClient := NewMockDatasetClient(mockCtrl)
 		mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadToken, mockCollectionID, filterID).Return(filter.Model{Links: filter.Links{Version: filter.Link{HRef: "/v1/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"}}}, nil)
-		mockFilterClient.EXPECT().GetDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID).Return([]filter.Dimension{{Name: "Day"}}, nil)
+		mockFilterClient.EXPECT().GetDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID,
+			filter.QueryParams{}).Return(
+			filter.Dimensions{
+				Items: []filter.Dimension{{Name: "Day"}},
+			}, nil)
 		mockDatasetClient.EXPECT().GetEdition(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016").Return(dataset.Edition{Links: mockEditionLinks}, nil)
 		mockFilterClient.EXPECT().CreateBlueprint(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "2", []string{}).Return(mockNewFilterID, nil)
 		mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockNewFilterID, "Day").Return(nil)
-		mockFilterClient.EXPECT().GetDimensionOptions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day").Return(mockDimensionOption, nil)
-		mockFilterClient.EXPECT().AddDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockNewFilterID, "Day", []string{mockDimensionOption[0].Option}).Return(nil)
+		mockFilterClient.EXPECT().GetDimensionOptionsBatchProcess(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day", gomock.Any(), batchSize, maxWorkers).Return(nil)
 
 		mockRenderer := NewMockRenderer(mockCtrl)
-		f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, mockServiceAuthToken, "", "/v1", false)
+		f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, "/v1", cfg)
 
 		router := mux.NewRouter()
 		router.Path("/filters/{filterID}/use-latest-version").HandlerFunc(f.UseLatest())
@@ -62,4 +73,27 @@ func TestUseLatest(t *testing.T) {
 		So(w.Header()["Location"][0], ShouldEqual, redirectPath)
 	})
 
+	Convey("The batch processor function calls filter API patch endpoint with the expected options", t, func() {
+
+		// mocked dimension Options batch for testing (similar to a real paginated response from filter API)
+		mockDimensionOptionsBatch := filter.DimensionOptions{
+			Items: []filter.DimensionOption{
+				{DimensionOptionsURL: "/123", Option: "monday"},
+			},
+			Count:      1,
+			TotalCount: 10,
+			Offset:     3,
+			Limit:      1,
+		}
+
+		// Mock the calls that are expected to be made by the batch processor method
+		mockFilterClient := NewMockFilterClient(mockCtrl)
+		mockFilterClient.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockNewFilterID, "Day", []string{mockDimensionOptionsBatch.Items[0].Option}, []string{}, batchSize).Return(nil)
+		f := NewFilter(nil, mockFilterClient, nil, nil, nil, nil, "/v1", cfg)
+
+		batchProcessor := f.batchAddOptions(context.Background(), mockUserAuthToken, mockCollectionID, mockNewFilterID, "Day")
+		forceAbort, err := batchProcessor(mockDimensionOptionsBatch)
+		So(err, ShouldBeNil)
+		So(forceAbort, ShouldBeFalse)
+	})
 }

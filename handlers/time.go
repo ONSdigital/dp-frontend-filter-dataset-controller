@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
@@ -102,20 +103,6 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 	ctx := req.Context()
 	dimensionName := "time"
 
-	opts, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName)
-	if err != nil {
-		return err
-	}
-
-	// Remove any unselected times
-	for _, opt := range opts {
-		if _, ok := req.Form[opt.Option]; !ok {
-			if err := f.FilterClient.RemoveDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, opt.Option); err != nil {
-				log.Event(ctx, "failed to remove dimension value", log.WARN, log.Error(err))
-			}
-		}
-	}
-
 	var options []string
 	startYearStr := req.Form.Get("start-year-grouped")
 	endYearStr := req.Form.Get("end-year-grouped")
@@ -135,7 +122,7 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 	for year := startYearInt; year <= endYearInt; year++ {
 		yearStr := strconv.Itoa(year)
 		for _, month := range selectedMonths {
-			monthYearComboStr  := fmt.Sprintf("%s %s", month, yearStr)
+			monthYearComboStr := fmt.Sprintf("%s %s", month, yearStr)
 			monthYearComboTime, err := time.Parse("January 2006", monthYearComboStr)
 			if err != nil {
 				log.Event(ctx, "failed to convert filtered month and year combo to time format", log.ERROR, log.Error(err))
@@ -146,7 +133,7 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 		}
 	}
 
-	if err := f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options); err != nil {
+	if err := f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options); err != nil {
 		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err))
 		return err
 	}
@@ -196,7 +183,7 @@ func (f *Filter) addTimeRange(filterID, userAccessToken, collectionID string, re
 		}
 	}
 
-	return f.FilterClient.AddDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options)
+	return f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options)
 }
 
 // Time specifically handles the data for the time dimension page
@@ -228,7 +215,7 @@ func (f *Filter) Time() http.HandlerFunc {
 			return
 		}
 
-		dataset, err := f.DatasetClient.Get(ctx, userAccessToken, "", collectionID, datasetID)
+		datasetDetails, err := f.DatasetClient.Get(ctx, userAccessToken, "", collectionID, datasetID)
 		if err != nil {
 			log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
 			setStatusCode(req, w, err)
@@ -241,7 +228,8 @@ func (f *Filter) Time() http.HandlerFunc {
 			return
 		}
 
-		allValues, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName)
+		// count number of options for the dimension in dataset API
+		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, dataset.QueryParams{Offset: 0, Limit: 1})
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
 				log.Data{"dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -250,16 +238,9 @@ func (f *Filter) Time() http.HandlerFunc {
 		}
 
 		//use normal list format unless a specially recognized time format
-		if len(allValues.Items) <= 20 || !acceptedReg.MatchString(allValues.Items[0].Option) {
+		if opts.TotalCount <= MaxNumOptionsOnPage || !acceptedReg.MatchString(opts.Items[0].Option) {
 			mux.Vars(req)["name"] = dimensionName
 			f.DimensionSelector().ServeHTTP(w, req)
-			return
-		}
-
-		selValues, err := f.FilterClient.GetDimensionOptions(ctx, userAccessToken, "", collectionID, filterID, dimensionName)
-		if err != nil {
-			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
-			setStatusCode(req, w, err)
 			return
 		}
 
@@ -271,7 +252,22 @@ func (f *Filter) Time() http.HandlerFunc {
 			return
 		}
 
-		p, err := mapper.CreateTimePage(req, fj, dataset, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion, lang)
+		selValues, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, dimensionName, f.BatchSize, f.BatchMaxWorkers)
+		if err != nil {
+			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		allValues, err := f.DatasetClient.GetOptionsInBatches(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, f.BatchSize, f.BatchMaxWorkers)
+		if err != nil {
+			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
+				log.Data{"dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		p, err := mapper.CreateTimePage(req, fj, datasetDetails, ver, allValues, selValues.Items, dims, datasetID, f.APIRouterVersion, lang)
 		if err != nil {
 			log.Event(ctx, "failed to map data to page", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})
 			setStatusCode(req, w, err)

@@ -18,6 +18,9 @@ type Config struct {
 	EnableDatasetPreview       bool          `envconfig:"ENABLE_DATASET_PREVIEW"`
 	EnableProfiler             bool          `envconfig:"ENABLE_PROFILER"`
 	PprofToken                 string        `envconfig:"PPROF_TOKEN" json:"-"`
+	BatchSizeLimit             int           `envconfig:"BATCH_SIZE_LIMIT"`
+	BatchMaxWorkers            int           `envconfig:"BATCH_MAX_WORKERS"`
+	MaxDatasetOptions          int           `envconfig:"MAX_DATASET_OPTIONS"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
@@ -42,6 +45,9 @@ func Get() (cfg *Config, err error) {
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
+		BatchSizeLimit:             1000, // maximum limit value to get items from APIs in a single call
+		BatchMaxWorkers:            100,  // maximum number of concurrent go-routines requesting items concurrently from APIs with pagination
+		MaxDatasetOptions:          200,  // maximum number of IDs that will be requested to dataset API in a single call as query parmeters
 	}
 
 	return cfg, envconfig.Process("", cfg)
