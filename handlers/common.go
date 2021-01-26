@@ -56,7 +56,7 @@ func (f *Filter) getIDNameLookupFromDatasetAPI(ctx context.Context, userAccessTo
 	// generate the complete list of IDs that will need to be requested
 	optionIDs := make([]string, len(filterOptions.Items))
 	for i, opt := range filterOptions.Items {
-		optionIDs[i] = opt.Option
+		optionIDs[i] = url.QueryEscape(opt.Option)
 	}
 
 	// initialise map of options to find and a batch processor that will map option IDs to Labels
