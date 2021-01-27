@@ -58,11 +58,11 @@ func TestUnitFilterOverview(t *testing.T) {
 				filter.QueryParams{}).Return(
 				filter.Dimensions{
 					Items: []filter.Dimension{{Name: "geography"}, {Name: "Day"}, {Name: "Goods and Services"}},
-				}, nil)
-			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day", batchSize, maxWorkers).Return(filter.DimensionOptions{}, nil)
-			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Goods and Services", batchSize, maxWorkers).Return(filter.DimensionOptions{}, nil)
-			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "geography", batchSize, maxWorkers).Return(filterGeographyOptions, nil)
-			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadToken, mockCollectionID, filterID).Return(filter.Model{Links: filter.Links{Version: filter.Link{HRef: "/v1/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"}}}, nil)
+				}, testETag(0), nil)
+			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "geography", batchSize, maxWorkers).Return(filterGeographyOptions, testETag(0), nil)
+			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day", batchSize, maxWorkers).Return(filter.DimensionOptions{}, testETag(0), nil)
+			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Goods and Services", batchSize, maxWorkers).Return(filter.DimensionOptions{}, testETag(0), nil)
+			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadToken, mockCollectionID, filterID).Return(filter.Model{Links: filter.Links{Version: filter.Link{HRef: "/v1/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"}}}, testETag(0), nil)
 
 			// expected calls to dataset api: get options only for options that were found in filter api. Get, GetVersion and GetEdition
 			mockDatasetClient := NewMockDatasetClient(mockCtrl)
@@ -96,13 +96,13 @@ func TestUnitFilterOverview(t *testing.T) {
 				filter.QueryParams{}).Return(
 				filter.Dimensions{
 					Items: []filter.Dimension{{Name: "geography"}, {Name: "Day"}, {Name: "Goods and Services"}},
-				}, nil)
-			mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day")
-			mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day")
-			mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Goods and Services")
-			mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Goods and Services")
-			mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "geography")
-			mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "geography")
+				}, testETag(0), nil)
+			mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "geography", testETag(0)).Return(testETag(1), nil)
+			mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "geography", testETag(1)).Return(testETag(2), nil)
+			mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day", testETag(2)).Return(testETag(3), nil)
+			mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day", testETag(3)).Return(testETag(4), nil)
+			mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Goods and Services", testETag(4)).Return(testETag(5), nil)
+			mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Goods and Services", testETag(5)).Return(testETag(6), nil)
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions/clear-all", nil)
 			w := httptest.NewRecorder()

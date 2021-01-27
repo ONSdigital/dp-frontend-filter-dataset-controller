@@ -121,10 +121,10 @@ func TestHierarchy(t *testing.T) {
 
 		Convey("Hierarchy called for the root node calls the expected methods and returns the expected marshlled hierarchy page", func() {
 			testTemplate := []byte{1, 2, 3, 4, 5}
-			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, testETag(0), nil)
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, dimensionName).Return(hierarchy.Model{}, nil)
 			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
-				batchSize, maxWorkers).Return(testSelectedOptions, nil)
+				batchSize, maxWorkers).Return(testSelectedOptions, testETag(0), nil)
 			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID).Return(testDatasetDetails, nil)
 			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersion, nil)
 			mockDatasetClient.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersionDimensions, nil)
@@ -140,10 +140,10 @@ func TestHierarchy(t *testing.T) {
 
 		Convey("Hierarchy called for the child node calls the expected methods and returns the expected marshlled hierarchy page", func() {
 			testTemplate := []byte{1, 2, 3, 4, 5}
-			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, testETag(0), nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, dimensionName, mockCode).Return(hierarchy.Model{}, nil)
 			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
-				batchSize, maxWorkers).Return(testSelectedOptions, nil)
+				batchSize, maxWorkers).Return(testSelectedOptions, testETag(0), nil)
 			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID).Return(testDatasetDetails, nil)
 			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersion, nil)
 			mockDatasetClient.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersionDimensions, nil)
@@ -158,10 +158,10 @@ func TestHierarchy(t *testing.T) {
 		})
 
 		Convey("Hierarchy called for the root node calls the expected methods. If dataset GetOption fails, an InternalServerError status code is returned", func() {
-			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, testETag(0), nil)
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, dimensionName).Return(hierarchy.Model{}, nil)
 			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
-				batchSize, maxWorkers).Return(testSelectedOptions, nil)
+				batchSize, maxWorkers).Return(testSelectedOptions, testETag(0), nil)
 			mockDatasetClient.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID).Return(testDatasetDetails, nil)
 			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersion, nil)
 			mockDatasetClient.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion).Return(testVersionDimensions, nil)
@@ -253,9 +253,9 @@ func TestHierarchyUpdate(t *testing.T) {
 				"opt5": []string{"v51", "v52", "v53"},
 			}
 
-			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, testETag(0), nil)
 			mockFilterClient.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
-				ItemsEq([]string{"opt3", "opt4", "opt5"}), []string{""}, batchSize).Return(nil)
+				ItemsEq([]string{"opt3", "opt4", "opt5"}), []string{""}, batchSize, testETag(0)).Return(testETag(1), nil)
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, dimensionName).Return(hierarchy.Model{}, nil)
 
 			w := callUpdateHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s/update", filterID, dimensionName), testForm)
@@ -270,9 +270,9 @@ func TestHierarchyUpdate(t *testing.T) {
 				"opt2": []string{"v31", "v32", "v33"},
 			}
 
-			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, testETag(0), nil)
 			mockFilterClient.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
-				ItemsEq([]string{"opt2"}), []string{"opt1"}, batchSize).Return(nil)
+				ItemsEq([]string{"opt2"}), []string{"opt1"}, batchSize, testETag(0)).Return(testETag(1), nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, dimensionName, mockCode).Return(mockHierarchyModel, nil)
 
 			w := callUpdateHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s/%s/update", filterID, dimensionName, mockCode), testForm)
@@ -286,10 +286,10 @@ func TestHierarchyUpdate(t *testing.T) {
 				"add-all": []string{"true"},
 			}
 
-			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, testETag(0), nil)
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, dimensionName).Return(mockHierarchyModel, nil)
 			mockFilterClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
-				ItemsEq([]string{"opt1", "opt2"})).Return(nil)
+				ItemsEq([]string{"opt1", "opt2"}), testETag(0)).Return(testETag(1), nil)
 
 			w := callUpdateHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s/update", filterID, dimensionName), testForm)
 
@@ -302,10 +302,10 @@ func TestHierarchyUpdate(t *testing.T) {
 				"add-all": []string{"true"},
 			}
 
-			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, testETag(0), nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, dimensionName, mockCode).Return(mockHierarchyModel, nil)
 			mockFilterClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
-				ItemsEq([]string{"opt1", "opt2"})).Return(nil)
+				ItemsEq([]string{"opt1", "opt2"}), testETag(0)).Return(testETag(1), nil)
 
 			w := callUpdateHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s/%s/update", filterID, dimensionName, mockCode), testForm)
 
@@ -318,10 +318,10 @@ func TestHierarchyUpdate(t *testing.T) {
 				"remove-all": []string{"true"},
 			}
 
-			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, testETag(0), nil)
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, dimensionName).Return(mockHierarchyModel, nil)
 			mockFilterClient.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
-				ItemsEq([]string{}), ItemsEq([]string{"opt1", "opt2"}), batchSize).Return(nil)
+				ItemsEq([]string{}), ItemsEq([]string{"opt1", "opt2"}), batchSize, testETag(0)).Return(testETag(1), nil)
 
 			w := callUpdateHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s/update", filterID, dimensionName), testForm)
 
@@ -334,10 +334,10 @@ func TestHierarchyUpdate(t *testing.T) {
 				"remove-all": []string{"true"},
 			}
 
-			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, nil)
+			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, testETag(0), nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, dimensionName, mockCode).Return(mockHierarchyModel, nil)
 			mockFilterClient.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
-				ItemsEq([]string{}), ItemsEq([]string{"opt1", "opt2"}), batchSize).Return(nil)
+				ItemsEq([]string{}), ItemsEq([]string{"opt1", "opt2"}), batchSize, testETag(0)).Return(testETag(1), nil)
 
 			w := callUpdateHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s/%s/update", filterID, dimensionName, mockCode), testForm)
 
@@ -347,7 +347,7 @@ func TestHierarchyUpdate(t *testing.T) {
 
 		Convey("Then if GetJobState fails, the hierarchy update is aborted and a 500 status code is returned", func() {
 			errGetJobState := errors.New("error getting job state")
-			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{}, errGetJobState)
+			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{}, "", errGetJobState)
 			w := callUpdateHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s/update", filterID, dimensionName), nil)
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
 		})
