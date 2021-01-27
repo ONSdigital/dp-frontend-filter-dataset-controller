@@ -3,7 +3,7 @@ module github.com/ONSdigital/dp-frontend-filter-dataset-controller
 go 1.13
 
 require (
-	github.com/ONSdigital/dp-api-clients-go v1.32.6
+	github.com/ONSdigital/dp-api-clients-go v1.32.11-0.20210127150434-e9fe27f4a4ae
 	github.com/ONSdigital/dp-cookies v0.1.0
 	github.com/ONSdigital/dp-frontend-dataset-controller v1.17.0
 	github.com/ONSdigital/dp-frontend-models v1.9.1
@@ -18,5 +18,3 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/smartystreets/goconvey v1.6.4
 )
-
-replace github.com/ONSdigital/dp-api-clients-go => ../dp-api-clients-go
