@@ -270,7 +270,7 @@ func (f *Filter) Time() http.HandlerFunc {
 			err := errors.New("inconsistent filter data")
 			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between calls", log.ERROR, log.Error(err),
 				log.Data{"filter_id": filterID, "e_tag_0": eTag0, "e_tag_1": eTag1})
-			// TODO we might want to retry this handler in this case?
+			// The user might want to retry this handler in this case
 			setStatusCode(req, w, err)
 			return
 		}

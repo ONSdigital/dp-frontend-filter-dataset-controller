@@ -128,7 +128,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 		if err != nil {
 			log.Event(ctx, "failed to get dimension options", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
-			// TODO we might want to retry this handler on ErrBatchETagMismatch?
+			// The user might want to retry this handler on ErrBatchETagMismatch
 			return
 		}
 
@@ -139,7 +139,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 			return
 		}
 
-		// TODO we might want to retry this handler if eTags don't match
+		// The user might want to retry this handler if eTags don't match
 		if eTag0 != eTag1 {
 			err := errors.New("inconsistent filter data")
 			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between calls", log.ERROR, log.Error(err),
@@ -280,11 +280,11 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
-			// TODO we might want to retry this handler on ErrBatchETagMismatch?
+			// The user might want to retry this handler on ErrBatchETagMismatch
 			return
 		}
 
-		// TODO we might want to retry this handler if eTags don't match
+		// The user might want to retry this handler if eTags don't match
 		if eTag0 != eTag1 {
 			err := errors.New("inconsistent filter data")
 			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between calls", log.ERROR, log.Error(err),
@@ -504,7 +504,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 	if err != nil {
 		log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
-		// TODO we might want to retry this handler on ErrBatchETagMismatch?
+		// The user might want to retry this handler on ErrBatchETagMismatch
 		return
 	}
 

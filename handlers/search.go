@@ -45,7 +45,7 @@ func (f *Filter) Search() http.HandlerFunc {
 			return
 		}
 
-		// TODO we might want to retry this handler if eTags don't match
+		// The user might want to retry this handler if eTags don't match
 		if eTag0 != eTag1 {
 			err := errors.New("inconsistent filter data")
 			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between calls", log.ERROR, log.Error(err),
@@ -211,7 +211,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 			return
 		}
 
-		// TODO we might want to retry this handler if eTags don't match
+		// The user might want to retry this handler if eTags don't match
 		if eTag != eTag1 {
 			err := errors.New("inconsistent filter data")
 			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between get calls", log.ERROR, log.Error(err),
