@@ -30,7 +30,7 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 			return
 		}
 
-		dims, _, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, filter.QueryParams{})
+		dims, _, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, nil)
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)

@@ -27,7 +27,7 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		dims, eTag0, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, filter.QueryParams{})
+		dims, eTag0, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, nil)
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
@@ -167,7 +167,7 @@ func (f *Filter) FilterOverviewClearAll() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		dims, eTag, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, filter.QueryParams{})
+		dims, eTag, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, nil)
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err))
 			return

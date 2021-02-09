@@ -197,7 +197,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 
 		// count number of options for each dimension in dataset API to check if any dimension has a single option
 		for _, dim := range dims.Items {
-			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, dataset.QueryParams{Offset: 0, Limit: 1})
+			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, &dataset.QueryParams{Offset: 0, Limit: 0})
 			if err != nil {
 				log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
 				setStatusCode(req, w, err)

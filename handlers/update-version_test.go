@@ -49,11 +49,11 @@ func TestUseLatest(t *testing.T) {
 		mockDatasetClient := NewMockDatasetClient(mockCtrl)
 		mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadToken, mockCollectionID, filterID).Return(
 			filter.Model{Links: filter.Links{Version: filter.Link{HRef: "/v1/datasets/95c4669b-3ae9-4ba7-b690-87e890a1c67c/editions/2016/versions/1"}}}, testETag(0), nil)
-		mockFilterClient.EXPECT().GetDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID,
-			filter.QueryParams{}).Return(
-			filter.Dimensions{
-				Items: []filter.Dimension{{Name: "Day"}},
-			}, testETag(0), nil)
+		mockFilterClient.EXPECT().GetDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, nil).
+			Return(
+				filter.Dimensions{
+					Items: []filter.Dimension{{Name: "Day"}},
+				}, testETag(0), nil)
 		mockDatasetClient.EXPECT().GetEdition(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016").Return(dataset.Edition{Links: mockEditionLinks}, nil)
 		mockFilterClient.EXPECT().CreateBlueprint(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "2", []string{}).Return(mockNewFilterID, testETag(1), nil)
 		mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockNewFilterID, "Day", testETag(1)).Return(testETag(2), nil)

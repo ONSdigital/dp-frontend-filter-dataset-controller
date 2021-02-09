@@ -54,11 +54,11 @@ func TestUnitFilterOverview(t *testing.T) {
 		Convey("test FilterOverview can successfully load a page, with expected calls", func() {
 			// expected calls to filter api: get dimension and get options for each dimension. Get job state.
 			mockFilterClient := NewMockFilterClient(mockCtrl)
-			mockFilterClient.EXPECT().GetDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID,
-				filter.QueryParams{}).Return(
-				filter.Dimensions{
-					Items: []filter.Dimension{{Name: "geography"}, {Name: "Day"}, {Name: "Goods and Services"}},
-				}, testETag(0), nil)
+			mockFilterClient.EXPECT().GetDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, nil).
+				Return(
+					filter.Dimensions{
+						Items: []filter.Dimension{{Name: "geography"}, {Name: "Day"}, {Name: "Goods and Services"}},
+					}, testETag(0), nil)
 			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "geography", batchSize, maxWorkers).Return(filterGeographyOptions, testETag(0), nil)
 			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day", batchSize, maxWorkers).Return(filter.DimensionOptions{}, testETag(0), nil)
 			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Goods and Services", batchSize, maxWorkers).Return(filter.DimensionOptions{}, testETag(0), nil)
@@ -92,11 +92,11 @@ func TestUnitFilterOverview(t *testing.T) {
 
 		Convey("test successful FilterOverviewClearAll", func() {
 			mockFilterClient := NewMockFilterClient(mockCtrl)
-			mockFilterClient.EXPECT().GetDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID,
-				filter.QueryParams{}).Return(
-				filter.Dimensions{
-					Items: []filter.Dimension{{Name: "geography"}, {Name: "Day"}, {Name: "Goods and Services"}},
-				}, testETag(0), nil)
+			mockFilterClient.EXPECT().GetDimensions(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, nil).
+				Return(
+					filter.Dimensions{
+						Items: []filter.Dimension{{Name: "geography"}, {Name: "Day"}, {Name: "Goods and Services"}},
+					}, testETag(0), nil)
 			mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "geography", testETag(0)).Return(testETag(1), nil)
 			mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "geography", testETag(1)).Return(testETag(2), nil)
 			mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day", testETag(2)).Return(testETag(3), nil)

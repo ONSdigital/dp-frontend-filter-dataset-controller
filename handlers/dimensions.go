@@ -257,7 +257,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 		}
 
 		// count number of options for the dimension in dataset API
-		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: 1})
+		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, &dataset.QueryParams{Offset: 0, Limit: 0})
 		if err != nil {
 			setStatusCode(req, w, err)
 			return

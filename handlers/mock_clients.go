@@ -104,7 +104,7 @@ func (mr *MockFilterClientMockRecorder) Checker(ctx, check interface{}) *gomock.
 }
 
 // GetDimensions mocks base method
-func (m *MockFilterClient) GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID string, q filter.QueryParams) (filter.Dimensions, string, error) {
+func (m *MockFilterClient) GetDimensions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID string, q *filter.QueryParams) (filter.Dimensions, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDimensions", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, q)
 	ret0, _ := ret[0].(filter.Dimensions)
@@ -120,7 +120,7 @@ func (mr *MockFilterClientMockRecorder) GetDimensions(ctx, userAuthToken, servic
 }
 
 // GetDimensionOptions mocks base method
-func (m *MockFilterClient) GetDimensionOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, q filter.QueryParams) (filter.DimensionOptions, string, error) {
+func (m *MockFilterClient) GetDimensionOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, filterID, name string, q *filter.QueryParams) (filter.DimensionOptions, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDimensionOptions", ctx, userAuthToken, serviceAuthToken, collectionID, filterID, name, q)
 	ret0, _ := ret[0].(filter.DimensionOptions)
@@ -433,7 +433,7 @@ func (mr *MockDatasetClientMockRecorder) GetVersionDimensions(ctx, userAuthToken
 }
 
 // GetOptions mocks base method
-func (m *MockDatasetClient) GetOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension string, q dataset.QueryParams) (dataset.Options, error) {
+func (m *MockDatasetClient) GetOptions(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension string, q *dataset.QueryParams) (dataset.Options, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOptions", ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version, dimension, q)
 	ret0, _ := ret[0].(dataset.Options)
