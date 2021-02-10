@@ -314,15 +314,20 @@ func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, colle
 
 	b.WriteString(metadata.ToString())
 	b.WriteString("Dimensions:\n")
+	fileSize := len(b.Bytes())
 
 	for _, dimension := range dimensions.Items {
-		options, err := f.DatasetClient.GetOptionsInBatches(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name, f.BatchSize, f.BatchMaxWorkers)
-		if err != nil {
-			return 0, err
+		var processBatch dataset.OptionsBatchProcessor = func(options dataset.Options) (abort bool, err error) {
+			var b bytes.Buffer
+			b.WriteString(options.String())
+			fileSize += len(b.Bytes())
+			return false, nil
 		}
 
-		b.WriteString(options.String())
+		if err := f.DatasetClient.GetOptionsBatchProcess(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name, nil, processBatch, f.BatchSize, f.BatchMaxWorkers); err != nil {
+			return 0, err
+		}
 	}
 
-	return len(b.Bytes()), nil
+	return fileSize, nil
 }
