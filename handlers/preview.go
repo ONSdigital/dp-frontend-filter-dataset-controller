@@ -24,6 +24,9 @@ import (
 // maxMetadataOptions is the maximum number of options per dimension for which the metadata.txt file size will be calculated
 const maxMetadataOptions = 1000
 
+// errTooManyOptions is an error returned when a request can't complete because the dimension has too many options
+var errTooManyOptions = errors.New("too many options in dimension")
+
 // Submit handles the submitting of a filter job through the filter API
 func (f Filter) Submit() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
@@ -316,10 +319,15 @@ func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, colle
 	b.WriteString("Dimensions:\n")
 
 	for _, dimension := range dimensions.Items {
-		options, err := f.DatasetClient.GetOptionsInBatches(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name, f.BatchSize, f.BatchMaxWorkers)
+		q := dataset.QueryParams{Offset: 0, Limit: maxMetadataOptions}
+		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name, &q)
 		if err != nil {
 			return 0, err
 		}
+		if options.TotalCount > maxMetadataOptions {
+			return 0, errTooManyOptions
+		}
+
 		b.WriteString(options.String())
 	}
 
