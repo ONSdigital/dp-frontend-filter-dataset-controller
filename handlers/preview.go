@@ -193,9 +193,12 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		// is currently being called by f.getMetadataTextSize and the for loop below
 		size, err := f.getMetadataTextSize(req.Context(), userAccessToken, collectionID, datasetID, edition, version, metadata, dims)
 		if err != nil {
-			log.Event(ctx, "failed to get metadata text size", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
-			setStatusCode(req, w, err)
-			return
+			if err != errTooManyOptions {
+				log.Event(ctx, "failed to get metadata text size", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+				setStatusCode(req, w, err)
+				return
+			}
+			log.Event(ctx, "failed to get metadata text size because at least a dimension has too many options", log.WARN, log.Data{"dataset_id": datasetID, "edition": edition, "version": version, "max_metadata_options": maxMetadataOptions})
 		}
 
 		// count number of options for each dimension in dataset API to check if any dimension has a single option
