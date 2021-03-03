@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -45,7 +46,7 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 			}
 		}
 
-		fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
+		fil, eTag, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
@@ -53,12 +54,12 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 		}
 
 		if len(req.Form["add-all"]) > 0 {
-			f.addAllHierarchyLevel(w, req, fil, name, code, redirectURI, userAccessToken, collectionID)
+			f.addAllHierarchyLevel(w, req, fil, name, code, redirectURI, userAccessToken, collectionID, eTag)
 			return
 		}
 
 		if len(req.Form["remove-all"]) > 0 {
-			f.removeAllHierarchyLevel(w, req, fil, name, code, redirectURI, userAccessToken, collectionID)
+			f.removeAllHierarchyLevel(w, req, fil, name, code, redirectURI, userAccessToken, collectionID, eTag)
 			return
 		}
 
@@ -81,7 +82,7 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 		var addOptions []string
 		addOptions = getOptionsAndRedirect(req.Form, &redirectURI)
 
-		err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize)
+		_, err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize, eTag)
 		if err != nil {
 			log.Event(ctx, "failed to patch dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
 			setStatusCode(req, w, err)
@@ -110,7 +111,7 @@ func (f *Filter) buildHierarchyModel(ctx context.Context, fil filter.Model, name
 	return h, err
 }
 
-func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID string) {
+func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID, eTag string) {
 
 	ctx := req.Context()
 	var err error
@@ -135,14 +136,15 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 	for _, child := range h.Children {
 		options = append(options, child.Links.Code.ID)
 	}
-	if err := f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, fil.FilterID, name, options); err != nil {
+	_, err = f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, fil.FilterID, name, options, eTag)
+	if err != nil {
 		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err))
 	}
 
 	http.Redirect(w, req, redirectURI, 302)
 }
 
-func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID string) {
+func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID, eTag string) {
 	ctx := req.Context()
 	var h hierarchy.Model
 	var err error
@@ -169,7 +171,8 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 	}
 
 	// remove all items
-	if err := f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, fil.FilterID, name, []string{}, removeOptions, f.BatchSize); err != nil {
+	_, err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, fil.FilterID, name, []string{}, removeOptions, f.BatchSize, eTag)
+	if err != nil {
 		log.Event(ctx, "failed to remove dimension values using a patch", log.ERROR, log.Error(err), log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code, "options": removeOptions})
 	}
 
@@ -185,7 +188,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 		code := vars["code"]
 		ctx := req.Context()
 
-		fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
+		fil, eTag0, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
@@ -209,9 +212,18 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			return
 		}
 
-		selVals, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
+		selVals, eTag1, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		// The user might want to retry this handler if eTags don't match
+		if eTag0 != eTag1 {
+			err := errors.New("inconsistent filter data")
+			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between calls", log.ERROR, log.Error(err),
+				log.Data{"filter_id": filterID, "dimension": name, "e_tag_0": eTag0, "e_tag_1": eTag1})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -277,7 +289,6 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 
 		w.Write(templateBytes)
 	})
-
 }
 
 type flatNodes struct {

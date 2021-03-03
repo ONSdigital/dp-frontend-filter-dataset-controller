@@ -12,6 +12,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
@@ -34,7 +35,7 @@ func (f *Filter) GetAllDimensionOptionsJSON() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
+		fj, _, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
@@ -123,16 +124,26 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		opts, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
+		opts, eTag0, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get dimension options", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			setStatusCode(req, w, err)
+			// The user might want to retry this handler on ErrBatchETagMismatch
+			return
+		}
+
+		fj, eTag1, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
+		if err != nil {
+			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
-		if err != nil {
-			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+		// The user might want to retry this handler if eTags don't match
+		if eTag0 != eTag1 {
+			err := errors.New("inconsistent filter data")
+			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between calls", log.ERROR, log.Error(err),
+				log.Data{"filter_id": filterID, "dimension": name, "e_tag_0": eTag0, "e_tag_1": eTag1})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -193,8 +204,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 
 }
 
-// DimensionSelector controls the render of the range selector template
-// Contains stubbed data for now - page to be populated by the API
+// DimensionSelector controls the render of the range selector template using data from Dataset API and Filter API
 func (f *Filter) DimensionSelector() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
 		vars := mux.Vars(req)
@@ -202,7 +212,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
+		fj, eTag0, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
@@ -247,7 +257,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 		}
 
 		// count number of options for the dimension in dataset API
-		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, dataset.QueryParams{Offset: 0, Limit: 1})
+		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, name, &dataset.QueryParams{Offset: 0, Limit: 0})
 		if err != nil {
 			setStatusCode(req, w, err)
 			return
@@ -266,9 +276,19 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		selectedValues, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
+		selectedValues, eTag1, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			setStatusCode(req, w, err)
+			// The user might want to retry this handler on ErrBatchETagMismatch
+			return
+		}
+
+		// The user might want to retry this handler if eTags don't match
+		if eTag0 != eTag1 {
+			err := errors.New("inconsistent filter data")
+			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between calls", log.ERROR, log.Error(err),
+				log.Data{"filter_id": filterID, "dimension": name, "e_tag_0": eTag0, "e_tag_1": eTag1})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -480,10 +500,11 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 	filterID := vars["filterID"]
 	ctx := req.Context()
 
-	fj, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
+	fj, eTag, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 	if err != nil {
 		log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 		setStatusCode(req, w, err)
+		// The user might want to retry this handler on ErrBatchETagMismatch
 		return
 	}
 
@@ -510,10 +531,12 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 		}
 		// first batch, will overwrite any existing values in filter API
 		if batch.Offset == 0 {
-			return false, f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options)
+			eTag, err = f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options, eTag)
+			return false, err
 		}
 		// the rest of batches will be added to the existing items in filter API via patch operations
-		return false, f.FilterClient.PatchDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options, []string{}, f.BatchSize)
+		eTag, err = f.FilterClient.PatchDimensionValues(req.Context(), userAccessToken, "", collectionID, filterID, name, options, []string{}, f.BatchSize, eTag)
+		return false, err
 	}
 
 	// call dataset API GetOptions in batches, and process each batch to add the options to filter API
@@ -563,7 +586,8 @@ func (f *Filter) AddList() http.HandlerFunc {
 			options = append(options, k)
 		}
 
-		if err := f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
+		_, err := f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options, headers.IfMatchAnyETag)
+		if err != nil {
 			log.Event(ctx, "failed to add dimension values", log.WARN, log.Error(err))
 		}
 
@@ -574,7 +598,7 @@ func (f *Filter) AddList() http.HandlerFunc {
 
 func (f *Filter) getDimensionValues(ctx context.Context, userAccessToken, collectionID, filterID, name string) (values []string, labelIDMap map[string]string, err error) {
 
-	fj, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
+	fj, _, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
 	if err != nil {
 		return
 	}
@@ -614,13 +638,15 @@ func (f *Filter) DimensionRemoveAll() http.HandlerFunc {
 
 		log.Event(ctx, "attempting to remove all options from dimension", log.INFO, log.Data{"dimension": name, "filterID": filterID})
 
-		if err := f.FilterClient.RemoveDimension(req.Context(), userAccessToken, "", collectionID, filterID, name); err != nil {
+		eTag, err := f.FilterClient.RemoveDimension(req.Context(), userAccessToken, "", collectionID, filterID, name, headers.IfMatchAnyETag)
+		if err != nil {
 			log.Event(ctx, "failed to remove dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		if err := f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, filterID, name); err != nil {
+		_, err = f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, filterID, name, eTag)
+		if err != nil {
 			log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
@@ -641,7 +667,8 @@ func (f *Filter) DimensionRemoveOne() http.HandlerFunc {
 		option := vars["option"]
 		ctx := req.Context()
 
-		if err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, option); err != nil {
+		_, err := f.FilterClient.RemoveDimensionValue(req.Context(), userAccessToken, "", collectionID, filterID, name, option, headers.IfMatchAnyETag)
+		if err != nil {
 			log.Event(ctx, "failed to remove dimension option", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "option": option})
 			setStatusCode(req, w, err)
 			return

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/headers"
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
@@ -30,13 +32,15 @@ func (f *Filter) UpdateTime() http.HandlerFunc {
 		ctx := req.Context()
 		dimensionName := "time"
 
-		if err := f.FilterClient.RemoveDimension(ctx, userAccessToken, "", collectionID, filterID, dimensionName); err != nil {
+		eTag, err := f.FilterClient.RemoveDimension(ctx, userAccessToken, "", collectionID, filterID, dimensionName, headers.IfMatchAnyETag)
+		if err != nil {
 			log.Event(ctx, "failed to remove dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		if err := f.FilterClient.AddDimension(ctx, userAccessToken, "", collectionID, filterID, dimensionName); err != nil {
+		eTag, err = f.FilterClient.AddDimension(ctx, userAccessToken, "", collectionID, filterID, dimensionName, eTag)
+		if err != nil {
 			log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
 			setStatusCode(req, w, err)
 			return
@@ -60,19 +64,23 @@ func (f *Filter) UpdateTime() http.HandlerFunc {
 
 		switch req.Form.Get("time-selection") {
 		case "latest":
-			if err := f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, req.Form.Get("latest-option")); err != nil {
+			eTag, err = f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, req.Form.Get("latest-option"), eTag)
+			if err != nil {
 				log.Event(ctx, "failed to add dimension value", log.ERROR, log.Error(err))
 			}
 		case "single":
-			if err := f.addSingleTime(filterID, userAccessToken, collectionID, req); err != nil {
+			eTag, err = f.addSingleTime(filterID, userAccessToken, collectionID, req, eTag)
+			if err != nil {
 				log.Event(ctx, "failed to add single time", log.ERROR, log.Error(err))
 			}
 		case "range":
-			if err := f.addTimeRange(filterID, userAccessToken, collectionID, req); err != nil {
+			eTag, err = f.addTimeRange(filterID, userAccessToken, collectionID, req, eTag)
+			if err != nil {
 				log.Event(ctx, "failed to add range of times", log.ERROR, log.Error(err))
 			}
 		case "list":
-			if err := f.addTimeList(filterID, userAccessToken, collectionID, req); err != nil {
+			eTag, err = f.addTimeList(filterID, userAccessToken, collectionID, req, eTag)
+			if err != nil {
 				log.Event(ctx, "failed to add list of times", log.ERROR, log.Error(err))
 			}
 		}
@@ -83,7 +91,7 @@ func (f *Filter) UpdateTime() http.HandlerFunc {
 
 }
 
-func (f *Filter) addSingleTime(filterID, userAccessToken, collectionID string, req *http.Request) error {
+func (f *Filter) addSingleTime(filterID, userAccessToken, collectionID string, req *http.Request, eTag string) (newETag string, err error) {
 	ctx := req.Context()
 
 	month := req.Form.Get("month-single")
@@ -92,14 +100,14 @@ func (f *Filter) addSingleTime(filterID, userAccessToken, collectionID string, r
 
 	date, err := time.Parse("January 2006", fmt.Sprintf("%s %s", month, year))
 	if err != nil {
-		return err
+		return eTag, err
 	}
 
-	return f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, date.Format("Jan-06"))
+	return f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, date.Format("Jan-06"), eTag)
 }
 
 // addTimeList will save form time grouped list form data to the filter
-func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req *http.Request) error {
+func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req *http.Request, eTag string) (newETag string, err error) {
 	ctx := req.Context()
 	dimensionName := "time"
 
@@ -109,12 +117,12 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 	startYearInt, err := strconv.Atoi(startYearStr)
 	if err != nil {
 		log.Event(ctx, "failed to convert filter start year string to integer", log.ERROR, log.Error(err))
-		return err
+		return eTag, err
 	}
 	endYearInt, err := strconv.Atoi(endYearStr)
 	if err != nil {
 		log.Event(ctx, "failed to convert filter end year string to integer", log.ERROR, log.Error(err))
-		return err
+		return eTag, err
 	}
 
 	selectedMonths := req.Form["months"]
@@ -126,23 +134,22 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 			monthYearComboTime, err := time.Parse("January 2006", monthYearComboStr)
 			if err != nil {
 				log.Event(ctx, "failed to convert filtered month and year combo to time format", log.ERROR, log.Error(err))
-				return err
+				return eTag, err
 			}
 			monthYearCombo := monthYearComboTime.Format("Jan-06")
 			options = append(options, monthYearCombo)
 		}
 	}
 
-	if err := f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options); err != nil {
+	newETag, err = f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options, eTag)
+	if err != nil {
 		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err))
-		return err
+		return eTag, err
 	}
-
-	// Should we not be returning error?
-	return nil
+	return newETag, nil
 }
 
-func (f *Filter) addTimeRange(filterID, userAccessToken, collectionID string, req *http.Request) error {
+func (f *Filter) addTimeRange(filterID, userAccessToken, collectionID string, req *http.Request, eTag string) (newETag string, err error) {
 	startMonth := req.Form.Get("start-month")
 	startYear := req.Form.Get("start-year")
 	endMonth := req.Form.Get("end-month")
@@ -152,27 +159,27 @@ func (f *Filter) addTimeRange(filterID, userAccessToken, collectionID string, re
 
 	values, labelIDMap, err := f.getDimensionValues(ctx, userAccessToken, collectionID, filterID, dimensionName)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	dats, err := dates.ConvertToReadable(values)
 	if err != nil {
-		return err
+		return "", err
 	}
 	dats = dates.Sort(dats)
 
 	start, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s %s", startMonth, startYear))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	end, err := time.Parse("01 January 2006", fmt.Sprintf("01 %s %s", endMonth, endYear))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if end.Before(start) {
-		return fmt.Errorf("start date: %s before end date: %s", start.String(), end.String())
+		return "", fmt.Errorf("start date: %s before end date: %s", start.String(), end.String())
 	}
 
 	values = dates.ConvertToCoded(dats)
@@ -183,7 +190,7 @@ func (f *Filter) addTimeRange(filterID, userAccessToken, collectionID string, re
 		}
 	}
 
-	return f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options)
+	return f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options, eTag)
 }
 
 // Time specifically handles the data for the time dimension page
@@ -194,7 +201,7 @@ func (f *Filter) Time() http.HandlerFunc {
 		ctx := req.Context()
 		dimensionName := "time"
 
-		fj, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
+		fj, eTag0, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
@@ -229,7 +236,7 @@ func (f *Filter) Time() http.HandlerFunc {
 		}
 
 		// count number of options for the dimension in dataset API
-		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, dataset.QueryParams{Offset: 0, Limit: 1})
+		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, &dataset.QueryParams{Offset: 0, Limit: 1})
 		if err != nil {
 			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
 				log.Data{"dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
@@ -252,9 +259,18 @@ func (f *Filter) Time() http.HandlerFunc {
 			return
 		}
 
-		selValues, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, dimensionName, f.BatchSize, f.BatchMaxWorkers)
+		selValues, eTag1, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, dimensionName, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		if eTag0 != eTag1 {
+			err := errors.New("inconsistent filter data")
+			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between calls", log.ERROR, log.Error(err),
+				log.Data{"filter_id": filterID, "e_tag_0": eTag0, "e_tag_1": eTag1})
+			// The user might want to retry this handler in this case
 			setStatusCode(req, w, err)
 			return
 		}

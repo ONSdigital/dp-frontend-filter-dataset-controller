@@ -34,14 +34,14 @@ func (f Filter) Submit() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		fil, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
+		fil, eTag, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		mdl, err := f.FilterClient.UpdateBlueprint(req.Context(), userAccessToken, "", "", collectionID, fil, true)
+		mdl, _, err := f.FilterClient.UpdateBlueprint(req.Context(), userAccessToken, "", "", collectionID, fil, true, eTag)
 		if err != nil {
 			log.Event(ctx, "failed to submit filter blueprint", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
@@ -203,7 +203,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 
 		// count number of options for each dimension in dataset API to check if any dimension has a single option
 		for _, dim := range dims.Items {
-			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, dataset.QueryParams{Offset: 0, Limit: 1})
+			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, &dataset.QueryParams{Offset: 0, Limit: 1})
 			if err != nil {
 				log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
 				setStatusCode(req, w, err)
@@ -323,7 +323,7 @@ func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, colle
 
 	for _, dimension := range dimensions.Items {
 		q := dataset.QueryParams{Offset: 0, Limit: maxMetadataOptions}
-		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name, q)
+		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name, &q)
 		if err != nil {
 			return 0, err
 		}

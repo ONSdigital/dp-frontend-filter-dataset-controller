@@ -23,14 +23,14 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
-		oldJob, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
+		oldJob, _, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		dims, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, filter.QueryParams{})
+		dims, _, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, nil)
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
@@ -59,7 +59,7 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 			return
 		}
 
-		newFilterID, err := f.FilterClient.CreateBlueprint(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, string(editionDetails.Links.LatestVersion.ID), []string{})
+		newFilterID, newFilterETag, err := f.FilterClient.CreateBlueprint(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, string(editionDetails.Links.LatestVersion.ID), []string{})
 		if err != nil {
 			log.Event(ctx, "failed to create filter blueprint", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": editionDetails.Links.LatestVersion.ID})
 			setStatusCode(req, w, err)
@@ -69,17 +69,19 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 		for _, dim := range dims.Items {
 
 			// Copy dimension to new filter
-			if err := f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, newFilterID, dim.Name); err != nil {
+			newFilterETag, err = f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, newFilterID, dim.Name, newFilterETag)
+			if err != nil {
 				log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
 				return
 			}
 
 			// Copy each batch of options to the new filter dimension via PATCH operations.
-			processBatch := f.batchAddOptions(req.Context(), userAccessToken, collectionID, newFilterID, dim.Name)
+			processBatch := f.batchAddOptions(req.Context(), userAccessToken, collectionID, newFilterID, dim.Name, newFilterETag)
 
 			// Call filter API GetOptions in batches and aggregate the responses
-			if err := f.FilterClient.GetDimensionOptionsBatchProcess(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, processBatch, f.BatchSize, f.BatchMaxWorkers); err != nil {
+			newFilterETag, err = f.FilterClient.GetDimensionOptionsBatchProcess(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, processBatch, f.BatchSize, f.BatchMaxWorkers, true)
+			if err != nil {
 				log.Event(ctx, "failed to get and process options from filter client in batches", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
 				return
@@ -93,12 +95,14 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 }
 
 // batchAddOptions generates a batch processor to add the dimension options for each provided batch to filter API, by calling the patch endpoint.
-func (f *Filter) batchAddOptions(ctx context.Context, userAccessToken, collectionID, filterID, dimensionName string) filter.DimensionOptionsBatchProcessor {
-	return func(batch filter.DimensionOptions) (forceAbort bool, err error) {
+func (f *Filter) batchAddOptions(ctx context.Context, userAccessToken, collectionID, filterID, dimensionName, initialETag string) filter.DimensionOptionsBatchProcessor {
+	currentETag := initialETag
+	return func(batch filter.DimensionOptions, oldFilterETag string) (forceAbort bool, err error) {
 		var vals []string
 		for _, val := range batch.Items {
 			vals = append(vals, val.Option)
 		}
-		return false, f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, vals, []string{}, f.BatchSize)
+		currentETag, err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, vals, []string{}, f.BatchSize, currentETag)
+		return false, err
 	}
 }

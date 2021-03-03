@@ -8,11 +8,16 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	dprequest "github.com/ONSdigital/dp-net/request"
 	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+func testETag(n int) string {
+	return fmt.Sprintf("testETag%d", n)
+}
 
 func TestUpdateAge(t *testing.T) {
 	t.Parallel()
@@ -52,9 +57,9 @@ func TestUpdateAge(t *testing.T) {
 	Convey("Given that a user selects age options from the list, then the redirect is successful and the expected calls are made to the filter API", t, func() {
 		options := []string{"30", "28", "90+"}
 		mockClient := NewMockFilterClient(mockCtrl)
-		mockClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age").Return(nil)
-		mockClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age").Return(nil)
-		mockClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age", ItemsEq(options)).Return(nil)
+		mockClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age", headers.IfMatchAnyETag).Return(testETag(0), nil)
+		mockClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age", testETag(0)).Return(testETag(1), nil)
+		mockClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age", ItemsEq(options), testETag(1)).Return(testETag(2), nil)
 		formData := "all-ages-option=total&youngest-age=0&oldest-age=90%2B&youngest=&oldest=&age-selection=list&28=28&30=30&90%2B=90%2B&save-and-return=Save+and+return"
 		w := callAgeUpdate(formData, mockClient, nil)
 		So(w.Code, ShouldEqual, 302)
@@ -63,15 +68,15 @@ func TestUpdateAge(t *testing.T) {
 	Convey("Given that a user selects all age options, then the redirect is successful and the expected calls are made to the filter API", t, func() {
 		option := "total"
 		mockClient := NewMockFilterClient(mockCtrl)
-		mockClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age").Return(nil)
-		mockClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age").Return(nil)
-		mockClient.EXPECT().AddDimensionValue(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age", option).Return(nil)
+		mockClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age", headers.IfMatchAnyETag).Return(testETag(0), nil)
+		mockClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age", testETag(0)).Return(testETag(1), nil)
+		mockClient.EXPECT().AddDimensionValue(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age", option, testETag(1)).Return(testETag(2), nil)
 		formData := "age-selection=all&all-ages-option=total&youngest-age=0&oldest-age=90%2B&youngest=&oldest=&28=28&30=30&90%2B=90%2B&save-and-return=Save+and+return"
 		w := callAgeUpdate(formData, mockClient, nil)
 		So(w.Code, ShouldEqual, 302)
 	})
 
-	Convey("Given that a user selects a range of age options, then teh redirect is successful and the expected calls are made to the filter API", t, func() {
+	Convey("Given that a user selects a range of age options, then the redirect is successful and the expected calls are made to the filter API", t, func() {
 		expectedFilterModel := filter.Model{
 			Links: filter.Links{
 				Version: filter.Link{
@@ -93,12 +98,12 @@ func TestUpdateAge(t *testing.T) {
 		filterOptions := []string{"18", "19", "20", "21", "22", "23", "24"}
 		mockFilterClient := NewMockFilterClient(mockCtrl)
 		mockDatasetClient := NewMockDatasetClient(mockCtrl)
-		mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age").Return(nil)
-		mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age").Return(nil)
-		mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, "", mockCollectionID, mockFilterID).Return(expectedFilterModel, nil)
+		mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age", headers.IfMatchAnyETag).Return(testETag(0), nil)
+		mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age", testETag(0)).Return(testETag(1), nil)
+		mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, mockServiceAuthToken, "", mockCollectionID, mockFilterID).Return(expectedFilterModel, testETag(1), nil)
 		mockDatasetClient.EXPECT().GetOptionsInBatches(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "mid-year-pop-est", "mid-2019-april-2020-geography", "1", "age",
 			batchSize, maxWorkers).Return(datasetOptions, nil)
-		mockFilterClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age", filterOptions).Return(nil)
+		mockFilterClient.EXPECT().SetDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockFilterID, "age", filterOptions, testETag(1)).Return(testETag(2), nil)
 		formData := "all-ages-option=total&age-selection=range&youngest-age=0&oldest-age=90%2B&youngest=18&oldest=24&save-and-return=Save+and+return"
 		w := callAgeUpdate(formData, mockFilterClient, mockDatasetClient)
 		So(w.Code, ShouldEqual, 302)

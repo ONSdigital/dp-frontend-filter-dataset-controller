@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -30,16 +31,25 @@ func (f *Filter) Search() http.HandlerFunc {
 			searchConfig = append(searchConfig, search.Config{InternalToken: f.SearchAPIAuthToken, FlorenceToken: req.Header.Get("X-Florence-Token")})
 		}
 
-		fil, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
+		fil, eTag0, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		selVals, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
+		selVals, eTag1, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			setStatusCode(req, w, err)
+			return
+		}
+
+		// The user might want to retry this handler if eTags don't match
+		if eTag0 != eTag1 {
+			err := errors.New("inconsistent filter data")
+			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between calls", log.ERROR, log.Error(err),
+				log.Data{"filter_id": filterID, "dimension": name, "e_tag_0": eTag0, "e_tag_1": eTag1})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -137,7 +147,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 
 		redirectURI := fmt.Sprintf("/filters/%s/dimensions", filterID)
 
-		fil, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
+		fil, eTag, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
 			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
@@ -170,7 +180,8 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 			for _, item := range searchRes.Items {
 				options = append(options, item.Code)
 			}
-			if err := f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options); err != nil {
+			_, err = f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, options, eTag)
+			if err != nil {
 				log.Event(ctx, "failed to add all dimension options", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 				setStatusCode(req, w, err)
 				return
@@ -183,7 +194,8 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 			for _, item := range searchRes.Items {
 				options = append(options, item.Code)
 			}
-			if err := f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, []string{}, options, f.BatchSize); err != nil {
+			_, err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, []string{}, options, f.BatchSize, eTag)
+			if err != nil {
 				log.Event(ctx, "failed to remove all dimension options, via patch", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 				setStatusCode(req, w, err)
 				return
@@ -192,9 +204,18 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 		}
 
 		// get all available dimension options from filter API
-		opts, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
+		opts, eTag1, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
 			log.Event(ctx, "failed to retrieve dimension options", log.WARN, log.Error(err))
+			setStatusCode(req, w, err)
+			return
+		}
+
+		// The user might want to retry this handler if eTags don't match
+		if eTag != eTag1 {
+			err := errors.New("inconsistent filter data")
+			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between get calls", log.ERROR, log.Error(err),
+				log.Data{"filter_id": filterID, "dimension": name, "e_tag_0": eTag, "e_tag_1": eTag1})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -216,7 +237,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 		addOptions = getOptionsAndRedirect(req.Form, &redirectURI)
 
 		// sent the PATCH with options to add and remove
-		err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize)
+		_, err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize, eTag1)
 		if err != nil {
 			log.Event(ctx, "failed to patch dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
