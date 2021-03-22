@@ -177,33 +177,6 @@ func TestUnitMapper(t *testing.T) {
 			So(p.Data.RangeData.Values[2].Label, ShouldEqual, "2010")
 			So(p.Data.RangeData.Values[3].Label, ShouldEqual, "2009")
 		})
-
-		Convey("correctly orders non time/age values alphabetically", func() {
-			p := CreateListSelectorPage(req, "geography", []filter.DimensionOption{}, dataset.Options{
-				Items: []dataset.Option{
-					{
-						Label: "Wales",
-					},
-					{
-						Label: "Scotland",
-					},
-					{
-						Label: "England",
-					},
-					{
-						Label: "Ireland",
-					},
-				},
-			}, filter.Model{}, dataset.DatasetDetails{}, dataset.VersionDimensions{}, "1234", "today", "/v1", "en")
-
-			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
-
-			So(p.Data.RangeData.Values[0].Label, ShouldEqual, "England")
-			So(p.Data.RangeData.Values[1].Label, ShouldEqual, "Ireland")
-			So(p.Data.RangeData.Values[2].Label, ShouldEqual, "Scotland")
-			So(p.Data.RangeData.Values[3].Label, ShouldEqual, "Wales")
-		})
-
 	})
 }
 

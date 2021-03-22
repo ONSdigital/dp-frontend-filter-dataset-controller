@@ -273,8 +273,6 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 				allListValues[i] = strconv.Itoa(val)
 			}
 		}
-	} else {
-		sort.Strings(allListValues)
 	}
 
 	for _, val := range allListValues {
