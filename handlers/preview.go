@@ -82,6 +82,13 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 				return
 			}
 
+			if len(prev.Headers) < 1 {
+				err = errors.New("No preview headers returned")
+				log.Event(ctx, "failed to format header", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
+				setStatusCode(req, w, err)
+				return
+			}
+
 			if len(prev.Headers[0]) < 4 || strings.ToUpper(prev.Headers[0][0:3]) != "V4_" {
 				err = errors.New("Unexpected format - expected `V4_N` in header")
 				log.Event(ctx, "failed to format header", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID, "header": prev.Headers})
