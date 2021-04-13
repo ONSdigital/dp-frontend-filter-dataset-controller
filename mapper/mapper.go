@@ -76,9 +76,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 			times, err := dates.ConvertToReadable(d.Values)
 			if err != nil {
 				log.Event(ctx, "unable to convert dates to human readable values", log.WARN, log.Error(err))
-				for _, ac := range d.Values {
-					fod.AddedCategories = append(fod.AddedCategories, ac)
-				}
+				fod.AddedCategories = append(fod.AddedCategories, d.Values...)
 			}
 
 			times = dates.Sort(times)
@@ -86,9 +84,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 				fod.AddedCategories = append(fod.AddedCategories, time.Format("January 2006"))
 			}
 		} else {
-			for _, ac := range d.Values {
-				fod.AddedCategories = append(fod.AddedCategories, ac)
-			}
+			fod.AddedCategories = append(fod.AddedCategories, d.Values...)
 
 			for _, dim := range datasetDims {
 				if dim.Name == d.Name {
@@ -239,10 +235,9 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 
 	lookup := getIDNameLookup(allValues)
 
-	var selectedListValues, selectedListIDs []string
+	var selectedListValues []string
 	for _, opt := range selectedValues {
 		selectedListValues = append(selectedListValues, lookup[opt.Option])
-		selectedListIDs = append(selectedListIDs, opt.Option)
 	}
 
 	var allListValues []string
@@ -250,31 +245,6 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 	for _, val := range allValues.Items {
 		allListValues = append(allListValues, val.Label)
 		valueIDmap[val.Label] = val.Option
-	}
-
-	if name == "time" || name == "age" {
-		isValid := true
-		var intVals []int
-		for _, val := range allListValues {
-			intVal, err := strconv.Atoi(val)
-			if err != nil {
-				isValid = false
-				break
-			}
-			intVals = append(intVals, intVal)
-		}
-
-		if isValid {
-			sort.Ints(intVals)
-			if name == "time" {
-				intVals = reverseInts(intVals)
-			}
-			for i, val := range intVals {
-				allListValues[i] = strconv.Itoa(val)
-			}
-		}
-	} else {
-		sort.Strings(allListValues)
 	}
 
 	for _, val := range allListValues {
@@ -399,14 +369,6 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 	return lookup
 }
 
-func getIDNameLookupFromHierarchy(vals hierarchyClient.Model) map[string]string {
-	lookup := make(map[string]string)
-	for _, val := range vals.Children {
-		lookup[val.Links.Self.ID] = val.Label
-	}
-	return lookup
-}
-
 // CreateAgePage creates an age selector page based on api responses
 func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals filter.DimensionOptions, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang string) (age.Page, error) {
 	var p age.Page
@@ -474,8 +436,6 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 		ages = append(ages, ageInt)
 	}
 
-	sort.Ints(ages)
-
 	for _, ageVal := range ages {
 		var isSelected bool
 		ageString := strconv.Itoa(ageVal)
@@ -492,7 +452,14 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 		})
 	}
 
-	p.Data.Youngest = strconv.Itoa(ages[0])
+	// we can't assume any order - find youngest
+	youngest := ages[0]
+	for _, ageVal := range ages {
+		if ageVal < youngest {
+			youngest = ageVal
+		}
+	}
+	p.Data.Youngest = strconv.Itoa(youngest)
 
 	if len(p.Data.Oldest) > 0 {
 		var isSelected bool
@@ -508,7 +475,14 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 			IsSelected: isSelected,
 		})
 	} else {
-		p.Data.Oldest = strconv.Itoa(ages[len(ages)-1])
+		// we can't assume any order - find oldest
+		oldest := ages[0]
+		for _, ageVal := range ages {
+			if ageVal > oldest {
+				oldest = ageVal
+			}
+		}
+		p.Data.Oldest = strconv.Itoa(oldest)
 	}
 
 	p.Data.CheckedRadio = "range"
@@ -609,22 +583,23 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 		return p, err
 	}
 
-	times = dates.Sort(times)
+	// sort just to find first and latest, but not to be used as the order
+	sortedTimes := dates.Sort(times)
 
 	p.Data.FirstTime = timeModel.Value{
-		Option: lookup[times[0].Format("Jan-06")],
-		Month:  times[0].Month().String(),
-		Year:   fmt.Sprintf("%d", times[0].Year()),
+		Option: lookup[sortedTimes[0].Format("Jan-06")],
+		Month:  sortedTimes[0].Month().String(),
+		Year:   fmt.Sprintf("%d", sortedTimes[0].Year()),
 	}
 
 	p.Data.LatestTime = timeModel.Value{
-		Option: lookup[times[len(times)-1].Format("Jan-06")],
-		Month:  times[len(times)-1].Month().String(),
-		Year:   fmt.Sprintf("%d", times[len(times)-1].Year()),
+		Option: lookup[sortedTimes[len(sortedTimes)-1].Format("Jan-06")],
+		Month:  sortedTimes[len(sortedTimes)-1].Month().String(),
+		Year:   fmt.Sprintf("%d", sortedTimes[len(sortedTimes)-1].Year()),
 	}
 
-	firstYear := times[0].Year()
-	lastYear := times[len(times)-1].Year()
+	firstYear := sortedTimes[0].Year()
+	lastYear := sortedTimes[len(sortedTimes)-1].Year()
 	diffYears := lastYear - firstYear
 
 	p.Data.Years = append(p.Data.Years, "Select")
@@ -637,16 +612,15 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 		p.Data.Months = append(p.Data.Months, time.Month(i+1).String())
 	}
 
-	// Reverse times so latest is first
-	for i, j := 0, len(times)-1; i < j; i, j = i+1, j-1 {
-		times[i], times[j] = times[j], times[i]
-	}
-
+	latestSelected := false
 	for _, val := range times {
 		var isSelected bool
 		for _, selVal := range selVals {
 			if val.Format("Jan-06") == selVal.Option {
 				isSelected = true
+				if val == sortedTimes[len(sortedTimes)-1] {
+					latestSelected = true
+				}
 			}
 		}
 
@@ -662,7 +636,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 		URL: fmt.Sprintf("/filters/%s/dimensions/time/update", f.FilterID),
 	}
 
-	if len(selVals) == 1 && p.Data.Values[0].IsSelected {
+	if len(selVals) == 1 && latestSelected {
 		p.Data.CheckedRadio = "latest"
 	} else if len(selVals) == 1 {
 		p.Data.CheckedRadio = "single"
@@ -1057,13 +1031,6 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 	p.Data.Cancel.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
 
 	return p
-}
-
-func reverseInts(input []int) []int {
-	if len(input) == 0 {
-		return input
-	}
-	return append(reverseInts(input[1:]), input[0])
 }
 
 // mapCookiePreferences reads cookie policy and preferences cookies and then maps the values to the page model

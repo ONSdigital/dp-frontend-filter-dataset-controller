@@ -152,7 +152,7 @@ func TestUnitMapper(t *testing.T) {
 			So(p.Data.FiltersAmount, ShouldEqual, 2)
 		})
 
-		Convey("correctly orders the time values into ascending numeric order", func() {
+		Convey("keeps the same order for the time values as provided by dataset API", func() {
 			p := CreateListSelectorPage(req, "time", []filter.DimensionOption{}, dataset.Options{
 				Items: []dataset.Option{
 					{
@@ -172,13 +172,13 @@ func TestUnitMapper(t *testing.T) {
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
-			So(p.Data.RangeData.Values[0].Label, ShouldEqual, "2017")
-			So(p.Data.RangeData.Values[1].Label, ShouldEqual, "2013")
-			So(p.Data.RangeData.Values[2].Label, ShouldEqual, "2010")
-			So(p.Data.RangeData.Values[3].Label, ShouldEqual, "2009")
+			So(p.Data.RangeData.Values[0].Label, ShouldEqual, "2013")
+			So(p.Data.RangeData.Values[1].Label, ShouldEqual, "2010")
+			So(p.Data.RangeData.Values[2].Label, ShouldEqual, "2009")
+			So(p.Data.RangeData.Values[3].Label, ShouldEqual, "2017")
 		})
 
-		Convey("correctly orders non time/age values alphabetically", func() {
+		Convey("keeps the same order for the non time/age values as provided by dataset API", func() {
 			p := CreateListSelectorPage(req, "geography", []filter.DimensionOption{}, dataset.Options{
 				Items: []dataset.Option{
 					{
@@ -198,10 +198,10 @@ func TestUnitMapper(t *testing.T) {
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
-			So(p.Data.RangeData.Values[0].Label, ShouldEqual, "England")
-			So(p.Data.RangeData.Values[1].Label, ShouldEqual, "Ireland")
-			So(p.Data.RangeData.Values[2].Label, ShouldEqual, "Scotland")
-			So(p.Data.RangeData.Values[3].Label, ShouldEqual, "Wales")
+			So(p.Data.RangeData.Values[0].Label, ShouldEqual, "Wales")
+			So(p.Data.RangeData.Values[1].Label, ShouldEqual, "Scotland")
+			So(p.Data.RangeData.Values[2].Label, ShouldEqual, "England")
+			So(p.Data.RangeData.Values[3].Label, ShouldEqual, "Ireland")
 		})
 
 	})
