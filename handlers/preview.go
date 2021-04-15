@@ -82,6 +82,13 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 				return
 			}
 
+			if len(prev.Headers) < 1 {
+				err = errors.New("No preview headers returned")
+				log.Event(ctx, "failed to format header", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
+				setStatusCode(req, w, err)
+				return
+			}
+
 			if len(prev.Headers[0]) < 4 || strings.ToUpper(prev.Headers[0][0:3]) != "V4_" {
 				err = errors.New("Unexpected format - expected `V4_N` in header")
 				log.Event(ctx, "failed to format header", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID, "header": prev.Headers})
@@ -96,8 +103,18 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 				return
 			}
 
+			if len(prev.Headers) > markingsColumnCount {
+				err = errors.New("Incongruent column count - column count from cell greater than header count")
+				log.Event(ctx, "failed to verify column count", log.ERROR, log.Error(err), log.Data{
+					"filter_output_id": filterOutputID, "header_count": len(prev.Headers), "column_count": markingsColumnCount,
+				})
+				setStatusCode(req, w, err)
+				return
+			}
+
 			indexOfFirstLabelColumn := markingsColumnCount + 2 // +1 for observation, +1 for first codelist column
 			dimensions = []filter.ModelDimension{{Name: "Values"}}
+
 			// add markings column headers
 			for i := 1; i <= markingsColumnCount; i++ {
 				dimensions = append(dimensions, filter.ModelDimension{Name: prev.Headers[i]})
@@ -111,7 +128,17 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 				if rowN >= 10 {
 					break
 				}
+
 				if len(row) > 0 {
+					if len(row) < markingsColumnCount {
+						err = errors.New("Incongruent row length - column count from cell greater than row length")
+						log.Event(ctx, "failed to read row", log.ERROR, log.Error(err), log.Data{
+							"filter_output_id": filterOutputID, "row_length": len(row), "column_count": markingsColumnCount,
+						})
+						setStatusCode(req, w, err)
+						return
+					}
+
 					// add observation[0]+markings[1:markingsColumnCount+1] columns of row
 					for i := 0; i <= markingsColumnCount; i++ {
 						dimensions[i].Values = append(dimensions[i].Values, row[i])
@@ -132,6 +159,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+
 		versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 		datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 		if err != nil {
@@ -146,6 +174,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
+
 		ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, version)
 		if err != nil {
 			log.Event(ctx, "failed to get version", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
@@ -159,8 +188,8 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		latestPath := strings.TrimPrefix(latestURL.Path, f.APIRouterVersion)
 
+		latestPath := strings.TrimPrefix(latestURL.Path, f.APIRouterVersion)
 		p := mapper.CreatePreviewPage(req, dimensions, fj, datasetDetails, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview, lang)
 
 		editionDetails, err := f.DatasetClient.GetEdition(req.Context(), userAccessToken, "", collectionID, datasetID, edition)
@@ -209,6 +238,8 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 				setStatusCode(req, w, err)
 				return
 			}
+
+			// Can we trust opts.TotalCount?
 
 			if opts.TotalCount == 1 {
 				p.Data.SingleValueDimensions = append(p.Data.SingleValueDimensions, previewPage.Dimension{
@@ -291,15 +322,17 @@ func (f *Filter) GetFilterJob() http.HandlerFunc {
 			if len(download.URL) == 0 {
 				continue
 			}
+
 			downloadURL, err := url.Parse(download.URL)
 			if err != nil {
 				log.Event(ctx, "failed to parse download url", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
 				setStatusCode(req, w, err)
 				return
 			}
-			downloadPath := strings.TrimPrefix(downloadURL.Path, f.APIRouterVersion)
 
+			downloadPath := strings.TrimPrefix(downloadURL.Path, f.APIRouterVersion)
 			download.URL = f.downloadServiceURL + downloadPath
+
 			prev.Downloads[k] = download
 		}
 
@@ -323,10 +356,12 @@ func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, colle
 
 	for _, dimension := range dimensions.Items {
 		q := dataset.QueryParams{Offset: 0, Limit: maxMetadataOptions}
+
 		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name, &q)
 		if err != nil {
 			return 0, err
 		}
+
 		if options.TotalCount > maxMetadataOptions {
 			return 0, errTooManyOptions
 		}

@@ -309,6 +309,10 @@ func (n flatNodes) addWithoutChildren(val hierarchy.Child, i int) {
 }
 
 func (n flatNodes) addWithChildren(val hierarchy.Child, i int) {
+	if len(n.list) < i {
+		return
+	}
+
 	n.list[i] = &hierarchy.Child{
 		Label:            val.Label,
 		Links:            val.Links,
@@ -347,7 +351,6 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 			}
 
 			for _, childVal := range child.Children {
-
 				if childVal.Links.Code.ID == nodes.order[1] {
 					nodes.addWithoutChildren(childVal, 1)
 
@@ -364,7 +367,6 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 						if grandChildVal.Links.Code.ID == nodes.order[5] {
 							nodes.addWithChildren(grandChildVal, 5)
 						}
-
 					}
 				}
 
