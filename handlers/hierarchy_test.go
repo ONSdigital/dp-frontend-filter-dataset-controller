@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -353,4 +354,309 @@ func TestHierarchyUpdate(t *testing.T) {
 		})
 	})
 
+}
+
+func TestFlattenGeographyTopLevel(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	ctx := context.Background()
+
+	mockSearchAPIAuthToken := "testServiceAuthToken"
+	batchSize := 100
+	testInstanceID := "testInstanceID"
+
+	expectedDimensionName := "geography"
+
+	cfg := &config.Config{
+		SearchAPIAuthToken:   mockSearchAPIAuthToken,
+		DownloadServiceURL:   "",
+		BatchSizeLimit:       batchSize,
+		EnableDatasetPreview: false,
+	}
+
+	Convey("Given mocked hierarchy model and child items", t, func() {
+
+		order0 := 0
+		order1 := 10
+		order2 := 25
+		order3 := 38
+		order4 := 41
+		order5 := 52
+
+		chWales := hierarchy.Child{
+			Label: "Wales",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: wales},
+			},
+			HasData: true,
+			Order:   &order0,
+		}
+
+		chEngland := hierarchy.Child{
+			Label: "England",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: england},
+			},
+			HasData: true,
+			Order:   &order1,
+		}
+
+		chNorthernIreland := hierarchy.Child{
+			Label: "Northern Ireland",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: northernIreland},
+			},
+			HasData: true,
+			Order:   &order2,
+		}
+
+		chScotland := hierarchy.Child{
+			Label: "Scotland",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: scotland},
+			},
+			HasData: true,
+			Order:   &order3,
+		}
+
+		chGreatBritain := hierarchy.Child{
+			Label: "Great Britain",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: greatBritain},
+			},
+			HasData: true,
+			Order:   &order4,
+		}
+
+		chEnglandAndWales := hierarchy.Child{
+			Label: "England and Wales",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: englandAndWales},
+			},
+			HasData: true,
+			Order:   &order5,
+		}
+
+		testUK := hierarchy.Model{
+			Label: "United Kingdom",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: uk},
+			},
+			HasData:          true,
+			NumberofChildren: 2,
+			Children:         []hierarchy.Child{chNorthernIreland, chGreatBritain},
+		}
+
+		testGB := hierarchy.Model{
+			Label: "Great Britain",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: greatBritain},
+			},
+			HasData:          true,
+			Order:            &order4,
+			NumberofChildren: 2,
+			Children:         []hierarchy.Child{chScotland, chEnglandAndWales},
+		}
+
+		testEnglandAndWales := hierarchy.Model{
+			Label: "England and Wales",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: englandAndWales},
+			},
+			HasData:          true,
+			Order:            &order5,
+			NumberofChildren: 2,
+			Children:         []hierarchy.Child{chWales, chEngland},
+		}
+
+		Convey("And a successful hierarchy client mock where all models contain order", func() {
+			mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
+			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, expectedDimensionName).Return(testUK, nil)
+			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, greatBritain).Return(testGB, nil)
+			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, englandAndWales).Return(testEnglandAndWales, nil)
+			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, nil, "/v1", cfg)
+
+			Convey("then flattenGeographyTopLevel returns a flat list of geography nodes sorted in the order defined by the children order property", func() {
+				expectedFlatGeography := hierarchy.Model{
+					Label:   "United Kingdom",
+					HasData: true,
+					Links: hierarchy.Links{
+						Code: hierarchy.Link{ID: uk},
+					},
+					Children: []hierarchy.Child{chWales, chEngland, chNorthernIreland, chScotland, chGreatBritain, chEnglandAndWales},
+				}
+
+				h, err := f.flattenGeographyTopLevel(ctx, testInstanceID)
+				So(err, ShouldBeNil)
+				So(h, ShouldResemble, expectedFlatGeography)
+			})
+		})
+
+		Convey("And a successful hierarchy client mock where some models don't contain order", func() {
+			chScotland.Order = nil
+			testGB.Children[0].Order = nil
+			mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
+			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, expectedDimensionName).Return(testUK, nil)
+			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, greatBritain).Return(testGB, nil)
+			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, englandAndWales).Return(testEnglandAndWales, nil)
+			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, nil, "/v1", cfg)
+
+			Convey("then flattenGeographyTopLevel returns a flat list of geography nodes sorted according to the default hardcoded order", func() {
+				expectedFlatGeography := hierarchy.Model{
+					Label:   "United Kingdom",
+					HasData: true,
+					Links: hierarchy.Links{
+						Code: hierarchy.Link{ID: uk},
+					},
+					Children: []hierarchy.Child{chGreatBritain, chEnglandAndWales, chEngland, chNorthernIreland, chScotland, chWales},
+				}
+
+				h, err := f.flattenGeographyTopLevel(ctx, testInstanceID)
+				So(err, ShouldBeNil)
+				So(h, ShouldResemble, expectedFlatGeography)
+			})
+		})
+
+		Convey("And a hierarchy client that fails on getRoot", func() {
+			testErr := errors.New("testError")
+			mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
+			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, expectedDimensionName).Return(hierarchy.Model{}, testErr)
+			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, nil, "/v1", cfg)
+
+			Convey("then flattenGeographyTopLevel fails with the same error and no other call is performed", func() {
+				_, err := f.flattenGeographyTopLevel(ctx, testInstanceID)
+				So(err, ShouldResemble, testErr)
+			})
+		})
+
+		Convey("And a hierarchy client that fails on getChildren for greatBritain code", func() {
+			testErr := errors.New("testError")
+			mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
+			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, expectedDimensionName).Return(testUK, nil)
+			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, greatBritain).Return(hierarchy.Model{}, testErr)
+			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, nil, "/v1", cfg)
+
+			Convey("then flattenGeographyTopLevel fails with the same error and no other call is performed", func() {
+				_, err := f.flattenGeographyTopLevel(ctx, testInstanceID)
+				So(err, ShouldResemble, testErr)
+			})
+		})
+
+		Convey("And a hierarchy client that fails on getChildren for englandAndWales code", func() {
+			testErr := errors.New("testError")
+			mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
+			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, expectedDimensionName).Return(testUK, nil)
+			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, greatBritain).Return(testGB, nil)
+			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, englandAndWales).Return(hierarchy.Model{}, testErr)
+			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, nil, "/v1", cfg)
+
+			Convey("then flattenGeographyTopLevel fails with the same error and no other call is performed", func() {
+				_, err := f.flattenGeographyTopLevel(ctx, testInstanceID)
+				So(err, ShouldResemble, testErr)
+			})
+		})
+	})
+}
+
+func TestFlatNodes(t *testing.T) {
+
+	Convey("Given mocked hierarchy Child items", t, func() {
+
+		chWales := &hierarchy.Child{
+			Label: "Wales",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: wales},
+			},
+		}
+
+		chEngland := &hierarchy.Child{
+			Label: "England",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: england},
+			},
+		}
+
+		chNorthernIreland := &hierarchy.Child{
+			Label: "Northern Ireland",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: northernIreland},
+			},
+		}
+
+		chScotland := &hierarchy.Child{
+			Label: "Scotland",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: scotland},
+			},
+		}
+
+		chGreatBritain := &hierarchy.Child{
+			Label: "Great Britain",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: greatBritain},
+			},
+		}
+
+		chEnglandAndWales := &hierarchy.Child{
+			Label: "England and Wales",
+			Links: hierarchy.Links{
+				Code: hierarchy.Link{ID: englandAndWales},
+			},
+		}
+
+		order0 := 0
+		order1 := 10
+		order2 := 25
+		order3 := 38
+		order4 := 41
+		order5 := 52
+
+		Convey("And a fully populated flatNodes structure without children-defined order", func() {
+			f := flatNodes{
+				list:         []*hierarchy.Child{chWales, chEngland, chNorthernIreland, chScotland, chGreatBritain, chEnglandAndWales},
+				defaultOrder: map[string]int{greatBritain: 0, englandAndWales: 1, england: 2, northernIreland: 3, scotland: 4, wales: 5},
+			}
+
+			Convey("Then when sort is called the items are sorted incrementally according to the default order", func() {
+				f.sort()
+				So(f.list, ShouldResemble, []*hierarchy.Child{chGreatBritain, chEnglandAndWales, chEngland, chNorthernIreland, chScotland, chWales})
+			})
+		})
+
+		Convey("And a fully populated flatNodes structure where all but children contain order", func() {
+			chNorthernIreland.Order = &order0
+			chScotland.Order = &order1
+			chEngland.Order = &order2
+			chGreatBritain.Order = &order3
+			chWales.Order = &order4
+			chEnglandAndWales.Order = &order5
+			f := flatNodes{
+				list:         []*hierarchy.Child{chWales, chEngland, chNorthernIreland, chScotland, chGreatBritain, chEnglandAndWales},
+				defaultOrder: map[string]int{greatBritain: 0, englandAndWales: 1, england: 2, northernIreland: 3, scotland: 4, wales: 5},
+			}
+
+			Convey("Then when sort is called the items are sorted incrementally according to the child items order", func() {
+				f.sort()
+				So(f.list, ShouldResemble, []*hierarchy.Child{chNorthernIreland, chScotland, chEngland, chGreatBritain, chWales, chEnglandAndWales})
+			})
+		})
+
+		Convey("And a fully populated flatNodes structure where all but one children contain order", func() {
+			chNorthernIreland.Order = &order0
+			chScotland.Order = &order1
+			chEngland.Order = &order2
+			chGreatBritain.Order = &order3
+			chWales.Order = &order4
+			f := flatNodes{
+				list:         []*hierarchy.Child{chWales, chEngland, chNorthernIreland, chScotland, chGreatBritain, chEnglandAndWales},
+				defaultOrder: map[string]int{greatBritain: 0, englandAndWales: 1, england: 2, northernIreland: 3, scotland: 4, wales: 5},
+			}
+
+			Convey("Then when sort is called the items are sorted incrementally according to the default order", func() {
+				f.sort()
+				So(f.list, ShouldResemble, []*hierarchy.Child{chGreatBritain, chEnglandAndWales, chEngland, chNorthernIreland, chScotland, chWales})
+			})
+		})
+	})
 }
