@@ -22,7 +22,6 @@ import (
 // HierarchyUpdate controls the updating of a hierarchy job
 func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
-
 		vars := mux.Vars(req)
 		filterID := vars["filterID"]
 		name := vars["name"]
