@@ -59,7 +59,6 @@ func (f Filter) Submit() http.HandlerFunc {
 // OutputPage controls the rendering of the preview and download page
 func (f *Filter) OutputPage() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
-
 		vars := mux.Vars(req)
 		filterOutputID := vars["filterOutputID"]
 		ctx := req.Context()
@@ -103,7 +102,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 				return
 			}
 
-			if len(prev.Headers) > markingsColumnCount {
+			if markingsColumnCount > len(prev.Headers){
 				err = errors.New("Incongruent column count - column count from cell greater than header count")
 				log.Event(ctx, "failed to verify column count", log.ERROR, log.Error(err), log.Data{
 					"filter_output_id": filterOutputID, "header_count": len(prev.Headers), "column_count": markingsColumnCount,
@@ -130,7 +129,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 				}
 
 				if len(row) > 0 {
-					if len(row) < markingsColumnCount {
+					if markingsColumnCount > len(row){
 						err = errors.New("Incongruent row length - column count from cell greater than row length")
 						log.Event(ctx, "failed to read row", log.ERROR, log.Error(err), log.Data{
 							"filter_output_id": filterOutputID, "row_length": len(row), "column_count": markingsColumnCount,
@@ -240,8 +239,15 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			}
 
 			// Can we trust opts.TotalCount?
-
 			if opts.TotalCount == 1 {
+				if len(opts.Items) < 1{
+					err = errors.New("Incongruent opts.TotalCount (actual items length zero)")
+					log.Event(ctx, "failed to build dimensions", log.ERROR, log.Error(err), log.Data{
+						"filter_output_id": filterOutputID, "opts.TotalCount": opts.TotalCount, "opts.Items length": len(opts.Items),
+					})
+					setStatusCode(req, w, err)
+					return
+				}
 				p.Data.SingleValueDimensions = append(p.Data.SingleValueDimensions, previewPage.Dimension{
 					Name:   strings.Title(dim.Name),
 					Values: []string{opts.Items[0].Label},
