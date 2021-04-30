@@ -82,18 +82,26 @@ func ItemsEq(expected []string) gomock.Matcher {
 }
 
 func (i *itemsEq) Matches(x interface{}) bool {
-	if len(x.([]string)) != len(i.expected) {
+	xs, ok := x.([]string)
+	if !ok {
 		return false
 	}
+
+	if len(xs) != len(i.expected) {
+		return false
+	}
+
 	mExpected := make(map[string]struct{})
 	for _, e := range i.expected {
 		mExpected[e] = struct{}{}
 	}
-	for _, val := range x.([]string) {
+
+	for _, val := range xs {
 		if _, found := mExpected[val]; !found {
 			return false
 		}
 	}
+
 	return true
 }
 

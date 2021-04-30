@@ -34,7 +34,6 @@ const (
 // HierarchyUpdate controls the updating of a hierarchy job
 func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
-
 		vars := mux.Vars(req)
 		filterID := vars["filterID"]
 		name := vars["name"]
@@ -321,6 +320,10 @@ func (n flatNodes) addWithoutChildren(val hierarchy.Child, i int) {
 }
 
 func (n flatNodes) addWithChildren(val hierarchy.Child, i int) {
+	if len(n.list) < i {
+		return
+	}
+
 	n.list[i] = &hierarchy.Child{
 		Label:            val.Label,
 		Links:            val.Links,
@@ -387,7 +390,6 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 			}
 
 			for _, childVal := range child.Children {
-
 				if childVal.Links.Code.ID == englandAndWales {
 					nodes.addWithoutChildren(childVal, nodes.defaultOrder[englandAndWales])
 

@@ -66,7 +66,6 @@ func TestHierarchy(t *testing.T) {
 	}
 
 	Convey("Given a set of mocked clients and models", t, func() {
-
 		mockFilterClient := NewMockFilterClient(mockCtrl)
 		mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
 		mockDatasetClient := NewMockDatasetClient(mockCtrl)
@@ -207,7 +206,6 @@ func TestHierarchyUpdate(t *testing.T) {
 	}
 
 	Convey("Given a set of mocked clients", t, func() {
-
 		mockFilterClient := NewMockFilterClient(mockCtrl)
 		mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
 
