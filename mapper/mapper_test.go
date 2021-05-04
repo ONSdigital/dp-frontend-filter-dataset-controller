@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,6 +10,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/dp-frontend-models/model"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/age"
 	hierarchyModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/hierarchy"
 	timeModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time"
 	dprequest "github.com/ONSdigital/dp-net/request"
@@ -232,7 +234,7 @@ func getTestDimensions() []filter.ModelDimension {
 	}
 }
 
-func getTestDatasetOptions() dataset.Options {
+func getTestDatasetTimeOptions() dataset.Options {
 	return dataset.Options{Items: []dataset.Option{
 		{
 			DimensionID: "time",
@@ -308,6 +310,10 @@ func getTestDatasetDimensions() []dataset.VersionDimension {
 		{
 			Name:  "age-range",
 			Label: "Age",
+		},
+		{
+			Name:        "age",
+			Description: "Description of the Age Dimension",
 		},
 		{
 			Name: "time",
@@ -561,7 +567,7 @@ func TestCreateTimePage(t *testing.T) {
 		datasetDetails := getTestDataset()
 		// Never actually used in the mapper but func requires it so leaving blank until needed in a test
 		datasetVersion := dataset.Version{}
-		options := getTestDatasetOptions()
+		options := getTestDatasetTimeOptions()
 		dimensionOptions := []filter.DimensionOption{{}}
 		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
 		datasetID := "cpih01"
@@ -574,4 +580,292 @@ func TestCreateTimePage(t *testing.T) {
 		So(timeModelPage.Data.Years, ShouldResemble, desiredPageModel.Data.Years)
 	})
 
+}
+
+// getTestDatasetAgeOptions returns an age dataset.Options for testing, with items sorted in a an order that is not from youngest to oldest
+func getTestDatasetAgeOptions(hasPlusSign bool) dataset.Options {
+	opts := dataset.Options{
+		Count:      10,
+		TotalCount: 10,
+		Items: []dataset.Option{
+			{DimensionID: "age", Label: "20", Option: "20"},
+			{DimensionID: "age", Label: "40", Option: "40"},
+			{DimensionID: "age", Label: "60", Option: "60"},
+			{DimensionID: "age", Label: "80", Option: "80"},
+			{DimensionID: "age", Label: "100", Option: "100"},
+			{DimensionID: "age", Label: "10", Option: "10"},
+			{DimensionID: "age", Label: "30", Option: "30"},
+			{DimensionID: "age", Label: "50", Option: "50"},
+			{DimensionID: "age", Label: "70", Option: "70"},
+			{DimensionID: "age", Label: "90", Option: "90"},
+		},
+	}
+	if hasPlusSign {
+		opts.Items[4] = dataset.Option{DimensionID: "age", Label: "100+", Option: "100+"}
+	}
+	return opts
+}
+
+// getExpectedEmptyPageModel returns the age.Page model that would be generated from all-empty values
+func getExpectedEmptyPageModel() age.Page {
+	return age.Page{
+		Page: model.Page{
+			Breadcrumb: []model.TaxonomyNode{
+				{
+					URI:      "/datasets//editions",
+					Type:     "",
+					Children: []model.TaxonomyNode(nil),
+				},
+				{},
+				{
+					Title:    "Filter options",
+					URI:      "/filters//dimensions",
+					Type:     "",
+					Children: []model.TaxonomyNode(nil),
+				},
+				{
+					Title: "Age",
+					URI:   "", Type: "",
+					Children: []model.TaxonomyNode(nil),
+				},
+			},
+			IsInFilterBreadcrumb: true,
+			Metadata: model.Metadata{
+				Title: "Age",
+			},
+			SearchDisabled:    true,
+			BetaBannerEnabled: true,
+			CookiesPolicy: model.CookiesPolicy{
+				Essential: true,
+			},
+		},
+		Data: age.Data{
+			CheckedRadio: "range",
+			FormAction: age.Link{
+				Label: "",
+				URL:   "/filters//dimensions/age/update",
+			},
+		},
+	}
+}
+
+func TestCreateAgePage(t *testing.T) {
+
+	apiRouterVersion := "v1"
+	datasetID := "cpih01"
+	lang := dprequest.DefaultLang
+	filterID := "12349876"
+
+	Convey("Given a valid request, empty values for filter, dataset, options and selected options", t, func() {
+		req := httptest.NewRequest("", "/", nil)
+		filterModel := filter.Model{}
+		datasetDetails := dataset.DatasetDetails{}
+		datasetVersion := dataset.Version{}
+		options := dataset.Options{}
+		dimensionOptions := filter.DimensionOptions{}
+		versionDimensions := dataset.VersionDimensions{}
+
+		Convey("Then, CreateAgePage returns the expected age page without error", func() {
+			ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, options, dimensionOptions, versionDimensions, "", "", "")
+			So(err, ShouldBeNil)
+			expectedPageModel := getExpectedEmptyPageModel()
+			So(ageModelPage, ShouldResemble, expectedPageModel)
+		})
+
+		Convey("Then, CreateAgePage with datasetID and language values returns the expected age page without error", func() {
+			ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, options, dimensionOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+			So(err, ShouldBeNil)
+
+			expectedPageModel := getExpectedEmptyPageModel()
+			expectedPageModel.DatasetId = datasetID
+			expectedPageModel.Language = lang
+			So(ageModelPage, ShouldResemble, expectedPageModel)
+		})
+	})
+
+	Convey("Given a valid request, valid non-empty values for filter, dataset, datasetID and language", t, func() {
+		req := httptest.NewRequest("", "/", nil)
+		filterModel := getTestFilter()
+		datasetDetails := getTestDataset()
+		datasetVersion := dataset.Version{}
+		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+
+		expectedPageModel := getExpectedEmptyPageModel()
+		expectedPageModel.DatasetId = datasetID
+		expectedPageModel.Language = lang
+		expectedPageModel.DatasetTitle = datasetDetails.Title
+		expectedPageModel.Metadata.Description = "Description of the Age Dimension"
+		expectedPageModel.Breadcrumb[0].Title = datasetDetails.Title
+		expectedPageModel.Breadcrumb[1] = model.TaxonomyNode{
+			Title:    "5678",
+			URI:      "/v1/datasets/1234/editions/5678/versions/1",
+			Type:     "",
+			Children: []model.TaxonomyNode(nil),
+		}
+		expectedPageModel.Breadcrumb[2] = model.TaxonomyNode{
+			Title:    "Filter options",
+			URI:      fmt.Sprintf("/filters/%s/dimensions", filterID),
+			Type:     "",
+			Children: []model.TaxonomyNode(nil),
+		}
+		expectedPageModel.Data.FormAction.URL = fmt.Sprintf("/filters/%s/dimensions/age/update", filterID)
+		expectedPageModel.FilterID = filterID
+		expectedPageModel.Data.Youngest = "10"
+		expectedPageModel.Data.Oldest = "100+"
+
+		Convey("Where one dataset option contains '+' and selected options is empty", func() {
+			allOptions := getTestDatasetAgeOptions(true)
+			selectedOptions := filter.DimensionOptions{}
+
+			Convey("Then, the expected age page is generated without error, with options in the same order as provided by dataset API, and all of them marked as not selected", func() {
+				expectedPageModel.Data.Ages = []age.Value{
+					{Label: "20", Option: "20", IsSelected: false},
+					{Label: "40", Option: "40", IsSelected: false},
+					{Label: "60", Option: "60", IsSelected: false},
+					{Label: "80", Option: "80", IsSelected: false},
+					{Label: "100+", Option: "100+", IsSelected: false},
+					{Label: "10", Option: "10", IsSelected: false},
+					{Label: "30", Option: "30", IsSelected: false},
+					{Label: "50", Option: "50", IsSelected: false},
+					{Label: "70", Option: "70", IsSelected: false},
+					{Label: "90", Option: "90", IsSelected: false},
+				}
+				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+				So(err, ShouldBeNil)
+				So(ageModelPage, ShouldResemble, expectedPageModel)
+			})
+		})
+
+		Convey("Where one dataset option contains '+' and selected options is a subset of the dataset options", func() {
+			allOptions := getTestDatasetAgeOptions(true)
+			selectedOptions := filter.DimensionOptions{
+				Count:      3,
+				TotalCount: 3,
+				Items:      []filter.DimensionOption{{Option: "60"}, {Option: "70"}, {Option: "100+"}},
+			}
+
+			Convey("Then, the expected age page is generated without error, with options in the same order as provided by dataset API, and only the selected ones marked as selected", func() {
+				expectedPageModel.Data.Ages = []age.Value{
+					{Label: "20", Option: "20", IsSelected: false},
+					{Label: "40", Option: "40", IsSelected: false},
+					{Label: "60", Option: "60", IsSelected: true},
+					{Label: "80", Option: "80", IsSelected: false},
+					{Label: "100+", Option: "100+", IsSelected: true},
+					{Label: "10", Option: "10", IsSelected: false},
+					{Label: "30", Option: "30", IsSelected: false},
+					{Label: "50", Option: "50", IsSelected: false},
+					{Label: "70", Option: "70", IsSelected: true},
+					{Label: "90", Option: "90", IsSelected: false},
+				}
+				expectedPageModel.Data.CheckedRadio = "list"
+				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+				So(err, ShouldBeNil)
+				So(ageModelPage, ShouldResemble, expectedPageModel)
+			})
+		})
+
+		Convey("Where one dataset option contains '+' and and all dataset options are selected", func() {
+			allOptions := getTestDatasetAgeOptions(true)
+			selectedOptions := filter.DimensionOptions{
+				Count:      3,
+				TotalCount: 3,
+				Items: []filter.DimensionOption{
+					{Option: "10"}, {Option: "20"}, {Option: "30"}, {Option: "40"}, {Option: "50"},
+					{Option: "60"}, {Option: "70"}, {Option: "80"}, {Option: "90"}, {Option: "100+"},
+				},
+			}
+			Convey("Then, the expected age page is generated without error, with options in the same order as provided by dataset API, and all of them marked as selected", func() {
+				expectedPageModel.Data.Ages = []age.Value{
+					{Label: "20", Option: "20", IsSelected: true},
+					{Label: "40", Option: "40", IsSelected: true},
+					{Label: "60", Option: "60", IsSelected: true},
+					{Label: "80", Option: "80", IsSelected: true},
+					{Label: "100+", Option: "100+", IsSelected: true},
+					{Label: "10", Option: "10", IsSelected: true},
+					{Label: "30", Option: "30", IsSelected: true},
+					{Label: "50", Option: "50", IsSelected: true},
+					{Label: "70", Option: "70", IsSelected: true},
+					{Label: "90", Option: "90", IsSelected: true},
+				}
+				expectedPageModel.Data.CheckedRadio = "range"
+				expectedPageModel.Data.FirstSelected = "20"
+				expectedPageModel.Data.LastSelected = "90"
+				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+				So(err, ShouldBeNil)
+				So(ageModelPage, ShouldResemble, expectedPageModel)
+			})
+		})
+
+		Convey("Where dataset options doesn't contain any value with '+'", func() {
+			allOptions := getTestDatasetAgeOptions(false)
+			selectedOptions := filter.DimensionOptions{}
+
+			Convey("Then, the expected age page is generated without error, with options in the same order as provided by dataset API, and all of them marked as not selected", func() {
+				expectedPageModel.Data.Ages = []age.Value{
+					{Label: "20", Option: "20", IsSelected: false},
+					{Label: "40", Option: "40", IsSelected: false},
+					{Label: "60", Option: "60", IsSelected: false},
+					{Label: "80", Option: "80", IsSelected: false},
+					{Label: "100", Option: "100", IsSelected: false},
+					{Label: "10", Option: "10", IsSelected: false},
+					{Label: "30", Option: "30", IsSelected: false},
+					{Label: "50", Option: "50", IsSelected: false},
+					{Label: "70", Option: "70", IsSelected: false},
+					{Label: "90", Option: "90", IsSelected: false},
+				}
+				expectedPageModel.Data.Oldest = "100"
+				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+				So(err, ShouldBeNil)
+				So(ageModelPage, ShouldResemble, expectedPageModel)
+			})
+		})
+
+		Convey("Where dataset options contains a nonnumerical value", func() {
+			allOptions := dataset.Options{
+				Count:      3,
+				TotalCount: 3,
+				Items: []dataset.Option{
+					{DimensionID: "age", Label: "10", Option: "10"},
+					{DimensionID: "age", Label: "nonnumerical", Option: "nonnumerical"},
+					{DimensionID: "age", Label: "100+", Option: "100+"},
+				},
+			}
+			selectedOptions := filter.DimensionOptions{}
+
+			Convey("Then, the expected age page is generated without error, with options in the same order as provided by dataset API, and all of them marked as not selected and AllAgesOption set to the nonnumerical value", func() {
+				expectedPageModel.Data.Ages = []age.Value{
+					{Label: "10", Option: "10", IsSelected: false},
+					{Label: "100+", Option: "100+", IsSelected: false},
+				}
+				expectedPageModel.Data.HasAllAges = true
+				expectedPageModel.Data.AllAgesOption = "nonnumerical"
+				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+				So(err, ShouldBeNil)
+				So(ageModelPage, ShouldResemble, expectedPageModel)
+			})
+		})
+	})
+
+	Convey("calling CreateAgePage with nil request results in an empty age page being generated and the expected error being returned", t, func() {
+		ageModelPage, err := CreateAgePage(nil, filter.Model{}, dataset.DatasetDetails{}, dataset.Version{}, dataset.Options{}, filter.DimensionOptions{}, dataset.VersionDimensions{}, datasetID, apiRouterVersion, lang)
+		So(err, ShouldNotBeNil)
+		So(err.Error(), ShouldEqual, "invalid request provided to CreateAgePage")
+		So(ageModelPage, ShouldResemble, age.Page{})
+	})
+
+	Convey("calling CreateAGePage with an invalid filter version link results in an empty age page being generated and the expected error being returned", t, func() {
+		req := httptest.NewRequest("", "/", nil)
+		filterModel := filter.Model{
+			Links: filter.Links{
+				Version: filter.Link{
+					HRef: "invalid%url",
+				},
+			},
+		}
+
+		ageModelPage, err := CreateAgePage(req, filterModel, dataset.DatasetDetails{}, dataset.Version{}, dataset.Options{}, filter.DimensionOptions{}, dataset.VersionDimensions{}, datasetID, apiRouterVersion, lang)
+		So(err, ShouldNotBeNil)
+		So(err.Error(), ShouldEqual, "parse \"invalid%url\": invalid URL escape \"%ur\"")
+		So(ageModelPage, ShouldResemble, age.Page{})
+	})
 }

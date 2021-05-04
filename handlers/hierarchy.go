@@ -22,13 +22,13 @@ import (
 
 // codes for geography nodes that need to be flattened in a single layer
 const (
-	uk              = "K02000001"
-	greatBritain    = "K03000001"
-	englandAndWales = "K04000001"
-	england         = "E92000001"
-	northernIreland = "N92000002"
-	scotland        = "S92000003"
-	wales           = "W92000004"
+	Uk              = "K02000001"
+	GreatBritain    = "K03000001"
+	EnglandAndWales = "K04000001"
+	England         = "E92000001"
+	NorthernIreland = "N92000002"
+	Scotland        = "S92000003"
+	Wales           = "W92000004"
 )
 
 // HierarchyUpdate controls the updating of a hierarchy job
@@ -333,7 +333,7 @@ func (n flatNodes) addWithChildren(val hierarchy.Child, i int) {
 	}
 }
 
-// hasOrder returns true iif all child items in the list have a non-nil order value
+// hasOrder returns true if and only if all child items in the list have a non-nil order values
 func (n flatNodes) hasOrder() bool {
 	for _, child := range n.list {
 		if child.Order == nil {
@@ -376,22 +376,22 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 	// create nodes struct with default order
 	nodes := flatNodes{
 		list:         make([]*hierarchy.Child, 6),
-		defaultOrder: map[string]int{greatBritain: 0, englandAndWales: 1, england: 2, northernIreland: 3, scotland: 4, wales: 5},
+		defaultOrder: map[string]int{GreatBritain: 0, EnglandAndWales: 1, England: 2, NorthernIreland: 3, Scotland: 4, Wales: 5},
 	}
 
 	// add items to flatNodes according to defaultOrder
 	for _, val := range root.Children {
-		if val.Links.Code.ID == greatBritain {
-			nodes.addWithoutChildren(val, nodes.defaultOrder[greatBritain])
+		if val.Links.Code.ID == GreatBritain {
+			nodes.addWithoutChildren(val, nodes.defaultOrder[GreatBritain])
 
-			child, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", greatBritain)
+			child, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", GreatBritain)
 			if err != nil {
 				return h, err
 			}
 
 			for _, childVal := range child.Children {
-				if childVal.Links.Code.ID == englandAndWales {
-					nodes.addWithoutChildren(childVal, nodes.defaultOrder[englandAndWales])
+				if childVal.Links.Code.ID == EnglandAndWales {
+					nodes.addWithoutChildren(childVal, nodes.defaultOrder[EnglandAndWales])
 
 					grandChild, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", childVal.Links.Code.ID)
 					if err != nil {
@@ -399,24 +399,24 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 					}
 
 					for _, grandChildVal := range grandChild.Children {
-						if grandChildVal.Links.Code.ID == england {
-							nodes.addWithChildren(grandChildVal, nodes.defaultOrder[england])
+						if grandChildVal.Links.Code.ID == England {
+							nodes.addWithChildren(grandChildVal, nodes.defaultOrder[England])
 						}
 
-						if grandChildVal.Links.Code.ID == wales {
-							nodes.addWithChildren(grandChildVal, nodes.defaultOrder[wales])
+						if grandChildVal.Links.Code.ID == Wales {
+							nodes.addWithChildren(grandChildVal, nodes.defaultOrder[Wales])
 						}
 					}
 				}
 
-				if childVal.Links.Code.ID == scotland {
-					nodes.addWithChildren(childVal, nodes.defaultOrder[scotland])
+				if childVal.Links.Code.ID == Scotland {
+					nodes.addWithChildren(childVal, nodes.defaultOrder[Scotland])
 				}
 			}
 		}
 
-		if val.Links.Code.ID == northernIreland {
-			nodes.addWithChildren(val, nodes.defaultOrder[northernIreland])
+		if val.Links.Code.ID == NorthernIreland {
+			nodes.addWithChildren(val, nodes.defaultOrder[NorthernIreland])
 		}
 	}
 

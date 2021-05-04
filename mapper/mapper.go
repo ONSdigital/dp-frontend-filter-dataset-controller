@@ -1,7 +1,9 @@
 package mapper
 
 import (
+	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"sort"
@@ -372,6 +374,9 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 // CreateAgePage creates an age selector page based on api responses
 func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals filter.DimensionOptions, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang string) (age.Page, error) {
 	var p age.Page
+	if req == nil {
+		return p, errors.New("invalid request provided to CreateAgePage")
+	}
 	p.BetaBannerEnabled = true
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
@@ -391,7 +396,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
-		return p, err
+		return age.Page{}, err
 	}
 	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
@@ -420,68 +425,56 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 
 	p.Data.FormAction.URL = fmt.Sprintf("/filters/%s/dimensions/age/update", f.FilterID)
 
-	var ages []int
+	// get mapping of labels (keys) to options (values) and initialise aux vars
 	labelIDs := getNameIDLookup(allVals)
-	for _, age := range allVals.Items {
-		ageInt, err := strconv.Atoi(age.Label)
-		if err != nil {
-			if strings.Contains(age.Label, "+") {
-				p.Data.Oldest = age.Label
-			} else {
+	youngest := math.MaxInt32
+	oldest := math.MinInt32
+
+	// iterate all values, and add them to the Page in the same order,
+	// settign the 'isSelected' for each one of them (according to selVals)
+	// and setting oldest and youngest values
+	for _, a := range allVals.Items {
+
+		// if the age Label contains '+', we assume that it is the oldest age value
+		if strings.Contains(a.Label, "+") {
+			p.Data.Oldest = a.Label
+		} else {
+			// get the Int values, if there is an error, we assume that 'allOptions' was selected
+			ageInt, err := strconv.Atoi(a.Label)
+			if err != nil {
 				p.Data.HasAllAges = true
-				p.Data.AllAgesOption = age.Option
+				p.Data.AllAgesOption = a.Option
+				continue
 			}
-			continue
+			// refresh youngest and oldest values if needed
+			if ageInt < youngest {
+				youngest = ageInt
+			}
+			if ageInt > oldest {
+				oldest = ageInt
+			}
 		}
-		ages = append(ages, ageInt)
-	}
 
-	for _, ageVal := range ages {
+		// find if the option is selected
 		var isSelected bool
-		ageString := strconv.Itoa(ageVal)
 		for _, selVal := range selVals.Items {
-			if selVal.Option == labelIDs[ageString] {
+			if selVal.Option == labelIDs[a.Label] {
 				isSelected = true
 			}
 		}
 
+		// append the age value to the page
 		p.Data.Ages = append(p.Data.Ages, age.Value{
-			Option:     labelIDs[ageString],
-			Label:      ageString,
+			Option:     labelIDs[a.Label],
+			Label:      a.Label,
 			IsSelected: isSelected,
 		})
 	}
 
-	// we can't assume any order - find youngest
-	youngest := ages[0]
-	for _, ageVal := range ages {
-		if ageVal < youngest {
-			youngest = ageVal
-		}
+	if p.Data.Youngest == "" && youngest < math.MaxInt32 {
+		p.Data.Youngest = strconv.Itoa(youngest)
 	}
-	p.Data.Youngest = strconv.Itoa(youngest)
-
-	if len(p.Data.Oldest) > 0 {
-		var isSelected bool
-		for _, selVal := range selVals.Items {
-			if selVal.Option == labelIDs[p.Data.Oldest] {
-				isSelected = true
-			}
-		}
-
-		p.Data.Ages = append(p.Data.Ages, age.Value{
-			Option:     labelIDs[p.Data.Oldest],
-			Label:      p.Data.Oldest,
-			IsSelected: isSelected,
-		})
-	} else {
-		// we can't assume any order - find oldest
-		oldest := ages[0]
-		for _, ageVal := range ages {
-			if ageVal > oldest {
-				oldest = ageVal
-			}
-		}
+	if p.Data.Oldest == "" && oldest > math.MinInt32 {
 		p.Data.Oldest = strconv.Itoa(oldest)
 	}
 
