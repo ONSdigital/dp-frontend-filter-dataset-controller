@@ -6,7 +6,6 @@ import (
 	"math"
 	"net/http"
 	"net/url"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -81,7 +80,6 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 				fod.AddedCategories = append(fod.AddedCategories, d.Values...)
 			}
 
-			times = dates.Sort(times)
 			for _, time := range times {
 				fod.AddedCategories = append(fod.AddedCategories, time.Format("January 2006"))
 			}
@@ -94,23 +92,6 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 					if len(dim.Label) > 0 {
 						fod.Filter = dim.Label
 					}
-				}
-			}
-
-			if d.Name == "age" {
-				var ages []int
-				for _, a := range fod.AddedCategories {
-					age, err := strconv.Atoi(a)
-					if err != nil {
-						continue
-					}
-
-					ages = append(ages, age)
-				}
-
-				sort.Ints(ages)
-				for i, age := range ages {
-					fod.AddedCategories[i] = strconv.Itoa(age)
 				}
 			}
 		}

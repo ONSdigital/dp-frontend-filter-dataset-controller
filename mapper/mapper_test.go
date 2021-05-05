@@ -11,54 +11,230 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/age"
+	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
 	hierarchyModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/hierarchy"
 	timeModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time"
 	dprequest "github.com/ONSdigital/dp-net/request"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestUnitMapper(t *testing.T) {
-	req := httptest.NewRequest("GET", "/", nil)
+// getExpectedFilterOverviewPage returns the filterOverview.Page model that would be generated from all-empty values
+func getExpectedFilterOverviewPage() filterOverview.Page {
+	expectedPageModel := filterOverview.Page{
+		Data: filterOverview.FilterOverview{
+			Dimensions: nil,
+			Cancel: filterOverview.Link{
+				URL: "/",
+			},
+			ClearAll: filterOverview.Link{
+				URL: "/filters//dimensions/clear-all",
+			},
+		},
+	}
+	expectedPageModel.Breadcrumb = []model.TaxonomyNode{
+		{URI: "/datasets//editions"},
+		{},
+		{Title: "Filter options"},
+	}
+	expectedPageModel.Data.PreviewAndDownloadDisabled = true
+	expectedPageModel.SearchDisabled = true
+	expectedPageModel.IsInFilterBreadcrumb = true
+	expectedPageModel.BetaBannerEnabled = true
+	expectedPageModel.Metadata = model.Metadata{Title: "Filter Options"}
+	expectedPageModel.CookiesPolicy = model.CookiesPolicy{Essential: true}
+	return expectedPageModel
+}
 
-	Convey("test CreateFilterOverview correctly maps item to filterOverview page model", t, func() {
-		dimensions := getTestDimensions()
+func TestCreateFilterOverview(t *testing.T) {
+	req := httptest.NewRequest("GET", "/", nil)
+	filterID := "12349876"
+	datasetID := "12345"
+	releaseDate := "18asdfoh1-11-1992"
+	apiRouterVersion := "/v1"
+	lang := dprequest.DefaultLang
+
+	Convey("Calling CreateFilterOverview with empty values returns the expected filter overview page without error", t, func() {
+		expectedFop := getExpectedFilterOverviewPage()
+		fop := CreateFilterOverview(req, []filter.ModelDimension{}, dataset.VersionDimensionItems{}, filter.Model{}, dataset.DatasetDetails{}, "", "", "", "", "")
+		So(fop, ShouldResemble, expectedFop)
+	})
+
+	Convey("Calling CreateFilterOverview with non-empty values for filterID, datasetID, release date, apiRouterVersion and language returns the expected filter overview page without error", t, func() {
+		expectedFop := getExpectedFilterOverviewPage()
+		expectedFop.DatasetId = datasetID
+		expectedFop.FilterID = filterID
+		expectedFop.Language = lang
+		expectedFop.Data.ClearAll.URL = fmt.Sprintf("/filters/%s/dimensions/clear-all", filterID)
+		fop := CreateFilterOverview(req, []filter.ModelDimension{}, dataset.VersionDimensionItems{}, filter.Model{}, dataset.DatasetDetails{}, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+		So(fop, ShouldResemble, expectedFop)
+	})
+
+	Convey("Given mocked datasetDimensions, filter and dataset", t, func() {
 		datasetDimension := getTestDatasetDimensions()
-		filter := getTestFilter()
+		f := getTestFilter()
 		dst := getTestDataset()
 
-		fop := CreateFilterOverview(req, dimensions, datasetDimension, filter, dst, filter.FilterID, "12345", "11-11-1992", "/v1", "en")
-		So(fop.FilterID, ShouldEqual, filter.FilterID)
-		So(fop.SearchDisabled, ShouldBeTrue)
-		So(fop.Data.Dimensions, ShouldHaveLength, 5)
-		So(fop.Data.Dimensions[0].Filter, ShouldEqual, "Year")
-		So(fop.Data.Dimensions[0].AddedCategories[0], ShouldEqual, "2014")
-		So(fop.Data.Dimensions[0].Link.Label, ShouldEqual, "Edit")
-		So(fop.Data.Dimensions[0].Link.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/year")
-		So(fop.Data.Dimensions[1].Filter, ShouldEqual, "Geographic Areas")
-		So(fop.Data.Dimensions[1].AddedCategories[0], ShouldEqual, "England and Wales")
-		So(fop.Data.Dimensions[1].AddedCategories[1], ShouldEqual, "Bristol")
-		So(fop.Data.Dimensions[1].Link.Label, ShouldEqual, "Edit")
-		So(fop.Data.Dimensions[1].Link.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/geography")
-		So(fop.Data.Dimensions[2].Filter, ShouldEqual, "Sex")
-		So(fop.Data.Dimensions[2].AddedCategories[0], ShouldEqual, "All persons")
-		So(fop.Data.Dimensions[2].Link.Label, ShouldEqual, "Edit")
-		So(fop.Data.Dimensions[2].Link.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/sex")
-		So(fop.Data.Dimensions[3].Filter, ShouldEqual, "Age")
-		So(fop.Data.Dimensions[3].AddedCategories[0], ShouldEqual, "0 - 92")
-		So(fop.Data.Dimensions[3].AddedCategories[1], ShouldEqual, "2 - 18")
-		So(fop.Data.Dimensions[3].AddedCategories[2], ShouldEqual, "18 - 65")
-		So(fop.Data.Dimensions[3].Link.Label, ShouldEqual, "Edit")
-		So(fop.Data.Dimensions[3].Link.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/age-range")
-		So(fop.Data.PreviewAndDownload.URL, ShouldEqual, "/filters/"+filter.FilterID)
-		So(fop.Data.Cancel.URL, ShouldEqual, "/")
-		So(fop.Breadcrumb, ShouldHaveLength, 3)
-		So(fop.Breadcrumb[0].Title, ShouldEqual, dst.Title)
-		So(fop.Breadcrumb[0].URI, ShouldEqual, "/datasets//editions")
-		So(fop.Breadcrumb[1].Title, ShouldEqual, "5678")
-		So(fop.Breadcrumb[1].URI, ShouldEqual, "/datasets/1234/editions/5678/versions/1")
-		So(fop.Breadcrumb[2].Title, ShouldEqual, "Filter options")
-		So(fop.Breadcrumb[2].URI, ShouldEqual, "")
+		expectedFop := getExpectedFilterOverviewPage()
+		expectedFop.DatasetId = datasetID
+		expectedFop.FilterID = filterID
+		expectedFop.Language = lang
+		expectedFop.Data.ClearAll.URL = fmt.Sprintf("/filters/%s/dimensions/clear-all", filterID)
+		expectedFop.DatasetTitle = "Small Area Population Estimates"
+		expectedFop.Data = filterOverview.FilterOverview{
+			PreviewAndDownload: filterOverview.Link{
+				URL: "/filters/" + f.FilterID,
+			},
+			Cancel: filterOverview.Link{
+				URL: "/",
+			},
+			ClearAll: filterOverview.Link{
+				URL: "/filters/12349876/dimensions/clear-all",
+			},
+		}
+		expectedFop.Breadcrumb = []model.TaxonomyNode{
+			{
+				Title: dst.Title,
+				URI:   "/datasets//editions",
+			},
+			{
+				Title: "5678",
+				URI:   "/datasets/1234/editions/5678/versions/1",
+			},
+			{
+				Title: "Filter options",
+			},
+		}
+
+		Convey("And a dimensions without values, then calling CreateFilterOverview returns the expected filter overview page, with 'Add' label for that dimension, without error", func() {
+			dimensions := []filter.ModelDimension{
+				{
+					Name:   "emptyDimension",
+					Values: []string{},
+				},
+			}
+			expectedFop.Data.Dimensions = []filterOverview.Dimension{
+				{
+					Filter:          "",
+					AddedCategories: nil,
+					Link: filterOverview.Link{
+						Label: "Add",
+						URL:   "/filters/" + f.FilterID + "/dimensions/emptyDimension",
+					},
+				},
+			}
+			expectedFop.Data.PreviewAndDownloadDisabled = true
+			expectedFop.Data.PreviewAndDownload = filterOverview.Link{}
+			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+			So(fop, ShouldResemble, expectedFop)
+		})
+
+		Convey("And a set of generic dimensions, then calling CreateFilterOverview returns the expected filter overview page without error", func() {
+			dimensions := getTestDimensions()
+			expectedFop.Data.Dimensions = []filterOverview.Dimension{
+				{
+					Filter:          "Year",
+					AddedCategories: []string{"2014"},
+					Link: filterOverview.Link{
+						Label: "Edit",
+						URL:   "/filters/" + f.FilterID + "/dimensions/year",
+					},
+				},
+				{
+					Filter:          "Geographic Areas",
+					AddedCategories: []string{"England and Wales", "Bristol"},
+					Link: filterOverview.Link{
+						Label: "Edit",
+						URL:   "/filters/" + f.FilterID + "/dimensions/geography",
+					},
+				},
+				{
+					Filter:          "Sex",
+					AddedCategories: []string{"All persons"},
+					Link: filterOverview.Link{
+						Label: "Edit",
+						URL:   "/filters/" + f.FilterID + "/dimensions/sex",
+					},
+				},
+				{
+					Filter:          "Age",
+					AddedCategories: []string{"0 - 92", "2 - 18", "18 - 65"},
+					Link: filterOverview.Link{
+						Label: "Edit",
+						URL:   "/filters/" + f.FilterID + "/dimensions/age-range",
+					},
+				},
+				{
+					Filter:          "Time",
+					AddedCategories: []string{"2002.10", "2009.08", "1996.08"},
+					Link: filterOverview.Link{
+						Label: "Edit",
+						URL:   "/filters/12349876/dimensions/time",
+					},
+				},
+			}
+			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+			So(fop, ShouldResemble, expectedFop)
+		})
+
+		Convey("And a time dimension with value with format 'Jan-06", func() {
+			dimensions := []filter.ModelDimension{
+				{
+					Name:   "time",
+					Values: []string{"Jan-01", "Sep-08", "Apr-85"},
+				},
+			}
+			expectedFop.Data.Dimensions = []filterOverview.Dimension{
+				{
+					Filter:          "Time",
+					AddedCategories: []string{"January 2001", "September 2008", "April 1985"},
+					Link: filterOverview.Link{
+						Label: "Edit",
+						URL:   "/filters/12349876/dimensions/time",
+					},
+				},
+			}
+
+			Convey("Then CreateFilterOverview returns the exected filter overview page, formatted as 'January 2006', sorted in the same order as provided", func() {
+				fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+				So(fop, ShouldResemble, expectedFop)
+			})
+
+			Convey("And a corresponding dataset dimension with a non-empty label for the time dimension, then CreateFilterOverview returns the exected filter overview page, formatted as 'January 2006', sorted in the same order as provided and with the Filter value overwritten by the label", func() {
+				datasetDimension[5] = dataset.VersionDimension{
+					Name:  "time",
+					Label: "TimeOverwrite",
+				}
+				expectedFop.Data.Dimensions[0].Filter = "TimeOverwrite"
+				fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+				So(fop, ShouldResemble, expectedFop)
+			})
+		})
+
+		Convey("And an age dimension with some sorting that is not from young to old, then CreateFilterOverview returns the items sorted in the same order as provided", func() {
+			dimensions := []filter.ModelDimension{
+				{
+					Name:   "age",
+					Values: []string{"20", "40", "60", "80", "100+", "nonnumerical", "10", "30", "50", "70", "90"},
+				},
+			}
+			expectedFop.Data.Dimensions = []filterOverview.Dimension{
+				{
+					Filter:          "Age",
+					AddedCategories: []string{"20", "40", "60", "80", "100+", "nonnumerical", "10", "30", "50", "70", "90"},
+					Link: filterOverview.Link{
+						Label: "Edit",
+						URL:   "/filters/12349876/dimensions/age",
+					},
+				},
+			}
+			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+			So(fop, ShouldResemble, expectedFop)
+		})
 	})
+}
+
+func TestUnitMapper(t *testing.T) {
+	req := httptest.NewRequest("GET", "/", nil)
 
 	Convey("test CreatePreviewPage correctly maps to previewPage frontend model", t, func() {
 		dimensions := getTestDimensions()
