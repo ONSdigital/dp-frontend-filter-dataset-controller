@@ -501,6 +501,10 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 
 	ctx := req.Context()
 
+	if len(allVals.Items) == 0 {
+		return p, nil
+	}
+
 	if _, err := time.Parse("Jan-06", allVals.Items[0].Option); err == nil {
 		p.Data.Type = "month"
 	}
@@ -557,8 +561,10 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 		return p, err
 	}
 
-	// sort just to find first and latest, but not to be used as the order
-	sortedTimes := dates.Sort(times)
+	// sort just to find first and latest, but not to be used as the order in the UI
+	sortedTimes := make([]time.Time, len(times))
+	copy(sortedTimes, times)
+	dates.Sort(sortedTimes)
 
 	p.Data.FirstTime = timeModel.Value{
 		Option: lookup[sortedTimes[0].Format("Jan-06")],
@@ -625,23 +631,10 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 	} else if len(selVals) == len(allVals.Items) {
 		p.Data.CheckedRadio = "list"
 	} else {
-		p.Data.CheckedRadio = "range"
-
-		for i, val := range p.Data.Values {
-			if val.IsSelected {
-				for j := i; j < len(p.Data.Values); j++ {
-					if p.Data.Values[j].IsSelected {
-						continue
-					} else {
-						for k := j; k < len(p.Data.Values); k++ {
-							if p.Data.Values[k].IsSelected {
-								p.Data.CheckedRadio = "list"
-								break
-							}
-						}
-					}
-				}
-			}
+		if isTimeRange(sortedTimes, selVals) {
+			p.Data.CheckedRadio = "range"
+		} else {
+			p.Data.CheckedRadio = "list"
 		}
 	}
 
@@ -723,6 +716,58 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 	p.Data.GroupedSelection = GroupedSelection
 
 	return p, nil
+}
+
+// isTimeRange determines if the selected values define a single continuous range of sorted items
+// - sortedTimes is a list of times in the order against which we want to determine the range selection
+// - selVals is a list of selected Options, with the Option value having "Jan-06" format
+func isTimeRange(sortedTimes []time.Time, selVals []filter.DimensionOption) bool {
+	// a range has to have at least two items
+	if len(selVals) < 2 {
+		return false
+	}
+
+	// state variables to determine that a single range is found
+	inRange := false
+	fullRangeFound := false
+
+	// iterate sortedTimes, we assume that the times are already sorted in the required order to determine the range
+	for _, val := range sortedTimes {
+
+		// state variable to determine if val is selected
+		isSelected := false
+
+		valueToFind := val.Format("Jan-06")
+
+		// determine if the time value is selected
+		for _, selVal := range selVals {
+
+			// if this condition is satisfied, the value is selected
+			if valueToFind == selVal.Option {
+				isSelected = true
+
+				// if there was already a complete range, this selected item would start a new discontinuous range.
+				if fullRangeFound {
+					return false
+				}
+
+				// we are in either a new range or continuing an existing range
+				inRange = true
+				continue
+			}
+		}
+
+		// value is not selected. If we were in a range, this is now complete
+		if !isSelected {
+			if inRange {
+				fullRangeFound = true
+			}
+			inRange = false
+		}
+	}
+
+	// we reached the end of the loop without fining a discontinuity.
+	return fullRangeFound
 }
 
 // CreateHierarchySearchPage forms a search page based on various api response models

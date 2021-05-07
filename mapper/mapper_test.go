@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
@@ -410,8 +411,28 @@ func getTestDimensions() []filter.ModelDimension {
 	}
 }
 
+// getTestDatasetTimeOptions returns 3 dataset Options for the time dimension, sorted in a non-chronological order
 func getTestDatasetTimeOptions() dataset.Options {
 	return dataset.Options{Items: []dataset.Option{
+		{
+			DimensionID: "time",
+			Label:       "Apr-07",
+			Links: dataset.Links{
+				CodeList: dataset.Link{
+					URL: "http://api.localhost:23200/v1/code-lists/mmm-yy",
+					ID:  "mmm-yy",
+				},
+				Version: dataset.Link{
+					URL: "http://api.localhost:23200/v1/datasets/cpih01/editions/time-series/versions/7",
+					ID:  "7",
+				},
+				Code: dataset.Link{
+					URL: "http://api.localhost:23200/v1/code-lists/mmm-yy/codes/Month",
+					ID:  "Month",
+				},
+			},
+			Option: "Apr-07",
+		},
 		{
 			DimensionID: "time",
 			Label:       "Apr-05",
@@ -452,7 +473,7 @@ func getTestDatasetTimeOptions() dataset.Options {
 		},
 		{
 			DimensionID: "time",
-			Label:       "Apr-07",
+			Label:       "Jun-05",
 			Links: dataset.Links{
 				CodeList: dataset.Link{
 					URL: "http://api.localhost:23200/v1/code-lists/mmm-yy",
@@ -467,8 +488,28 @@ func getTestDatasetTimeOptions() dataset.Options {
 					ID:  "Month",
 				},
 			},
-			Option: "Apr-07",
-		}}}
+			Option: "Jun-05",
+		},
+		{
+			DimensionID: "time",
+			Label:       "May-05",
+			Links: dataset.Links{
+				CodeList: dataset.Link{
+					URL: "http://api.localhost:23200/v1/code-lists/mmm-yy",
+					ID:  "mmm-yy",
+				},
+				Version: dataset.Link{
+					URL: "http://api.localhost:23200/v1/datasets/cpih01/editions/time-series/versions/7",
+					ID:  "7",
+				},
+				Code: dataset.Link{
+					URL: "http://api.localhost:23200/v1/code-lists/mmm-yy/codes/Month",
+					ID:  "Month",
+				},
+			},
+			Option: "May-05",
+		},
+	}}
 }
 
 func getTestDatasetDimensions() []dataset.VersionDimension {
@@ -663,99 +704,383 @@ func TestCreateHierarchyPage(t *testing.T) {
 	})
 }
 
-func TestCreateTimePage(t *testing.T) {
-	Convey("maps filter to page model correctly", t, func() {
-		desiredPageModel := timeModel.Page{
-			Page: model.Page{},
-			Data: timeModel.Data{
-				LatestTime:         timeModel.Value{},
-				FirstTime:          timeModel.Value{},
-				Values:             nil,
-				Months:             []string{"Select", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"},
-				Years:              []string{"Select", "2005", "2006", "2007"},
-				CheckedRadio:       "",
-				FormAction:         timeModel.Link{},
-				SelectedStartMonth: "",
-				SelectedStartYear:  "",
-				SelectedEndMonth:   "",
-				SelectedEndYear:    "",
-				Type:               "",
-				DatasetTitle:       "",
-				GroupedSelection: timeModel.GroupedSelection{
-					Months: []timeModel.Month{
-						{
-							Name:       "January",
-							IsSelected: false,
-						},
-						{
-							Name:       "February",
-							IsSelected: false,
-						},
-						{
-							Name:       "March",
-							IsSelected: false,
-						},
-						{
-							Name:       "April",
-							IsSelected: false,
-						},
-						{
-							Name:       "May",
-							IsSelected: false,
-						},
-						{
-							Name:       "June",
-							IsSelected: false,
-						},
-						{
-							Name:       "July",
-							IsSelected: false,
-						},
-						{
-							Name:       "August",
-							IsSelected: false,
-						},
-						{
-							Name:       "September",
-							IsSelected: false,
-						},
-						{
-							Name:       "October",
-							IsSelected: false,
-						},
-						{
-							Name:       "November",
-							IsSelected: false,
-						},
-						{
-							Name:       "December",
-							IsSelected: false,
-						},
+// getExpectedTimePage returns the timeModel.Page model that would be generated
+// from the options returned by getTestDatasetTimeOptions and no selected options, keeping the original values order
+func getExpectedTimePage(datasetID, filterID, lang string) timeModel.Page {
+	p := timeModel.Page{
+		Page: model.Page{},
+		Data: timeModel.Data{
+			LatestTime: timeModel.Value{
+				Month:      "April",
+				Year:       "2007",
+				Option:     "Apr-07",
+				IsSelected: false,
+			},
+			FirstTime: timeModel.Value{
+				Month:      "April",
+				Year:       "2005",
+				Option:     "Apr-05",
+				IsSelected: false,
+			},
+			Values: []timeModel.Value{
+				{Month: "April", Year: "2007", Option: "Apr-07", IsSelected: false},
+				{Month: "April", Year: "2005", Option: "Apr-05", IsSelected: false},
+				{Month: "April", Year: "2006", Option: "Apr-06", IsSelected: false},
+				{Month: "June", Year: "2005", Option: "Jun-05", IsSelected: false},
+				{Month: "May", Year: "2005", Option: "May-05", IsSelected: false},
+			},
+			Months:     []string{"Select", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"},
+			Years:      []string{"Select", "2005", "2006", "2007"},
+			FormAction: timeModel.Link{Label: "", URL: "/filters/12349876/dimensions/time/update"},
+			Type:       "month",
+			GroupedSelection: timeModel.GroupedSelection{
+				Months: []timeModel.Month{
+					{
+						Name:       "January",
+						IsSelected: false,
 					},
-					YearStart: "",
-					YearEnd:   "",
+					{
+						Name:       "February",
+						IsSelected: false,
+					},
+					{
+						Name:       "March",
+						IsSelected: false,
+					},
+					{
+						Name:       "April",
+						IsSelected: false,
+					},
+					{
+						Name:       "May",
+						IsSelected: false,
+					},
+					{
+						Name:       "June",
+						IsSelected: false,
+					},
+					{
+						Name:       "July",
+						IsSelected: false,
+					},
+					{
+						Name:       "August",
+						IsSelected: false,
+					},
+					{
+						Name:       "September",
+						IsSelected: false,
+					},
+					{
+						Name:       "October",
+						IsSelected: false,
+					},
+					{
+						Name:       "November",
+						IsSelected: false,
+					},
+					{
+						Name:       "December",
+						IsSelected: false,
+					},
 				},
 			},
-			FilterID: "",
-		}
-		req := httptest.NewRequest("", "/", nil)
-		filterModel := getTestFilter()
-		datasetDetails := getTestDataset()
-		// Never actually used in the mapper but func requires it so leaving blank until needed in a test
-		datasetVersion := dataset.Version{}
-		options := getTestDatasetTimeOptions()
-		dimensionOptions := []filter.DimensionOption{{}}
-		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
-		datasetID := "cpih01"
-		apiRouterVersion := "v1"
-		lang := dprequest.DefaultLang
-		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, dimensionOptions, versionDimensions, datasetID, apiRouterVersion, lang)
-		So(err, ShouldBeNil)
-		So(timeModelPage.Data.GroupedSelection, ShouldResemble, desiredPageModel.Data.GroupedSelection)
-		So(timeModelPage.Data.Months, ShouldResemble, desiredPageModel.Data.Months)
-		So(timeModelPage.Data.Years, ShouldResemble, desiredPageModel.Data.Years)
+		},
+	}
+	p.FilterID = filterID
+	p.DatasetId = datasetID
+	p.DatasetTitle = "Small Area Population Estimates"
+	p.IsInFilterBreadcrumb = true
+	p.Metadata = model.Metadata{Title: "Time"}
+	p.SearchDisabled = true
+	p.BetaBannerEnabled = true
+	p.Language = lang
+	p.CookiesPolicy = model.CookiesPolicy{Essential: true}
+	p.Breadcrumb = []model.TaxonomyNode{
+		{
+			Title: "Small Area Population Estimates",
+			URI:   "/datasets//editions",
+		},
+		{
+			Title: "5678",
+			URI:   "/v1/datasets/1234/editions/5678/versions/1",
+		},
+		{
+			Title: "Filter options",
+			URI:   "/filters/12349876/dimensions",
+		},
+		{
+			Title: "Time",
+		},
+	}
+	return p
+}
+
+func TestIsTimeRange(t *testing.T) {
+	t0, _ := time.Parse("Jan-06", "Jan-21")
+	t1, _ := time.Parse("Jan-06", "Feb-21")
+	t2, _ := time.Parse("Jan-06", "Mar-21")
+	t3, _ := time.Parse("Jan-06", "Apr-21")
+	t4, _ := time.Parse("Jan-06", "May-21")
+	t5, _ := time.Parse("Jan-06", "Jun-21")
+	t6, _ := time.Parse("Jan-06", "Jul-21")
+	t7, _ := time.Parse("Jan-06", "Aug-21")
+	t8, _ := time.Parse("Jan-06", "Sep-21")
+	t9, _ := time.Parse("Jan-06", "Oct-21")
+	sortedTimes := []time.Time{t0, t1, t2, t3, t4, t5, t6, t7, t8, t9}
+
+	Convey("Given an empty array of selected values", t, func() {
+		selVals := []filter.DimensionOption{}
+		Convey("Then isTimeRange returns false", func() {
+			So(isTimeRange(sortedTimes, selVals), ShouldBeFalse)
+		})
 	})
 
+	Convey("Given a single selected value", t, func() {
+		selVals := []filter.DimensionOption{
+			{Option: "Apr-21"},
+		}
+		Convey("Then isTimeRange returns false", func() {
+			So(isTimeRange(sortedTimes, selVals), ShouldBeFalse)
+		})
+	})
+
+	Convey("Given two chronologically consecutive selected values", t, func() {
+		selVals := []filter.DimensionOption{
+			{Option: "May-21"},
+			{Option: "Apr-21"},
+		}
+		Convey("Then isTimeRange returns true", func() {
+			So(isTimeRange(sortedTimes, selVals), ShouldBeTrue)
+		})
+	})
+
+	Convey("Given two chronologically discontinuous selected values", t, func() {
+		selVals := []filter.DimensionOption{
+			{Option: "Sep-21"},
+			{Option: "Apr-21"},
+		}
+		Convey("Then isTimeRange returns false", func() {
+			So(isTimeRange(sortedTimes, selVals), ShouldBeFalse)
+		})
+	})
+
+	Convey("Given six chronologically consecutive selected values", t, func() {
+		selVals := []filter.DimensionOption{
+			{Option: "May-21"},
+			{Option: "Apr-21"},
+			{Option: "Jun-21"},
+			{Option: "Feb-21"},
+			{Option: "Jul-21"},
+			{Option: "Mar-21"},
+		}
+		Convey("Then isTimeRange returns true", func() {
+			So(isTimeRange(sortedTimes, selVals), ShouldBeTrue)
+		})
+	})
+
+	Convey("Given 2 groups of 3 chronologically consecutive selected values", t, func() {
+		selVals := []filter.DimensionOption{
+			{Option: "May-21"},
+			{Option: "Jan-21"},
+			{Option: "Jun-21"},
+			{Option: "Feb-21"},
+			{Option: "Jul-21"},
+			{Option: "Mar-21"},
+		}
+		Convey("Then isTimeRange returns false", func() {
+			So(isTimeRange(sortedTimes, selVals), ShouldBeFalse)
+		})
+	})
+
+	Convey("Given 2 selected values with the wrong format", t, func() {
+		selVals := []filter.DimensionOption{
+			{Option: "wrong1"},
+			{Option: "wrong2"},
+		}
+		Convey("Then isTimeRange returns false", func() {
+			So(isTimeRange(sortedTimes, selVals), ShouldBeFalse)
+		})
+	})
+}
+
+func TestCreateTimePage(t *testing.T) {
+	req := httptest.NewRequest("", "/", nil)
+	datasetID := "cpih01"
+	apiRouterVersion := "v1"
+	lang := dprequest.DefaultLang
+
+	Convey("Given a valid request and all empty values, then CreateTimePage generates the expected timeModel page", t, func() {
+		expected := timeModel.Page{}
+		expected.BetaBannerEnabled = true
+		expected.CookiesPolicy = model.CookiesPolicy{Essential: true}
+
+		timeModelPage, err := CreateTimePage(req, filter.Model{}, dataset.DatasetDetails{}, dataset.Version{}, dataset.Options{}, []filter.DimensionOption{}, dataset.VersionDimensions{}, "", "", "")
+		So(err, ShouldBeNil)
+		So(timeModelPage, ShouldResemble, expected)
+	})
+
+	Convey("Given a valid request with no selected options, then CreateTimePage generates the expected timeModel page", t, func() {
+		filterModel := getTestFilter()
+		datasetDetails := getTestDataset()
+		datasetVersion := dataset.Version{}
+		options := getTestDatasetTimeOptions()
+		selectedOptions := []filter.DimensionOption{}
+		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+
+		expected := getExpectedTimePage(datasetID, filterModel.FilterID, lang)
+		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		So(err, ShouldBeNil)
+		So(timeModelPage, ShouldResemble, expected)
+	})
+
+	Convey("Given a valid request with a selected option, then CreateTimePage generates the expected single timeModel page", t, func() {
+		filterModel := getTestFilter()
+		datasetDetails := getTestDataset()
+		datasetVersion := dataset.Version{}
+		options := getTestDatasetTimeOptions()
+		selectedOptions := []filter.DimensionOption{
+			{Option: "Apr-05"},
+		}
+		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+
+		expected := getExpectedTimePage(datasetID, filterModel.FilterID, lang)
+		expected.Data.Values[1] = timeModel.Value{Month: "April", Year: "2005", Option: "Apr-05", IsSelected: true}
+		expected.Data.CheckedRadio = "single"
+		expected.Data.SelectedStartMonth = "April"
+		expected.Data.SelectedStartYear = "2005"
+		expected.Data.GroupedSelection.Months[3] = timeModel.Month{
+			Name:       "April",
+			IsSelected: true,
+		}
+		expected.Data.GroupedSelection.YearStart = "2005"
+		expected.Data.GroupedSelection.YearEnd = "2005"
+
+		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		So(err, ShouldBeNil)
+		So(timeModelPage, ShouldResemble, expected)
+	})
+
+	Convey("Given a valid request with the latest time option selected, even if it's not the last item in the options list, then CreateTimePage generates the expected latest timeModel page", t, func() {
+		filterModel := getTestFilter()
+		datasetDetails := getTestDataset()
+		datasetVersion := dataset.Version{}
+		options := getTestDatasetTimeOptions()
+		selectedOptions := []filter.DimensionOption{
+			{Option: "Apr-07"},
+		}
+		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+
+		expected := getExpectedTimePage(datasetID, filterModel.FilterID, lang)
+		expected.Data.Values[0] = timeModel.Value{Month: "April", Year: "2007", Option: "Apr-07", IsSelected: true}
+		expected.Data.CheckedRadio = "latest"
+		expected.Data.GroupedSelection.Months[3] = timeModel.Month{
+			Name:       "April",
+			IsSelected: true,
+		}
+		expected.Data.GroupedSelection.YearStart = "2007"
+		expected.Data.GroupedSelection.YearEnd = "2007"
+
+		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		So(err, ShouldBeNil)
+		So(timeModelPage, ShouldResemble, expected)
+	})
+
+	Convey("Given a valid request with two non-chronologically-consecutive selected options, then CreateTimePage generates the expected list timeModel page", t, func() {
+		filterModel := getTestFilter()
+		datasetDetails := getTestDataset()
+		datasetVersion := dataset.Version{}
+		options := getTestDatasetTimeOptions()
+		selectedOptions := []filter.DimensionOption{
+			{Option: "Apr-05"},
+			{Option: "Apr-07"},
+		}
+		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+
+		expected := getExpectedTimePage(datasetID, filterModel.FilterID, lang)
+		expected.Data.Values[0] = timeModel.Value{Month: "April", Year: "2007", Option: "Apr-07", IsSelected: true}
+		expected.Data.Values[1] = timeModel.Value{Month: "April", Year: "2005", Option: "Apr-05", IsSelected: true}
+		expected.Data.CheckedRadio = "list"
+		expected.Data.GroupedSelection.Months[3] = timeModel.Month{
+			Name:       "April",
+			IsSelected: true,
+		}
+		expected.Data.GroupedSelection.YearStart = "2005"
+		expected.Data.GroupedSelection.YearEnd = "2007"
+
+		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		So(err, ShouldBeNil)
+		So(timeModelPage, ShouldResemble, expected)
+	})
+
+	Convey("Given a valid request with three chronologically consecutive selected options, then CreateTimePage generates the expected range timeModel page", t, func() {
+		filterModel := getTestFilter()
+		datasetDetails := getTestDataset()
+		datasetVersion := dataset.Version{}
+		options := getTestDatasetTimeOptions()
+		selectedOptions := []filter.DimensionOption{
+			{Option: "Jun-05"},
+			{Option: "Apr-05"},
+			{Option: "May-05"},
+		}
+		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+
+		expected := getExpectedTimePage(datasetID, filterModel.FilterID, lang)
+		expected.Data.Values[1] = timeModel.Value{Month: "April", Year: "2005", Option: "Apr-05", IsSelected: true}
+		expected.Data.Values[4] = timeModel.Value{Month: "May", Year: "2005", Option: "May-05", IsSelected: true}
+		expected.Data.Values[3] = timeModel.Value{Month: "June", Year: "2005", Option: "Jun-05", IsSelected: true}
+		expected.Data.CheckedRadio = "range"
+		expected.Data.GroupedSelection.Months[3] = timeModel.Month{
+			Name:       "April",
+			IsSelected: true,
+		}
+		expected.Data.GroupedSelection.Months[4] = timeModel.Month{
+			Name:       "May",
+			IsSelected: true,
+		}
+		expected.Data.GroupedSelection.Months[5] = timeModel.Month{
+			Name:       "June",
+			IsSelected: true,
+		}
+		expected.Data.SelectedStartMonth = "April"
+		expected.Data.SelectedStartYear = "2005"
+		expected.Data.SelectedEndMonth = "June"
+		expected.Data.SelectedEndYear = "2005"
+		expected.Data.GroupedSelection.YearStart = "2005"
+		expected.Data.GroupedSelection.YearEnd = "2005"
+
+		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		So(err, ShouldBeNil)
+		So(timeModelPage, ShouldResemble, expected)
+	})
+
+	Convey("Given an invalid URL link, then CreateTimePage returns the expected error", t, func() {
+		filterModel := getTestFilter()
+		filterModel.Links.Version.HRef = "invalid%url"
+		datasetDetails := getTestDataset()
+		datasetVersion := dataset.Version{}
+		options := getTestDatasetTimeOptions()
+		selectedOptions := []filter.DimensionOption{}
+		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+
+		_, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		So(err, ShouldNotBeNil)
+		So(err.Error(), ShouldEqual, "parse \"invalid%url\": invalid URL escape \"%ur\"")
+	})
+
+	Convey("Given that one of the dimension options has the wrong format, then CreateTimePage returns the expected error", t, func() {
+		filterModel := getTestFilter()
+		datasetDetails := getTestDataset()
+		datasetVersion := dataset.Version{}
+		options := getTestDatasetTimeOptions()
+		options.Items[3].Label = "wrongFormat"
+		selectedOptions := []filter.DimensionOption{}
+		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+
+		_, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		So(err, ShouldNotBeNil)
+		So(err.Error(), ShouldEqual, "parsing time \"wrongFormat\" as \"Jan-06\": cannot parse \"wrongFormat\" as \"Jan\"")
+	})
 }
 
 // getTestDatasetAgeOptions returns an age dataset.Options for testing, with items sorted in a an order that is not from youngest to oldest
