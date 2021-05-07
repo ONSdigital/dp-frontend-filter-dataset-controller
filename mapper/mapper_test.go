@@ -32,6 +32,7 @@ func getExpectedFilterOverviewPage() filterOverview.Page {
 			},
 		},
 	}
+	expectedPageModel.URI = "/"
 	expectedPageModel.Breadcrumb = []model.TaxonomyNode{
 		{URI: "/datasets//editions"},
 		{},
@@ -620,7 +621,7 @@ func TestCreateHierarchyPage(t *testing.T) {
 			BetaBannerEnabled:                true,
 			SiteDomain:                       "",
 			SearchDisabled:                   true,
-			URI:                              "",
+			URI:                              "/",
 			Taxonomy:                         nil,
 			ReleaseDate:                      "",
 			IsInFilterBreadcrumb:             true,
@@ -789,6 +790,7 @@ func getExpectedTimePage(datasetID, filterID, lang string) timeModel.Page {
 	}
 	p.FilterID = filterID
 	p.DatasetId = datasetID
+	p.URI = "/"
 	p.DatasetTitle = "Small Area Population Estimates"
 	p.IsInFilterBreadcrumb = true
 	p.Metadata = model.Metadata{Title: "Time"}
@@ -1109,7 +1111,7 @@ func getTestDatasetAgeOptions(hasPlusSign bool) dataset.Options {
 
 // getExpectedEmptyPageModel returns the age.Page model that would be generated from all-empty values
 func getExpectedEmptyPageModel() age.Page {
-	return age.Page{
+	p := age.Page{
 		Page: model.Page{
 			Breadcrumb: []model.TaxonomyNode{
 				{
@@ -1148,6 +1150,8 @@ func getExpectedEmptyPageModel() age.Page {
 			},
 		},
 	}
+	p.URI = "/"
+	return p
 }
 
 func TestCreateAgePage(t *testing.T) {
