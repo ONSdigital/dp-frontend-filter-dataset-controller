@@ -40,7 +40,7 @@ func TestGetIDNameLookupFromDatasetAPI(t *testing.T) {
 
 	Convey("Given a filter initialised with a mocked DatasetClient", t, func() {
 		mdc := NewMockDatasetClient(mockCtrl)
-		f := NewFilter(nil, nil, mdc, nil, nil, nil, "/v1", cfg)
+		f := NewFilter(nil, nil, mdc, nil, nil, "/v1", cfg)
 
 		Convey("a set of existing filter dimension options is correctly requested in batches to dataset API by their option IDs", func() {
 			filterOptions := filter.DimensionOptions{

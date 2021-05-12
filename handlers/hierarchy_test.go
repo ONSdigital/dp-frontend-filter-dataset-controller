@@ -112,7 +112,7 @@ func TestHierarchy(t *testing.T) {
 
 			router := mux.NewRouter()
 			w := httptest.NewRecorder()
-			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, mockHierarchyClient, nil, nil, "/v1", cfg)
+			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, mockHierarchyClient, nil, "/v1", cfg)
 			router.Path("/filters/{filterID}/dimensions/{name}").HandlerFunc(f.Hierarchy())
 			router.Path("/filters/{filterID}/dimensions/{name}/{code}").HandlerFunc(f.Hierarchy())
 			router.ServeHTTP(w, req)
@@ -238,7 +238,7 @@ func TestHierarchyUpdate(t *testing.T) {
 
 			router := mux.NewRouter()
 			w := httptest.NewRecorder()
-			f := NewFilter(nil, mockFilterClient, nil, mockHierarchyClient, nil, nil, "/v1", cfg)
+			f := NewFilter(nil, mockFilterClient, nil, mockHierarchyClient, nil, "/v1", cfg)
 			router.Path("/filters/{filterID}/dimensions/{name}/update").HandlerFunc(f.HierarchyUpdate())
 			router.Path("/filters/{filterID}/dimensions/{name}/{code}/update").HandlerFunc(f.HierarchyUpdate())
 			router.ServeHTTP(w, req)
@@ -473,7 +473,7 @@ func TestFlattenGeographyTopLevel(t *testing.T) {
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, expectedDimensionName).Return(testUK, nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, GreatBritain).Return(testGB, nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, EnglandAndWales).Return(testEnglandAndWales, nil)
-			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, nil, "/v1", cfg)
+			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, "/v1", cfg)
 
 			Convey("then flattenGeographyTopLevel returns a flat list of geography nodes sorted in the order defined by the children order property", func() {
 				expectedFlatGeography := hierarchy.Model{
@@ -502,7 +502,7 @@ func TestFlattenGeographyTopLevel(t *testing.T) {
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, expectedDimensionName).Return(testUK, nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, GreatBritain).Return(testGB, nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, EnglandAndWales).Return(testEnglandAndWales, nil)
-			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, nil, "/v1", cfg)
+			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, "/v1", cfg)
 
 			Convey("then flattenGeographyTopLevel returns a flat list of geography nodes sorted according to the default hardcoded order", func() {
 				expectedFlatGeography := hierarchy.Model{
@@ -544,7 +544,7 @@ func TestFlattenGeographyTopLevel(t *testing.T) {
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, expectedDimensionName).Return(testUK, nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, GreatBritain).Return(testGB, nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, EnglandAndWales).Return(testEnglandAndWales, nil)
-			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, nil, "/v1", cfg)
+			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, "/v1", cfg)
 
 			Convey("then flattenGeographyTopLevel returns a flat list of geography nodes sorted according to the default hardcoded order", func() {
 				expectedFlatGeography := hierarchy.Model{
@@ -566,7 +566,7 @@ func TestFlattenGeographyTopLevel(t *testing.T) {
 			testErr := errors.New("testError")
 			mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, expectedDimensionName).Return(hierarchy.Model{}, testErr)
-			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, nil, "/v1", cfg)
+			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, "/v1", cfg)
 
 			Convey("then flattenGeographyTopLevel fails with the same error and no other call is performed", func() {
 				_, err := f.flattenGeographyTopLevel(ctx, testInstanceID)
@@ -579,7 +579,7 @@ func TestFlattenGeographyTopLevel(t *testing.T) {
 			mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, expectedDimensionName).Return(testUK, nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, GreatBritain).Return(hierarchy.Model{}, testErr)
-			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, nil, "/v1", cfg)
+			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, "/v1", cfg)
 
 			Convey("then flattenGeographyTopLevel fails with the same error and no other call is performed", func() {
 				_, err := f.flattenGeographyTopLevel(ctx, testInstanceID)
@@ -593,7 +593,7 @@ func TestFlattenGeographyTopLevel(t *testing.T) {
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, expectedDimensionName).Return(testUK, nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, GreatBritain).Return(testGB, nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, expectedDimensionName, EnglandAndWales).Return(hierarchy.Model{}, testErr)
-			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, nil, "/v1", cfg)
+			f := NewFilter(nil, nil, nil, mockHierarchyClient, nil, "/v1", cfg)
 
 			Convey("then flattenGeographyTopLevel fails with the same error and no other call is performed", func() {
 				_, err := f.flattenGeographyTopLevel(ctx, testInstanceID)
