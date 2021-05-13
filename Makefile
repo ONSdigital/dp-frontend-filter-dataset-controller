@@ -14,7 +14,6 @@ audit:
 .PHONY: build
 build:
 	go build -tags 'production' -o $(BINPATH)/dp-frontend-filter-dataset-controller -ldflags "-X main.BuildTime=$(BUILD_TIME) -X main.GitCommit=$(GIT_COMMIT) -X main.Version=$(VERSION)"
-	cp rules.json $(BINPATH)
 
 .PHONY: debug
 debug:
