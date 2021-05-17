@@ -336,7 +336,7 @@ func (n flatNodes) addWithChildren(val hierarchy.Child, i int) {
 // hasOrder returns true if and only if all child items in the list have a non-nil order values
 func (n flatNodes) hasOrder() bool {
 	for _, child := range n.list {
-		if child.Order == nil {
+		if child == nil || child.Order == nil {
 			return false
 		}
 	}
