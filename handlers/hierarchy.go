@@ -355,7 +355,7 @@ func (n *flatNodes) getOrder(i int) int {
 }
 
 // getDefaultOrder obtains the default order value according to the defaultOrder slice, with parameter checking
-// returns the default order, and ok=true only if a non-nil order was found for the child in the ist corresponding to the provided index
+// returns the default order value corresponding to the child item in the provided index, or -1 if not defined
 func (n *flatNodes) getDefaultOrder(i int) int {
 	if n == nil || n.list == nil || i >= len(n.list) || n.list[i] == nil || n.list[i].Links.Code.ID == "" {
 		return -1
