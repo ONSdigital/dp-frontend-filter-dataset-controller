@@ -306,35 +306,37 @@ type flatNodes struct {
 	defaultOrder map[string]int
 }
 
-func (n flatNodes) addWithoutChildren(val hierarchy.Child, i int) {
-	if !val.HasData {
+func (n *flatNodes) addWithoutChildren(val hierarchy.Child) {
+	if n == nil || !val.HasData {
 		return
 	}
 
-	n.list[i] = &hierarchy.Child{
+	n.list = append(n.list, &hierarchy.Child{
 		Label:   val.Label,
 		Links:   val.Links,
 		HasData: val.HasData,
 		Order:   val.Order,
-	}
+	})
 }
 
-func (n flatNodes) addWithChildren(val hierarchy.Child, i int) {
-	if len(n.list) < i {
+func (n *flatNodes) addWithChildren(val hierarchy.Child) {
+	if n == nil {
 		return
 	}
-
-	n.list[i] = &hierarchy.Child{
+	n.list = append(n.list, &hierarchy.Child{
 		Label:            val.Label,
 		Links:            val.Links,
 		HasData:          val.HasData,
 		Order:            val.Order,
 		NumberofChildren: val.NumberofChildren,
-	}
+	})
 }
 
 // hasOrder returns true if and only if all child items in the list have a non-nil order values
-func (n flatNodes) hasOrder() bool {
+func (n *flatNodes) hasOrder() bool {
+	if n == nil || n.list == nil {
+		return false
+	}
 	for _, child := range n.list {
 		if child == nil || child.Order == nil {
 			return false
@@ -343,15 +345,40 @@ func (n flatNodes) hasOrder() bool {
 	return true
 }
 
+// getOrder obtains the order value, with paramater checking, and assuming that it's not nil
+// returns the order value, or -1 if any parameter check failed or the order was nil
+func (n *flatNodes) getOrder(i int) int {
+	if n == nil || n.list == nil || i >= len(n.list) || n.list[i] == nil || n.list[i].Order == nil {
+		return -1
+	}
+	return *n.list[i].Order
+}
+
+// getDefaultOrder obtains the default order value according to the defaultOrder slice, with parameter checking
+// returns the default order, and ok=true only if a non-nil order was found for the child in the ist corresponding to the provided index
+func (n *flatNodes) getDefaultOrder(i int) int {
+	if n == nil || n.list == nil || i >= len(n.list) || n.list[i] == nil || n.list[i].Links.Code.ID == "" {
+		return -1
+	}
+	order, ok := n.defaultOrder[n.list[i].Links.Code.ID]
+	if !ok {
+		return -1
+	}
+	return order
+}
+
 // sort child items by order property, or by default values as fallback (if order is not defined in all items)
-func (n flatNodes) sort() {
+func (n *flatNodes) sort() {
+	if n == nil || n.list == nil || len(n.list) == 0 {
+		return
+	}
 	if n.hasOrder() {
 		sort.Slice(n.list, func(i, j int) bool {
-			return *n.list[i].Order < *n.list[j].Order
+			return n.getOrder(i) < n.getOrder(j)
 		})
 	} else {
 		sort.Slice(n.list, func(i, j int) bool {
-			return n.defaultOrder[n.list[i].Links.Code.ID] < n.defaultOrder[n.list[j].Links.Code.ID]
+			return n.getDefaultOrder(i) < n.getDefaultOrder(j)
 		})
 	}
 }
@@ -375,14 +402,14 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 
 	// create nodes struct with default order
 	nodes := flatNodes{
-		list:         make([]*hierarchy.Child, 6),
+		list:         []*hierarchy.Child{},
 		defaultOrder: map[string]int{GreatBritain: 0, EnglandAndWales: 1, England: 2, NorthernIreland: 3, Scotland: 4, Wales: 5},
 	}
 
-	// add items to flatNodes according to defaultOrder
+	// add items to flatNodes
 	for _, val := range root.Children {
 		if val.Links.Code.ID == GreatBritain {
-			nodes.addWithoutChildren(val, nodes.defaultOrder[GreatBritain])
+			nodes.addWithoutChildren(val)
 
 			child, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", GreatBritain)
 			if err != nil {
@@ -391,7 +418,7 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 
 			for _, childVal := range child.Children {
 				if childVal.Links.Code.ID == EnglandAndWales {
-					nodes.addWithoutChildren(childVal, nodes.defaultOrder[EnglandAndWales])
+					nodes.addWithoutChildren(childVal)
 
 					grandChild, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", childVal.Links.Code.ID)
 					if err != nil {
@@ -400,26 +427,27 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 
 					for _, grandChildVal := range grandChild.Children {
 						if grandChildVal.Links.Code.ID == England {
-							nodes.addWithChildren(grandChildVal, nodes.defaultOrder[England])
+							nodes.addWithChildren(grandChildVal)
 						}
 
 						if grandChildVal.Links.Code.ID == Wales {
-							nodes.addWithChildren(grandChildVal, nodes.defaultOrder[Wales])
+							nodes.addWithChildren(grandChildVal)
 						}
 					}
 				}
 
 				if childVal.Links.Code.ID == Scotland {
-					nodes.addWithChildren(childVal, nodes.defaultOrder[Scotland])
+					nodes.addWithChildren(childVal)
 				}
 			}
 		}
 
 		if val.Links.Code.ID == NorthernIreland {
-			nodes.addWithChildren(val, nodes.defaultOrder[NorthernIreland])
+			nodes.addWithChildren(val)
 		}
 	}
 
+	// sort nodes according to their defined order, or the defaultOrder as a fallback
 	nodes.sort()
 
 	//remove nil elements from list
