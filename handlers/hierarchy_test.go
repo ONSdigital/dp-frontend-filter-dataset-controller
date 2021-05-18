@@ -649,12 +649,6 @@ func TestFlatNodes_AddWithChildren(t *testing.T) {
 		NumberofChildren: 2,
 	}
 
-	Convey("given a nil flatNodes variable, then addWithChildren does not panic", t, func() {
-		var n *flatNodes = nil
-		n.addWithChildren(hierarchy.Child{})
-		So(n, ShouldBeNil)
-	})
-
 	Convey("given an empty flatNodes", t, func() {
 		var n *flatNodes = &flatNodes{}
 
@@ -719,11 +713,6 @@ func TestFlatNodes_HasOrder(t *testing.T) {
 	order1 := 1
 	order2 := 2
 
-	Convey("given a nil flatNodes variable, then hasOrder does not panic and returns false", t, func() {
-		var n *flatNodes = nil
-		So(n.hasOrder(), ShouldBeFalse)
-	})
-
 	Convey("given an empty flatNodes, then hasOrder returns false", t, func() {
 		var n *flatNodes = &flatNodes{}
 		So(n.hasOrder(), ShouldBeFalse)
@@ -782,12 +771,6 @@ func TestFlatNodes_GetOrder(t *testing.T) {
 	order1 := 1
 	order2 := 2
 
-	Convey("given a nil flatNodes variable, then getOrder does not panic and returns -1", t, func() {
-		var n *flatNodes = nil
-		So(n.getOrder(0), ShouldEqual, -1)
-		So(n, ShouldBeNil)
-	})
-
 	Convey("given an empty flatNodes, then getOrder returns -1", t, func() {
 		var n *flatNodes = &flatNodes{}
 		So(n.getOrder(0), ShouldEqual, -1)
@@ -815,12 +798,6 @@ func TestFlatNodes_GetOrder(t *testing.T) {
 func TestFlatNodes_GetDefaultOrder(t *testing.T) {
 
 	order1 := 1
-
-	Convey("given a nil flatNodes variable, then getDefaultOrder does not panic and returns -1", t, func() {
-		var n *flatNodes = nil
-		So(n.getDefaultOrder(0), ShouldEqual, -1)
-		So(n, ShouldBeNil)
-	})
 
 	Convey("given an empty flatNodes, then getDefaultOrder returns -1", t, func() {
 		var n *flatNodes = &flatNodes{}
@@ -872,12 +849,6 @@ func TestFlatNodes_Sort(t *testing.T) {
 	order2 := 2
 	order3 := 3
 	order4 := 4
-
-	Convey("given a nil flatNodes variable, then sort does not panic", t, func() {
-		var n *flatNodes = nil
-		n.sort()
-		So(n, ShouldBeNil)
-	})
 
 	Convey("given an empty flatNodes, then sort does not panic", t, func() {
 		var n *flatNodes = &flatNodes{}
