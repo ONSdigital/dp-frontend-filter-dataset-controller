@@ -397,7 +397,7 @@ func TestCreateHierarchyPage(t *testing.T) {
 			BetaBannerEnabled:                true,
 			SiteDomain:                       "",
 			SearchDisabled:                   true,
-			URI:                              "",
+			URI:                              "/",
 			Taxonomy:                         nil,
 			ReleaseDate:                      "",
 			IsInFilterBreadcrumb:             true,

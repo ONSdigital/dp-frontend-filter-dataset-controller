@@ -54,6 +54,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 	p.Metadata.Title = "Filter Options"
 	p.DatasetId = datasetID
 	p.Language = lang
+	p.URI = req.URL.Path
 
 	disableButton := true
 
@@ -73,6 +74,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 					}
 				}
 			}
+
 			times, err := dates.ConvertToReadable(d.Values)
 			if err != nil {
 				log.Event(ctx, "unable to convert dates to human readable values", log.WARN, log.Error(err))
@@ -82,6 +84,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 			}
 
 			times = dates.Sort(times)
+
 			for _, time := range times {
 				fod.AddedCategories = append(fod.AddedCategories, time.Format("January 2006"))
 			}
@@ -190,6 +193,7 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 	p.Metadata.Title = pageTitle
 	p.DatasetId = datasetID
 	p.Language = lang
+	p.URI = req.URL.Path
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
@@ -324,6 +328,7 @@ func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, fi
 	p.SearchDisabled = false
 	p.ReleaseDate = releaseDate
 	p.Data.UnitOfMeasurement = dst.UnitOfMeasure
+	p.URI = req.URL.Path
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
@@ -426,6 +431,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 	p.SearchDisabled = true
 	p.DatasetId = datasetID
 	p.Language = lang
+	p.URI = req.URL.Path
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
@@ -562,6 +568,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 	p.SearchDisabled = true
 	p.DatasetId = datasetID
 	p.Language = lang
+	p.URI = req.URL.Path
 
 	for _, dim := range dims.Items {
 		if dim.Name == "time" {
@@ -799,6 +806,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	p.Data.IsSearchResults = true
 	p.Data.Query = query
 	p.Language = lang
+	p.URI = req.URL.Path
 
 	title := pageTitle
 
@@ -901,6 +909,7 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 	p.DatasetTitle = dst.Title
 	p.Data.DimensionName = pageTitle
 	p.DatasetId = datasetID
+	p.URI = req.URL.Path
 
 	var title string
 	if len(h.Breadcrumbs) == 0 {
