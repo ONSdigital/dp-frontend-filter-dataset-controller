@@ -375,7 +375,6 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 	}
 
 	p.FilterID = f.FilterID
-	p.URI = "/"
 	p.SearchDisabled = true
 	p.DatasetId = datasetID
 	p.Language = lang
