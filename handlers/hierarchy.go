@@ -302,7 +302,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 }
 
 type flatNodes struct {
-	list         []*hierarchy.Child
+	list         []hierarchy.Child
 	defaultOrder map[string]int
 }
 
@@ -311,7 +311,7 @@ func (n *flatNodes) addWithoutChildren(val hierarchy.Child) {
 		return
 	}
 
-	n.list = append(n.list, &hierarchy.Child{
+	n.list = append(n.list, hierarchy.Child{
 		Label:   val.Label,
 		Links:   val.Links,
 		HasData: val.HasData,
@@ -320,7 +320,7 @@ func (n *flatNodes) addWithoutChildren(val hierarchy.Child) {
 }
 
 func (n *flatNodes) addWithChildren(val hierarchy.Child) {
-	n.list = append(n.list, &hierarchy.Child{
+	n.list = append(n.list, hierarchy.Child{
 		Label:            val.Label,
 		Links:            val.Links,
 		HasData:          val.HasData,
@@ -335,7 +335,7 @@ func (n *flatNodes) hasOrder() bool {
 		return false
 	}
 	for _, child := range n.list {
-		if child == nil || child.Order == nil {
+		if child.Order == nil {
 			return false
 		}
 	}
@@ -345,7 +345,7 @@ func (n *flatNodes) hasOrder() bool {
 // getOrder obtains the order value, with paramater checking, and assuming that it's not nil
 // returns the order value, or -1 if any parameter check failed or the order was nil
 func (n *flatNodes) getOrder(i int) int {
-	if n.list == nil || i >= len(n.list) || n.list[i] == nil || n.list[i].Order == nil {
+	if n.list == nil || i >= len(n.list) || n.list[i].Order == nil {
 		return -1
 	}
 	return *n.list[i].Order
@@ -354,7 +354,7 @@ func (n *flatNodes) getOrder(i int) int {
 // getDefaultOrder obtains the default order value according to the defaultOrder slice, with parameter checking
 // returns the default order value corresponding to the child item in the provided index, or -1 if not defined
 func (n *flatNodes) getDefaultOrder(i int) int {
-	if n.list == nil || i >= len(n.list) || n.list[i] == nil || n.list[i].Links.Code.ID == "" {
+	if n.list == nil || i >= len(n.list) || n.list[i].Links.Code.ID == "" {
 		return -1
 	}
 	order, ok := n.defaultOrder[n.list[i].Links.Code.ID]
@@ -399,7 +399,7 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 
 	// create nodes struct with default order
 	nodes := flatNodes{
-		list:         []*hierarchy.Child{},
+		list:         []hierarchy.Child{},
 		defaultOrder: map[string]int{GreatBritain: 0, EnglandAndWales: 1, England: 2, NorthernIreland: 3, Scotland: 4, Wales: 5},
 	}
 
@@ -447,18 +447,12 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 	// sort nodes according to their defined order, or the defaultOrder as a fallback
 	nodes.sort()
 
-	//remove nil elements from list
-	children := []hierarchy.Child{}
-	for _, c := range nodes.list {
-		if c != nil {
-			children = append(children, *c)
-		}
+	// use nodes.list only if the list is not empty. Otherwise, use the Children items under the root node
+	if len(nodes.list) == 0 {
+		h.Children = root.Children
+	} else {
+		h.Children = nodes.list
 	}
 
-	if len(children) == 0 {
-		children = root.Children
-	}
-
-	h.Children = children
 	return h, err
 }
