@@ -650,11 +650,11 @@ func TestFlatNodes_AddWithChildren(t *testing.T) {
 	}
 
 	Convey("given an empty flatNodes", t, func() {
-		var n *flatNodes = &flatNodes{}
+		var n flatNodes = flatNodes{}
 
 		Convey("Then addWithChildren will add the child value to the list", func() {
 			n.addWithChildren(testChild)
-			So(*n, ShouldResemble, flatNodes{
+			So(n, ShouldResemble, flatNodes{
 				list: []hierarchy.Child{testChild},
 			})
 		})
@@ -692,18 +692,18 @@ func TestFlatNodes_AddWithoutChildren(t *testing.T) {
 	})
 
 	Convey("given an empty flatNodes", t, func() {
-		var n *flatNodes = &flatNodes{}
+		var n flatNodes = flatNodes{}
 
 		Convey("Then addWithoutChildren with a child that has data will add the child value to the list", func() {
 			n.addWithoutChildren(testChildWithData)
-			So(*n, ShouldResemble, flatNodes{
+			So(n, ShouldResemble, flatNodes{
 				list: []hierarchy.Child{testChildWithData},
 			})
 		})
 
 		Convey("Then addWithoutChildren with a child that does not have data will not add the child value to the list", func() {
 			n.addWithoutChildren(testChildWithoutData)
-			So(*n, ShouldResemble, flatNodes{})
+			So(n, ShouldResemble, flatNodes{})
 		})
 	})
 }
@@ -714,12 +714,12 @@ func TestFlatNodes_HasOrder(t *testing.T) {
 	order2 := 2
 
 	Convey("given an empty flatNodes, then hasOrder returns false", t, func() {
-		var n *flatNodes = &flatNodes{}
+		var n flatNodes = flatNodes{}
 		So(n.hasOrder(), ShouldBeFalse)
 	})
 
 	Convey("given a flatNodes with all items in the list having order, then hasOrder returns true", t, func() {
-		var n *flatNodes = &flatNodes{
+		var n flatNodes = flatNodes{
 			list: []hierarchy.Child{
 				{Label: "child1", Order: &order1},
 				{Label: "child2", Order: &order2},
@@ -729,7 +729,7 @@ func TestFlatNodes_HasOrder(t *testing.T) {
 	})
 
 	Convey("given a flatNodes with a mixture of items with order and items without order in the list, then hasOrder returns false", t, func() {
-		var n *flatNodes = &flatNodes{
+		var n flatNodes = flatNodes{
 			list: []hierarchy.Child{
 				{Label: "child1", Order: &order1},
 				{Label: "child2", Order: nil},
@@ -739,7 +739,7 @@ func TestFlatNodes_HasOrder(t *testing.T) {
 	})
 
 	Convey("given a flatNodes with all items in the list not having order, then hasOrder returns false", t, func() {
-		var n *flatNodes = &flatNodes{
+		var n flatNodes = flatNodes{
 			list: []hierarchy.Child{
 				{Label: "child1", Order: nil},
 				{Label: "child2", Order: nil},
@@ -755,12 +755,12 @@ func TestFlatNodes_GetOrder(t *testing.T) {
 	order2 := 2
 
 	Convey("given an empty flatNodes, then getOrder returns -1", t, func() {
-		var n *flatNodes = &flatNodes{}
+		var n flatNodes = flatNodes{}
 		So(n.getOrder(0), ShouldEqual, -1)
 	})
 
 	Convey("given a flatNodes with items with order and without order", t, func() {
-		var n *flatNodes = &flatNodes{
+		var n flatNodes = flatNodes{
 			list: []hierarchy.Child{
 				{Label: "child1", Order: &order1},
 				{Label: "child2", Order: &order2},
@@ -782,12 +782,12 @@ func TestFlatNodes_GetDefaultOrder(t *testing.T) {
 	order1 := 1
 
 	Convey("given an empty flatNodes, then getDefaultOrder returns -1", t, func() {
-		var n *flatNodes = &flatNodes{}
+		var n flatNodes = flatNodes{}
 		So(n.getDefaultOrder(0), ShouldEqual, -1)
 	})
 
 	Convey("given a flatNodes with a list of unordered items but without a default order list", t, func() {
-		var n *flatNodes = &flatNodes{
+		var n flatNodes = flatNodes{
 			list: []hierarchy.Child{
 				{Label: "child1", Order: nil, Links: hierarchy.Links{Code: hierarchy.Link{ID: "code1"}}},
 			},
@@ -800,7 +800,7 @@ func TestFlatNodes_GetDefaultOrder(t *testing.T) {
 	})
 
 	Convey("given a flatNodes with a list of unordered items and a default order list", t, func() {
-		var n *flatNodes = &flatNodes{
+		var n flatNodes = flatNodes{
 			list: []hierarchy.Child{
 				{Label: "child1", Order: nil, Links: hierarchy.Links{Code: hierarchy.Link{ID: "code1"}}},
 				{Label: "child2", Order: nil, Links: hierarchy.Links{Code: hierarchy.Link{ID: "code2"}}},
@@ -838,7 +838,7 @@ func TestFlatNodes_Sort(t *testing.T) {
 	})
 
 	Convey("given a flatNodes with a list of children with order", t, func() {
-		var n *flatNodes = &flatNodes{
+		var n flatNodes = flatNodes{
 			list: []hierarchy.Child{
 				{Label: "child1", Order: &order3},
 				{Label: "child2", Order: &order4},
@@ -849,7 +849,7 @@ func TestFlatNodes_Sort(t *testing.T) {
 
 		Convey("Then sort sorts the list of children according to their order values, incrementally", func() {
 			n.sort()
-			So(*n, ShouldResemble, flatNodes{
+			So(n, ShouldResemble, flatNodes{
 				list: []hierarchy.Child{
 					{Label: "child3", Order: &order1},
 					{Label: "child4", Order: &order2},
@@ -861,7 +861,7 @@ func TestFlatNodes_Sort(t *testing.T) {
 	})
 
 	Convey("given a flatNodes with a list of children where at least one of them does not have order, and a list of default orders that contains default order for all the items in list", t, func() {
-		var n *flatNodes = &flatNodes{
+		var n flatNodes = flatNodes{
 			list: []hierarchy.Child{
 				{Label: "child1", Order: &order1, Links: hierarchy.Links{Code: hierarchy.Link{ID: "code1"}}},
 				{Label: "child2", Order: nil, Links: hierarchy.Links{Code: hierarchy.Link{ID: "code2"}}},
@@ -888,7 +888,7 @@ func TestFlatNodes_Sort(t *testing.T) {
 	})
 
 	Convey("given a flatNodes with a list of children where at least one of them does not have order, and a list of default orders that does not contain some of the items in list", t, func() {
-		var n *flatNodes = &flatNodes{
+		var n flatNodes = flatNodes{
 			list: []hierarchy.Child{
 				{Label: "child1", Order: &order1, Links: hierarchy.Links{Code: hierarchy.Link{ID: "code1"}}},
 				{Label: "child2", Order: nil, Links: hierarchy.Links{Code: hierarchy.Link{ID: "code2"}}},

@@ -334,6 +334,7 @@ func (n *flatNodes) hasOrder() bool {
 	if n.list == nil {
 		return false
 	}
+
 	for _, child := range n.list {
 		if child.Order == nil {
 			return false
@@ -345,18 +346,32 @@ func (n *flatNodes) hasOrder() bool {
 // getOrder obtains the order value, with paramater checking, and assuming that it's not nil
 // returns the order value, or -1 if any parameter check failed or the order was nil
 func (n *flatNodes) getOrder(i int) int {
-	if n.list == nil || i >= len(n.list) || n.list[i].Order == nil {
+	if n.list == nil {
 		return -1
 	}
+	if i >= len(n.list) {
+		return -1
+	}
+	if n.list[i].Order == nil {
+		return -1
+	}
+
 	return *n.list[i].Order
 }
 
 // getDefaultOrder obtains the default order value according to the defaultOrder slice, with parameter checking
 // returns the default order value corresponding to the child item in the provided index, or -1 if not defined
 func (n *flatNodes) getDefaultOrder(i int) int {
-	if n.list == nil || i >= len(n.list) || n.list[i].Links.Code.ID == "" {
+	if n.list == nil {
 		return -1
 	}
+	if i >= len(n.list) {
+		return -1
+	}
+	if n.list[i].Links.Code.ID == "" {
+		return -1
+	}
+
 	order, ok := n.defaultOrder[n.list[i].Links.Code.ID]
 	if !ok {
 		return -1
@@ -366,9 +381,13 @@ func (n *flatNodes) getDefaultOrder(i int) int {
 
 // sort child items by order property, or by default values as fallback (if order is not defined in all items)
 func (n *flatNodes) sort() {
-	if n.list == nil || len(n.list) == 0 {
+	if n.list == nil {
 		return
 	}
+	if len(n.list) == 0 {
+		return
+	}
+
 	if n.hasOrder() {
 		sort.Slice(n.list, func(i, j int) bool {
 			return n.getOrder(i) < n.getOrder(j)
