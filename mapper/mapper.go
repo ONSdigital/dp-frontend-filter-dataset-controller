@@ -375,7 +375,6 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 	}
 
 	p.FilterID = f.FilterID
-	p.URI = "/"
 	p.SearchDisabled = true
 	p.DatasetId = datasetID
 	p.Language = lang
@@ -799,7 +798,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	p.Data.IsSearchResults = true
 	p.Data.Query = query
 	p.Language = lang
-	p.URI = req.URL.Path
+	p.URI = fmt.Sprintf("%s?q=%s", req.URL.Path, url.QueryEscape(req.URL.Query().Get("q")))
 
 	title := pageTitle
 
