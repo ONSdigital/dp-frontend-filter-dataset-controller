@@ -112,6 +112,10 @@ func (f *Filter) buildHierarchyModel(ctx context.Context, fil filter.Model, name
 		h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
 	}
 
+	if err != nil {
+		return h, err
+	}
+
 	// We include the value on the root as a selectable item, so append
 	// the value on the root to the child to see if it has been removed by
 	// the user
