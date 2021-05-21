@@ -350,6 +350,7 @@ func (n *flatNodes) hasOrder() bool {
 // getOrder obtains the order value, with paramater checking, and assuming that it's not nil
 // returns the order value, or -1 if any parameter check failed or the order was nil
 func (n *flatNodes) getOrder(i int) int {
+	// split checks over separate if's so that code coverage can be related to unit test code
 	if n.list == nil {
 		return -1
 	}
@@ -366,6 +367,7 @@ func (n *flatNodes) getOrder(i int) int {
 // getDefaultOrder obtains the default order value according to the defaultOrder slice, with parameter checking
 // returns the default order value corresponding to the child item in the provided index, or -1 if not defined
 func (n *flatNodes) getDefaultOrder(i int) int {
+	// split checks over separate if's so that code coverage can be related to unit test code
 	if n.list == nil {
 		return -1
 	}
@@ -385,6 +387,7 @@ func (n *flatNodes) getDefaultOrder(i int) int {
 
 // sort child items by order property, or by default values as fallback (if order is not defined in all items)
 func (n *flatNodes) sort() {
+	// split checks over separate if's so that code coverage can be related to unit test code
 	if n.list == nil {
 		return
 	}
