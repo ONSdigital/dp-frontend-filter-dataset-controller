@@ -16,7 +16,6 @@ type Filter struct {
 	HierarchyClient      HierarchyClient
 	SearchClient         SearchClient
 	SearchAPIAuthToken   string
-	val                  Validator
 	downloadServiceURL   string
 	EnableDatasetPreview bool
 	APIRouterVersion     string
@@ -27,14 +26,13 @@ type Filter struct {
 
 // NewFilter creates a new instance of Filter
 func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient,
-	sc SearchClient, val Validator, apiRouterVersion string, cfg *config.Config) *Filter {
+	sc SearchClient, apiRouterVersion string, cfg *config.Config) *Filter {
 	return &Filter{
 		Renderer:             r,
 		FilterClient:         fc,
 		DatasetClient:        dc,
 		HierarchyClient:      hc,
 		SearchClient:         sc,
-		val:                  val,
 		APIRouterVersion:     apiRouterVersion,
 		downloadServiceURL:   cfg.DownloadServiceURL,
 		EnableDatasetPreview: cfg.EnableDatasetPreview,

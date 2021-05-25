@@ -75,7 +75,7 @@ func TestUnitSearch(t *testing.T) {
 			req.Header.Add(dprequest.CollectionIDHeaderKey, mockCollectionID)
 			w := httptest.NewRecorder()
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, "/v1", cfg)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, "/v1", cfg)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods(http.MethodGet).HandlerFunc(f.Search())
 			router.ServeHTTP(w, req)
 			return w
@@ -284,7 +284,7 @@ func TestSearchUpdate(t *testing.T) {
 			req.Header.Add(dprequest.CollectionIDHeaderKey, mockCollectionID)
 			w := httptest.NewRecorder()
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, nil, "/v1", cfg)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, "/v1", cfg)
 			router.Path("/filters/{filterID}/dimensions/{name}/search/update").HandlerFunc(f.SearchUpdate())
 			router.ServeHTTP(w, req)
 			return w

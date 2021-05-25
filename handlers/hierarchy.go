@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
@@ -17,6 +18,17 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
+)
+
+// codes for geography nodes that need to be flattened in a single layer
+const (
+	Uk              = "K02000001"
+	GreatBritain    = "K03000001"
+	EnglandAndWales = "K04000001"
+	England         = "E92000001"
+	NorthernIreland = "N92000002"
+	Scotland        = "S92000003"
+	Wales           = "W92000004"
 )
 
 // HierarchyUpdate controls the updating of a hierarchy job
@@ -78,8 +90,7 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 		}
 
 		// get options to add and overwrite redirectURI, if provided in the form
-		var addOptions []string
-		addOptions = getOptionsAndRedirect(req.Form, &redirectURI)
+		addOptions := getOptionsAndRedirect(req.Form, &redirectURI)
 
 		_, err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize, eTag)
 		if err != nil {
@@ -99,6 +110,10 @@ func (f *Filter) buildHierarchyModel(ctx context.Context, fil filter.Model, name
 		h, err = f.flattenGeographyTopLevel(ctx, fil.InstanceID)
 	} else {
 		h, err = f.HierarchyClient.GetRoot(ctx, fil.InstanceID, name)
+	}
+
+	if err != nil {
+		return h, err
 	}
 
 	// We include the value on the root as a selectable item, so append
@@ -291,67 +306,142 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 }
 
 type flatNodes struct {
-	list  []*hierarchy.Child
-	order []string
+	list         []hierarchy.Child
+	defaultOrder map[string]int
 }
 
-func (n flatNodes) addWithoutChildren(val hierarchy.Child, i int) {
+func (n *flatNodes) addWithoutChildren(val hierarchy.Child) {
 	if !val.HasData {
 		return
 	}
 
-	n.list[i] = &hierarchy.Child{
+	n.list = append(n.list, hierarchy.Child{
 		Label:   val.Label,
 		Links:   val.Links,
 		HasData: val.HasData,
-	}
+		Order:   val.Order,
+	})
 }
 
-func (n flatNodes) addWithChildren(val hierarchy.Child, i int) {
-	if len(n.list) < i {
-		return
-	}
-
-	n.list[i] = &hierarchy.Child{
+func (n *flatNodes) addWithChildren(val hierarchy.Child) {
+	n.list = append(n.list, hierarchy.Child{
 		Label:            val.Label,
 		Links:            val.Links,
 		HasData:          val.HasData,
+		Order:            val.Order,
 		NumberofChildren: val.NumberofChildren,
+	})
+}
+
+// hasOrder returns true if and only if all child items in the list have a non-nil order values
+func (n *flatNodes) hasOrder() bool {
+	if n.list == nil {
+		return false
+	}
+
+	for _, child := range n.list {
+		if child.Order == nil {
+			return false
+		}
+	}
+	return true
+}
+
+// getOrder obtains the order value, with paramater checking, and assuming that it's not nil
+// returns the order value, or -1 if any parameter check failed or the order was nil
+func (n *flatNodes) getOrder(i int) int {
+	// split checks over separate if's so that code coverage can be related to unit test code
+	if n.list == nil {
+		return -1
+	}
+	if i >= len(n.list) {
+		return -1
+	}
+	if n.list[i].Order == nil {
+		return -1
+	}
+
+	return *n.list[i].Order
+}
+
+// getDefaultOrder obtains the default order value according to the defaultOrder slice, with parameter checking
+// returns the default order value corresponding to the child item in the provided index, or -1 if not defined
+func (n *flatNodes) getDefaultOrder(i int) int {
+	// split checks over separate if's so that code coverage can be related to unit test code
+	if n.list == nil {
+		return -1
+	}
+	if i >= len(n.list) {
+		return -1
+	}
+	if n.list[i].Links.Code.ID == "" {
+		return -1
+	}
+
+	order, ok := n.defaultOrder[n.list[i].Links.Code.ID]
+	if !ok {
+		return -1
+	}
+	return order
+}
+
+// sort child items by order property, or by default values as fallback (if order is not defined in all items)
+func (n *flatNodes) sort() {
+	// split checks over separate if's so that code coverage can be related to unit test code
+	if n.list == nil {
+		return
+	}
+	if len(n.list) == 0 {
+		return
+	}
+
+	if n.hasOrder() {
+		sort.Slice(n.list, func(i, j int) bool {
+			return n.getOrder(i) < n.getOrder(j)
+		})
+	} else {
+		sort.Slice(n.list, func(i, j int) bool {
+			return n.getDefaultOrder(i) < n.getDefaultOrder(j)
+		})
 	}
 }
 
 // Flatten the geography hierarchy - please note this will only work for this particular hierarchy,
 // need helper functions for other geog hierarchies too.
 func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string) (h hierarchy.Model, err error) {
+
+	// obtain root element
 	root, err := f.HierarchyClient.GetRoot(ctx, instanceID, "geography")
 	if err != nil {
 		return
 	}
 
+	// if root has data, we need to copy label and links to the model
 	if root.HasData {
 		h.Label = root.Label
 		h.Links = root.Links
 		h.HasData = root.HasData
 	}
 
-	// Order: Great Britain, England and Wales, England, Northern Ireland, Scotland, Wales
+	// create nodes struct with default order
 	nodes := flatNodes{
-		list:  make([]*hierarchy.Child, 6),
-		order: []string{"K03000001", "K04000001", "E92000001", "N92000002", "S92000003", "W92000004"},
+		list:         []hierarchy.Child{},
+		defaultOrder: map[string]int{GreatBritain: 0, EnglandAndWales: 1, England: 2, NorthernIreland: 3, Scotland: 4, Wales: 5},
 	}
 
+	// add items to flatNodes
 	for _, val := range root.Children {
-		if val.Links.Code.ID == nodes.order[0] {
-			nodes.addWithoutChildren(val, 0)
+		if val.Links.Code.ID == GreatBritain {
+			nodes.addWithoutChildren(val)
 
-			child, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", val.Links.Code.ID)
+			child, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", GreatBritain)
 			if err != nil {
 				return h, err
 			}
 
 			for _, childVal := range child.Children {
-				if childVal.Links.Code.ID == nodes.order[1] {
-					nodes.addWithoutChildren(childVal, 1)
+				if childVal.Links.Code.ID == EnglandAndWales {
+					nodes.addWithoutChildren(childVal)
 
 					grandChild, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", childVal.Links.Code.ID)
 					if err != nil {
@@ -359,39 +449,36 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 					}
 
 					for _, grandChildVal := range grandChild.Children {
-						if grandChildVal.Links.Code.ID == nodes.order[2] {
-							nodes.addWithChildren(grandChildVal, 2)
+						if grandChildVal.Links.Code.ID == England {
+							nodes.addWithChildren(grandChildVal)
 						}
 
-						if grandChildVal.Links.Code.ID == nodes.order[5] {
-							nodes.addWithChildren(grandChildVal, 5)
+						if grandChildVal.Links.Code.ID == Wales {
+							nodes.addWithChildren(grandChildVal)
 						}
 					}
 				}
 
-				if childVal.Links.Code.ID == nodes.order[4] {
-					nodes.addWithChildren(childVal, 4)
+				if childVal.Links.Code.ID == Scotland {
+					nodes.addWithChildren(childVal)
 				}
 			}
 		}
 
-		if val.Links.Code.ID == nodes.order[3] {
-			nodes.addWithChildren(val, 3)
+		if val.Links.Code.ID == NorthernIreland {
+			nodes.addWithChildren(val)
 		}
 	}
 
-	//remove nil elements from list
-	children := []hierarchy.Child{}
-	for _, c := range nodes.list {
-		if c != nil {
-			children = append(children, *c)
-		}
+	// sort nodes according to their defined order, or the defaultOrder as a fallback
+	nodes.sort()
+
+	// use nodes.list only if the list is not empty. Otherwise, use the Children items under the root node
+	if len(nodes.list) == 0 {
+		h.Children = root.Children
+	} else {
+		h.Children = nodes.list
 	}
 
-	if len(children) == 0 {
-		children = root.Children
-	}
-
-	h.Children = children
 	return h, err
 }

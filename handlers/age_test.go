@@ -49,7 +49,7 @@ func TestUpdateAge(t *testing.T) {
 		req.Header.Add(dprequest.FlorenceHeaderKey, mockUserAuthToken)
 		req.Header.Add(dprequest.CollectionIDHeaderKey, mockCollectionID)
 		w := httptest.NewRecorder()
-		f := NewFilter(nil, mockFilterClient, mockDatasetClient, nil, nil, nil, "/v1", cfg)
+		f := NewFilter(nil, mockFilterClient, mockDatasetClient, nil, nil, "/v1", cfg)
 		f.UpdateAge().ServeHTTP(w, req)
 		return w
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"os"
 
 	"github.com/ONSdigital/dp-api-clients-go/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/filter"
@@ -14,7 +13,6 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
-	"github.com/ONSdigital/go-ns/validator"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
@@ -33,24 +31,13 @@ type Clients struct {
 // Init initialises routes for the service
 func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients *Clients) {
 
-	fi, err := os.Open("rules.json")
-	if err != nil {
-		log.Event(ctx, "unable to open date rules", log.WARN, log.Error(err))
-	}
-	defer fi.Close()
-
-	v, err := validator.New(fi)
-	if err != nil {
-		log.Event(ctx, "failed to validate date rules", log.WARN, log.Error(err))
-	}
-
 	apiRouterVersion, err := helpers.GetAPIRouterVersion(cfg.APIRouterURL)
 	if err != nil {
 		log.Event(ctx, "failed to obtain an api router version. Will assume that it is un-versioned", log.WARN, log.Error(err))
 	}
 
 	filter := handlers.NewFilter(clients.Renderer, clients.Filter, clients.Dataset,
-		clients.Hierarchy, clients.Search, v, apiRouterVersion, cfg)
+		clients.Hierarchy, clients.Search, apiRouterVersion, cfg)
 
 	r.StrictSlash(true).Path("/health").HandlerFunc(clients.HealthcheckHandler)
 

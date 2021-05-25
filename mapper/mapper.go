@@ -1,10 +1,11 @@
 package mapper
 
 import (
+	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -78,20 +79,14 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 			times, err := dates.ConvertToReadable(d.Values)
 			if err != nil {
 				log.Event(ctx, "unable to convert dates to human readable values", log.WARN, log.Error(err))
-				for _, ac := range d.Values {
-					fod.AddedCategories = append(fod.AddedCategories, ac)
-				}
+				fod.AddedCategories = append(fod.AddedCategories, d.Values...)
 			}
-
-			times = dates.Sort(times)
 
 			for _, time := range times {
 				fod.AddedCategories = append(fod.AddedCategories, time.Format("January 2006"))
 			}
 		} else {
-			for _, ac := range d.Values {
-				fod.AddedCategories = append(fod.AddedCategories, ac)
-			}
+			fod.AddedCategories = append(fod.AddedCategories, d.Values...)
 
 			for _, dim := range datasetDims {
 				if dim.Name == d.Name {
@@ -99,23 +94,6 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 					if len(dim.Label) > 0 {
 						fod.Filter = dim.Label
 					}
-				}
-			}
-
-			if d.Name == "age" {
-				var ages []int
-				for _, a := range fod.AddedCategories {
-					age, err := strconv.Atoi(a)
-					if err != nil {
-						continue
-					}
-
-					ages = append(ages, age)
-				}
-
-				sort.Ints(ages)
-				for i, age := range ages {
-					fod.AddedCategories[i] = strconv.Itoa(age)
 				}
 			}
 		}
@@ -243,10 +221,9 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 
 	lookup := getIDNameLookup(allValues)
 
-	var selectedListValues, selectedListIDs []string
+	var selectedListValues []string
 	for _, opt := range selectedValues {
 		selectedListValues = append(selectedListValues, lookup[opt.Option])
-		selectedListIDs = append(selectedListIDs, opt.Option)
 	}
 
 	var allListValues []string
@@ -254,31 +231,6 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 	for _, val := range allValues.Items {
 		allListValues = append(allListValues, val.Label)
 		valueIDmap[val.Label] = val.Option
-	}
-
-	if name == "time" || name == "age" {
-		isValid := true
-		var intVals []int
-		for _, val := range allListValues {
-			intVal, err := strconv.Atoi(val)
-			if err != nil {
-				isValid = false
-				break
-			}
-			intVals = append(intVals, intVal)
-		}
-
-		if isValid {
-			sort.Ints(intVals)
-			if name == "time" {
-				intVals = reverseInts(intVals)
-			}
-			for i, val := range intVals {
-				allListValues[i] = strconv.Itoa(val)
-			}
-		}
-	} else {
-		sort.Strings(allListValues)
 	}
 
 	for _, val := range allListValues {
@@ -404,17 +356,12 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 	return lookup
 }
 
-func getIDNameLookupFromHierarchy(vals hierarchyClient.Model) map[string]string {
-	lookup := make(map[string]string)
-	for _, val := range vals.Children {
-		lookup[val.Links.Self.ID] = val.Label
-	}
-	return lookup
-}
-
 // CreateAgePage creates an age selector page based on api responses
 func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals filter.DimensionOptions, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang string) (age.Page, error) {
 	var p age.Page
+	if req == nil {
+		return p, errors.New("invalid request provided to CreateAgePage")
+	}
 	p.BetaBannerEnabled = true
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
@@ -435,7 +382,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
-		return p, err
+		return age.Page{}, err
 	}
 	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
@@ -464,57 +411,57 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 
 	p.Data.FormAction.URL = fmt.Sprintf("/filters/%s/dimensions/age/update", f.FilterID)
 
-	var ages []int
+	// get mapping of labels (keys) to options (values) and initialise aux vars
 	labelIDs := getNameIDLookup(allVals)
-	for _, age := range allVals.Items {
-		ageInt, err := strconv.Atoi(age.Label)
-		if err != nil {
-			if strings.Contains(age.Label, "+") {
-				p.Data.Oldest = age.Label
-			} else {
+	youngest := math.MaxInt32
+	oldest := math.MinInt32
+
+	// iterate all values, and add them to the Page in the same order,
+	// settign the 'isSelected' for each one of them (according to selVals)
+	// and setting oldest and youngest values
+	for _, a := range allVals.Items {
+
+		// if the age Label contains '+', we assume that it is the oldest age value
+		if strings.Contains(a.Label, "+") {
+			p.Data.Oldest = a.Label
+		} else {
+			// get the Int values, if there is an error, we assume that 'allOptions' was selected
+			ageInt, err := strconv.Atoi(a.Label)
+			if err != nil {
 				p.Data.HasAllAges = true
-				p.Data.AllAgesOption = age.Option
+				p.Data.AllAgesOption = a.Option
+				continue
 			}
-			continue
+			// refresh youngest and oldest values if needed
+			if ageInt < youngest {
+				youngest = ageInt
+			}
+			if ageInt > oldest {
+				oldest = ageInt
+			}
 		}
-		ages = append(ages, ageInt)
-	}
 
-	sort.Ints(ages)
-
-	for _, ageVal := range ages {
+		// find if the option is selected
 		var isSelected bool
-		ageString := strconv.Itoa(ageVal)
 		for _, selVal := range selVals.Items {
-			if selVal.Option == labelIDs[ageString] {
+			if selVal.Option == labelIDs[a.Label] {
 				isSelected = true
 			}
 		}
 
+		// append the age value to the page
 		p.Data.Ages = append(p.Data.Ages, age.Value{
-			Option:     labelIDs[ageString],
-			Label:      ageString,
+			Option:     labelIDs[a.Label],
+			Label:      a.Label,
 			IsSelected: isSelected,
 		})
 	}
 
-	p.Data.Youngest = strconv.Itoa(ages[0])
-
-	if len(p.Data.Oldest) > 0 {
-		var isSelected bool
-		for _, selVal := range selVals.Items {
-			if selVal.Option == labelIDs[p.Data.Oldest] {
-				isSelected = true
-			}
-		}
-
-		p.Data.Ages = append(p.Data.Ages, age.Value{
-			Option:     labelIDs[p.Data.Oldest],
-			Label:      p.Data.Oldest,
-			IsSelected: isSelected,
-		})
-	} else {
-		p.Data.Oldest = strconv.Itoa(ages[len(ages)-1])
+	if p.Data.Youngest == "" && youngest < math.MaxInt32 {
+		p.Data.Youngest = strconv.Itoa(youngest)
+	}
+	if p.Data.Oldest == "" && oldest > math.MinInt32 {
+		p.Data.Oldest = strconv.Itoa(oldest)
 	}
 
 	p.Data.CheckedRadio = "range"
@@ -558,6 +505,10 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
+
+	if len(allVals.Items) == 0 {
+		return p, nil
+	}
 
 	if _, err := time.Parse("Jan-06", allVals.Items[0].Option); err == nil {
 		p.Data.Type = "month"
@@ -616,22 +567,25 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 		return p, err
 	}
 
-	times = dates.Sort(times)
+	// sort just to find first and latest, but not to be used as the order in the UI
+	sortedTimes := make([]time.Time, len(times))
+	copy(sortedTimes, times)
+	dates.Sort(sortedTimes)
 
 	p.Data.FirstTime = timeModel.Value{
-		Option: lookup[times[0].Format("Jan-06")],
-		Month:  times[0].Month().String(),
-		Year:   fmt.Sprintf("%d", times[0].Year()),
+		Option: lookup[sortedTimes[0].Format("Jan-06")],
+		Month:  sortedTimes[0].Month().String(),
+		Year:   fmt.Sprintf("%d", sortedTimes[0].Year()),
 	}
 
 	p.Data.LatestTime = timeModel.Value{
-		Option: lookup[times[len(times)-1].Format("Jan-06")],
-		Month:  times[len(times)-1].Month().String(),
-		Year:   fmt.Sprintf("%d", times[len(times)-1].Year()),
+		Option: lookup[sortedTimes[len(sortedTimes)-1].Format("Jan-06")],
+		Month:  sortedTimes[len(sortedTimes)-1].Month().String(),
+		Year:   fmt.Sprintf("%d", sortedTimes[len(sortedTimes)-1].Year()),
 	}
 
-	firstYear := times[0].Year()
-	lastYear := times[len(times)-1].Year()
+	firstYear := sortedTimes[0].Year()
+	lastYear := sortedTimes[len(sortedTimes)-1].Year()
 	diffYears := lastYear - firstYear
 
 	p.Data.Years = append(p.Data.Years, "Select")
@@ -644,16 +598,15 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 		p.Data.Months = append(p.Data.Months, time.Month(i+1).String())
 	}
 
-	// Reverse times so latest is first
-	for i, j := 0, len(times)-1; i < j; i, j = i+1, j-1 {
-		times[i], times[j] = times[j], times[i]
-	}
-
+	latestSelected := false
 	for _, val := range times {
 		var isSelected bool
 		for _, selVal := range selVals {
 			if val.Format("Jan-06") == selVal.Option {
 				isSelected = true
+				if val == sortedTimes[len(sortedTimes)-1] {
+					latestSelected = true
+				}
 			}
 		}
 
@@ -669,7 +622,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 		URL: fmt.Sprintf("/filters/%s/dimensions/time/update", f.FilterID),
 	}
 
-	if len(selVals) == 1 && p.Data.Values[0].IsSelected {
+	if len(selVals) == 1 && latestSelected {
 		p.Data.CheckedRadio = "latest"
 	} else if len(selVals) == 1 {
 		p.Data.CheckedRadio = "single"
@@ -684,23 +637,10 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 	} else if len(selVals) == len(allVals.Items) {
 		p.Data.CheckedRadio = "list"
 	} else {
-		p.Data.CheckedRadio = "range"
-
-		for i, val := range p.Data.Values {
-			if val.IsSelected {
-				for j := i; j < len(p.Data.Values); j++ {
-					if p.Data.Values[j].IsSelected {
-						continue
-					} else {
-						for k := j; k < len(p.Data.Values); k++ {
-							if p.Data.Values[k].IsSelected {
-								p.Data.CheckedRadio = "list"
-								break
-							}
-						}
-					}
-				}
-			}
+		if isTimeRange(sortedTimes, selVals) {
+			p.Data.CheckedRadio = "range"
+		} else {
+			p.Data.CheckedRadio = "list"
 		}
 	}
 
@@ -784,6 +724,58 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 	return p, nil
 }
 
+// isTimeRange determines if the selected values define a single continuous range of sorted items
+// - sortedTimes is a list of times in the order against which we want to determine the range selection
+// - selVals is a list of selected Options, with the Option value having "Jan-06" format
+func isTimeRange(sortedTimes []time.Time, selVals []filter.DimensionOption) bool {
+	// a range has to have at least two items
+	if len(selVals) < 2 {
+		return false
+	}
+
+	// state variables to determine that a single range is found
+	inRange := false
+	fullRangeFound := false
+
+	// iterate sortedTimes, we assume that the times are already sorted in the required order to determine the range
+	for _, val := range sortedTimes {
+
+		// state variable to determine if val is selected
+		isSelected := false
+
+		valueToFind := val.Format("Jan-06")
+
+		// determine if the time value is selected
+		for _, selVal := range selVals {
+
+			// if this condition is satisfied, the value is selected
+			if valueToFind == selVal.Option {
+				isSelected = true
+
+				// if there was already a complete range, this selected item would start a new discontinuous range.
+				if fullRangeFound {
+					return false
+				}
+
+				// we are in either a new range or continuing an existing range
+				inRange = true
+				continue
+			}
+		}
+
+		// value is not selected. If we were in a range, this is now complete
+		if !isSelected {
+			if inRange {
+				fullRangeFound = true
+			}
+			inRange = false
+		}
+	}
+
+	// we reached the end of the loop without fining a discontinuity.
+	return fullRangeFound
+}
+
 // CreateHierarchySearchPage forms a search page based on various api response models
 func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selectedValueLabels map[string]string, dims []dataset.VersionDimension, name, curPath, datasetID, releaseDate, referrer, query, apiRouterVersion, lang string) hierarchy.Page {
 	var p hierarchy.Page
@@ -806,7 +798,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	p.Data.IsSearchResults = true
 	p.Data.Query = query
 	p.Language = lang
-	p.URI = req.URL.Path
+	p.URI = fmt.Sprintf("%s?q=%s", req.URL.Path, url.QueryEscape(req.URL.Query().Get("q")))
 
 	title := pageTitle
 
@@ -1066,13 +1058,6 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 	p.Data.Cancel.URL = fmt.Sprintf("/filters/%s/dimensions", f.FilterID)
 
 	return p
-}
-
-func reverseInts(input []int) []int {
-	if len(input) == 0 {
-		return input
-	}
-	return append(reverseInts(input[1:]), input[0])
 }
 
 // mapCookiePreferences reads cookie policy and preferences cookies and then maps the values to the page model
