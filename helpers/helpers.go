@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"regexp"
 
+	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/log.go/log"
 )
 
@@ -15,7 +16,7 @@ func ExtractDatasetInfoFromPath(ctx context.Context, path string) (datasetID, ed
 	pathReg := regexp.MustCompile(`\/datasets\/(.+)\/editions\/(.+)\/versions\/(.+)`)
 	subs := pathReg.FindStringSubmatch(path)
 	if len(subs) < 4 {
-		err = fmt.Errorf("unabled to extract datasetID, edition and version from path: %s", path)
+		err = fmt.Errorf("unable to extract datasetID, edition and version from path: %s", path)
 		return
 	}
 	return subs[1], subs[2], subs[3], nil
@@ -39,4 +40,19 @@ func StringInSlice(str string, slice []string) (int, bool) {
 		}
 	}
 	return -1, false
+}
+
+// Check each dimension has an option selected
+func CheckAllDimensionsHaveAnOption(dims []filter.ModelDimension) (check bool, err error) {
+	if len(dims) == 0 {
+		err = fmt.Errorf("no dimensions provided: %s", dims)
+		return
+	}
+	check = true
+	for _, dim := range dims {
+		if len(dim.Options) == 0 {
+			check = false
+		}
+	}
+	return
 }

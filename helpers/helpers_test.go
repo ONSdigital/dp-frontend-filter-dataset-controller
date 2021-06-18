@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ONSdigital/dp-api-clients-go/filter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -21,7 +22,7 @@ func TestUnitHelpers(t *testing.T) {
 
 		Convey("returns an error if it is unable to extract the information", func() {
 			datasetID, edition, version, err := ExtractDatasetInfoFromPath(ctx, "invalid")
-			So(err.Error(), ShouldEqual, "unabled to extract datasetID, edition and version from path: invalid")
+			So(err.Error(), ShouldEqual, "unable to extract datasetID, edition and version from path: invalid")
 			So(datasetID, ShouldEqual, "")
 			So(edition, ShouldEqual, "")
 			So(version, ShouldEqual, "")
@@ -145,5 +146,206 @@ func TestStringInSlice(t *testing.T) {
 				})
 			})
 		})
+	})
+}
+
+// TestCheckAllDimensionHaveAnOption test the helper function CheckAllDimensionsHaveAnOption
+func TestCheckAllDimensionHaveAnOption(t *testing.T) {
+	Convey("No dimesions provided return error", t, func() {
+		testDimensions := []filter.ModelDimension{}
+
+		sut, err := CheckAllDimensionsHaveAnOption(testDimensions)
+		So(err.Error(), ShouldEqual, "no dimensions provided: []")
+		So(sut, ShouldEqual, false)
+	})
+
+	Convey("All dimensions have an option return true", t, func() {
+		testDimensions := []filter.ModelDimension{{
+			Name:    "test",
+			Options: []string{"option"},
+		}}
+
+		sut, err := CheckAllDimensionsHaveAnOption(testDimensions)
+		So(err, ShouldBeNil)
+		So(sut, ShouldEqual, true)
+	})
+
+	Convey("Dimension with no option selected return false", t, func() {
+		testDimensions := []filter.ModelDimension{{
+			Name:    "test",
+			Options: []string{},
+		}}
+
+		sut, err := CheckAllDimensionsHaveAnOption(testDimensions)
+		So(err, ShouldBeNil)
+		So(sut, ShouldEqual, false)
+	})
+
+	Convey("Two dimensions with options selected return true", t, func() {
+		testDimensions := []filter.ModelDimension{
+			{
+				Name:    "test",
+				Options: []string{"option1"},
+			},
+			{
+				Name:    "test2",
+				Options: []string{"option2"},
+			},
+		}
+
+		sut, err := CheckAllDimensionsHaveAnOption(testDimensions)
+		So(err, ShouldBeNil)
+		So(sut, ShouldEqual, true)
+	})
+
+	Convey("Two dimensions with no options selected return false", t, func() {
+		testDimensions := []filter.ModelDimension{
+			{
+				Name:    "test",
+				Options: []string{},
+			},
+			{
+				Name:    "test2",
+				Options: []string{},
+			},
+		}
+
+		sut, err := CheckAllDimensionsHaveAnOption(testDimensions)
+		So(err, ShouldBeNil)
+		So(sut, ShouldEqual, false)
+	})
+
+	Convey("Two dimensions with one option selected return false", t, func() {
+		testDimensions := []filter.ModelDimension{
+			{
+				Name:    "test",
+				Options: []string{"option1"},
+			},
+			{
+				Name:    "test2",
+				Options: []string{},
+			},
+		}
+
+		sut, err := CheckAllDimensionsHaveAnOption(testDimensions)
+		So(err, ShouldBeNil)
+		So(sut, ShouldEqual, false)
+	})
+
+	Convey("Two dimensions with one option selected return false", t, func() {
+		testDimensions := []filter.ModelDimension{
+			{
+				Name:    "test",
+				Options: []string{},
+			},
+			{
+				Name:    "test2",
+				Options: []string{"option1"},
+			},
+		}
+
+		sut, err := CheckAllDimensionsHaveAnOption(testDimensions)
+		So(err, ShouldBeNil)
+		So(sut, ShouldEqual, false)
+	})
+
+	Convey("Three dimensions with only last option selected return false", t, func() {
+		testDimensions := []filter.ModelDimension{
+			{
+				Name:    "test",
+				Options: []string{},
+			},
+			{
+				Name:    "test2",
+				Options: []string{},
+			},
+			{
+				Name:    "test3",
+				Options: []string{"option1"},
+			},
+		}
+
+		sut, err := CheckAllDimensionsHaveAnOption(testDimensions)
+		So(err, ShouldBeNil)
+		So(sut, ShouldEqual, false)
+	})
+
+	Convey("Three dimensions with only first option selected return false", t, func() {
+		testDimensions := []filter.ModelDimension{
+			{
+				Name:    "test",
+				Options: []string{"option1"},
+			},
+			{
+				Name:    "test2",
+				Options: []string{},
+			},
+			{
+				Name:    "test3",
+				Options: []string{},
+			},
+		}
+
+		sut, err := CheckAllDimensionsHaveAnOption(testDimensions)
+		So(err, ShouldBeNil)
+		So(sut, ShouldEqual, false)
+	})
+
+	Convey("Five dimensions with only middle option selected return false", t, func() {
+		testDimensions := []filter.ModelDimension{
+			{
+				Name:    "test",
+				Options: []string{},
+			},
+			{
+				Name:    "test2",
+				Options: []string{},
+			},
+			{
+				Name:    "test3",
+				Options: []string{"option1"},
+			},
+			{
+				Name:    "test4",
+				Options: []string{},
+			},
+			{
+				Name:    "test5",
+				Options: []string{},
+			},
+		}
+
+		sut, err := CheckAllDimensionsHaveAnOption(testDimensions)
+		So(err, ShouldBeNil)
+		So(sut, ShouldEqual, false)
+	})
+
+	Convey("Five dimensions with option in each return true", t, func() {
+		testDimensions := []filter.ModelDimension{
+			{
+				Name:    "test",
+				Options: []string{"option1"},
+			},
+			{
+				Name:    "test2",
+				Options: []string{"option1"},
+			},
+			{
+				Name:    "test3",
+				Options: []string{"option1"},
+			},
+			{
+				Name:    "test4",
+				Options: []string{"option1"},
+			},
+			{
+				Name:    "test5",
+				Options: []string{"option1"},
+			},
+		}
+
+		sut, err := CheckAllDimensionsHaveAnOption(testDimensions)
+		So(err, ShouldBeNil)
+		So(sut, ShouldEqual, true)
 	})
 }
