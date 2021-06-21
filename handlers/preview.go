@@ -50,8 +50,18 @@ func (f Filter) Submit() http.HandlerFunc {
 
 		filterOutputID := mdl.Links.FilterOutputs.ID
 
-		http.Redirect(w, req, fmt.Sprintf("/filter-outputs/%s", filterOutputID), 302)
-		return
+		checkOptionsAdded, err := helpers.CheckAllDimensionsHaveAnOption(mdl.Dimensions)
+		if err != nil {
+			log.Event(ctx, "failed to check options on dimensions", log.ERROR, log.Error(err))
+			setStatusCode(req, w, err)
+			return
+		}
+		if !checkOptionsAdded {
+			redirectURL := fmt.Sprintf("/filters/%s/dimensions?hasUnsetDimensions=true", filterID)
+			http.Redirect(w, req, redirectURL, http.StatusFound)
+		}
+
+		http.Redirect(w, req, fmt.Sprintf("/filter-outputs/%s", filterOutputID), http.StatusFound)
 	})
 
 }
@@ -102,7 +112,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 				return
 			}
 
-			if markingsColumnCount > len(prev.Headers){
+			if markingsColumnCount > len(prev.Headers) {
 				err = errors.New("Incongruent column count - column count from cell greater than header count")
 				log.Event(ctx, "failed to verify column count", log.ERROR, log.Error(err), log.Data{
 					"filter_output_id": filterOutputID, "header_count": len(prev.Headers), "column_count": markingsColumnCount,
@@ -129,7 +139,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 				}
 
 				if len(row) > 0 {
-					if markingsColumnCount > len(row){
+					if markingsColumnCount > len(row) {
 						err = errors.New("Incongruent row length - column count from cell greater than row length")
 						log.Event(ctx, "failed to read row", log.ERROR, log.Error(err), log.Data{
 							"filter_output_id": filterOutputID, "row_length": len(row), "column_count": markingsColumnCount,
@@ -240,7 +250,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 
 			// Can we trust opts.TotalCount?
 			if opts.TotalCount == 1 {
-				if len(opts.Items) < 1{
+				if len(opts.Items) < 1 {
 					err = errors.New("Incongruent opts.TotalCount (actual items length zero)")
 					log.Event(ctx, "failed to build dimensions", log.ERROR, log.Error(err), log.Data{
 						"filter_output_id": filterOutputID, "opts.TotalCount": opts.TotalCount, "opts.Items length": len(opts.Items),

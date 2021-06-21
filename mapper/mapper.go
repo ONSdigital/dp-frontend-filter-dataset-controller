@@ -57,14 +57,8 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 	p.Language = lang
 	p.URI = req.URL.Path
 
-	disableButton := true
-
 	for _, d := range dimensions {
 		var fod filterOverview.Dimension
-
-		if len(d.Values) > 0 {
-			disableButton = false
-		}
 
 		if d.Name == "time" {
 			for _, dim := range datasetDims {
@@ -104,13 +98,11 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 			fod.Link.Label = "Edit"
 		} else {
 			fod.Link.Label = "Add"
+			fod.HasNoCategory = true
+			p.Data.UnsetDimensions = append(p.Data.UnsetDimensions, fod.Filter)
 		}
 
 		p.Data.Dimensions = append(p.Data.Dimensions, fod)
-	}
-
-	if p.Data.PreviewAndDownloadDisabled = disableButton; !p.Data.PreviewAndDownloadDisabled {
-		p.Data.PreviewAndDownload.URL = fmt.Sprintf("/filters/%s", filterID)
 	}
 
 	p.Data.Cancel.URL = "/"
