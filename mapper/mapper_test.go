@@ -38,7 +38,6 @@ func getExpectedFilterOverviewPage() filterOverview.Page {
 		{},
 		{Title: "Filter options"},
 	}
-	expectedPageModel.Data.PreviewAndDownloadDisabled = true
 	expectedPageModel.SearchDisabled = true
 	expectedPageModel.IsInFilterBreadcrumb = true
 	expectedPageModel.BetaBannerEnabled = true
@@ -83,9 +82,6 @@ func TestCreateFilterOverview(t *testing.T) {
 		expectedFop.Data.ClearAll.URL = fmt.Sprintf("/filters/%s/dimensions/clear-all", filterID)
 		expectedFop.DatasetTitle = "Small Area Population Estimates"
 		expectedFop.Data = filterOverview.FilterOverview{
-			PreviewAndDownload: filterOverview.Link{
-				URL: "/filters/" + f.FilterID,
-			},
 			Cancel: filterOverview.Link{
 				URL: "/",
 			},
@@ -122,10 +118,93 @@ func TestCreateFilterOverview(t *testing.T) {
 						Label: "Add",
 						URL:   "/filters/" + f.FilterID + "/dimensions/emptyDimension",
 					},
+					HasNoCategory: true,
 				},
 			}
-			expectedFop.Data.PreviewAndDownloadDisabled = true
-			expectedFop.Data.PreviewAndDownload = filterOverview.Link{}
+			expectedFop.Data.UnsetDimensions = append(expectedFop.Data.UnsetDimensions, "")
+			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+			So(fop, ShouldResemble, expectedFop)
+		})
+
+		Convey("Given categories added the HasNoCategory flag is set to false", func() {
+			dimensions := []filter.ModelDimension{
+				{
+					Name:   "time",
+					Values: []string{"Jan-01", "Sep-08", "Apr-85"},
+				},
+			}
+			expectedFop.Data.Dimensions = []filterOverview.Dimension{
+				{
+					Filter:          "Time",
+					AddedCategories: []string{"January 2001", "September 2008", "April 1985"},
+					Link: filterOverview.Link{
+						Label: "Edit",
+						URL:   "/filters/12349876/dimensions/time",
+					},
+					HasNoCategory: false,
+				},
+			}
+			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+			So(fop, ShouldResemble, expectedFop)
+		})
+
+		Convey("Given categories provided and no categories are added the HasNoCategory flag is set to true and the UnsetDimensions array is populated with the unset filter", func() {
+			dimensions := []filter.ModelDimension{
+				{
+					Name:   "time",
+					Values: []string{},
+				},
+			}
+			expectedFop.Data.Dimensions = []filterOverview.Dimension{
+				{
+					Filter: "Time",
+					Link: filterOverview.Link{
+						Label: "Add",
+						URL:   "/filters/12349876/dimensions/time",
+					},
+					HasNoCategory: true,
+				},
+			}
+			expectedFop.Data.UnsetDimensions = []string{
+				"Time",
+			}
+			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+			So(fop, ShouldResemble, expectedFop)
+		})
+
+		Convey("Given two dimesions and one category added the HasNoCategory flag is set to true where no categories are added and the UnsetDimensions array is populated with the unset filter", func() {
+			dimensions := []filter.ModelDimension{
+				{
+					Name: "year",
+				},
+				{
+					Name:   "geography",
+					Values: []string{"England and Wales", "Bristol"},
+				},
+			}
+			expectedFop.Data.Dimensions = []filterOverview.Dimension{
+				{
+					Filter: "Year",
+					Link: filterOverview.Link{
+						Label: "Add",
+						URL:   "/filters/" + f.FilterID + "/dimensions/year",
+					},
+					HasNoCategory: true,
+				},
+				{
+					Filter:          "Geographic Areas",
+					AddedCategories: []string{"England and Wales", "Bristol"},
+					Link: filterOverview.Link{
+						Label: "Edit",
+						URL:   "/filters/" + f.FilterID + "/dimensions/geography",
+					},
+					HasNoCategory: false,
+				},
+			}
+
+			expectedFop.Data.UnsetDimensions = []string{
+				"Year",
+			}
 			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
 			So(fop, ShouldResemble, expectedFop)
 		})

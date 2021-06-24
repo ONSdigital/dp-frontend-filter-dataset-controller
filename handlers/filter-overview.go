@@ -27,6 +27,8 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 		filterID := vars["filterID"]
 		ctx := req.Context()
 
+		hasUnsetDimensions := req.URL.Query().Get("hasUnsetDimensions")
+
 		dims, eTag0, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, nil)
 		if err != nil {
 			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
@@ -140,6 +142,10 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 
 		p.Data.LatestVersion.DatasetLandingPageURL = latestVersionInEditionPath
 		p.Data.LatestVersion.FilterJourneyWithLatestJourney = fmt.Sprintf("/filters/%s/use-latest-version", filterID)
+
+		if hasUnsetDimensions == "true" {
+			p.Data.HasUnsetDimensions = true
+		}
 
 		b, err := json.Marshal(p)
 		if err != nil {
