@@ -26,7 +26,7 @@ import (
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
 	timeModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 var hierarchyBrowseLookup = map[string]string{
@@ -48,7 +48,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
-	log.Event(ctx, "mapping api response models into filter overview page model", log.INFO, log.Data{"filterID": filterID, "datasetID": datasetID})
+	log.Info(ctx, "mapping api response models into filter overview page model", log.Data{"filterID": filterID, "datasetID": datasetID})
 
 	p.FilterID = filterID
 	p.DatasetTitle = dst.Title
@@ -72,7 +72,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 
 			times, err := dates.ConvertToReadable(d.Values)
 			if err != nil {
-				log.Event(ctx, "unable to convert dates to human readable values", log.WARN, log.Error(err))
+				log.Warn(ctx, "unable to convert dates to human readable values", log.FormatErrors([]error{err}))
 				fod.AddedCategories = append(fod.AddedCategories, d.Values...)
 			}
 
@@ -111,7 +111,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
-		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
+		log.Warn(ctx, "unable to parse version url", log.FormatErrors([]error{err}))
 	}
 	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
@@ -143,7 +143,7 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
-	log.Event(ctx, "mapping api response models to list selector page model", log.INFO, log.Data{"filterID": filter.FilterID, "datasetID": datasetID, "dimension": name})
+	log.Info(ctx, "mapping api response models to list selector page model", log.Data{"filterID": filter.FilterID, "datasetID": datasetID, "dimension": name})
 
 	pageTitle := strings.Title(name)
 
@@ -167,7 +167,7 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
-		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
+		log.Warn(ctx, "unable to parse version url", log.FormatErrors([]error{err}))
 	}
 	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
@@ -267,7 +267,7 @@ func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, fi
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
-	log.Event(ctx, "mapping api responses to preview page model", log.INFO, log.Data{"filterOutputID": filterOutputID, "datasetID": datasetID})
+	log.Info(ctx, "mapping api responses to preview page model", log.Data{"filterOutputID": filterOutputID, "datasetID": datasetID})
 
 	p.SearchDisabled = false
 	p.ReleaseDate = releaseDate
@@ -276,7 +276,7 @@ func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, fi
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
-		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
+		log.Warn(ctx, "unable to parse version url", log.FormatErrors([]error{err}))
 	}
 	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
@@ -358,7 +358,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
-	log.Event(req.Context(), "mapping api responses to age page model", log.INFO, log.Data{"filterID": f.FilterID, "datasetID": datasetID})
+	log.Info(req.Context(), "mapping api responses to age page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
 
 	for _, dim := range dims.Items {
 		if dim.Name == "age" {
@@ -620,7 +620,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 		p.Data.CheckedRadio = "single"
 		date, err := time.Parse("Jan-06", selVals[0].Option)
 		if err != nil {
-			log.Event(ctx, "unable to parse date", log.WARN, log.Error(err))
+			log.Warn(ctx, "unable to parse date", log.FormatErrors([]error{err}))
 		}
 		p.Data.SelectedStartMonth = date.Month().String()
 		p.Data.SelectedStartYear = fmt.Sprintf("%d", date.Year())
@@ -644,7 +644,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 
 		selDates, err := dates.ConvertToReadable(selOptions)
 		if err != nil {
-			log.Event(ctx, "unable to convert dates to human readable values", log.WARN, log.Error(err))
+			log.Warn(ctx, "unable to convert dates to human readable values", log.FormatErrors([]error{err}))
 		}
 
 		selDates = dates.Sort(selDates)
@@ -659,7 +659,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 	for _, selVal := range selVals {
 		month, err := time.Parse("Jan-06", selVal.Option)
 		if err != nil {
-			log.Event(ctx, "unable to convert date to month value", log.ERROR, log.Error(err))
+			log.Error(ctx, "unable to convert date to month value", err)
 			continue
 		}
 		monthStr := month.Format("January")
@@ -676,17 +676,17 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 		}
 		yearInt, err := strconv.Atoi(yearStr)
 		if err != nil {
-			log.Event(ctx, "unable to convert year string to int for comparison", log.ERROR, log.Error(err))
+			log.Error(ctx, "unable to convert year string to int for comparison", err)
 			continue
 		}
 		maxYearInt, err := strconv.Atoi(maxYear)
 		if err != nil {
-			log.Event(ctx, "unable to convert max year string to int for comparison", log.ERROR, log.Error(err))
+			log.Error(ctx, "unable to convert max year string to int for comparison", err)
 			continue
 		}
 		minYearInt, err := strconv.Atoi(minYear)
 		if err != nil {
-			log.Event(ctx, "unable to convert min year string to int for comparison", log.ERROR, log.Error(err))
+			log.Error(ctx, "unable to convert min year string to int for comparison", err)
 			continue
 		}
 		if yearInt > maxYearInt {
@@ -776,7 +776,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
-	log.Event(ctx, "mapping api response models to hierarchy search page", log.INFO, log.Data{"filterID": f.FilterID, "datasetID": datasetID, "name": name})
+	log.Info(ctx, "mapping api response models to hierarchy search page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "name": name})
 
 	pageTitle := strings.Title(name)
 	for _, dim := range dims {
@@ -806,7 +806,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
-		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
+		log.Warn(ctx, "unable to parse version url", log.FormatErrors([]error{err}))
 	}
 	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
@@ -878,7 +878,7 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
-	log.Event(ctx, "mapping api response models to hierarchy page", log.INFO, log.Data{"filterID": f.FilterID, "datasetID": datasetID, "label": h.Label})
+	log.Info(ctx, "mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "label": h.Label})
 
 	pageTitle := strings.Title(name)
 	for _, dim := range dims.Items {
@@ -913,7 +913,7 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
-		log.Event(ctx, "unable to parse version url", log.WARN, log.Error(err))
+		log.Warn(ctx, "unable to parse version url", log.FormatErrors([]error{err}))
 	}
 	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // Filter represents the handlers for Filtering
@@ -55,6 +55,6 @@ func setStatusCode(req *http.Request, w http.ResponseWriter, err error) {
 			status = http.StatusInternalServerError
 		}
 	}
-	log.Event(req.Context(), "setting response status", log.INFO, log.Error(err), log.Data{"status": status})
+	log.Info(req.Context(), "setting response status", log.FormatErrors([]error{err}), log.Data{"status": status})
 	w.WriteHeader(status)
 }

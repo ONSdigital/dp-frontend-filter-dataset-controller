@@ -11,7 +11,7 @@ import (
 	dphandlers "github.com/ONSdigital/dp-net/handlers"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 )
 
@@ -25,21 +25,21 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 
 		oldJob, _, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
-			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to get job state", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		dims, _, err := f.FilterClient.GetDimensions(req.Context(), userAccessToken, "", collectionID, filterID, nil)
 		if err != nil {
-			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to get dimensions", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		versionURL, err := url.Parse(oldJob.Links.Version.HRef)
 		if err != nil || versionURL.Path == "" {
-			log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to parse version href", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -47,21 +47,21 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 
 		datasetID, edition, _, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 		if err != nil {
-			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
+			log.Error(ctx, "failed to extract dataset info from path", err, log.Data{"filter_id": filterID, "path": versionPath})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		editionDetails, err := f.DatasetClient.GetEdition(req.Context(), userAccessToken, "", collectionID, datasetID, edition)
 		if err != nil {
-			log.Event(ctx, "failed to get edition details", log.ERROR, log.Error(err), log.Data{"dataset": datasetID, "edition": edition})
+			log.Error(ctx, "failed to get edition details", err, log.Data{"dataset": datasetID, "edition": edition})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		newFilterID, newFilterETag, err := f.FilterClient.CreateBlueprint(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, string(editionDetails.Links.LatestVersion.ID), []string{})
 		if err != nil {
-			log.Event(ctx, "failed to create filter blueprint", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": editionDetails.Links.LatestVersion.ID})
+			log.Error(ctx, "failed to create filter blueprint", err, log.Data{"dataset_id": datasetID, "edition": edition, "version": editionDetails.Links.LatestVersion.ID})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -71,7 +71,7 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 			// Copy dimension to new filter
 			newFilterETag, err = f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, newFilterID, dim.Name, newFilterETag)
 			if err != nil {
-				log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
+				log.Error(ctx, "failed to add dimension", err, log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
 				return
 			}
@@ -82,7 +82,7 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 			// Call filter API GetOptions in batches and aggregate the responses
 			newFilterETag, err = f.FilterClient.GetDimensionOptionsBatchProcess(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, processBatch, f.BatchSize, f.BatchMaxWorkers, true)
 			if err != nil {
-				log.Event(ctx, "failed to get and process options from filter client in batches", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dim.Name})
+				log.Error(ctx, "failed to get and process options from filter client in batches", err, log.Data{"filter_id": filterID, "dimension": dim.Name})
 				setStatusCode(req, w, err)
 				return
 			}

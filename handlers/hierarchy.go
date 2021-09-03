@@ -16,7 +16,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
 	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 )
 
@@ -42,7 +42,7 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 		ctx := req.Context()
 
 		if err := req.ParseForm(); err != nil {
-			log.Event(ctx, "failed to parse request", log.ERROR, log.Error(err))
+			log.Error(ctx, "failed to parse request", err)
 			return
 		}
 
@@ -59,7 +59,7 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 
 		fil, eTag, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
-			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to get job state", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -76,7 +76,7 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 
 		h, err := f.buildHierarchyModel(ctx, fil, name, code)
 		if err != nil {
-			log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
+			log.Error(ctx, "failed to get hierarchy node", err, log.Data{"filter_id": filterID, "dimension": name, "code": code})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -94,7 +94,7 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 
 		_, err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize, eTag)
 		if err != nil {
-			log.Event(ctx, "failed to patch dimension values", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
+			log.Error(ctx, "failed to patch dimension values", err, log.Data{"filter_id": filterID, "dimension": name, "code": code})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -141,7 +141,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 		}
 	}
 	if err != nil {
-		log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code})
+		log.Error(ctx, "failed to get hierarchy node", err, log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -152,7 +152,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 	}
 	_, err = f.FilterClient.SetDimensionValues(req.Context(), userAccessToken, "", collectionID, fil.FilterID, name, options, eTag)
 	if err != nil {
-		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err))
+		log.Error(ctx, "failed to add dimension values", err)
 	}
 
 	http.Redirect(w, req, redirectURI, 302)
@@ -173,7 +173,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 		}
 	}
 	if err != nil {
-		log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code})
+		log.Error(ctx, "failed to get hierarchy node", err, log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code})
 		setStatusCode(req, w, err)
 		return
 	}
@@ -187,7 +187,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 	// remove all items
 	_, err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, fil.FilterID, name, []string{}, removeOptions, f.BatchSize, eTag)
 	if err != nil {
-		log.Event(ctx, "failed to remove dimension values using a patch", log.ERROR, log.Error(err), log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code, "options": removeOptions})
+		log.Error(ctx, "failed to remove dimension values using a patch", err, log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code, "options": removeOptions})
 	}
 
 	http.Redirect(w, req, redirectURI, 302)
@@ -204,7 +204,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 
 		fil, eTag0, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
-			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to get job state", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -221,14 +221,14 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 		}
 
 		if err != nil {
-			log.Event(ctx, "failed to get hierarchy node", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name, "code": code})
+			log.Error(ctx, "failed to get hierarchy node", err, log.Data{"filter_id": filterID, "dimension": name, "code": code})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		selVals, eTag1, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, name, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
-			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": name})
+			log.Error(ctx, "failed to get options from filter client", err, log.Data{"filter_id": filterID, "dimension": name})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -236,7 +236,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 		// The user might want to retry this handler if eTags don't match
 		if eTag0 != eTag1 {
 			err := errors.New("inconsistent filter data")
-			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between calls", log.ERROR, log.Error(err),
+			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", err,
 				log.Data{"filter_id": filterID, "dimension": name, "e_tag_0": eTag0, "e_tag_1": eTag1})
 			setStatusCode(req, w, err)
 			return
@@ -244,34 +244,34 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 
 		versionURL, err := url.Parse(fil.Links.Version.HRef)
 		if err != nil {
-			log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to parse version href", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 		versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 		datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 		if err != nil {
-			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
+			log.Error(ctx, "failed to extract dataset info from path", err, log.Data{"filter_id": filterID, "path": versionPath})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		d, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
 		if err != nil {
-			log.Event(req.Context(), "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
+			log.Error(req.Context(), "failed to get dataset", err, log.Data{"dataset_id": datasetID})
 			setStatusCode(req, w, err)
 			return
 		}
 		ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, version)
 		if err != nil {
-			log.Event(req.Context(), "failed to get version", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+			log.Error(req.Context(), "failed to get version", err, log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 		if err != nil {
-			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
+			log.Error(ctx, "failed to get dimensions", err,
 				log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
@@ -279,7 +279,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 
 		selValsLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, name, selVals)
 		if err != nil {
-			log.Event(ctx, "failed to get options from dataset client for the selected values", log.ERROR, log.Error(err),
+			log.Error(ctx, "failed to get options from dataset client for the selected values", err,
 				log.Data{"dimension": name, "dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
@@ -289,14 +289,14 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 
 		b, err := json.Marshal(p)
 		if err != nil {
-			log.Event(req.Context(), "failed to marshal json", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(req.Context(), "failed to marshal json", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		templateBytes, err := f.Renderer.Do("dataset-filter/hierarchy", b)
 		if err != nil {
-			log.Event(req.Context(), "failed to render", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(req.Context(), "failed to render", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}

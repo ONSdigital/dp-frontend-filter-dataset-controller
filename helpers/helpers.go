@@ -7,12 +7,12 @@ import (
 	"regexp"
 
 	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // ExtractDatasetInfoFromPath gets the datasetID, edition and version from a given path
 func ExtractDatasetInfoFromPath(ctx context.Context, path string) (datasetID, edition, version string, err error) {
-	log.Event(ctx, "attempting to extract dataset details from path", log.INFO, log.Data{"path": path})
+	log.Info(ctx, "attempting to extract dataset details from path", log.Data{"path": path})
 	pathReg := regexp.MustCompile(`\/datasets\/(.+)\/editions\/(.+)\/versions\/(.+)`)
 	subs := pathReg.FindStringSubmatch(path)
 	if len(subs) < 4 {
