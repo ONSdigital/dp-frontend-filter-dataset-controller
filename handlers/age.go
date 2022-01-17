@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ONSdigital/dp-api-clients-go/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/headers"
-	dphandlers "github.com/ONSdigital/dp-net/handlers"
+	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/v2/headers"
+	dphandlers "github.com/ONSdigital/dp-net/v2/handlers"
 	"github.com/ONSdigital/log.go/v2/log"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"

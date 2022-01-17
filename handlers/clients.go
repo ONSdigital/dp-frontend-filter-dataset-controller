@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 
-	"github.com/ONSdigital/dp-api-clients-go/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
-	"github.com/ONSdigital/dp-api-clients-go/search"
+	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
+	"github.com/ONSdigital/dp-api-clients-go/v2/hierarchy"
+	"github.com/ONSdigital/dp-api-clients-go/v2/search"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 )
 

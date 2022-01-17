@@ -10,11 +10,11 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/ONSdigital/dp-api-clients-go/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/search"
+	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
+	"github.com/ONSdigital/dp-api-clients-go/v2/search"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
-	dprequest "github.com/ONSdigital/dp-net/request"
+	dprequest "github.com/ONSdigital/dp-net/v2/request"
 	gomock "github.com/golang/mock/gomock"
 
 	. "github.com/smartystreets/goconvey/convey"
