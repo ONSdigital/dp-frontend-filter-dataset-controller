@@ -14,6 +14,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
 	hierarchyClient "github.com/ONSdigital/dp-api-clients-go/v2/hierarchy"
 	"github.com/ONSdigital/dp-api-clients-go/v2/search"
+	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-cookies/cookies"
 	"github.com/ONSdigital/dp-frontend-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
@@ -41,7 +42,7 @@ var topLevelGeographies = map[string]bool{
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
 // front end page model
-func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension, datasetDims dataset.VersionDimensionItems, filter filter.Model, dst dataset.DatasetDetails, filterID, datasetID, releaseDate, apiRouterVersion, lang string) filterOverview.Page {
+func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension, datasetDims dataset.VersionDimensionItems, filter filter.Model, dst dataset.DatasetDetails, filterID, datasetID, releaseDate, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) filterOverview.Page {
 	var p filterOverview.Page
 	p.BetaBannerEnabled = true
 
@@ -56,6 +57,8 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 	p.DatasetId = datasetID
 	p.Language = lang
 	p.URI = req.URL.Path
+	p.ServiceMessage = serviceMessage
+	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
 
 	for _, d := range dimensions {
 		var fod filterOverview.Dimension
@@ -136,7 +139,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 
 // CreateListSelectorPage maps items from API responses to form the model for a
 // dimension list selector page
-func CreateListSelectorPage(req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate, apiRouterVersion, lang string) listSelector.Page {
+func CreateListSelectorPage(req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) listSelector.Page {
 	var p listSelector.Page
 	p.BetaBannerEnabled = true
 
@@ -164,6 +167,8 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 	p.DatasetId = datasetID
 	p.Language = lang
 	p.URI = req.URL.Path
+	p.ServiceMessage = serviceMessage
+	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
 
 	versionURL, err := url.Parse(filter.Links.Version.HRef)
 	if err != nil {
@@ -257,12 +262,14 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 }
 
 // CreatePreviewPage maps data items from API responses to create a preview page
-func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.DatasetDetails, filterOutputID, datasetID, releaseDate, apiRouterVersion string, enableDatasetPreivew bool, lang string) previewPage.Page {
+func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.DatasetDetails, filterOutputID, datasetID, releaseDate, apiRouterVersion string, enableDatasetPreivew bool, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) previewPage.Page {
 	var p previewPage.Page
 	p.Metadata.Title = "Preview and Download"
 	p.BetaBannerEnabled = true
 	p.EnableDatasetPreview = enableDatasetPreivew
 	p.Language = lang
+	p.ServiceMessage = serviceMessage
+	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
@@ -349,7 +356,7 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 }
 
 // CreateAgePage creates an age selector page based on api responses
-func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals filter.DimensionOptions, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang string) (age.Page, error) {
+func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals filter.DimensionOptions, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) (age.Page, error) {
 	var p age.Page
 	if req == nil {
 		return p, errors.New("invalid request provided to CreateAgePage")
@@ -371,6 +378,8 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 	p.DatasetId = datasetID
 	p.Language = lang
 	p.URI = req.URL.Path
+	p.ServiceMessage = serviceMessage
+	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
@@ -490,7 +499,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 }
 
 // CreateTimePage will create a time selector page based on api response models
-func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang string) (timeModel.Page, error) {
+func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) (timeModel.Page, error) {
 	var p timeModel.Page
 	p.BetaBannerEnabled = true
 
@@ -512,6 +521,8 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 	p.DatasetId = datasetID
 	p.Language = lang
 	p.URI = req.URL.Path
+	p.ServiceMessage = serviceMessage
+	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
 
 	for _, dim := range dims.Items {
 		if dim.Name == "time" {
@@ -769,7 +780,7 @@ func isTimeRange(sortedTimes []time.Time, selVals []filter.DimensionOption) bool
 }
 
 // CreateHierarchySearchPage forms a search page based on various api response models
-func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selectedValueLabels map[string]string, dims []dataset.VersionDimension, name, curPath, datasetID, releaseDate, referrer, query, apiRouterVersion, lang string) hierarchy.Page {
+func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selectedValueLabels map[string]string, dims []dataset.VersionDimension, name, curPath, datasetID, releaseDate, referrer, query, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
 
@@ -791,6 +802,8 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	p.Data.Query = query
 	p.Language = lang
 	p.URI = fmt.Sprintf("%s?q=%s", req.URL.Path, url.QueryEscape(req.URL.Query().Get("q")))
+	p.ServiceMessage = serviceMessage
+	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
 
 	title := pageTitle
 
@@ -870,7 +883,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 }
 
 // CreateHierarchyPage maps data items from API responses to form a hirearchy page
-func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selectedValueLabels map[string]string, dims dataset.VersionDimensions, name, curPath, datasetID, releaseDate, apiRouterVersion, lang string) hierarchy.Page {
+func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selectedValueLabels map[string]string, dims dataset.VersionDimensions, name, curPath, datasetID, releaseDate, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) hierarchy.Page {
 	var p hierarchy.Page
 	p.BetaBannerEnabled = true
 	p.Language = lang
@@ -894,6 +907,8 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 	p.Data.DimensionName = pageTitle
 	p.DatasetId = datasetID
 	p.URI = req.URL.Path
+	p.ServiceMessage = serviceMessage
+	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
 
 	var title string
 	if len(h.Breadcrumbs) == 0 {
@@ -1060,4 +1075,17 @@ func mapCookiePreferences(req *http.Request, preferencesIsSet *bool, policy *mod
 		Essential: preferencesCookie.Policy.Essential,
 		Usage:     preferencesCookie.Policy.Usage,
 	}
+}
+
+func mapEmergencyBanner(bannerData zebedee.EmergencyBanner) model.EmergencyBanner {
+	var mappedEmergencyBanner model.EmergencyBanner
+	emptyBannerObj := zebedee.EmergencyBanner{}
+	if bannerData != emptyBannerObj {
+		mappedEmergencyBanner.Title = bannerData.Title
+		mappedEmergencyBanner.Type = strings.Replace(bannerData.Type, "_", "-", -1)
+		mappedEmergencyBanner.Description = bannerData.Description
+		mappedEmergencyBanner.URI = bannerData.URI
+		mappedEmergencyBanner.LinkText = bannerData.LinkText
+	}
+	return mappedEmergencyBanner
 }

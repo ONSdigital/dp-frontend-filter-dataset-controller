@@ -13,6 +13,7 @@ type Filter struct {
 	Renderer             Renderer
 	FilterClient         FilterClient
 	DatasetClient        DatasetClient
+	ZebedeeClient        ZebedeeClient
 	HierarchyClient      HierarchyClient
 	SearchClient         SearchClient
 	SearchAPIAuthToken   string
@@ -26,13 +27,14 @@ type Filter struct {
 
 // NewFilter creates a new instance of Filter
 func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient,
-	sc SearchClient, apiRouterVersion string, cfg *config.Config) *Filter {
+	sc SearchClient, zc ZebedeeClient, apiRouterVersion string, cfg *config.Config) *Filter {
 	return &Filter{
 		Renderer:             r,
 		FilterClient:         fc,
 		DatasetClient:        dc,
 		HierarchyClient:      hc,
 		SearchClient:         sc,
+		ZebedeeClient:        zc,
 		APIRouterVersion:     apiRouterVersion,
 		downloadServiceURL:   cfg.DownloadServiceURL,
 		EnableDatasetPreview: cfg.EnableDatasetPreview,

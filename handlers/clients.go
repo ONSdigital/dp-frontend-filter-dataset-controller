@@ -7,6 +7,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
 	"github.com/ONSdigital/dp-api-clients-go/v2/hierarchy"
 	"github.com/ONSdigital/dp-api-clients-go/v2/search"
+	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 )
 
@@ -69,4 +70,8 @@ type SearchClient interface {
 type Renderer interface {
 	Checker(ctx context.Context, check *health.CheckState) error
 	Do(path string, b []byte) ([]byte, error)
+}
+
+type ZebedeeClient interface {
+	GetHomepageContent(ctx context.Context, userAccessToken, collectionID, lang, path string) (m zebedee.HomepageContent, err error)
 }

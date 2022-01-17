@@ -9,6 +9,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/hierarchy"
 	"github.com/ONSdigital/dp-api-clients-go/v2/renderer"
 	"github.com/ONSdigital/dp-api-clients-go/v2/search"
+	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/routes"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -46,6 +47,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		Dataset:   dataset.NewWithHealthClient(svc.routerHealthClient),
 		Hierarchy: hierarchy.NewWithHealthClient(svc.routerHealthClient),
 		Search:    search.NewWithHealthClient(svc.routerHealthClient),
+		Zebedee:   zebedee.NewWithHealthClient(svc.routerHealthClient),
 	}
 
 	// Get healthcheck with checkers

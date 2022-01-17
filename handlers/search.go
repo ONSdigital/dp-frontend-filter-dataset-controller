@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/search"
+	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	dphandlers "github.com/ONSdigital/dp-net/v2/handlers"
@@ -105,7 +106,22 @@ func (f *Filter) Search() http.HandlerFunc {
 			return
 		}
 
-		p := mapper.CreateHierarchySearchPage(req, searchRes.Items, d, fil, selValsLabelMap, dims.Items, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang)
+		homepageContent, err := f.ZebedeeClient.GetHomepageContent(ctx, userAccessToken, collectionID, lang, "/")
+		if err != nil {
+			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
+		}
+
+		content := zebedee.EmergencyBanner{
+			Type:        "notable_death",
+			Title:       "This is not not an emergency",
+			Description: "Something has gone wrong...",
+			URI:         "https://www.ons.gov.uk/",
+			LinkText:    "more info",
+		}
+
+		homepageContent.EmergencyBanner = content
+
+		p := mapper.CreateHierarchySearchPage(req, searchRes.Items, d, fil, selValsLabelMap, dims.Items, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 
 		b, err := json.Marshal(p)
 		if err != nil {
