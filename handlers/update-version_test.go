@@ -60,7 +60,7 @@ func TestUseLatest(t *testing.T) {
 		mockFilterClient.EXPECT().GetDimensionOptionsBatchProcess(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Day", gomock.Any(), batchSize, maxWorkers, true).Return(testETag(0), nil)
 
 		mockRenderer := NewMockRenderer(mockCtrl)
-		f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, "/v1", cfg)
+		f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, nil, "/v1", cfg)
 
 		router := mux.NewRouter()
 		router.Path("/filters/{filterID}/use-latest-version").HandlerFunc(f.UseLatest())
@@ -90,7 +90,7 @@ func TestUseLatest(t *testing.T) {
 		// Mock the calls that are expected to be made by the batch processor method
 		mockFilterClient := NewMockFilterClient(mockCtrl)
 		mockFilterClient.EXPECT().PatchDimensionValues(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, mockNewFilterID, "Day", []string{mockDimensionOptionsBatch.Items[0].Option}, []string{}, batchSize, testETag(0)).Return(testETag(1), nil)
-		f := NewFilter(nil, mockFilterClient, nil, nil, nil, "/v1", cfg)
+		f := NewFilter(nil, mockFilterClient, nil, nil, nil, nil, "/v1", cfg)
 
 		batchProcessor := f.batchAddOptions(context.Background(), mockUserAuthToken, mockCollectionID, mockNewFilterID, "Day", testETag(0))
 		forceAbort, err := batchProcessor(mockDimensionOptionsBatch, testETag(0))

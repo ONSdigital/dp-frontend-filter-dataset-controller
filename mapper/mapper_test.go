@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
 	"github.com/ONSdigital/dp-api-clients-go/v2/hierarchy"
+	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-frontend-models/model"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/age"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
@@ -56,7 +58,7 @@ func TestCreateFilterOverview(t *testing.T) {
 
 	Convey("Calling CreateFilterOverview with empty values returns the expected filter overview page without error", t, func() {
 		expectedFop := getExpectedFilterOverviewPage()
-		fop := CreateFilterOverview(req, []filter.ModelDimension{}, dataset.VersionDimensionItems{}, filter.Model{}, dataset.DatasetDetails{}, "", "", "", "", "")
+		fop := CreateFilterOverview(req, []filter.ModelDimension{}, dataset.VersionDimensionItems{}, filter.Model{}, dataset.DatasetDetails{}, "", "", "", "", "", "", zebedee.EmergencyBanner{})
 		So(fop, ShouldResemble, expectedFop)
 	})
 
@@ -66,7 +68,7 @@ func TestCreateFilterOverview(t *testing.T) {
 		expectedFop.FilterID = filterID
 		expectedFop.Language = lang
 		expectedFop.Data.ClearAll.URL = fmt.Sprintf("/filters/%s/dimensions/clear-all", filterID)
-		fop := CreateFilterOverview(req, []filter.ModelDimension{}, dataset.VersionDimensionItems{}, filter.Model{}, dataset.DatasetDetails{}, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+		fop := CreateFilterOverview(req, []filter.ModelDimension{}, dataset.VersionDimensionItems{}, filter.Model{}, dataset.DatasetDetails{}, filterID, datasetID, releaseDate, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 		So(fop, ShouldResemble, expectedFop)
 	})
 
@@ -122,7 +124,7 @@ func TestCreateFilterOverview(t *testing.T) {
 				},
 			}
 			expectedFop.Data.UnsetDimensions = append(expectedFop.Data.UnsetDimensions, "")
-			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 			So(fop, ShouldResemble, expectedFop)
 		})
 
@@ -144,7 +146,7 @@ func TestCreateFilterOverview(t *testing.T) {
 					HasNoCategory: false,
 				},
 			}
-			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 			So(fop, ShouldResemble, expectedFop)
 		})
 
@@ -168,7 +170,7 @@ func TestCreateFilterOverview(t *testing.T) {
 			expectedFop.Data.UnsetDimensions = []string{
 				"Time",
 			}
-			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 			So(fop, ShouldResemble, expectedFop)
 		})
 
@@ -205,7 +207,7 @@ func TestCreateFilterOverview(t *testing.T) {
 			expectedFop.Data.UnsetDimensions = []string{
 				"Year",
 			}
-			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 			So(fop, ShouldResemble, expectedFop)
 		})
 
@@ -253,7 +255,7 @@ func TestCreateFilterOverview(t *testing.T) {
 					},
 				},
 			}
-			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 			So(fop, ShouldResemble, expectedFop)
 		})
 
@@ -276,7 +278,7 @@ func TestCreateFilterOverview(t *testing.T) {
 			}
 
 			Convey("Then CreateFilterOverview returns the exected filter overview page, formatted as 'January 2006', sorted in the same order as provided", func() {
-				fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+				fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 				So(fop, ShouldResemble, expectedFop)
 			})
 
@@ -286,7 +288,7 @@ func TestCreateFilterOverview(t *testing.T) {
 					Label: "TimeOverwrite",
 				}
 				expectedFop.Data.Dimensions[0].Filter = "TimeOverwrite"
-				fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+				fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 				So(fop, ShouldResemble, expectedFop)
 			})
 		})
@@ -308,7 +310,7 @@ func TestCreateFilterOverview(t *testing.T) {
 					},
 				},
 			}
-			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang)
+			fop := CreateFilterOverview(req, dimensions, datasetDimension, f, dst, filterID, datasetID, releaseDate, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 			So(fop, ShouldResemble, expectedFop)
 		})
 	})
@@ -316,13 +318,15 @@ func TestCreateFilterOverview(t *testing.T) {
 
 func TestUnitMapper(t *testing.T) {
 	req := httptest.NewRequest("GET", "/", nil)
+	serviceMessage := getTestServiceMessage()
+	emergencyBanner := getTestEmergencyBanner()
 
 	Convey("test CreatePreviewPage correctly maps to previewPage frontend model", t, func() {
 		dimensions := getTestDimensions()
 		filter := getTestFilter()
 		dataset := getTestDataset()
 
-		pp := CreatePreviewPage(req, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992", "/v1", false, "en")
+		pp := CreatePreviewPage(req, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992", "/v1", false, "en", serviceMessage, emergencyBanner)
 		So(pp.SearchDisabled, ShouldBeFalse)
 		So(pp.Breadcrumb, ShouldHaveLength, 4)
 		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
@@ -348,6 +352,14 @@ func TestUnitMapper(t *testing.T) {
 			So(dim.Values, ShouldResemble, dimensions[i].Values)
 			So(dim.Name, ShouldEqual, dimensions[i].Name)
 		}
+
+		So(pp.ServiceMessage, ShouldEqual, serviceMessage)
+		So(pp.EmergencyBanner.Type, ShouldEqual, strings.Replace(emergencyBanner.Type, "_", "-", -1))
+		So(pp.EmergencyBanner.Title, ShouldEqual, emergencyBanner.Title)
+		So(pp.EmergencyBanner.Description, ShouldEqual, emergencyBanner.Description)
+		So(pp.EmergencyBanner.URI, ShouldEqual, emergencyBanner.URI)
+		So(pp.EmergencyBanner.LinkText, ShouldEqual, emergencyBanner.LinkText)
+
 	})
 
 	Convey("test CreateListSelector page... ", t, func() {
@@ -380,7 +392,7 @@ func TestUnitMapper(t *testing.T) {
 
 			filter := getTestFilter()
 
-			p := CreateListSelectorPage(req, "time", selectedValues, allValues, filter, d, dataset.VersionDimensions{}, "12345", "11-11-1992", "/v1", "en")
+			p := CreateListSelectorPage(req, "time", selectedValues, allValues, filter, d, dataset.VersionDimensions{}, "12345", "11-11-1992", "/v1", "en", serviceMessage, emergencyBanner)
 			So(p.Data.Title, ShouldEqual, "Time")
 			So(p.SearchDisabled, ShouldBeTrue)
 			So(p.FilterID, ShouldEqual, filter.FilterID)
@@ -409,6 +421,13 @@ func TestUnitMapper(t *testing.T) {
 			So(p.Data.RangeData.Values[2].Label, ShouldEqual, "Apr-10")
 			So(p.Data.RangeData.Values[2].IsSelected, ShouldBeFalse)
 			So(p.Data.FiltersAmount, ShouldEqual, 2)
+
+			So(p.ServiceMessage, ShouldEqual, serviceMessage)
+			So(p.EmergencyBanner.Type, ShouldEqual, strings.Replace(emergencyBanner.Type, "_", "-", -1))
+			So(p.EmergencyBanner.Title, ShouldEqual, emergencyBanner.Title)
+			So(p.EmergencyBanner.Description, ShouldEqual, emergencyBanner.Description)
+			So(p.EmergencyBanner.URI, ShouldEqual, emergencyBanner.URI)
+			So(p.EmergencyBanner.LinkText, ShouldEqual, emergencyBanner.LinkText)
 		})
 
 		Convey("keeps the same order for the time values as provided by dataset API", func() {
@@ -427,7 +446,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "2017",
 					},
 				},
-			}, filter.Model{}, dataset.DatasetDetails{}, dataset.VersionDimensions{}, "1234", "today", "/v1", "en")
+			}, filter.Model{}, dataset.DatasetDetails{}, dataset.VersionDimensions{}, "1234", "today", "/v1", "en", "", zebedee.EmergencyBanner{})
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
@@ -453,7 +472,7 @@ func TestUnitMapper(t *testing.T) {
 						Label: "Ireland",
 					},
 				},
-			}, filter.Model{}, dataset.DatasetDetails{}, dataset.VersionDimensions{}, "1234", "today", "/v1", "en")
+			}, filter.Model{}, dataset.DatasetDetails{}, dataset.VersionDimensions{}, "1234", "today", "/v1", "en", "", zebedee.EmergencyBanner{})
 
 			So(len(p.Data.RangeData.Values), ShouldEqual, 4)
 
@@ -720,6 +739,8 @@ func TestCreateHierarchyPage(t *testing.T) {
 				{Title: "DatasetTitle", URI: ""},
 			},
 			PatternLibraryAssetsPath: "",
+			ServiceMessage:           getTestServiceMessage(),
+			EmergencyBanner:          model.EmergencyBanner(returnCorrectlyFormedEmergencyBanner()),
 		}
 
 		testHierarchyPage.Data = hierarchyModel.Hierarchy{
@@ -775,11 +796,14 @@ func TestCreateHierarchyPage(t *testing.T) {
 			Title: "datasetTitle",
 		}
 
+		testServiceMessage := getTestServiceMessage()
+		testEmergencyBanner := getTestEmergencyBanner()
+
 		req := httptest.NewRequest("", "/", nil)
 		filterModel := getTestFilter()
 		apiRouterVersion := "v1"
 		lang := dprequest.DefaultLang
-		hierarchyPageModel := CreateHierarchyPage(req, hierarchy.Model{}, testDatasetDetails, filterModel, testSelectedOptions, testVersionDimensions, testDatasetDetails.Title, req.URL.Path, testDatasetDetails.ID, testVersion.ReleaseDate, apiRouterVersion, lang)
+		hierarchyPageModel := CreateHierarchyPage(req, hierarchy.Model{}, testDatasetDetails, filterModel, testSelectedOptions, testVersionDimensions, testDatasetDetails.Title, req.URL.Path, testDatasetDetails.ID, testVersion.ReleaseDate, apiRouterVersion, lang, testServiceMessage, testEmergencyBanner)
 		So(hierarchyPageModel, ShouldResemble, testHierarchyPage)
 	})
 }
@@ -894,6 +918,8 @@ func getExpectedTimePage(datasetID, filterID, lang string) timeModel.Page {
 			Title: "Time",
 		},
 	}
+	p.ServiceMessage = getTestServiceMessage()
+	p.EmergencyBanner = model.EmergencyBanner(returnCorrectlyFormedEmergencyBanner())
 	return p
 }
 
@@ -996,7 +1022,7 @@ func TestCreateTimePage(t *testing.T) {
 		expected.BetaBannerEnabled = true
 		expected.CookiesPolicy = model.CookiesPolicy{Essential: true}
 
-		timeModelPage, err := CreateTimePage(req, filter.Model{}, dataset.DatasetDetails{}, dataset.Version{}, dataset.Options{}, []filter.DimensionOption{}, dataset.VersionDimensions{}, "", "", "")
+		timeModelPage, err := CreateTimePage(req, filter.Model{}, dataset.DatasetDetails{}, dataset.Version{}, dataset.Options{}, []filter.DimensionOption{}, dataset.VersionDimensions{}, "", "", "", "", zebedee.EmergencyBanner{})
 		So(err, ShouldBeNil)
 		So(timeModelPage, ShouldResemble, expected)
 	})
@@ -1008,9 +1034,11 @@ func TestCreateTimePage(t *testing.T) {
 		options := getTestDatasetTimeOptions()
 		selectedOptions := []filter.DimensionOption{}
 		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+		serviceMessage := getTestServiceMessage()
+		emergencyBanner := getTestEmergencyBanner()
 
 		expected := getExpectedTimePage(datasetID, filterModel.FilterID, lang)
-		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang, serviceMessage, emergencyBanner)
 		So(err, ShouldBeNil)
 		So(timeModelPage, ShouldResemble, expected)
 	})
@@ -1024,6 +1052,8 @@ func TestCreateTimePage(t *testing.T) {
 			{Option: "Apr-05"},
 		}
 		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+		sericeMessage := getTestServiceMessage()
+		emergencyBanner := getTestEmergencyBanner()
 
 		expected := getExpectedTimePage(datasetID, filterModel.FilterID, lang)
 		expected.Data.Values[1] = timeModel.Value{Month: "April", Year: "2005", Option: "Apr-05", IsSelected: true}
@@ -1037,7 +1067,7 @@ func TestCreateTimePage(t *testing.T) {
 		expected.Data.GroupedSelection.YearStart = "2005"
 		expected.Data.GroupedSelection.YearEnd = "2005"
 
-		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang, sericeMessage, emergencyBanner)
 		So(err, ShouldBeNil)
 		So(timeModelPage, ShouldResemble, expected)
 	})
@@ -1051,6 +1081,8 @@ func TestCreateTimePage(t *testing.T) {
 			{Option: "Apr-07"},
 		}
 		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+		serviceMsg := getTestServiceMessage()
+		emergencyBnr := getTestEmergencyBanner()
 
 		expected := getExpectedTimePage(datasetID, filterModel.FilterID, lang)
 		expected.Data.Values[0] = timeModel.Value{Month: "April", Year: "2007", Option: "Apr-07", IsSelected: true}
@@ -1062,7 +1094,7 @@ func TestCreateTimePage(t *testing.T) {
 		expected.Data.GroupedSelection.YearStart = "2007"
 		expected.Data.GroupedSelection.YearEnd = "2007"
 
-		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang, serviceMsg, emergencyBnr)
 		So(err, ShouldBeNil)
 		So(timeModelPage, ShouldResemble, expected)
 	})
@@ -1077,6 +1109,8 @@ func TestCreateTimePage(t *testing.T) {
 			{Option: "Apr-07"},
 		}
 		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+		serviceMsg := getTestServiceMessage()
+		emergencyBnr := getTestEmergencyBanner()
 
 		expected := getExpectedTimePage(datasetID, filterModel.FilterID, lang)
 		expected.Data.Values[0] = timeModel.Value{Month: "April", Year: "2007", Option: "Apr-07", IsSelected: true}
@@ -1089,7 +1123,7 @@ func TestCreateTimePage(t *testing.T) {
 		expected.Data.GroupedSelection.YearStart = "2005"
 		expected.Data.GroupedSelection.YearEnd = "2007"
 
-		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang, serviceMsg, emergencyBnr)
 		So(err, ShouldBeNil)
 		So(timeModelPage, ShouldResemble, expected)
 	})
@@ -1099,6 +1133,8 @@ func TestCreateTimePage(t *testing.T) {
 		datasetDetails := getTestDataset()
 		datasetVersion := dataset.Version{}
 		options := getTestDatasetTimeOptions()
+		serviceMsg := getTestServiceMessage()
+		emergencyBnr := getTestEmergencyBanner()
 		selectedOptions := []filter.DimensionOption{
 			{Option: "Jun-05"},
 			{Option: "Apr-05"},
@@ -1130,7 +1166,7 @@ func TestCreateTimePage(t *testing.T) {
 		expected.Data.GroupedSelection.YearStart = "2005"
 		expected.Data.GroupedSelection.YearEnd = "2005"
 
-		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		timeModelPage, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang, serviceMsg, emergencyBnr)
 		So(err, ShouldBeNil)
 		So(timeModelPage, ShouldResemble, expected)
 	})
@@ -1144,7 +1180,7 @@ func TestCreateTimePage(t *testing.T) {
 		selectedOptions := []filter.DimensionOption{}
 		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
 
-		_, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		_, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 		So(err, ShouldNotBeNil)
 		So(err.Error(), ShouldEqual, "parse \"invalid%url\": invalid URL escape \"%ur\"")
 	})
@@ -1158,7 +1194,7 @@ func TestCreateTimePage(t *testing.T) {
 		selectedOptions := []filter.DimensionOption{}
 		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
 
-		_, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+		_, err := CreateTimePage(req, filterModel, datasetDetails, datasetVersion, options, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 		So(err, ShouldNotBeNil)
 		So(err.Error(), ShouldEqual, "parsing time \"wrongFormat\" as \"Jan-06\": cannot parse \"wrongFormat\" as \"Jan\"")
 	})
@@ -1250,14 +1286,14 @@ func TestCreateAgePage(t *testing.T) {
 		versionDimensions := dataset.VersionDimensions{}
 
 		Convey("Then, CreateAgePage returns the expected age page without error", func() {
-			ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, options, dimensionOptions, versionDimensions, "", "", "")
+			ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, options, dimensionOptions, versionDimensions, "", "", "", "", zebedee.EmergencyBanner{})
 			So(err, ShouldBeNil)
 			expectedPageModel := getExpectedEmptyPageModel()
 			So(ageModelPage, ShouldResemble, expectedPageModel)
 		})
 
 		Convey("Then, CreateAgePage with datasetID and language values returns the expected age page without error", func() {
-			ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, options, dimensionOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+			ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, options, dimensionOptions, versionDimensions, datasetID, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 			So(err, ShouldBeNil)
 
 			expectedPageModel := getExpectedEmptyPageModel()
@@ -1273,6 +1309,8 @@ func TestCreateAgePage(t *testing.T) {
 		datasetDetails := getTestDataset()
 		datasetVersion := dataset.Version{}
 		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
+		serviceMessage := getTestServiceMessage()
+		emergencyBanner := getTestEmergencyBanner()
 
 		expectedPageModel := getExpectedEmptyPageModel()
 		expectedPageModel.DatasetId = datasetID
@@ -1296,6 +1334,8 @@ func TestCreateAgePage(t *testing.T) {
 		expectedPageModel.FilterID = filterID
 		expectedPageModel.Data.Youngest = "10"
 		expectedPageModel.Data.Oldest = "100+"
+		expectedPageModel.ServiceMessage = getTestServiceMessage()
+		expectedPageModel.EmergencyBanner = model.EmergencyBanner(returnCorrectlyFormedEmergencyBanner())
 
 		Convey("Where one dataset option contains '+' and selected options is empty", func() {
 			allOptions := getTestDatasetAgeOptions(true)
@@ -1314,7 +1354,7 @@ func TestCreateAgePage(t *testing.T) {
 					{Label: "70", Option: "70", IsSelected: false},
 					{Label: "90", Option: "90", IsSelected: false},
 				}
-				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang, serviceMessage, emergencyBanner)
 				So(err, ShouldBeNil)
 				So(ageModelPage, ShouldResemble, expectedPageModel)
 			})
@@ -1342,7 +1382,7 @@ func TestCreateAgePage(t *testing.T) {
 					{Label: "90", Option: "90", IsSelected: false},
 				}
 				expectedPageModel.Data.CheckedRadio = "list"
-				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang, serviceMessage, emergencyBanner)
 				So(err, ShouldBeNil)
 				So(ageModelPage, ShouldResemble, expectedPageModel)
 			})
@@ -1374,7 +1414,7 @@ func TestCreateAgePage(t *testing.T) {
 				expectedPageModel.Data.CheckedRadio = "range"
 				expectedPageModel.Data.FirstSelected = "20"
 				expectedPageModel.Data.LastSelected = "90"
-				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang, serviceMessage, emergencyBanner)
 				So(err, ShouldBeNil)
 				So(ageModelPage, ShouldResemble, expectedPageModel)
 			})
@@ -1398,7 +1438,7 @@ func TestCreateAgePage(t *testing.T) {
 					{Label: "90", Option: "90", IsSelected: false},
 				}
 				expectedPageModel.Data.Oldest = "100"
-				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang, serviceMessage, emergencyBanner)
 				So(err, ShouldBeNil)
 				So(ageModelPage, ShouldResemble, expectedPageModel)
 			})
@@ -1423,7 +1463,7 @@ func TestCreateAgePage(t *testing.T) {
 				}
 				expectedPageModel.Data.HasAllAges = true
 				expectedPageModel.Data.AllAgesOption = "nonnumerical"
-				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang)
+				ageModelPage, err := CreateAgePage(req, filterModel, datasetDetails, datasetVersion, allOptions, selectedOptions, versionDimensions, datasetID, apiRouterVersion, lang, serviceMessage, emergencyBanner)
 				So(err, ShouldBeNil)
 				So(ageModelPage, ShouldResemble, expectedPageModel)
 			})
@@ -1431,7 +1471,7 @@ func TestCreateAgePage(t *testing.T) {
 	})
 
 	Convey("calling CreateAgePage with nil request results in an empty age page being generated and the expected error being returned", t, func() {
-		ageModelPage, err := CreateAgePage(nil, filter.Model{}, dataset.DatasetDetails{}, dataset.Version{}, dataset.Options{}, filter.DimensionOptions{}, dataset.VersionDimensions{}, datasetID, apiRouterVersion, lang)
+		ageModelPage, err := CreateAgePage(nil, filter.Model{}, dataset.DatasetDetails{}, dataset.Version{}, dataset.Options{}, filter.DimensionOptions{}, dataset.VersionDimensions{}, datasetID, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 		So(err, ShouldNotBeNil)
 		So(err.Error(), ShouldEqual, "invalid request provided to CreateAgePage")
 		So(ageModelPage, ShouldResemble, age.Page{})
@@ -1447,9 +1487,33 @@ func TestCreateAgePage(t *testing.T) {
 			},
 		}
 
-		ageModelPage, err := CreateAgePage(req, filterModel, dataset.DatasetDetails{}, dataset.Version{}, dataset.Options{}, filter.DimensionOptions{}, dataset.VersionDimensions{}, datasetID, apiRouterVersion, lang)
+		ageModelPage, err := CreateAgePage(req, filterModel, dataset.DatasetDetails{}, dataset.Version{}, dataset.Options{}, filter.DimensionOptions{}, dataset.VersionDimensions{}, datasetID, apiRouterVersion, lang, "", zebedee.EmergencyBanner{})
 		So(err, ShouldNotBeNil)
 		So(err.Error(), ShouldEqual, "parse \"invalid%url\": invalid URL escape \"%ur\"")
 		So(ageModelPage, ShouldResemble, age.Page{})
 	})
+}
+
+func getTestEmergencyBanner() zebedee.EmergencyBanner {
+	return zebedee.EmergencyBanner{
+		Type:        "notable_death",
+		Title:       "This is not not an emergency",
+		Description: "Something has gone wrong",
+		URI:         "google.com",
+		LinkText:    "More info",
+	}
+}
+
+func returnCorrectlyFormedEmergencyBanner() zebedee.EmergencyBanner {
+	return zebedee.EmergencyBanner{
+		Type:        "notable-death",
+		Title:       "This is not not an emergency",
+		Description: "Something has gone wrong",
+		URI:         "google.com",
+		LinkText:    "More info",
+	}
+}
+
+func getTestServiceMessage() string {
+	return "Test service message"
 }
