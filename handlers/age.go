@@ -13,7 +13,6 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/v2/headers"
-	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	dphandlers "github.com/ONSdigital/dp-net/v2/handlers"
 	"github.com/ONSdigital/log.go/v2/log"
 
@@ -264,16 +263,6 @@ func (f *Filter) Age() http.HandlerFunc {
 		if err != nil {
 			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
 		}
-
-		content := zebedee.EmergencyBanner{
-			Type:        "notable_death",
-			Title:       "This is not not an emergency",
-			Description: "Something has gone wrong...",
-			URI:         "https://www.ons.gov.uk/",
-			LinkText:    "more info",
-		}
-
-		homepageContent.EmergencyBanner = content
 
 		p, err := mapper.CreateAgePage(req, fj, datasetDetails, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 		if err != nil {

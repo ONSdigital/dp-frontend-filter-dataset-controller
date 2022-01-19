@@ -305,16 +305,6 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
 		}
 
-		content := zebedee.EmergencyBanner{
-			Type:        "notable_death",
-			Title:       "This is not not an emergency",
-			Description: "Something has gone wrong...",
-			URI:         "https://www.ons.gov.uk/",
-			LinkText:    "more info",
-		}
-
-		homepageContent.EmergencyBanner = content
-
 		f.listSelector(w, req, name, selectedValues.Items, allValues, fj, datasetDetails, dims, datasetID, ver.ReleaseDate, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 	})
 

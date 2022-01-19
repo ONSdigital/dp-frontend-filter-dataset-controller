@@ -16,7 +16,6 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
 	"github.com/ONSdigital/dp-api-clients-go/v2/hierarchy"
-	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 )
@@ -290,16 +289,6 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 		if err != nil {
 			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
 		}
-
-		content := zebedee.EmergencyBanner{
-			Type:        "notable_death",
-			Title:       "This is not not an emergency",
-			Description: "Something has gone wrong...",
-			URI:         "https://www.ons.gov.uk/",
-			LinkText:    "more info",
-		}
-
-		homepageContent.EmergencyBanner = content
 
 		p := mapper.CreateHierarchyPage(req, h, d, fil, selValsLabelMap, dims, name, req.URL.Path, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 

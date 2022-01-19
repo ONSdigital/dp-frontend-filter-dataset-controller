@@ -13,7 +13,6 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
-	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
@@ -203,16 +202,6 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		if err != nil {
 			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
 		}
-
-		content := zebedee.EmergencyBanner{
-			Type:        "notable_death",
-			Title:       "This is not not an emergency",
-			Description: "Something has gone wrong...",
-			URI:         "https://www.ons.gov.uk/",
-			LinkText:    "more info",
-		}
-
-		homepageContent.EmergencyBanner = content
 
 		latestPath := strings.TrimPrefix(latestURL.Path, f.APIRouterVersion)
 		p := mapper.CreatePreviewPage(req, dimensions, fj, datasetDetails, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
