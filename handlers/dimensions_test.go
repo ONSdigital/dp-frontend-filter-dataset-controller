@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
+	"github.com/ONSdigital/dp-api-clients-go/v2/hierarchy"
 	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
 )

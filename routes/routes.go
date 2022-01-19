@@ -5,11 +5,12 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ONSdigital/dp-api-clients-go/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
-	"github.com/ONSdigital/dp-api-clients-go/renderer"
-	"github.com/ONSdigital/dp-api-clients-go/search"
+	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
+	"github.com/ONSdigital/dp-api-clients-go/v2/hierarchy"
+	"github.com/ONSdigital/dp-api-clients-go/v2/renderer"
+	"github.com/ONSdigital/dp-api-clients-go/v2/search"
+	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
@@ -26,6 +27,7 @@ type Clients struct {
 	HealthcheckHandler func(w http.ResponseWriter, req *http.Request)
 	Renderer           *renderer.Renderer
 	Search             *search.Client
+	Zebedee            *zebedee.Client
 }
 
 // Init initialises routes for the service
@@ -37,7 +39,7 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients *Clien
 	}
 
 	filter := handlers.NewFilter(clients.Renderer, clients.Filter, clients.Dataset,
-		clients.Hierarchy, clients.Search, apiRouterVersion, cfg)
+		clients.Hierarchy, clients.Search, clients.Zebedee, apiRouterVersion, cfg)
 
 	r.StrictSlash(true).Path("/health").HandlerFunc(clients.HealthcheckHandler)
 

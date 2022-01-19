@@ -10,11 +10,12 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/ONSdigital/dp-api-clients-go/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/search"
+	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
+	"github.com/ONSdigital/dp-api-clients-go/v2/search"
+	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
-	dprequest "github.com/ONSdigital/dp-net/request"
+	dprequest "github.com/ONSdigital/dp-net/v2/request"
 	gomock "github.com/golang/mock/gomock"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -67,6 +68,7 @@ func TestUnitSearch(t *testing.T) {
 		mdc := NewMockDatasetClient(mockCtrl)
 		msc := NewMockSearchClient(mockCtrl)
 		mrc := NewMockRenderer(mockCtrl)
+		mzc := NewMockZebedeeClient(mockCtrl)
 
 		callSearch := func() *httptest.ResponseRecorder {
 			target := fmt.Sprintf("/filters/%s/dimensions/%s/search?q=%s", filterID, name, query)
@@ -75,7 +77,7 @@ func TestUnitSearch(t *testing.T) {
 			req.Header.Add(dprequest.CollectionIDHeaderKey, mockCollectionID)
 			w := httptest.NewRecorder()
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, "/v1", cfg)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, mzc, "/v1", cfg)
 			router.Path("/filters/{filterID}/dimensions/{name}/search").Methods(http.MethodGet).HandlerFunc(f.Search())
 			router.ServeHTTP(w, req)
 			return w
@@ -101,6 +103,7 @@ func TestUnitSearch(t *testing.T) {
 			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
 			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version).Return(dataset.VersionDimensions{}, nil)
+			mzc.EXPECT().GetHomepageContent(ctx, mockUserAuthToken, mockCollectionID, "en", "/").Return(zebedee.HomepageContent{}, nil)
 			mdc.EXPECT().GetOptionsBatchProcess(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
 				&[]string{"op1", "op2"}, gomock.Any(), maxDatasetOptions, maxWorkers).Return(nil)
 			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query, expectedSearchClientConfigs).Return(&search.Model{}, nil)
@@ -221,6 +224,7 @@ func TestUnitSearch(t *testing.T) {
 				&[]string{"op1", "op2"}, gomock.Any(), maxDatasetOptions, maxWorkers).Return(nil)
 			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query, expectedSearchClientConfigs).Return(&search.Model{}, nil)
 			mdc.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version).Return(dataset.VersionDimensions{}, nil)
+			mzc.EXPECT().GetHomepageContent(ctx, mockUserAuthToken, mockCollectionID, "en", "/").Return(zebedee.HomepageContent{}, nil)
 			mrc.EXPECT().Do("dataset-filter/hierarchy", gomock.Any()).Return([]byte(expectedHTML), errors.New("renderer error"))
 
 			w := callSearch()
@@ -274,6 +278,7 @@ func TestSearchUpdate(t *testing.T) {
 		mdc := NewMockDatasetClient(mockCtrl)
 		msc := NewMockSearchClient(mockCtrl)
 		mrc := NewMockRenderer(mockCtrl)
+		mzc := NewMockZebedeeClient(mockCtrl)
 
 		callSearchUpdate := func(formData string) *httptest.ResponseRecorder {
 			target := fmt.Sprintf("/filters/%s/dimensions/%s/search/update", filterID, name)
@@ -284,7 +289,7 @@ func TestSearchUpdate(t *testing.T) {
 			req.Header.Add(dprequest.CollectionIDHeaderKey, mockCollectionID)
 			w := httptest.NewRecorder()
 			router := mux.NewRouter()
-			f := NewFilter(mrc, mfc, mdc, nil, msc, "/v1", cfg)
+			f := NewFilter(mrc, mfc, mdc, nil, msc, mzc, "/v1", cfg)
 			router.Path("/filters/{filterID}/dimensions/{name}/search/update").HandlerFunc(f.SearchUpdate())
 			router.ServeHTTP(w, req)
 			return w

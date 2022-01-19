@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ONSdigital/dp-api-clients-go/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
@@ -74,6 +74,9 @@ func TestUnitFilterOverview(t *testing.T) {
 			mockDatasetClient.EXPECT().GetVersion(ctx, mockUserAuthToken, mockServiceAuthToken, mockDownloadToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016", "1").Return(dataset.Version{}, nil)
 			mockDatasetClient.EXPECT().GetEdition(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, "95c4669b-3ae9-4ba7-b690-87e890a1c67c", "2016").Return(dataset.Edition{}, nil)
 
+			mockZebedeeClient := NewMockZebedeeClient(mockCtrl)
+			mockZebedeeClient.EXPECT().GetHomepageContent(ctx, mockUserAuthToken, mockCollectionID, "en", "/")
+
 			mockRenderer := NewMockRenderer(mockCtrl)
 			mockRenderer.EXPECT().Do("dataset-filter/filter-overview", gomock.Any()).Return([]byte("some-bytes"), nil)
 
@@ -81,7 +84,7 @@ func TestUnitFilterOverview(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, "/v1", cfg)
+			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, mockZebedeeClient, "/v1", cfg)
 			router.Path("/filters/{filterID}/dimensions").HandlerFunc(f.FilterOverview())
 
 			router.ServeHTTP(w, req)
@@ -108,7 +111,7 @@ func TestUnitFilterOverview(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(nil, mockFilterClient, nil, nil, nil, "/v1", cfg)
+			f := NewFilter(nil, mockFilterClient, nil, nil, nil, nil, "/v1", cfg)
 			router.Path("/filters/{filterID}/dimensions/clear-all").HandlerFunc(f.FilterOverviewClearAll())
 
 			router.ServeHTTP(w, req)

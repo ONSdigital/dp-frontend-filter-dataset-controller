@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ONSdigital/dp-api-clients-go/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/headers"
+	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
+	"github.com/ONSdigital/dp-api-clients-go/v2/headers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
-	dprequest "github.com/ONSdigital/dp-net/request"
+	dprequest "github.com/ONSdigital/dp-net/v2/request"
 	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -49,7 +49,7 @@ func TestUpdateAge(t *testing.T) {
 		req.Header.Add(dprequest.FlorenceHeaderKey, mockUserAuthToken)
 		req.Header.Add(dprequest.CollectionIDHeaderKey, mockCollectionID)
 		w := httptest.NewRecorder()
-		f := NewFilter(nil, mockFilterClient, mockDatasetClient, nil, nil, "/v1", cfg)
+		f := NewFilter(nil, mockFilterClient, mockDatasetClient, nil, nil, nil, "/v1", cfg)
 		f.UpdateAge().ServeHTTP(w, req)
 		return w
 	}

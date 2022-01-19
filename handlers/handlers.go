@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/log.go/v2/log"
 )
@@ -13,6 +13,7 @@ type Filter struct {
 	Renderer             Renderer
 	FilterClient         FilterClient
 	DatasetClient        DatasetClient
+	ZebedeeClient        ZebedeeClient
 	HierarchyClient      HierarchyClient
 	SearchClient         SearchClient
 	SearchAPIAuthToken   string
@@ -26,13 +27,14 @@ type Filter struct {
 
 // NewFilter creates a new instance of Filter
 func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient,
-	sc SearchClient, apiRouterVersion string, cfg *config.Config) *Filter {
+	sc SearchClient, zc ZebedeeClient, apiRouterVersion string, cfg *config.Config) *Filter {
 	return &Filter{
 		Renderer:             r,
 		FilterClient:         fc,
 		DatasetClient:        dc,
 		HierarchyClient:      hc,
 		SearchClient:         sc,
+		ZebedeeClient:        zc,
 		APIRouterVersion:     apiRouterVersion,
 		downloadServiceURL:   cfg.DownloadServiceURL,
 		EnableDatasetPreview: cfg.EnableDatasetPreview,
