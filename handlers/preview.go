@@ -11,13 +11,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ONSdigital/dp-api-clients-go/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
+	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
 	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
-	dphandlers "github.com/ONSdigital/dp-net/handlers"
-	"github.com/ONSdigital/log.go/log"
+	dphandlers "github.com/ONSdigital/dp-net/v2/handlers"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 )
 
@@ -36,14 +36,14 @@ func (f Filter) Submit() http.HandlerFunc {
 
 		fil, eTag, err := f.FilterClient.GetJobState(req.Context(), userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
-			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to get job state", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		mdl, _, err := f.FilterClient.UpdateBlueprint(req.Context(), userAccessToken, "", "", collectionID, fil, true, eTag)
 		if err != nil {
-			log.Event(ctx, "failed to submit filter blueprint", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to submit filter blueprint", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -52,7 +52,7 @@ func (f Filter) Submit() http.HandlerFunc {
 
 		checkOptionsAdded, err := helpers.CheckAllDimensionsHaveAnOption(mdl.Dimensions)
 		if err != nil {
-			log.Event(ctx, "failed to check options on dimensions", log.ERROR, log.Error(err))
+			log.Error(ctx, "failed to check options on dimensions", err)
 			setStatusCode(req, w, err)
 			return
 		}
@@ -75,7 +75,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 
 		fj, err := f.FilterClient.GetOutput(req.Context(), userAccessToken, "", "", collectionID, filterOutputID)
 		if err != nil {
-			log.Event(ctx, "failed to get filter output", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
+			log.Error(ctx, "failed to get filter output", err, log.Data{"filter_output_id": filterOutputID})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -86,35 +86,35 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		if f.EnableDatasetPreview {
 			prev, err := f.FilterClient.GetPreview(req.Context(), userAccessToken, "", "", collectionID, filterOutputID)
 			if err != nil {
-				log.Event(ctx, "failed to get preview", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
+				log.Error(ctx, "failed to get preview", err, log.Data{"filter_output_id": filterOutputID})
 				setStatusCode(req, w, err)
 				return
 			}
 
 			if len(prev.Headers) < 1 {
 				err = errors.New("No preview headers returned")
-				log.Event(ctx, "failed to format header", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
+				log.Error(ctx, "failed to format header", err, log.Data{"filter_output_id": filterOutputID})
 				setStatusCode(req, w, err)
 				return
 			}
 
 			if len(prev.Headers[0]) < 4 || strings.ToUpper(prev.Headers[0][0:3]) != "V4_" {
 				err = errors.New("Unexpected format - expected `V4_N` in header")
-				log.Event(ctx, "failed to format header", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID, "header": prev.Headers})
+				log.Error(ctx, "failed to format header", err, log.Data{"filter_output_id": filterOutputID, "header": prev.Headers})
 				setStatusCode(req, w, err)
 				return
 			}
 
 			markingsColumnCount, err := strconv.Atoi(prev.Headers[0][3:])
 			if err != nil {
-				log.Event(ctx, "failed to get column count from header cell", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID, "header": prev.Headers[0]})
+				log.Error(ctx, "failed to get column count from header cell", err, log.Data{"filter_output_id": filterOutputID, "header": prev.Headers[0]})
 				setStatusCode(req, w, err)
 				return
 			}
 
 			if markingsColumnCount > len(prev.Headers) {
 				err = errors.New("Incongruent column count - column count from cell greater than header count")
-				log.Event(ctx, "failed to verify column count", log.ERROR, log.Error(err), log.Data{
+				log.Error(ctx, "failed to verify column count", err, log.Data{
 					"filter_output_id": filterOutputID, "header_count": len(prev.Headers), "column_count": markingsColumnCount,
 				})
 				setStatusCode(req, w, err)
@@ -141,7 +141,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 				if len(row) > 0 {
 					if markingsColumnCount > len(row) {
 						err = errors.New("Incongruent row length - column count from cell greater than row length")
-						log.Event(ctx, "failed to read row", log.ERROR, log.Error(err), log.Data{
+						log.Error(ctx, "failed to read row", err, log.Data{
 							"filter_output_id": filterOutputID, "row_length": len(row), "column_count": markingsColumnCount,
 						})
 						setStatusCode(req, w, err)
@@ -164,7 +164,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 
 		versionURL, err := url.Parse(fj.Links.Version.HRef)
 		if err != nil {
-			log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
+			log.Error(ctx, "failed to parse version href", err, log.Data{"filter_output_id": filterOutputID})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -172,38 +172,43 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 		datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 		if err != nil {
-			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID, "path": versionPath})
+			log.Error(ctx, "failed to extract dataset info from path", err, log.Data{"filter_output_id": filterOutputID, "path": versionPath})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		datasetDetails, err := f.DatasetClient.Get(req.Context(), userAccessToken, "", collectionID, datasetID)
 		if err != nil {
-			log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
+			log.Error(ctx, "failed to get dataset", err, log.Data{"dataset_id": datasetID})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, version)
 		if err != nil {
-			log.Event(ctx, "failed to get version", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+			log.Error(ctx, "failed to get version", err, log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		latestURL, err := url.Parse(datasetDetails.Links.LatestVersion.URL)
 		if err != nil {
-			log.Event(ctx, "failed to parse latest version href", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
+			log.Error(ctx, "failed to parse latest version href", err, log.Data{"filter_output_id": filterOutputID})
 			setStatusCode(req, w, err)
 			return
 		}
 
+		homepageContent, err := f.ZebedeeClient.GetHomepageContent(ctx, userAccessToken, collectionID, lang, "/")
+		if err != nil {
+			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
+		}
+
 		latestPath := strings.TrimPrefix(latestURL.Path, f.APIRouterVersion)
-		p := mapper.CreatePreviewPage(req, dimensions, fj, datasetDetails, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview, lang)
+		p := mapper.CreatePreviewPage(req, dimensions, fj, datasetDetails, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 
 		editionDetails, err := f.DatasetClient.GetEdition(req.Context(), userAccessToken, "", collectionID, datasetID, edition)
 		if err != nil {
-			log.Event(ctx, "failed to get edition details", log.ERROR, log.Error(err), log.Data{"dataset": datasetID, "edition": edition})
+			log.Error(ctx, "failed to get edition details", err, log.Data{"dataset": datasetID, "edition": edition})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -215,14 +220,14 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 
 		metadata, err := f.DatasetClient.GetVersionMetadata(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 		if err != nil {
-			log.Event(ctx, "failed to get version metadata", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+			log.Error(ctx, "failed to get version metadata", err, log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 		if err != nil {
-			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+			log.Error(ctx, "failed to get dimensions", err, log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -232,18 +237,18 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		size, err := f.getMetadataTextSize(req.Context(), userAccessToken, collectionID, datasetID, edition, version, metadata, dims)
 		if err != nil {
 			if err != errTooManyOptions {
-				log.Event(ctx, "failed to get metadata text size", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+				log.Error(ctx, "failed to get metadata text size", err, log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 				setStatusCode(req, w, err)
 				return
 			}
-			log.Event(ctx, "failed to get metadata text size because at least a dimension has too many options", log.WARN, log.Data{"dataset_id": datasetID, "edition": edition, "version": version, "max_metadata_options": maxMetadataOptions})
+			log.Warn(ctx, "failed to get metadata text size because at least a dimension has too many options", log.Data{"dataset_id": datasetID, "edition": edition, "version": version, "max_metadata_options": maxMetadataOptions})
 		}
 
 		// count number of options for each dimension in dataset API to check if any dimension has a single option
 		for _, dim := range dims.Items {
 			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, &dataset.QueryParams{Offset: 0, Limit: 1})
 			if err != nil {
-				log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err), log.Data{"dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
+				log.Error(ctx, "failed to get options from dataset client", err, log.Data{"dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
 				setStatusCode(req, w, err)
 				return
 			}
@@ -252,7 +257,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			if opts.TotalCount == 1 {
 				if len(opts.Items) < 1 {
 					err = errors.New("Incongruent opts.TotalCount (actual items length zero)")
-					log.Event(ctx, "failed to build dimensions", log.ERROR, log.Error(err), log.Data{
+					log.Error(ctx, "failed to build dimensions", err, log.Data{
 						"filter_output_id": filterOutputID, "opts.TotalCount": opts.TotalCount, "opts.Items length": len(opts.Items),
 					})
 					setStatusCode(req, w, err)
@@ -299,20 +304,20 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 
 		body, err := json.Marshal(p)
 		if err != nil {
-			log.Event(ctx, "failed to marshal json", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
+			log.Error(ctx, "failed to marshal json", err, log.Data{"filter_output_id": filterOutputID})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		b, err := f.Renderer.Do("dataset-filter/preview-page", body)
 		if err != nil {
-			log.Event(ctx, "failed to render", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
+			log.Error(ctx, "failed to render", err, log.Data{"filter_output_id": filterOutputID})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		if _, err := w.Write(b); err != nil {
-			log.Event(ctx, "failed to write response", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
+			log.Error(ctx, "failed to write response", err, log.Data{"filter_output_id": filterOutputID})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -329,7 +334,7 @@ func (f *Filter) GetFilterJob() http.HandlerFunc {
 
 		prev, err := f.FilterClient.GetOutput(req.Context(), accessToken, "", "", collectionID, filterOutputID)
 		if err != nil {
-			log.Event(ctx, "failed to get filter output", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
+			log.Error(ctx, "failed to get filter output", err, log.Data{"filter_output_id": filterOutputID})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -341,7 +346,7 @@ func (f *Filter) GetFilterJob() http.HandlerFunc {
 
 			downloadURL, err := url.Parse(download.URL)
 			if err != nil {
-				log.Event(ctx, "failed to parse download url", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
+				log.Error(ctx, "failed to parse download url", err, log.Data{"filter_output_id": filterOutputID})
 				setStatusCode(req, w, err)
 				return
 			}
@@ -354,7 +359,7 @@ func (f *Filter) GetFilterJob() http.HandlerFunc {
 
 		b, err := json.Marshal(prev)
 		if err != nil {
-			log.Event(ctx, "failed to marshal json", log.ERROR, log.Error(err), log.Data{"filter_output_id": filterOutputID})
+			log.Error(ctx, "failed to marshal json", err, log.Data{"filter_output_id": filterOutputID})
 			setStatusCode(req, w, err)
 			return
 		}

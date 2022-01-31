@@ -5,15 +5,16 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ONSdigital/dp-api-clients-go/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/filter"
-	"github.com/ONSdigital/dp-api-clients-go/hierarchy"
-	"github.com/ONSdigital/dp-api-clients-go/renderer"
-	"github.com/ONSdigital/dp-api-clients-go/search"
+	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
+	"github.com/ONSdigital/dp-api-clients-go/v2/hierarchy"
+	"github.com/ONSdigital/dp-api-clients-go/v2/renderer"
+	"github.com/ONSdigital/dp-api-clients-go/v2/search"
+	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 )
@@ -26,6 +27,7 @@ type Clients struct {
 	HealthcheckHandler func(w http.ResponseWriter, req *http.Request)
 	Renderer           *renderer.Renderer
 	Search             *search.Client
+	Zebedee            *zebedee.Client
 }
 
 // Init initialises routes for the service
@@ -33,11 +35,11 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients *Clien
 
 	apiRouterVersion, err := helpers.GetAPIRouterVersion(cfg.APIRouterURL)
 	if err != nil {
-		log.Event(ctx, "failed to obtain an api router version. Will assume that it is un-versioned", log.WARN, log.Error(err))
+		log.Warn(ctx, "failed to obtain an api router version. Will assume that it is un-versioned", log.FormatErrors([]error{err}))
 	}
 
 	filter := handlers.NewFilter(clients.Renderer, clients.Filter, clients.Dataset,
-		clients.Hierarchy, clients.Search, apiRouterVersion, cfg)
+		clients.Hierarchy, clients.Search, clients.Zebedee, apiRouterVersion, cfg)
 
 	r.StrictSlash(true).Path("/health").HandlerFunc(clients.HealthcheckHandler)
 
@@ -87,12 +89,12 @@ func profileMiddleware(token string) func(http.Handler) http.Handler {
 
 			pprofToken := req.Header.Get("Authorization")
 			if pprofToken == "Bearer " || pprofToken != "Bearer "+token {
-				log.Event(ctx, "invalid auth token", log.ERROR, log.Error(errors.New("invalid auth token")))
+				log.Error(ctx, "invalid auth token", errors.New("invalid auth token"))
 				w.WriteHeader(404)
 				return
 			}
 
-			log.Event(ctx, "accessing profiling endpoint", log.INFO)
+			log.Info(ctx, "accessing profiling endpoint")
 			h.ServeHTTP(w, req)
 		})
 	}

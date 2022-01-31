@@ -7,12 +7,12 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ONSdigital/dp-api-clients-go/health"
+	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/service"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/service/mock"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dphttp "github.com/ONSdigital/dp-net/http"
+	dphttp "github.com/ONSdigital/dp-net/v2/http"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 )

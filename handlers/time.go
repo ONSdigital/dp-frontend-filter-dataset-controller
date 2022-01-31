@@ -11,14 +11,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ONSdigital/dp-api-clients-go/dataset"
-	"github.com/ONSdigital/dp-api-clients-go/headers"
-	dphandlers "github.com/ONSdigital/dp-net/handlers"
+	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
+	"github.com/ONSdigital/dp-api-clients-go/v2/headers"
+	dphandlers "github.com/ONSdigital/dp-net/v2/handlers"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 )
 
@@ -34,20 +34,20 @@ func (f *Filter) UpdateTime() http.HandlerFunc {
 
 		eTag, err := f.FilterClient.RemoveDimension(ctx, userAccessToken, "", collectionID, filterID, dimensionName, headers.IfMatchAnyETag)
 		if err != nil {
-			log.Event(ctx, "failed to remove dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
+			log.Error(ctx, "failed to remove dimension", err, log.Data{"filter_id": filterID, "dimension": dimensionName})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		eTag, err = f.FilterClient.AddDimension(ctx, userAccessToken, "", collectionID, filterID, dimensionName, eTag)
 		if err != nil {
-			log.Event(ctx, "failed to add dimension", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
+			log.Error(ctx, "failed to add dimension", err, log.Data{"filter_id": filterID, "dimension": dimensionName})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		if err := req.ParseForm(); err != nil {
-			log.Event(ctx, "failed to parse form", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to parse form", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -66,22 +66,22 @@ func (f *Filter) UpdateTime() http.HandlerFunc {
 		case "latest":
 			eTag, err = f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, req.Form.Get("latest-option"), eTag)
 			if err != nil {
-				log.Event(ctx, "failed to add dimension value", log.ERROR, log.Error(err))
+				log.Error(ctx, "failed to add dimension value", err)
 			}
 		case "single":
 			eTag, err = f.addSingleTime(filterID, userAccessToken, collectionID, req, eTag)
 			if err != nil {
-				log.Event(ctx, "failed to add single time", log.ERROR, log.Error(err))
+				log.Error(ctx, "failed to add single time", err)
 			}
 		case "range":
 			eTag, err = f.addTimeRange(filterID, userAccessToken, collectionID, req, eTag)
 			if err != nil {
-				log.Event(ctx, "failed to add range of times", log.ERROR, log.Error(err))
+				log.Error(ctx, "failed to add range of times", err)
 			}
 		case "list":
 			eTag, err = f.addTimeList(filterID, userAccessToken, collectionID, req, eTag)
 			if err != nil {
-				log.Event(ctx, "failed to add list of times", log.ERROR, log.Error(err))
+				log.Error(ctx, "failed to add list of times", err)
 			}
 		}
 
@@ -116,12 +116,12 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 	endYearStr := req.Form.Get("end-year-grouped")
 	startYearInt, err := strconv.Atoi(startYearStr)
 	if err != nil {
-		log.Event(ctx, "failed to convert filter start year string to integer", log.ERROR, log.Error(err))
+		log.Error(ctx, "failed to convert filter start year string to integer", err)
 		return eTag, err
 	}
 	endYearInt, err := strconv.Atoi(endYearStr)
 	if err != nil {
-		log.Event(ctx, "failed to convert filter end year string to integer", log.ERROR, log.Error(err))
+		log.Error(ctx, "failed to convert filter end year string to integer", err)
 		return eTag, err
 	}
 
@@ -133,7 +133,7 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 			monthYearComboStr := fmt.Sprintf("%s %s", month, yearStr)
 			monthYearComboTime, err := time.Parse("January 2006", monthYearComboStr)
 			if err != nil {
-				log.Event(ctx, "failed to convert filtered month and year combo to time format", log.ERROR, log.Error(err))
+				log.Error(ctx, "failed to convert filtered month and year combo to time format", err)
 				return eTag, err
 			}
 			monthYearCombo := monthYearComboTime.Format("Jan-06")
@@ -143,7 +143,7 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 
 	newETag, err = f.FilterClient.SetDimensionValues(ctx, userAccessToken, "", collectionID, filterID, dimensionName, options, eTag)
 	if err != nil {
-		log.Event(ctx, "failed to add dimension values", log.ERROR, log.Error(err))
+		log.Error(ctx, "failed to add dimension values", err)
 		return eTag, err
 	}
 	return newETag, nil
@@ -203,34 +203,34 @@ func (f *Filter) Time() http.HandlerFunc {
 
 		fj, eTag0, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
-			log.Event(ctx, "failed to get job state", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to get job state", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		versionURL, err := url.Parse(fj.Links.Version.HRef)
 		if err != nil {
-			log.Event(ctx, "failed to parse version href", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to parse version href", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 		versionPath := strings.TrimPrefix(versionURL.Path, f.APIRouterVersion)
 		datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionPath)
 		if err != nil {
-			log.Event(ctx, "failed to extract dataset info from path", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "path": versionPath})
+			log.Error(ctx, "failed to extract dataset info from path", err, log.Data{"filter_id": filterID, "path": versionPath})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		datasetDetails, err := f.DatasetClient.Get(ctx, userAccessToken, "", collectionID, datasetID)
 		if err != nil {
-			log.Event(ctx, "failed to get dataset", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID})
+			log.Error(ctx, "failed to get dataset", err, log.Data{"dataset_id": datasetID})
 			setStatusCode(req, w, err)
 			return
 		}
 		ver, err := f.DatasetClient.GetVersion(ctx, userAccessToken, "", "", collectionID, datasetID, edition, version)
 		if err != nil {
-			log.Event(ctx, "failed to get version", log.ERROR, log.Error(err), log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
+			log.Error(ctx, "failed to get version", err, log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
@@ -238,7 +238,7 @@ func (f *Filter) Time() http.HandlerFunc {
 		// count number of options for the dimension in dataset API
 		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, &dataset.QueryParams{Offset: 0, Limit: 1})
 		if err != nil {
-			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
+			log.Error(ctx, "failed to get options from dataset client", err,
 				log.Data{"dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
@@ -253,7 +253,7 @@ func (f *Filter) Time() http.HandlerFunc {
 
 		dims, err := f.DatasetClient.GetVersionDimensions(ctx, userAccessToken, "", collectionID, datasetID, edition, version)
 		if err != nil {
-			log.Event(ctx, "failed to get dimensions", log.ERROR, log.Error(err),
+			log.Error(ctx, "failed to get dimensions", err,
 				log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
@@ -261,14 +261,14 @@ func (f *Filter) Time() http.HandlerFunc {
 
 		selValues, eTag1, err := f.FilterClient.GetDimensionOptionsInBatches(ctx, userAccessToken, "", collectionID, filterID, dimensionName, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
-			log.Event(ctx, "failed to get options from filter client", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dimension": dimensionName})
+			log.Error(ctx, "failed to get options from filter client", err, log.Data{"filter_id": filterID, "dimension": dimensionName})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		if eTag0 != eTag1 {
 			err := errors.New("inconsistent filter data")
-			log.Event(ctx, "data consistency cannot be guaranteed because filter was modified between calls", log.ERROR, log.Error(err),
+			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", err,
 				log.Data{"filter_id": filterID, "e_tag_0": eTag0, "e_tag_1": eTag1})
 			// The user might want to retry this handler in this case
 			setStatusCode(req, w, err)
@@ -277,35 +277,40 @@ func (f *Filter) Time() http.HandlerFunc {
 
 		allValues, err := f.DatasetClient.GetOptionsInBatches(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, f.BatchSize, f.BatchMaxWorkers)
 		if err != nil {
-			log.Event(ctx, "failed to get options from dataset client", log.ERROR, log.Error(err),
+			log.Error(ctx, "failed to get options from dataset client", err,
 				log.Data{"dimension": dimensionName, "dataset_id": datasetID, "edition": edition, "version": version})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		p, err := mapper.CreateTimePage(req, fj, datasetDetails, ver, allValues, selValues.Items, dims, datasetID, f.APIRouterVersion, lang)
+		homepageContent, err := f.ZebedeeClient.GetHomepageContent(ctx, userAccessToken, collectionID, lang, "/")
 		if err != nil {
-			log.Event(ctx, "failed to map data to page", log.ERROR, log.Error(err), log.Data{"filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})
+			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
+		}
+
+		p, err := mapper.CreateTimePage(req, fj, datasetDetails, ver, allValues, selValues.Items, dims, datasetID, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
+		if err != nil {
+			log.Error(ctx, "failed to map data to page", err, log.Data{"filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		b, err := json.Marshal(p)
 		if err != nil {
-			log.Event(ctx, "failed to marshal json", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to marshal json", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		templateBytes, err := f.Renderer.Do("dataset-filter/time", b)
 		if err != nil {
-			log.Event(ctx, "failed to render", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to render", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
 
 		if _, err := w.Write(templateBytes); err != nil {
-			log.Event(ctx, "failed to write response", log.ERROR, log.Error(err), log.Data{"filter_id": filterID})
+			log.Error(ctx, "failed to write response", err, log.Data{"filter_id": filterID})
 			setStatusCode(req, w, err)
 			return
 		}
