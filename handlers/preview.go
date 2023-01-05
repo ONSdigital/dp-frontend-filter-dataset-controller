@@ -41,6 +41,9 @@ func (f Filter) Submit() http.HandlerFunc {
 			return
 		}
 
+		// make sure dataset struct is empty
+		fil.Dataset = filter.Dataset{}
+
 		mdl, _, err := f.FilterClient.UpdateBlueprint(req.Context(), userAccessToken, "", "", collectionID, fil, true, eTag)
 		if err != nil {
 			log.Error(ctx, "failed to submit filter blueprint", err, log.Data{"filter_id": filterID})
