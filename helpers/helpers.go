@@ -45,7 +45,7 @@ func StringInSlice(str string, slice []string) (int, bool) {
 // Check each dimension has an option selected
 func CheckAllDimensionsHaveAnOption(dims []filter.ModelDimension) (check bool, err error) {
 	if len(dims) == 0 {
-		err = fmt.Errorf("no dimensions provided: %s", dims)
+		err = fmt.Errorf("no dimensions provided: %v", dims)
 		return
 	}
 	check = true
