@@ -21,8 +21,8 @@ func TestConfig(t *testing.T) {
 
 			Convey("Then the values should be set to the expected defaults", func() {
 				So(cfg.APIRouterURL, ShouldEqual, "http://localhost:23200/v1")
-				So(cfg.BatchSizeLimit, ShouldEqual, 1000)
 				So(cfg.BatchMaxWorkers, ShouldEqual, 100)
+				So(cfg.BatchSizeLimit, ShouldEqual, 1000)
 				So(cfg.BindAddr, ShouldEqual, ":20001")
 				So(cfg.DownloadServiceURL, ShouldEqual, "http://localhost:23600")
 				So(cfg.EnableDatasetPreview, ShouldBeFalse)

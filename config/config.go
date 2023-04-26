@@ -9,8 +9,8 @@ import (
 // Config represents service configuration for dp-frontend-filter-dataset-controller
 type Config struct {
 	APIRouterURL               string        `envconfig:"API_ROUTER_URL"`
-	BatchSizeLimit             int           `envconfig:"BATCH_SIZE_LIMIT"`
 	BatchMaxWorkers            int           `envconfig:"BATCH_MAX_WORKERS"`
+	BatchSizeLimit             int           `envconfig:"BATCH_SIZE_LIMIT"`
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
 	DownloadServiceURL         string        `envconfig:"DOWNLOAD_SERVICE_URL"`
 	EnableDatasetPreview       bool          `envconfig:"ENABLE_DATASET_PREVIEW"`
@@ -32,8 +32,8 @@ func Get() (cfg *Config, err error) {
 
 	cfg = &Config{
 		APIRouterURL:               "http://localhost:23200/v1",
-		BatchSizeLimit:             1000,
 		BatchMaxWorkers:            100,
+		BatchSizeLimit:             1000,
 		BindAddr:                   ":20001",
 		DownloadServiceURL:         "http://localhost:23600",
 		EnableDatasetPreview:       false,
