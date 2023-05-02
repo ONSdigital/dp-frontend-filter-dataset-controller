@@ -30,6 +30,10 @@ var cfg *Config
 // variables
 func Get() (cfg *Config, err error) {
 
+	if cfg != nil {
+		return cfg, nil
+	}
+
 	cfg = &Config{
 		APIRouterURL:               "http://localhost:23200/v1",
 		BatchMaxWorkers:            100,
