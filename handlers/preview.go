@@ -15,7 +15,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/mapper"
-	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/model"
 	dphandlers "github.com/ONSdigital/dp-net/v2/handlers"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
@@ -207,7 +207,8 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		}
 
 		latestPath := strings.TrimPrefix(latestURL.Path, f.APIRouterVersion)
-		p := mapper.CreatePreviewPage(req, dimensions, fj, datasetDetails, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
+		bp := f.Render.NewBasePageModel()
+		p := mapper.CreatePreviewPage(req, bp, dimensions, fj, datasetDetails, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 
 		editionDetails, err := f.DatasetClient.GetEdition(req.Context(), userAccessToken, "", collectionID, datasetID, edition)
 		if err != nil {
@@ -266,7 +267,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 					setStatusCode(req, w, err)
 					return
 				}
-				p.Data.SingleValueDimensions = append(p.Data.SingleValueDimensions, previewPage.Dimension{
+				p.Data.SingleValueDimensions = append(p.Data.SingleValueDimensions, model.PreviewDimension{
 					Name:   strings.Title(dim.Name),
 					Values: []string{opts.Items[0].Label},
 				})
@@ -299,31 +300,13 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 
 		// Text file is created on the fly in this app, so do not prepend the
 		// download service url as is the case with other downloads
-		p.Data.Downloads = append(p.Data.Downloads, previewPage.Download{
+		p.Data.Downloads = append(p.Data.Downloads, model.Download{
 			Extension: "txt",
 			Size:      strconv.Itoa(size),
 			URI:       fmt.Sprintf("/datasets/%s/editions/%s/versions/%s/metadata.txt", datasetID, edition, version),
 		})
 
-		body, err := json.Marshal(p)
-		if err != nil {
-			log.Error(ctx, "failed to marshal json", err, log.Data{"filter_output_id": filterOutputID})
-			setStatusCode(req, w, err)
-			return
-		}
-
-		b, err := f.Renderer.Do("dataset-filter/preview-page", body)
-		if err != nil {
-			log.Error(ctx, "failed to render", err, log.Data{"filter_output_id": filterOutputID})
-			setStatusCode(req, w, err)
-			return
-		}
-
-		if _, err := w.Write(b); err != nil {
-			log.Error(ctx, "failed to write response", err, log.Data{"filter_output_id": filterOutputID})
-			setStatusCode(req, w, err)
-			return
-		}
+		f.Render.BuildPage(w, p, "preview")
 	})
 }
 

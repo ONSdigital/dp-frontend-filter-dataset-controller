@@ -31,10 +31,10 @@ var cfg *Config
 
 // Get returns the default config with any modifications through environment
 // variables
-func Get() (cfg *Config, err error) {
-
-	if cfg != nil {
-		return cfg, nil
+func Get() (*Config, error) {
+	cfg, err := get()
+	if err != nil {
+		return nil, err
 	}
 
 	if cfg.Debug {
@@ -43,11 +43,19 @@ func Get() (cfg *Config, err error) {
 		cfg.PatternLibraryAssetsPath = "//cdn.ons.gov.uk/dp-design-system/afa6add"
 	}
 
+	return cfg, nil
+}
+
+func get() (*Config, error) {
+	if cfg != nil {
+		return cfg, nil
+	}
+
 	cfg = &Config{
 		APIRouterURL:               "http://localhost:23200/v1",
 		BatchMaxWorkers:            100,
 		BatchSizeLimit:             1000,
-		BindAddr:                   ":20001",
+		BindAddr:                   "localhost:20001",
 		Debug:                      false,
 		DownloadServiceURL:         "http://localhost:23600",
 		EnableDatasetPreview:       false,

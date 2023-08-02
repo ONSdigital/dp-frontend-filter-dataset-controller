@@ -7,11 +7,12 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
 	"github.com/ONSdigital/dp-api-clients-go/v2/health"
 	"github.com/ONSdigital/dp-api-clients-go/v2/hierarchy"
-	"github.com/ONSdigital/dp-api-clients-go/v2/renderer"
 	"github.com/ONSdigital/dp-api-clients-go/v2/search"
 	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/assets"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/routes"
+	render "github.com/ONSdigital/dp-renderer/v2"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -42,7 +43,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	// Initialise clients
 	svc.clients = &routes.Clients{
-		Renderer:  renderer.New(cfg.RendererURL),
+		Render:    render.NewWithDefaultClient(assets.Asset, assets.AssetNames, cfg.PatternLibraryAssetsPath, cfg.SiteDomain),
 		Filter:    filter.NewWithHealthClient(svc.routerHealthClient),
 		Dataset:   dataset.NewWithHealthClient(svc.routerHealthClient),
 		Hierarchy: hierarchy.NewWithHealthClient(svc.routerHealthClient),
@@ -126,11 +127,6 @@ func (svc *Service) Close(ctx context.Context) error {
 func (svc *Service) registerCheckers(ctx context.Context, cfg *config.Config) (err error) {
 
 	hasErrors := false
-
-	if err = svc.HealthCheck.AddCheck("frontend renderer", svc.clients.Renderer.Checker); err != nil {
-		hasErrors = true
-		log.Error(ctx, "failed to add frontend renderer checker", err)
-	}
 
 	if err = svc.HealthCheck.AddCheck("API router", svc.routerHealthClient.Checker); err != nil {
 		hasErrors = true

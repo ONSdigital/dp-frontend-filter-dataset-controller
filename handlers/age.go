@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -264,32 +263,14 @@ func (f *Filter) Age() http.HandlerFunc {
 			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
 		}
 
-		p, err := mapper.CreateAgePage(req, fj, datasetDetails, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
+		bp := f.Render.NewBasePageModel()
+		p, err := mapper.CreateAgePage(req, bp, fj, datasetDetails, ver, allValues, selValues, dims, datasetID, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 		if err != nil {
 			log.Error(ctx, "failed to map data to page", err,
 				log.Data{"filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})
 			setStatusCode(req, w, err)
 			return
 		}
-
-		b, err := json.Marshal(p)
-		if err != nil {
-			log.Error(ctx, "failed to marshal json", err, log.Data{"filter_id": filterID})
-			setStatusCode(req, w, err)
-			return
-		}
-
-		templateBytes, err := f.Renderer.Do("dataset-filter/age", b)
-		if err != nil {
-			log.Error(ctx, "failed to render", err, log.Data{"filter_id": filterID})
-			setStatusCode(req, w, err)
-			return
-		}
-
-		if _, err := w.Write(templateBytes); err != nil {
-			log.Error(ctx, "failed to write response", err, log.Data{"filter_id": filterID})
-			setStatusCode(req, w, err)
-			return
-		}
+		f.Render.BuildPage(w, p, "age")
 	})
 }

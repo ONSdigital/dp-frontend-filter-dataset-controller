@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -131,7 +130,8 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
 		}
 
-		p := mapper.CreateFilterOverview(req, dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
+		bp := f.Render.NewBasePageModel()
+		p := mapper.CreateFilterOverview(req, bp, dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 
 		editionDetails, err := f.DatasetClient.GetEdition(req.Context(), userAccessToken, "", collectionID, datasetID, edition)
 		if err != nil {
@@ -152,21 +152,7 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 			p.Data.HasUnsetDimensions = true
 		}
 
-		b, err := json.Marshal(p)
-		if err != nil {
-			log.Error(ctx, "failed to marshal json", err, log.Data{"filter_id": filterID})
-			setStatusCode(req, w, err)
-			return
-		}
-
-		templateBytes, err := f.Renderer.Do("dataset-filter/filter-overview", b)
-		if err != nil {
-			log.Error(ctx, "failed to render", err, log.Data{"filter_id": filterID})
-			setStatusCode(req, w, err)
-			return
-		}
-
-		w.Write(templateBytes)
+		f.Render.BuildPage(w, p, "filter-overview")
 	})
 
 }

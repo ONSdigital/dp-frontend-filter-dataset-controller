@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -110,23 +109,9 @@ func (f *Filter) Search() http.HandlerFunc {
 			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
 		}
 
-		p := mapper.CreateHierarchySearchPage(req, searchRes.Items, d, fil, selValsLabelMap, dims.Items, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
-
-		b, err := json.Marshal(p)
-		if err != nil {
-			log.Error(ctx, "failed to marshal json", err, log.Data{"filter_id": filterID})
-			setStatusCode(req, w, err)
-			return
-		}
-
-		templateBytes, err := f.Renderer.Do("dataset-filter/hierarchy", b)
-		if err != nil {
-			log.Error(ctx, "failed to render", err, log.Data{"filter_id": filterID})
-			setStatusCode(req, w, err)
-			return
-		}
-
-		w.Write(templateBytes)
+		bp := f.Render.NewBasePageModel()
+		p := mapper.CreateHierarchySearchPage(req, bp, searchRes.Items, d, fil, selValsLabelMap, dims.Items, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
+		f.Render.BuildPage(w, p, "hierarchy")
 	})
 
 }

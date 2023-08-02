@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -20,15 +19,12 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	fdHelpers "github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 
-	"github.com/ONSdigital/dp-frontend-models/model"
-	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/age"
-	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/filterOverview"
-	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/hierarchy"
-	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/listSelector"
-	"github.com/ONSdigital/dp-frontend-models/model/dataset-filter/previewPage"
-	timeModel "github.com/ONSdigital/dp-frontend-models/model/dataset-filter/time"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/model"
+	core "github.com/ONSdigital/dp-renderer/v2/model"
 	"github.com/ONSdigital/log.go/v2/log"
 )
+
+const sixteensVersion = "7d2d294"
 
 var hierarchyBrowseLookup = map[string]string{
 	"geography": "area",
@@ -42,9 +38,12 @@ var topLevelGeographies = map[string]bool{
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
 // front end page model
-func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension, datasetDims dataset.VersionDimensionItems, filter filter.Model, dst dataset.DatasetDetails, filterID, datasetID, releaseDate, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) filterOverview.Page {
-	var p filterOverview.Page
+func CreateFilterOverview(req *http.Request, bp core.Page, dimensions []filter.ModelDimension, datasetDims dataset.VersionDimensionItems, filter filter.Model, dst dataset.DatasetDetails, filterID, datasetID, releaseDate, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) model.Overview {
+	p := model.Overview{
+		Page: bp,
+	}
 	p.BetaBannerEnabled = true
+	p.FeatureFlags.SixteensVersion = sixteensVersion
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
@@ -61,7 +60,7 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
 
 	for _, d := range dimensions {
-		var fod filterOverview.Dimension
+		var fod model.Dimension
 
 		if d.Name == "time" {
 			for _, dim := range datasetDims {
@@ -122,15 +121,15 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 
 	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionPath)
 
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: dst.Title,
 		URI:   fmt.Sprintf("/datasets/%s/editions", dst.ID),
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: edition,
 		URI:   versionPath,
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: "Filter options",
 	})
 
@@ -139,9 +138,12 @@ func CreateFilterOverview(req *http.Request, dimensions []filter.ModelDimension,
 
 // CreateListSelectorPage maps items from API responses to form the model for a
 // dimension list selector page
-func CreateListSelectorPage(req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) listSelector.Page {
-	var p listSelector.Page
+func CreateListSelectorPage(req *http.Request, bp core.Page, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dst dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) model.Selector {
+	p := model.Selector{
+		Page: bp,
+	}
 	p.BetaBannerEnabled = true
+	p.FeatureFlags.SixteensVersion = sixteensVersion
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
@@ -180,35 +182,35 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 
 	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionPath)
 
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: dst.Title,
 		URI:   fmt.Sprintf("/datasets/%s/editions", dst.ID),
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: edition,
 		URI:   versionPath,
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: pageTitle,
 	})
 
-	p.Data.AddFromRange = listSelector.Link{
+	p.Data.AddFromRange = model.Link{
 		Label: fmt.Sprintf("add %s range", name),
 		URL:   fmt.Sprintf("/filters/%s/dimensions/%s", filter.FilterID, name),
 	}
 
-	p.Data.SaveAndReturn = listSelector.Link{
+	p.Data.SaveAndReturn = model.Link{
 		URL: fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
 	}
-	p.Data.Cancel = listSelector.Link{
+	p.Data.Cancel = model.Link{
 		URL: fmt.Sprintf("/filters/%s/dimensions", filter.FilterID),
 	}
 
-	p.Data.AddAllInRange = listSelector.Link{
+	p.Data.AddAllInRange = model.Link{
 		Label: fmt.Sprintf("All %ss", name),
 	}
 
@@ -237,7 +239,7 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 				isSelected = true
 			}
 		}
-		p.Data.RangeData.Values = append(p.Data.RangeData.Values, listSelector.Value{
+		p.Data.RangeData.Values = append(p.Data.RangeData.Values, model.Value{
 			Label:      val,
 			ID:         valueIDmap[val],
 			IsSelected: isSelected,
@@ -245,7 +247,7 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 	}
 
 	for _, val := range selectedListValues {
-		p.Data.FiltersAdded = append(p.Data.FiltersAdded, listSelector.Filter{
+		p.Data.FiltersAdded = append(p.Data.FiltersAdded, model.Filter{
 			RemoveURL: fmt.Sprintf("/filters/%s/dimensions/%s/remove/%s", filter.FilterID, name, valueIDmap[val]),
 			Label:     val,
 			ID:        valueIDmap[val],
@@ -262,8 +264,11 @@ func CreateListSelectorPage(req *http.Request, name string, selectedValues []fil
 }
 
 // CreatePreviewPage maps data items from API responses to create a preview page
-func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.DatasetDetails, filterOutputID, datasetID, releaseDate, apiRouterVersion string, enableDatasetPreivew bool, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) previewPage.Page {
-	var p previewPage.Page
+func CreatePreviewPage(req *http.Request, bp core.Page, dimensions []filter.ModelDimension, filter filter.Model, dst dataset.DatasetDetails, filterOutputID, datasetID, releaseDate, apiRouterVersion string, enableDatasetPreivew bool, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) model.Preview {
+	p := model.Preview{
+		Page: bp,
+	}
+	p.FeatureFlags.SixteensVersion = sixteensVersion
 	p.Metadata.Title = "Preview and Download"
 	p.BetaBannerEnabled = true
 	p.EnableDatasetPreview = enableDatasetPreivew
@@ -293,19 +298,19 @@ func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, fi
 
 	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionPath)
 
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: dst.Title,
 		URI:   fmt.Sprintf("/datasets/%s/editions", dst.ID),
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: edition,
 		URI:   versionPath,
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", filter.Links.FilterBlueprint.ID),
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: "Preview",
 	})
 
@@ -318,7 +323,7 @@ func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, fi
 	_, p.Data.Edition, _, _ = helpers.ExtractDatasetInfoFromPath(versionPath)
 
 	for ext, d := range filter.Downloads {
-		p.Data.Downloads = append(p.Data.Downloads, previewPage.Download{
+		p.Data.Downloads = append(p.Data.Downloads, model.Download{
 			Extension: ext,
 			Size:      d.Size,
 			URI:       d.URL,
@@ -327,7 +332,7 @@ func CreatePreviewPage(req *http.Request, dimensions []filter.ModelDimension, fi
 	}
 
 	for _, dim := range dimensions {
-		p.Data.Dimensions = append(p.Data.Dimensions, previewPage.Dimension{
+		p.Data.Dimensions = append(p.Data.Dimensions, model.PreviewDimension{
 			Name:   dim.Name,
 			Values: dim.Values,
 		})
@@ -356,12 +361,12 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 }
 
 // CreateAgePage creates an age selector page based on api responses
-func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals filter.DimensionOptions, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) (age.Page, error) {
-	var p age.Page
-	if req == nil {
-		return p, errors.New("invalid request provided to CreateAgePage")
+func CreateAgePage(req *http.Request, bp core.Page, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals filter.DimensionOptions, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) (model.Age, error) {
+	p := model.Age{
+		Page: bp,
 	}
 	p.BetaBannerEnabled = true
+	p.FeatureFlags.SixteensVersion = sixteensVersion
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
@@ -383,7 +388,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
-		return age.Page{}, err
+		return model.Age{}, err
 	}
 	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
@@ -391,19 +396,19 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 
 	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionPath)
 
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: d.Title,
 		URI:   fmt.Sprintf("/datasets/%s/editions", d.ID),
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: edition,
 		URI:   versionPath,
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: "Age",
 	})
 
@@ -418,7 +423,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 	oldest := math.MinInt32
 
 	// iterate all values, and add them to the Page in the same order,
-	// settign the 'isSelected' for each one of them (according to selVals)
+	// setting the 'isSelected' for each one of them (according to selVals)
 	// and setting oldest and youngest values
 	for _, a := range allVals.Items {
 
@@ -451,7 +456,7 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 		}
 
 		// append the age value to the page
-		p.Data.Ages = append(p.Data.Ages, age.Value{
+		p.Data.Ages = append(p.Data.Ages, model.AgeValue{
 			Option:     labelIDs[a.Label],
 			Label:      a.Label,
 			IsSelected: isSelected,
@@ -499,9 +504,12 @@ func CreateAgePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, 
 }
 
 // CreateTimePage will create a time selector page based on api response models
-func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) (timeModel.Page, error) {
-	var p timeModel.Page
+func CreateTimePage(req *http.Request, bp core.Page, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) (model.Time, error) {
+	p := model.Time{
+		Page: bp,
+	}
 	p.BetaBannerEnabled = true
+	p.FeatureFlags.SixteensVersion = sixteensVersion
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
@@ -540,19 +548,19 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 
 	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionPath)
 
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: d.Title,
 		URI:   fmt.Sprintf("/datasets/%s/editions", d.ID),
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: edition,
 		URI:   versionPath,
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: "Time",
 	})
 
@@ -575,13 +583,13 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 	copy(sortedTimes, times)
 	dates.Sort(sortedTimes)
 
-	p.Data.FirstTime = timeModel.Value{
+	p.Data.FirstTime = model.TimeValue{
 		Option: lookup[sortedTimes[0].Format("Jan-06")],
 		Month:  sortedTimes[0].Month().String(),
 		Year:   fmt.Sprintf("%d", sortedTimes[0].Year()),
 	}
 
-	p.Data.LatestTime = timeModel.Value{
+	p.Data.LatestTime = model.TimeValue{
 		Option: lookup[sortedTimes[len(sortedTimes)-1].Format("Jan-06")],
 		Month:  sortedTimes[len(sortedTimes)-1].Month().String(),
 		Year:   fmt.Sprintf("%d", sortedTimes[len(sortedTimes)-1].Year()),
@@ -613,7 +621,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 			}
 		}
 
-		p.Data.Values = append(p.Data.Values, timeModel.Value{
+		p.Data.Values = append(p.Data.Values, model.TimeValue{
 			Option:     lookup[val.Format("Jan-06")],
 			Month:      val.Month().String(),
 			Year:       fmt.Sprintf("%d", val.Year()),
@@ -621,7 +629,7 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 		})
 	}
 
-	p.Data.FormAction = timeModel.Link{
+	p.Data.FormAction = model.Link{
 		URL: fmt.Sprintf("/filters/%s/dimensions/time/update", f.FilterID),
 	}
 
@@ -706,18 +714,18 @@ func CreateTimePage(req *http.Request, f filter.Model, d dataset.DatasetDetails,
 			minYear = yearStr
 		}
 	}
-	var listOfAllMonths []timeModel.Month
+	var listOfAllMonths []model.Month
 	numberOfMonthsInAYear := 12
 	for i := 0; i < numberOfMonthsInAYear; i++ {
 		monthName := time.Month(i + 1).String()
 		_, isSelected := fdHelpers.StringInSlice(monthName, selectedMonths)
-		singleMonth := timeModel.Month{
+		singleMonth := model.Month{
 			Name:       monthName,
 			IsSelected: isSelected,
 		}
 		listOfAllMonths = append(listOfAllMonths, singleMonth)
 	}
-	GroupedSelection := timeModel.GroupedSelection{
+	GroupedSelection := model.GroupedSelection{
 		Months:    listOfAllMonths,
 		YearStart: minYear,
 		YearEnd:   maxYear,
@@ -780,9 +788,12 @@ func isTimeRange(sortedTimes []time.Time, selVals []filter.DimensionOption) bool
 }
 
 // CreateHierarchySearchPage forms a search page based on various api response models
-func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selectedValueLabels map[string]string, dims []dataset.VersionDimension, name, curPath, datasetID, releaseDate, referrer, query, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) hierarchy.Page {
-	var p hierarchy.Page
+func CreateHierarchySearchPage(req *http.Request, bp core.Page, items []search.Item, dst dataset.DatasetDetails, f filter.Model, selectedValueLabels map[string]string, dims []dataset.VersionDimension, name, curPath, datasetID, releaseDate, referrer, query, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) model.Hierarchy {
+	p := model.Hierarchy{
+		Page: bp,
+	}
 	p.BetaBannerEnabled = true
+	p.FeatureFlags.SixteensVersion = sixteensVersion
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
@@ -824,19 +835,19 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	versionPath := strings.TrimPrefix(versionURL.Path, apiRouterVersion)
 
 	p.Data.LandingPageURL = versionPath + "#id-dimensions"
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: dst.Title,
 		URI:   versionPath,
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: title,
 		URI:   fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name),
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: "Search results",
 	})
 
@@ -850,7 +861,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	p.Data.RemoveAll.URL = curPath + "/remove-all"
 
 	for option, label := range selectedValueLabels {
-		p.Data.FiltersAdded = append(p.Data.FiltersAdded, hierarchy.Filter{
+		p.Data.FiltersAdded = append(p.Data.FiltersAdded, model.Filter{
 			Label:     label,
 			RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, option),
 			ID:        option,
@@ -863,7 +874,7 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 
 		for _, item := range items {
 			_, selected := selectedValueLabels[item.Code]
-			p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
+			p.Data.FilterList = append(p.Data.FilterList, model.List{
 				Label:    item.Label,
 				ID:       item.Code,
 				SubNum:   strconv.Itoa(item.NumberOfChildren),
@@ -882,10 +893,13 @@ func CreateHierarchySearchPage(req *http.Request, items []search.Item, dst datas
 	return p
 }
 
-// CreateHierarchyPage maps data items from API responses to form a hirearchy page
-func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selectedValueLabels map[string]string, dims dataset.VersionDimensions, name, curPath, datasetID, releaseDate, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) hierarchy.Page {
-	var p hierarchy.Page
+// CreateHierarchyPage maps data items from API responses to form a hierarchy page
+func CreateHierarchyPage(req *http.Request, bp core.Page, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selectedValueLabels map[string]string, dims dataset.VersionDimensions, name, curPath, datasetID, releaseDate, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) model.Hierarchy {
+	p := model.Hierarchy{
+		Page: bp,
+	}
 	p.BetaBannerEnabled = true
+	p.FeatureFlags.SixteensVersion = sixteensVersion
 	p.Language = lang
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
@@ -936,22 +950,22 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 
 	_, edition, _, _ := helpers.ExtractDatasetInfoFromPath(versionPath)
 
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: dst.Title,
 		URI:   fmt.Sprintf("/datasets/%s/editions", dst.ID),
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: edition,
 		URI:   versionPath,
 	})
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: "Filter options",
 		URI:   fmt.Sprintf("/filters/%s/dimensions", f.FilterID),
 	})
 
 	if len(h.Breadcrumbs) > 0 {
 		if name == "geography" {
-			p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+			p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 				Title: "Geographic Areas",
 				URI:   fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, "geography"),
 			})
@@ -968,7 +982,7 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 							url = fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name)
 						}
 
-						p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+						p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 							Title: breadcrumb.Label,
 							URI:   url,
 						})
@@ -987,16 +1001,15 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 					url = fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name)
 				}
 
-				p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+				p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 					Title: breadcrumb.Label,
 					URI:   url,
 				})
 			}
-
 		}
 	}
 
-	p.Breadcrumb = append(p.Breadcrumb, model.TaxonomyNode{
+	p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 		Title: title,
 	})
 
@@ -1007,12 +1020,12 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 	if len(h.Breadcrumbs) > 0 {
 		if len(h.Breadcrumbs) == 1 || topLevelGeographies[h.Breadcrumbs[0].Links.Code.ID] && name == "geography" {
 			p.Data.Parent = pageTitle
-			p.Data.GoBack = hierarchy.Link{
+			p.Data.GoBack = model.Link{
 				URL: fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name),
 			}
 		} else {
 			p.Data.Parent = h.Breadcrumbs[0].Label
-			p.Data.GoBack = hierarchy.Link{
+			p.Data.GoBack = model.Link{
 				URL: fmt.Sprintf("/filters/%s/dimensions/%s/%s", f.FilterID, name, h.Breadcrumbs[0].Links.Code.ID),
 			}
 		}
@@ -1029,7 +1042,7 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 	p.Data.RemoveAll.URL = curPath + "/remove-all"
 
 	for option, label := range selectedValueLabels {
-		p.Data.FiltersAdded = append(p.Data.FiltersAdded, hierarchy.Filter{
+		p.Data.FiltersAdded = append(p.Data.FiltersAdded, model.Filter{
 			Label:     label,
 			RemoveURL: fmt.Sprintf("%s/remove/%s", curPath, option),
 			ID:        option,
@@ -1038,7 +1051,7 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 
 	if h.HasData && len(h.Breadcrumbs) == 0 {
 		_, selected := selectedValueLabels[h.Links.Code.ID]
-		p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
+		p.Data.FilterList = append(p.Data.FilterList, model.List{
 			Label:    h.Label,
 			ID:       h.Links.Code.ID,
 			SubNum:   "0",
@@ -1050,7 +1063,7 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 
 	for _, child := range h.Children {
 		_, selected := selectedValueLabels[child.Links.Code.ID]
-		p.Data.FilterList = append(p.Data.FilterList, hierarchy.List{
+		p.Data.FilterList = append(p.Data.FilterList, model.List{
 			Label:    child.Label,
 			ID:       child.Links.Code.ID,
 			SubNum:   strconv.Itoa(child.NumberofChildren),
@@ -1068,17 +1081,17 @@ func CreateHierarchyPage(req *http.Request, h hierarchyClient.Model, dst dataset
 }
 
 // mapCookiePreferences reads cookie policy and preferences cookies and then maps the values to the page model
-func mapCookiePreferences(req *http.Request, preferencesIsSet *bool, policy *model.CookiesPolicy) {
+func mapCookiePreferences(req *http.Request, preferencesIsSet *bool, policy *core.CookiesPolicy) {
 	preferencesCookie := cookies.GetCookiePreferences(req)
 	*preferencesIsSet = preferencesCookie.IsPreferenceSet
-	*policy = model.CookiesPolicy{
+	*policy = core.CookiesPolicy{
 		Essential: preferencesCookie.Policy.Essential,
 		Usage:     preferencesCookie.Policy.Usage,
 	}
 }
 
-func mapEmergencyBanner(bannerData zebedee.EmergencyBanner) model.EmergencyBanner {
-	var mappedEmergencyBanner model.EmergencyBanner
+func mapEmergencyBanner(bannerData zebedee.EmergencyBanner) core.EmergencyBanner {
+	var mappedEmergencyBanner core.EmergencyBanner
 	emptyBannerObj := zebedee.EmergencyBanner{}
 	if bannerData != emptyBannerObj {
 		mappedEmergencyBanner.Title = bannerData.Title

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"io"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
@@ -9,6 +10,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/search"
 	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	"github.com/ONSdigital/dp-renderer/v2/model"
 )
 
 //go:generate mockgen -source=clients.go -destination=mock_clients.go -package=handlers github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers FilterClient,DatasetClient,HierarchyClient,SearchClient,Renderer
@@ -66,10 +68,10 @@ type SearchClient interface {
 	Dimension(ctx context.Context, datasetID, edition, version, name, query string, params ...search.Config) (m *search.Model, err error)
 }
 
-// Renderer provides an interface for a service template renderer
-type Renderer interface {
-	Checker(ctx context.Context, check *health.CheckState) error
-	Do(path string, b []byte) ([]byte, error)
+// RenderClient is an interface with methods for rendering a template
+type RenderClient interface {
+	BuildPage(w io.Writer, pageModel interface{}, templateName string)
+	NewBasePageModel() model.Page
 }
 
 type ZebedeeClient interface {

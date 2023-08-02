@@ -10,7 +10,7 @@ import (
 
 // Filter represents the handlers for Filtering
 type Filter struct {
-	Renderer             Renderer
+	Render               RenderClient
 	FilterClient         FilterClient
 	DatasetClient        DatasetClient
 	ZebedeeClient        ZebedeeClient
@@ -26,10 +26,10 @@ type Filter struct {
 }
 
 // NewFilter creates a new instance of Filter
-func NewFilter(r Renderer, fc FilterClient, dc DatasetClient, hc HierarchyClient,
+func NewFilter(rc RenderClient, fc FilterClient, dc DatasetClient, hc HierarchyClient,
 	sc SearchClient, zc ZebedeeClient, apiRouterVersion string, cfg *config.Config) *Filter {
 	return &Filter{
-		Renderer:             r,
+		Render:               rc,
 		FilterClient:         fc,
 		DatasetClient:        dc,
 		HierarchyClient:      hc,

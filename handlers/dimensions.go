@@ -357,25 +357,9 @@ func splitCode(id string) (string, string, error) {
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) {
-	ctx := req.Context()
-
-	p := mapper.CreateListSelectorPage(req, name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate, f.APIRouterVersion, lang, serviceMessage, emergencyBannerContent)
-
-	b, err := json.Marshal(p)
-	if err != nil {
-		log.Error(ctx, "failed to marshal json", err, log.Data{"filter_id": filter.FilterID})
-		setStatusCode(req, w, err)
-		return
-	}
-
-	templateBytes, err := f.Renderer.Do("dataset-filter/list-selector", b)
-	if err != nil {
-		log.Error(ctx, "failed to render", err, log.Data{"filter_id": filter.FilterID})
-		setStatusCode(req, w, err)
-		return
-	}
-
-	w.Write(templateBytes)
+	bp := f.Render.NewBasePageModel()
+	p := mapper.CreateListSelectorPage(req, bp, name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate, f.APIRouterVersion, lang, serviceMessage, emergencyBannerContent)
+	f.Render.BuildPage(w, p, "list-selector")
 }
 
 // DimensionAddAll will add all dimension values to a basket

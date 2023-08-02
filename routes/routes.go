@@ -8,12 +8,12 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
 	"github.com/ONSdigital/dp-api-clients-go/v2/hierarchy"
-	"github.com/ONSdigital/dp-api-clients-go/v2/renderer"
 	"github.com/ONSdigital/dp-api-clients-go/v2/search"
 	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
+	render "github.com/ONSdigital/dp-renderer/v2"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
@@ -25,7 +25,7 @@ type Clients struct {
 	Dataset            *dataset.Client
 	Hierarchy          *hierarchy.Client
 	HealthcheckHandler func(w http.ResponseWriter, req *http.Request)
-	Renderer           *renderer.Renderer
+	Render             *render.Render
 	Search             *search.Client
 	Zebedee            *zebedee.Client
 }
@@ -38,7 +38,7 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients *Clien
 		log.Warn(ctx, "failed to obtain an api router version. Will assume that it is un-versioned", log.FormatErrors([]error{err}))
 	}
 
-	filter := handlers.NewFilter(clients.Renderer, clients.Filter, clients.Dataset,
+	filter := handlers.NewFilter(clients.Render, clients.Filter, clients.Dataset,
 		clients.Hierarchy, clients.Search, clients.Zebedee, apiRouterVersion, cfg)
 
 	r.StrictSlash(true).Path("/health").HandlerFunc(clients.HealthcheckHandler)
