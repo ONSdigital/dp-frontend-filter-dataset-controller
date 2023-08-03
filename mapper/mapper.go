@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -364,6 +365,9 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 func CreateAgePage(req *http.Request, bp core.Page, f filter.Model, d dataset.DatasetDetails, v dataset.Version, allVals dataset.Options, selVals filter.DimensionOptions, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) (model.Age, error) {
 	p := model.Age{
 		Page: bp,
+	}
+	if req == nil {
+		return p, errors.New("invalid request provided to CreateAgePage")
 	}
 	p.BetaBannerEnabled = true
 	p.FeatureFlags.SixteensVersion = sixteensVersion
