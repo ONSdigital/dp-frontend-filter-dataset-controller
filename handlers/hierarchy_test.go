@@ -15,6 +15,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	dprequest "github.com/ONSdigital/dp-net/v2/request"
+	core "github.com/ONSdigital/dp-renderer/v2/model"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 
@@ -70,7 +71,7 @@ func TestHierarchy(t *testing.T) {
 		mockFilterClient := NewMockFilterClient(mockCtrl)
 		mockHierarchyClient := NewMockHierarchyClient(mockCtrl)
 		mockDatasetClient := NewMockDatasetClient(mockCtrl)
-		mockRenderer := NewMockRenderer(mockCtrl)
+		mockRend := NewMockRenderClient(mockCtrl)
 		mockZebedeeClient := NewMockZebedeeClient(mockCtrl)
 
 		testSelectedOptions := filter.DimensionOptions{
@@ -114,7 +115,7 @@ func TestHierarchy(t *testing.T) {
 
 			router := mux.NewRouter()
 			w := httptest.NewRecorder()
-			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, mockHierarchyClient, nil, mockZebedeeClient, "/v1", cfg)
+			f := NewFilter(mockRend, mockFilterClient, mockDatasetClient, mockHierarchyClient, nil, mockZebedeeClient, "/v1", cfg)
 			router.Path("/filters/{filterID}/dimensions/{name}").HandlerFunc(f.Hierarchy())
 			router.Path("/filters/{filterID}/dimensions/{name}/{code}").HandlerFunc(f.Hierarchy())
 			router.ServeHTTP(w, req)
@@ -122,7 +123,6 @@ func TestHierarchy(t *testing.T) {
 		}
 
 		Convey("Hierarchy called for the root node calls the expected methods and returns the expected marshlled hierarchy page", func() {
-			testTemplate := []byte{1, 2, 3, 4, 5}
 			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, testETag(0), nil)
 			mockHierarchyClient.EXPECT().GetRoot(ctx, testInstanceID, dimensionName).Return(hierarchy.Model{}, nil)
 			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
@@ -133,16 +133,15 @@ func TestHierarchy(t *testing.T) {
 			mockDatasetClient.EXPECT().GetOptionsBatchProcess(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion, dimensionName,
 				&[]string{"op1", "op2"}, gomock.Any(), maxDatasetOptions, maxWorkers).Return(nil)
 			mockZebedeeClient.EXPECT().GetHomepageContent(ctx, mockUserAuthToken, mockCollectionID, "en", "/").Return(zebedee.HomepageContent{}, nil)
-			mockRenderer.EXPECT().Do(gomock.Eq("dataset-filter/hierarchy"), gomock.Any()).Return(testTemplate, nil)
+			mockRend.EXPECT().NewBasePageModel().Return(core.NewPage(cfg.PatternLibraryAssetsPath, cfg.SiteDomain))
+			mockRend.EXPECT().BuildPage(gomock.Any(), gomock.Any(), "hierarchy")
 
 			w := callHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s", filterID, dimensionName))
 
 			So(w.Code, ShouldEqual, http.StatusOK)
-			So(w.Body.Bytes(), ShouldResemble, testTemplate)
 		})
 
 		Convey("Hierarchy called for the child node calls the expected methods and returns the expected marshlled hierarchy page", func() {
-			testTemplate := []byte{1, 2, 3, 4, 5}
 			mockFilterClient.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filterModel, testETag(0), nil)
 			mockHierarchyClient.EXPECT().GetChild(ctx, testInstanceID, dimensionName, mockCode).Return(hierarchy.Model{}, nil)
 			mockFilterClient.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, "", mockCollectionID, filterID, dimensionName,
@@ -153,12 +152,12 @@ func TestHierarchy(t *testing.T) {
 			mockDatasetClient.EXPECT().GetOptionsBatchProcess(ctx, mockUserAuthToken, "", mockCollectionID, mockDatasetID, mockEdition, mockVersion, dimensionName,
 				&[]string{"op1", "op2"}, gomock.Any(), maxDatasetOptions, maxWorkers).Return(nil)
 			mockZebedeeClient.EXPECT().GetHomepageContent(ctx, mockUserAuthToken, mockCollectionID, "en", "/").Return(zebedee.HomepageContent{}, nil)
-			mockRenderer.EXPECT().Do(gomock.Eq("dataset-filter/hierarchy"), gomock.Any()).Return(testTemplate, nil)
+			mockRend.EXPECT().NewBasePageModel().Return(core.NewPage(cfg.PatternLibraryAssetsPath, cfg.SiteDomain))
+			mockRend.EXPECT().BuildPage(gomock.Any(), gomock.Any(), "hierarchy")
 
 			w := callHierarchy(fmt.Sprintf("/filters/%s/dimensions/%s/%s", filterID, dimensionName, mockCode))
 
 			So(w.Code, ShouldEqual, http.StatusOK)
-			So(w.Body.Bytes(), ShouldResemble, testTemplate)
 		})
 
 		Convey("Hierarchy called for the root node calls the expected methods. If dataset GetOption fails, an InternalServerError status code is returned", func() {
@@ -179,7 +178,6 @@ func TestHierarchy(t *testing.T) {
 		})
 
 	})
-
 }
 
 func TestHierarchyUpdate(t *testing.T) {

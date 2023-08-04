@@ -6,6 +6,7 @@ package handlers
 
 import (
 	context "context"
+	io "io"
 	reflect "reflect"
 
 	dataset "github.com/ONSdigital/dp-api-clients-go/v2/dataset"
@@ -14,6 +15,7 @@ import (
 	search "github.com/ONSdigital/dp-api-clients-go/v2/search"
 	zebedee "github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	healthcheck "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	model "github.com/ONSdigital/dp-renderer/v2/model"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -632,56 +634,53 @@ func (mr *MockSearchClientMockRecorder) Dimension(ctx, datasetID, edition, versi
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dimension", reflect.TypeOf((*MockSearchClient)(nil).Dimension), varargs...)
 }
 
-// MockRenderer is a mock of Renderer interface.
-type MockRenderer struct {
+// MockRenderClient is a mock of RenderClient interface.
+type MockRenderClient struct {
 	ctrl     *gomock.Controller
-	recorder *MockRendererMockRecorder
+	recorder *MockRenderClientMockRecorder
 }
 
-// MockRendererMockRecorder is the mock recorder for MockRenderer.
-type MockRendererMockRecorder struct {
-	mock *MockRenderer
+// MockRenderClientMockRecorder is the mock recorder for MockRenderClient.
+type MockRenderClientMockRecorder struct {
+	mock *MockRenderClient
 }
 
-// NewMockRenderer creates a new mock instance.
-func NewMockRenderer(ctrl *gomock.Controller) *MockRenderer {
-	mock := &MockRenderer{ctrl: ctrl}
-	mock.recorder = &MockRendererMockRecorder{mock}
+// NewMockRenderClient creates a new mock instance.
+func NewMockRenderClient(ctrl *gomock.Controller) *MockRenderClient {
+	mock := &MockRenderClient{ctrl: ctrl}
+	mock.recorder = &MockRenderClientMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockRenderer) EXPECT() *MockRendererMockRecorder {
+func (m *MockRenderClient) EXPECT() *MockRenderClientMockRecorder {
 	return m.recorder
 }
 
-// Checker mocks base method.
-func (m *MockRenderer) Checker(ctx context.Context, check *healthcheck.CheckState) error {
+// BuildPage mocks base method.
+func (m *MockRenderClient) BuildPage(w io.Writer, pageModel interface{}, templateName string) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Checker", ctx, check)
-	ret0, _ := ret[0].(error)
+	m.ctrl.Call(m, "BuildPage", w, pageModel, templateName)
+}
+
+// BuildPage indicates an expected call of BuildPage.
+func (mr *MockRenderClientMockRecorder) BuildPage(w, pageModel, templateName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BuildPage", reflect.TypeOf((*MockRenderClient)(nil).BuildPage), w, pageModel, templateName)
+}
+
+// NewBasePageModel mocks base method.
+func (m *MockRenderClient) NewBasePageModel() model.Page {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewBasePageModel")
+	ret0, _ := ret[0].(model.Page)
 	return ret0
 }
 
-// Checker indicates an expected call of Checker.
-func (mr *MockRendererMockRecorder) Checker(ctx, check interface{}) *gomock.Call {
+// NewBasePageModel indicates an expected call of NewBasePageModel.
+func (mr *MockRenderClientMockRecorder) NewBasePageModel() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Checker", reflect.TypeOf((*MockRenderer)(nil).Checker), ctx, check)
-}
-
-// Do mocks base method.
-func (m *MockRenderer) Do(path string, b []byte) ([]byte, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Do", path, b)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Do indicates an expected call of Do.
-func (mr *MockRendererMockRecorder) Do(path, b interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Do", reflect.TypeOf((*MockRenderer)(nil).Do), path, b)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewBasePageModel", reflect.TypeOf((*MockRenderClient)(nil).NewBasePageModel))
 }
 
 // MockZebedeeClient is a mock of ZebedeeClient interface.

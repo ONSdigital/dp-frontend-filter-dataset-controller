@@ -8,9 +8,9 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
+	core "github.com/ONSdigital/dp-renderer/v2/model"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
-
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -77,20 +77,21 @@ func TestUnitFilterOverview(t *testing.T) {
 			mockZebedeeClient := NewMockZebedeeClient(mockCtrl)
 			mockZebedeeClient.EXPECT().GetHomepageContent(ctx, mockUserAuthToken, mockCollectionID, "en", "/")
 
-			mockRenderer := NewMockRenderer(mockCtrl)
-			mockRenderer.EXPECT().Do("dataset-filter/filter-overview", gomock.Any()).Return([]byte("some-bytes"), nil)
+			mockRend := NewMockRenderClient(mockCtrl)
+			mockRend.EXPECT().NewBasePageModel().Return(core.NewPage(cfg.PatternLibraryAssetsPath, cfg.SiteDomain))
+			mockRend.EXPECT().BuildPage(gomock.Any(), gomock.Any(), "filter-overview")
 
 			req := httptest.NewRequest("GET", "/filters/12345/dimensions", nil)
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
-			f := NewFilter(mockRenderer, mockFilterClient, mockDatasetClient, nil, nil, mockZebedeeClient, "/v1", cfg)
+			f := NewFilter(mockRend, mockFilterClient, mockDatasetClient, nil, nil, mockZebedeeClient, "/v1", cfg)
 			router.Path("/filters/{filterID}/dimensions").HandlerFunc(f.FilterOverview())
 
 			router.ServeHTTP(w, req)
 
 			So(w.Code, ShouldEqual, http.StatusOK)
-			So(w.Body.String(), ShouldEqual, "some-bytes")
+			So(w.Body.String(), ShouldBeEmpty)
 		})
 
 		Convey("test successful FilterOverviewClearAll", func() {

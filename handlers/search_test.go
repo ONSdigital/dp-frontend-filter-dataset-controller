@@ -16,6 +16,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	dprequest "github.com/ONSdigital/dp-net/v2/request"
+	core "github.com/ONSdigital/dp-renderer/v2/model"
 	gomock "github.com/golang/mock/gomock"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -40,7 +41,6 @@ func TestUnitSearch(t *testing.T) {
 	batchSize := 100
 	maxWorkers := 25
 	maxDatasetOptions := 10
-	expectedHTML := "<html>Search Results</html>"
 
 	cfg := &config.Config{
 		SearchAPIAuthToken:   mockServiceAuthToken,
@@ -67,7 +67,7 @@ func TestUnitSearch(t *testing.T) {
 		mfc := NewMockFilterClient(mockCtrl)
 		mdc := NewMockDatasetClient(mockCtrl)
 		msc := NewMockSearchClient(mockCtrl)
-		mrc := NewMockRenderer(mockCtrl)
+		mrc := NewMockRenderClient(mockCtrl)
 		mzc := NewMockZebedeeClient(mockCtrl)
 
 		callSearch := func() *httptest.ResponseRecorder {
@@ -107,12 +107,11 @@ func TestUnitSearch(t *testing.T) {
 			mdc.EXPECT().GetOptionsBatchProcess(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
 				&[]string{"op1", "op2"}, gomock.Any(), maxDatasetOptions, maxWorkers).Return(nil)
 			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query, expectedSearchClientConfigs).Return(&search.Model{}, nil)
-			mrc.EXPECT().Do("dataset-filter/hierarchy", gomock.Any()).Return([]byte(expectedHTML), nil)
+			mrc.EXPECT().NewBasePageModel().Return(core.NewPage(cfg.PatternLibraryAssetsPath, cfg.SiteDomain))
+			mrc.EXPECT().BuildPage(gomock.Any(), gomock.Any(), "hierarchy")
 
 			w := callSearch()
 			So(w.Code, ShouldEqual, http.StatusOK)
-			So(w.Body.String(), ShouldEqual, expectedHTML)
-
 		})
 
 		Convey("Then search returns server error if GetJobState errors", func() {
@@ -208,30 +207,6 @@ func TestUnitSearch(t *testing.T) {
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
 		})
 
-		Convey("Then search returns server error if renderer errors", func() {
-			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{
-				Links: filter.Links{
-					Version: filter.Link{
-						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
-					},
-				},
-			}, testETag(0), nil)
-			mfc.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name,
-				batchSize, maxWorkers).Return(testSelectedOptions, testETag(0), nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
-			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
-			mdc.EXPECT().GetOptionsBatchProcess(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
-				&[]string{"op1", "op2"}, gomock.Any(), maxDatasetOptions, maxWorkers).Return(nil)
-			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query, expectedSearchClientConfigs).Return(&search.Model{}, nil)
-			mdc.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version).Return(dataset.VersionDimensions{}, nil)
-			mzc.EXPECT().GetHomepageContent(ctx, mockUserAuthToken, mockCollectionID, "en", "/").Return(zebedee.HomepageContent{}, nil)
-			mrc.EXPECT().Do("dataset-filter/hierarchy", gomock.Any()).Return([]byte(expectedHTML), errors.New("renderer error"))
-
-			w := callSearch()
-
-			So(w.Code, ShouldEqual, http.StatusInternalServerError)
-		})
-
 		Convey("Then search returns internal server error if version url cannot be parsed", func() {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
@@ -277,7 +252,7 @@ func TestSearchUpdate(t *testing.T) {
 		mfc := NewMockFilterClient(mockCtrl)
 		mdc := NewMockDatasetClient(mockCtrl)
 		msc := NewMockSearchClient(mockCtrl)
-		mrc := NewMockRenderer(mockCtrl)
+		mrc := NewMockRenderClient(mockCtrl)
 		mzc := NewMockZebedeeClient(mockCtrl)
 
 		callSearchUpdate := func(formData string) *httptest.ResponseRecorder {
