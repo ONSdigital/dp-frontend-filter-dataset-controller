@@ -22,7 +22,6 @@ type Config struct {
 	MaxDatasetOptions          int           `envconfig:"MAX_DATASET_OPTIONS"`
 	PatternLibraryAssetsPath   string        `envconfig:"PATTERN_LIBRARY_ASSETS_PATH"`
 	PprofToken                 string        `envconfig:"PPROF_TOKEN" json:"-"`
-	RendererURL                string        `envconfig:"RENDERER_URL"`
 	SearchAPIAuthToken         string        `envconfig:"SEARCH_API_AUTH_TOKEN"  json:"-"`
 	SiteDomain                 string        `envconfig:"SITE_DOMAIN"`
 }
@@ -64,7 +63,7 @@ func get() (*Config, error) {
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		MaxDatasetOptions:          200,
-		RendererURL:                "http://localhost:20010",
+		SiteDomain:                 "localhost",
 	}
 
 	return cfg, envconfig.Process("", cfg)
