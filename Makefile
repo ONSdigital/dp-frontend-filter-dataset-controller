@@ -1,3 +1,4 @@
+SHELL=bash
 BINPATH ?= build
 LOCAL_DP_RENDERER_IN_USE = $(shell grep -c "\"github.com/ONSdigital/dp-renderer/v2\" =" go.mod)
 BUILD_TIME=$(shell date +%s)
@@ -20,9 +21,18 @@ debug: generate-debug
 	go build -tags 'debug' -o $(BINPATH)/dp-frontend-filter-dataset-controller -ldflags "-X main.BuildTime=$(BUILD_TIME) -X main.GitCommit=$(GIT_COMMIT) -X main.Version=$(VERSION)"
 	HUMAN_LOG=1 DEBUG=1 $(BINPATH)/dp-frontend-filter-dataset-controller
 
+.PHONY: lint 
+lint:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
+	golangci-lint run ./...
+
 .PHONY: test
 test: generate-prod
 	go test -race -cover -tags 'production' ./...
+
+.PHONY: test-component
+test-component:
+	exit
 
 .PHONY: fetch-dp-renderer
 fetch-renderer-lib:
