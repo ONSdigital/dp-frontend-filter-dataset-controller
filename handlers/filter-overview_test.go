@@ -36,9 +36,7 @@ func TestUnitFilterOverview(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-
 	Convey("test FilterOverview", t, func() {
-
 		filterGeographyOptions := filter.DimensionOptions{
 			Items: []filter.DimensionOption{
 				{

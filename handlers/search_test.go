@@ -63,7 +63,6 @@ func TestUnitSearch(t *testing.T) {
 	}
 
 	Convey("Given a set of mocks for filter, dataset, search and renderer clients", t, func() {
-
 		mfc := NewMockFilterClient(mockCtrl)
 		mdc := NewMockDatasetClient(mockCtrl)
 		msc := NewMockSearchClient(mockCtrl)
@@ -248,7 +247,6 @@ func TestSearchUpdate(t *testing.T) {
 	}
 
 	Convey("Given a set of mocks for filter, dataset, search and renderer clients", t, func() {
-
 		mfc := NewMockFilterClient(mockCtrl)
 		mdc := NewMockDatasetClient(mockCtrl)
 		msc := NewMockSearchClient(mockCtrl)

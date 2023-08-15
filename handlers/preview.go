@@ -66,10 +66,11 @@ func (f Filter) Submit() http.HandlerFunc {
 
 		http.Redirect(w, req, fmt.Sprintf("/filter-outputs/%s", filterOutputID), http.StatusFound)
 	})
-
 }
 
 // OutputPage controls the rendering of the preview and download page
+//
+//nolint:gocognit,gocyclo // cognitive complexity 109 and cyclomatic complexity 40
 func (f *Filter) OutputPage() http.HandlerFunc {
 	return dphandlers.ControllerHandler(func(w http.ResponseWriter, req *http.Request, lang, collectionID, userAccessToken string) {
 		vars := mux.Vars(req)
@@ -87,40 +88,40 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 
 		dimensions := make([]filter.ModelDimension, 0)
 		if f.EnableDatasetPreview {
-			prev, err := f.FilterClient.GetPreview(req.Context(), userAccessToken, "", "", collectionID, filterOutputID)
-			if err != nil {
-				log.Error(ctx, "failed to get preview", err, log.Data{"filter_output_id": filterOutputID})
-				setStatusCode(req, w, err)
+			prev, pErr := f.FilterClient.GetPreview(req.Context(), userAccessToken, "", "", collectionID, filterOutputID)
+			if pErr != nil {
+				log.Error(ctx, "failed to get preview", pErr, log.Data{"filter_output_id": filterOutputID})
+				setStatusCode(req, w, pErr)
 				return
 			}
 
 			if len(prev.Headers) < 1 {
-				err = errors.New("No preview headers returned")
-				log.Error(ctx, "failed to format header", err, log.Data{"filter_output_id": filterOutputID})
-				setStatusCode(req, w, err)
+				pErr = errors.New("no preview headers returned")
+				log.Error(ctx, "failed to format header", pErr, log.Data{"filter_output_id": filterOutputID})
+				setStatusCode(req, w, pErr)
 				return
 			}
 
 			if len(prev.Headers[0]) < 4 || strings.ToUpper(prev.Headers[0][0:3]) != "V4_" {
-				err = errors.New("Unexpected format - expected `V4_N` in header")
-				log.Error(ctx, "failed to format header", err, log.Data{"filter_output_id": filterOutputID, "header": prev.Headers})
-				setStatusCode(req, w, err)
+				pErr = errors.New("Unexpected format - expected `V4_N` in header")
+				log.Error(ctx, "failed to format header", pErr, log.Data{"filter_output_id": filterOutputID, "header": prev.Headers})
+				setStatusCode(req, w, pErr)
 				return
 			}
 
-			markingsColumnCount, err := strconv.Atoi(prev.Headers[0][3:])
-			if err != nil {
-				log.Error(ctx, "failed to get column count from header cell", err, log.Data{"filter_output_id": filterOutputID, "header": prev.Headers[0]})
-				setStatusCode(req, w, err)
+			markingsColumnCount, pErr := strconv.Atoi(prev.Headers[0][3:])
+			if pErr != nil {
+				log.Error(ctx, "failed to get column count from header cell", pErr, log.Data{"filter_output_id": filterOutputID, "header": prev.Headers[0]})
+				setStatusCode(req, w, pErr)
 				return
 			}
 
 			if markingsColumnCount > len(prev.Headers) {
-				err = errors.New("Incongruent column count - column count from cell greater than header count")
-				log.Error(ctx, "failed to verify column count", err, log.Data{
+				pErr = errors.New("Incongruent column count - column count from cell greater than header count")
+				log.Error(ctx, "failed to verify column count", pErr, log.Data{
 					"filter_output_id": filterOutputID, "header_count": len(prev.Headers), "column_count": markingsColumnCount,
 				})
-				setStatusCode(req, w, err)
+				setStatusCode(req, w, pErr)
 				return
 			}
 
@@ -143,11 +144,11 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 
 				if len(row) > 0 {
 					if markingsColumnCount > len(row) {
-						err = errors.New("Incongruent row length - column count from cell greater than row length")
-						log.Error(ctx, "failed to read row", err, log.Data{
+						pErr = errors.New("Incongruent row length - column count from cell greater than row length")
+						log.Error(ctx, "failed to read row", pErr, log.Data{
 							"filter_output_id": filterOutputID, "row_length": len(row), "column_count": markingsColumnCount,
 						})
-						setStatusCode(req, w, err)
+						setStatusCode(req, w, pErr)
 						return
 					}
 
@@ -249,10 +250,10 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		}
 
 		// count number of options for each dimension in dataset API to check if any dimension has a single option
-		for _, dim := range dims.Items {
-			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dim.Name, &dataset.QueryParams{Offset: 0, Limit: 1})
+		for i := range dims.Items {
+			opts, err := f.DatasetClient.GetOptions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version, dims.Items[i].Name, &dataset.QueryParams{Offset: 0, Limit: 1})
 			if err != nil {
-				log.Error(ctx, "failed to get options from dataset client", err, log.Data{"dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
+				log.Error(ctx, "failed to get options from dataset client", err, log.Data{"dimension": dims.Items[i].Name, "dataset_id": datasetID, "edition": edition, "version": version})
 				setStatusCode(req, w, err)
 				return
 			}
@@ -268,7 +269,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 					return
 				}
 				p.Data.SingleValueDimensions = append(p.Data.SingleValueDimensions, model.PreviewDimension{
-					Name:   strings.Title(dim.Name),
+					Name:   strings.Title(dims.Items[i].Name),
 					Values: []string{opts.Items[0].Label},
 				})
 			}
@@ -326,14 +327,14 @@ func (f *Filter) GetFilterJob() http.HandlerFunc {
 		}
 
 		for k, download := range prev.Downloads {
-			if len(download.URL) == 0 {
+			if download.URL == "" {
 				continue
 			}
 
-			downloadURL, err := url.Parse(download.URL)
-			if err != nil {
-				log.Error(ctx, "failed to parse download url", err, log.Data{"filter_output_id": filterOutputID})
-				setStatusCode(req, w, err)
+			downloadURL, uErr := url.Parse(download.URL)
+			if uErr != nil {
+				log.Error(ctx, "failed to parse download url", uErr, log.Data{"filter_output_id": filterOutputID})
+				setStatusCode(req, w, uErr)
 				return
 			}
 
@@ -352,7 +353,6 @@ func (f *Filter) GetFilterJob() http.HandlerFunc {
 
 		w.Write(b)
 	})
-
 }
 
 func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, collectionID, datasetID, edition, version string, metadata dataset.Metadata, dimensions dataset.VersionDimensions) (int, error) {
@@ -361,10 +361,10 @@ func (f *Filter) getMetadataTextSize(ctx context.Context, userAccessToken, colle
 	b.WriteString(metadata.ToString())
 	b.WriteString("Dimensions:\n")
 
-	for _, dimension := range dimensions.Items {
+	for i := range dimensions.Items {
 		q := dataset.QueryParams{Offset: 0, Limit: maxMetadataOptions}
 
-		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension.Name, &q)
+		options, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensions.Items[i].Name, &q)
 		if err != nil {
 			return 0, err
 		}

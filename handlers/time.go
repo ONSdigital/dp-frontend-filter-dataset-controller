@@ -45,9 +45,9 @@ func (f *Filter) UpdateTime() http.HandlerFunc {
 			return
 		}
 
-		if err := req.ParseForm(); err != nil {
-			log.Error(ctx, "failed to parse form", err, log.Data{"filter_id": filterID})
-			setStatusCode(req, w, err)
+		if fErr := req.ParseForm(); fErr != nil {
+			log.Error(ctx, "failed to parse form", fErr, log.Data{"filter_id": filterID})
+			setStatusCode(req, w, fErr)
 			return
 		}
 
@@ -63,22 +63,22 @@ func (f *Filter) UpdateTime() http.HandlerFunc {
 
 		switch req.Form.Get("time-selection") {
 		case "latest":
-			eTag, err = f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, req.Form.Get("latest-option"), eTag)
+			_, err = f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, req.Form.Get("latest-option"), eTag)
 			if err != nil {
 				log.Error(ctx, "failed to add dimension value", err)
 			}
 		case "single":
-			eTag, err = f.addSingleTime(filterID, userAccessToken, collectionID, req, eTag)
+			_, err = f.addSingleTime(filterID, userAccessToken, collectionID, req, eTag)
 			if err != nil {
 				log.Error(ctx, "failed to add single time", err)
 			}
 		case "range":
-			eTag, err = f.addTimeRange(filterID, userAccessToken, collectionID, req, eTag)
+			_, err = f.addTimeRange(filterID, userAccessToken, collectionID, req, eTag)
 			if err != nil {
 				log.Error(ctx, "failed to add range of times", err)
 			}
 		case "list":
-			eTag, err = f.addTimeList(filterID, userAccessToken, collectionID, req, eTag)
+			_, err = f.addTimeList(filterID, userAccessToken, collectionID, req, eTag)
 			if err != nil {
 				log.Error(ctx, "failed to add list of times", err)
 			}
@@ -87,7 +87,6 @@ func (f *Filter) UpdateTime() http.HandlerFunc {
 		redirectURL := fmt.Sprintf("/filters/%s/dimensions", filterID)
 		http.Redirect(w, req, redirectURL, 302)
 	})
-
 }
 
 func (f *Filter) addSingleTime(filterID, userAccessToken, collectionID string, req *http.Request, eTag string) (newETag string, err error) {
@@ -130,10 +129,10 @@ func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req
 		yearStr := strconv.Itoa(year)
 		for _, month := range selectedMonths {
 			monthYearComboStr := fmt.Sprintf("%s %s", month, yearStr)
-			monthYearComboTime, err := time.Parse("January 2006", monthYearComboStr)
-			if err != nil {
-				log.Error(ctx, "failed to convert filtered month and year combo to time format", err)
-				return eTag, err
+			monthYearComboTime, tErr := time.Parse("January 2006", monthYearComboStr)
+			if tErr != nil {
+				log.Error(ctx, "failed to convert filtered month and year combo to time format", tErr)
+				return eTag, tErr
 			}
 			monthYearCombo := monthYearComboTime.Format("Jan-06")
 			options = append(options, monthYearCombo)
@@ -243,7 +242,7 @@ func (f *Filter) Time() http.HandlerFunc {
 			return
 		}
 
-		//use normal list format unless a specially recognized time format
+		// use normal list format unless a specially recognized time format
 		if opts.TotalCount <= MaxNumOptionsOnPage || !acceptedReg.MatchString(opts.Items[0].Option) {
 			mux.Vars(req)["name"] = dimensionName
 			f.DimensionSelector().ServeHTTP(w, req)
@@ -266,11 +265,11 @@ func (f *Filter) Time() http.HandlerFunc {
 		}
 
 		if eTag0 != eTag1 {
-			err := errors.New("inconsistent filter data")
-			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", err,
+			conflictErr := errors.New("inconsistent filter data")
+			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", conflictErr,
 				log.Data{"filter_id": filterID, "e_tag_0": eTag0, "e_tag_1": eTag1})
 			// The user might want to retry this handler in this case
-			setStatusCode(req, w, err)
+			setStatusCode(req, w, conflictErr)
 			return
 		}
 

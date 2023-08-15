@@ -31,7 +31,6 @@ func TestUnitHelpers(t *testing.T) {
 }
 
 func TestGetAPIRouterVersion(t *testing.T) {
-
 	Convey("The api router version is correctly extracted from a valid API Router URL", t, func() {
 		version, err := GetAPIRouterVersion("http://localhost:23200/v1")
 		So(err, ShouldBeNil)
@@ -130,7 +129,6 @@ func TestStringInSlice(t *testing.T) {
 					index, isFound = StringInSlice(testString, subjectSlice)
 					So(isFound, ShouldEqual, false)
 					So(index, ShouldEqual, -1)
-
 				})
 				Convey("or a symbol represented as a char is missing", func() {
 					testString = "thud"

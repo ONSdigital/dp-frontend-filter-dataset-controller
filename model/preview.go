@@ -2,7 +2,7 @@ package model
 
 import core "github.com/ONSdigital/dp-renderer/v2/model"
 
-// Page ...
+// Preview represents the data for a preview page
 type Preview struct {
 	core.Page
 	Data                 PreviewPage `json:"data"`
@@ -12,7 +12,7 @@ type Preview struct {
 	NoDimensionData      bool        `json:"no_dimension_data"`
 }
 
-// PreviewPage ...
+// PreviewPage represents the metadata for a preview page
 type PreviewPage struct {
 	FilterID              string             `json:"filter_id"`
 	Downloads             []Download         `json:"downloads"`
@@ -29,7 +29,7 @@ type PreviewPage struct {
 	FilterOutputID        string             `json:"filter_output_id"`
 }
 
-// Download has the details for an individual downloadable files
+// Download has the details for an individual downloadable file
 type Download struct {
 	Extension string `json:"extension"`
 	Size      string `json:"size"`
@@ -37,7 +37,7 @@ type Download struct {
 	Skipped   bool   `json:"skipped"`
 }
 
-// Dimension ...
+// PreviewDimension represents a single dimension for the preview page
 type PreviewDimension struct {
 	Name   string   `json:"name"`
 	Values []string `json:"values"`

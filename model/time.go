@@ -2,14 +2,14 @@ package model
 
 import core "github.com/ONSdigital/dp-renderer/v2/model"
 
-// Page represents a time selection page
+// Time represents a time selection page
 type Time struct {
 	core.Page
 	Data     TimeData `json:"data"`
 	FilterID string   `json:"filter_id"`
 }
 
-// Data represents the data for the time page
+// Data represents the metadata for the time page
 type TimeData struct {
 	LatestTime         TimeValue        `json:"latest_value"`
 	FirstTime          TimeValue        `json:"fist_time"`
@@ -27,6 +27,7 @@ type TimeData struct {
 	GroupedSelection   GroupedSelection `json:"grouped_selection"`
 }
 
+// TimeValue represents the data to display a single time value
 type TimeValue struct {
 	Month      string `json:"month,omitempty"`
 	Year       string `json:"year,omitempty"`
@@ -34,12 +35,14 @@ type TimeValue struct {
 	IsSelected bool   `json:"is_selected"`
 }
 
+// GroupedSelection represents the data required to a group a selection
 type GroupedSelection struct {
 	Months    []Month `json:"months"`
 	YearStart string  `json:"year_start"`
 	YearEnd   string  `json:"year_end"`
 }
 
+// Month represents the data required to display a month
 type Month struct {
 	Name       string `json:"name"`
 	IsSelected bool   `json:"is_selected"`

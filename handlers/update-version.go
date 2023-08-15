@@ -59,30 +59,29 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 			return
 		}
 
-		newFilterID, newFilterETag, err := f.FilterClient.CreateBlueprint(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, string(editionDetails.Links.LatestVersion.ID), []string{})
+		newFilterID, newFilterETag, err := f.FilterClient.CreateBlueprint(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, editionDetails.Links.LatestVersion.ID, []string{})
 		if err != nil {
 			log.Error(ctx, "failed to create filter blueprint", err, log.Data{"dataset_id": datasetID, "edition": edition, "version": editionDetails.Links.LatestVersion.ID})
 			setStatusCode(req, w, err)
 			return
 		}
 
-		for _, dim := range dims.Items {
-
+		for i := range dims.Items {
 			// Copy dimension to new filter
-			newFilterETag, err = f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, newFilterID, dim.Name, newFilterETag)
+			newFilterETag, err = f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, newFilterID, dims.Items[i].Name, newFilterETag)
 			if err != nil {
-				log.Error(ctx, "failed to add dimension", err, log.Data{"filter_id": filterID, "dimension": dim.Name})
+				log.Error(ctx, "failed to add dimension", err, log.Data{"filter_id": filterID, "dimension": dims.Items[i].Name})
 				setStatusCode(req, w, err)
 				return
 			}
 
 			// Copy each batch of options to the new filter dimension via PATCH operations.
-			processBatch := f.batchAddOptions(req.Context(), userAccessToken, collectionID, newFilterID, dim.Name, newFilterETag)
+			processBatch := f.batchAddOptions(req.Context(), userAccessToken, collectionID, newFilterID, dims.Items[i].Name, newFilterETag)
 
 			// Call filter API GetOptions in batches and aggregate the responses
-			newFilterETag, err = f.FilterClient.GetDimensionOptionsBatchProcess(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, processBatch, f.BatchSize, f.BatchMaxWorkers, true)
+			newFilterETag, err = f.FilterClient.GetDimensionOptionsBatchProcess(req.Context(), userAccessToken, "", collectionID, filterID, dims.Items[i].Name, processBatch, f.BatchSize, f.BatchMaxWorkers, true)
 			if err != nil {
-				log.Error(ctx, "failed to get and process options from filter client in batches", err, log.Data{"filter_id": filterID, "dimension": dim.Name})
+				log.Error(ctx, "failed to get and process options from filter client in batches", err, log.Data{"filter_id": filterID, "dimension": dims.Items[i].Name})
 				setStatusCode(req, w, err)
 				return
 			}
@@ -91,7 +90,6 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 		redirectURL := fmt.Sprintf("/filters/%s/dimensions", newFilterID)
 		http.Redirect(w, req, redirectURL, 302)
 	})
-
 }
 
 // batchAddOptions generates a batch processor to add the dimension options for each provided batch to filter API, by calling the patch endpoint.

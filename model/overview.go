@@ -2,14 +2,14 @@ package model
 
 import core "github.com/ONSdigital/dp-renderer/v2/model"
 
-// Page ...
+// Overview represents the data for a overview page
 type Overview struct {
 	core.Page
 	Data     FilterOverview `json:"data"`
 	FilterID string         `json:"filter_id"`
 }
 
-// FilterOverview ...
+// FilterOverview represents the metadata for a overview page
 type FilterOverview struct {
 	Dimensions         []Dimension   `json:"dimensions"`
 	UnsetDimensions    []string      `json:"unset_dimensions"`
@@ -21,7 +21,7 @@ type FilterOverview struct {
 	HasUnsetDimensions bool          `json:"has_unset_dimensions"`
 }
 
-// Dimension ...
+// Dimension represents the data for a single dimension
 type Dimension struct {
 	Filter          string   `json:"filter"`
 	AddedCategories []string `json:"added_categories"`

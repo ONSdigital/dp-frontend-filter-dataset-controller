@@ -60,7 +60,6 @@ func (f *Filter) GetAllDimensionOptionsJSON() http.HandlerFunc {
 		var lids []labelID
 
 		if name == "time" {
-
 			var codedDates []string
 			labelIDMap := make(map[string]string)
 			for k, v := range idNameMap {
@@ -68,10 +67,10 @@ func (f *Filter) GetAllDimensionOptionsJSON() http.HandlerFunc {
 				labelIDMap[v] = k
 			}
 
-			readableDates, err := dates.ConvertToReadable(codedDates)
-			if err != nil {
-				log.Error(ctx, "failed to convert dates", err, log.Data{"filter_id": filterID, "dates": codedDates})
-				setStatusCode(req, w, err)
+			readableDates, dErr := dates.ConvertToReadable(codedDates)
+			if dErr != nil {
+				log.Error(ctx, "failed to convert dates", dErr, log.Data{"filter_id": filterID, "dates": codedDates})
+				setStatusCode(req, w, dErr)
 				return
 			}
 
@@ -96,21 +95,18 @@ func (f *Filter) GetAllDimensionOptionsJSON() http.HandlerFunc {
 
 		w.Write(b)
 	})
-
 }
 
-func (f *Filter) getIDNameMap(ctx context.Context, userAccessToken, collectionID, versionURL, dimension string) (map[string]string, error) {
-	datasetID, edition, version, err := helpers.ExtractDatasetInfoFromPath(ctx, versionURL)
-
-	idNameMap := make(map[string]string)
-
+func (f *Filter) getIDNameMap(ctx context.Context, userAccessToken, collectionID, versionURL, dimension string) (idNameMap map[string]string, err error) {
+	datasetID, edition, version, _ := helpers.ExtractDatasetInfoFromPath(ctx, versionURL)
 	opts, err := f.DatasetClient.GetOptionsInBatches(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimension, f.BatchSize, f.BatchMaxWorkers)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, opt := range opts.Items {
-		idNameMap[opt.Option] = opt.Label
+	idNameMap = make(map[string]string)
+	for i := range opts.Items {
+		idNameMap[opts.Items[i].Option] = opts.Items[i].Label
 	}
 
 	return idNameMap, nil
@@ -141,10 +137,10 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 
 		// The user might want to retry this handler if eTags don't match
 		if eTag0 != eTag1 {
-			err := errors.New("inconsistent filter data")
-			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", err,
+			conflictErr := errors.New("inconsistent filter data")
+			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", conflictErr,
 				log.Data{"filter_id": filterID, "dimension": name, "e_tag_0": eTag0, "e_tag_1": eTag1})
-			setStatusCode(req, w, err)
+			setStatusCode(req, w, conflictErr)
 			return
 		}
 
@@ -165,7 +161,6 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 		var lids []labelID
 
 		if name == "time" {
-
 			var codedDates []string
 			labelIDMap := make(map[string]string)
 			for _, opt := range opts.Items {
@@ -173,10 +168,10 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 				labelIDMap[idNameMap[opt.Option]] = opt.Option
 			}
 
-			readableDates, err := dates.ConvertToReadable(codedDates)
-			if err != nil {
-				log.Error(ctx, "failed to convert dates", err, log.Data{"filter_id": filterID, "dates": codedDates})
-				setStatusCode(req, w, err)
+			readableDates, dErr := dates.ConvertToReadable(codedDates)
+			if dErr != nil {
+				log.Error(ctx, "failed to convert dates", dErr, log.Data{"filter_id": filterID, "dates": codedDates})
+				setStatusCode(req, w, dErr)
 				return
 			}
 
@@ -201,7 +196,6 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 
 		w.Write(b)
 	})
-
 }
 
 // DimensionSelector controls the render of the range selector template using data from Dataset API and Filter API
@@ -286,10 +280,10 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 
 		// The user might want to retry this handler if eTags don't match
 		if eTag0 != eTag1 {
-			err := errors.New("inconsistent filter data")
-			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", err,
+			conflictErr := errors.New("inconsistent filter data")
+			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", conflictErr,
 				log.Data{"filter_id": filterID, "dimension": name, "e_tag_0": eTag0, "e_tag_1": eTag1})
-			setStatusCode(req, w, err)
+			setStatusCode(req, w, conflictErr)
 			return
 		}
 
@@ -307,13 +301,11 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 
 		f.listSelector(w, req, name, selectedValues.Items, allValues, fj, datasetDetails, dims, datasetID, ver.ReleaseDate, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 	})
-
 }
 
 func (f *Filter) isHierarchicalDimension(ctx context.Context, instanceID, dimensionName string) (bool, error) {
 	_, err := f.HierarchyClient.GetRoot(ctx, instanceID, dimensionName)
 	if err != nil {
-
 		var getHierarchyErr *hierarchy.ErrInvalidHierarchyAPIResponse
 		if errors.As(err, &getHierarchyErr) && http.StatusNotFound == getHierarchyErr.Code() {
 			return false, nil
@@ -335,7 +327,7 @@ type sorting struct {
 	option    dataset.Option
 }
 
-func splitCode(id string) (string, string, error) {
+func splitCode(id string) (month, year string, err error) {
 	code := strings.Split(id, "-")
 	if len(code) == 1 {
 		return "", "", errors.New("code cannot be split")
@@ -345,10 +337,10 @@ func splitCode(id string) (string, string, error) {
 		return "", "", errors.New("code does not match expected format")
 	}
 
-	month := code[len(code)-2]
+	month = code[len(code)-2]
 	month = strings.ToLower(month)
 
-	year := code[len(code)-1]
+	year = code[len(code)-1]
 	year = strings.ToLower(year)
 
 	return month, year, nil
@@ -356,9 +348,9 @@ func splitCode(id string) (string, string, error) {
 
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
-func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, filter filter.Model, dataset dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) {
+func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, fm filter.Model, ds dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) {
 	bp := f.Render.NewBasePageModel()
-	p := mapper.CreateListSelectorPage(req, bp, name, selectedValues, allValues, filter, dataset, dims, datasetID, releaseDate, f.APIRouterVersion, lang, serviceMessage, emergencyBannerContent)
+	p := mapper.CreateListSelectorPage(req, bp, name, selectedValues, allValues, fm, ds, dims, datasetID, releaseDate, f.APIRouterVersion, lang, serviceMessage, emergencyBannerContent)
 	f.Render.BuildPage(w, p, "list-selector")
 }
 
@@ -373,7 +365,6 @@ func (f *Filter) DimensionAddAll() http.HandlerFunc {
 }
 
 func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, userAccessToken, collectionID string) {
-
 	vars := mux.Vars(req)
 	name := vars["name"]
 	filterID := vars["filterID"]
@@ -405,8 +396,8 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 	// function to add each batch of dataset dimension options to filter API
 	processBatch := func(batch dataset.Options) (forceAbort bool, err error) {
 		var options []string
-		for _, item := range batch.Items {
-			options = append(options, item.Option)
+		for i := range batch.Items {
+			options = append(options, batch.Items[i].Option)
 		}
 		// first batch, will overwrite any existing values in filter API
 		if batch.Offset == 0 {
@@ -472,11 +463,9 @@ func (f *Filter) AddList() http.HandlerFunc {
 
 		http.Redirect(w, req, redirectURL, 302)
 	})
-
 }
 
 func (f *Filter) getDimensionValues(ctx context.Context, userAccessToken, collectionID, filterID, name string) (values []string, labelIDMap map[string]string, err error) {
-
 	fj, _, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
 	if err != nil {
 		return
@@ -499,9 +488,9 @@ func (f *Filter) getDimensionValues(ctx context.Context, userAccessToken, collec
 	}
 
 	labelIDMap = make(map[string]string)
-	for _, val := range vals.Items {
-		values = append(values, val.Label)
-		labelIDMap[val.Label] = val.Option
+	for i := range vals.Items {
+		values = append(values, vals.Items[i].Label)
+		labelIDMap[vals.Items[i].Label] = vals.Items[i].Option
 	}
 
 	return
@@ -534,7 +523,6 @@ func (f *Filter) DimensionRemoveAll() http.HandlerFunc {
 		redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
 		http.Redirect(w, req, redirectURL, 302)
 	})
-
 }
 
 // DimensionRemoveOne removes an individual option on a dimensions
@@ -556,5 +544,4 @@ func (f *Filter) DimensionRemoveOne() http.HandlerFunc {
 		redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
 		http.Redirect(w, req, redirectURL, 302)
 	})
-
 }

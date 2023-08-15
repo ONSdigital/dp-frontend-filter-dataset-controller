@@ -48,11 +48,11 @@ func NewFilter(rc RenderClient, fc FilterClient, dc DatasetClient, hc HierarchyC
 func setStatusCode(req *http.Request, w http.ResponseWriter, err error) {
 	status := http.StatusOK
 	if err != nil {
-		switch err.(type) {
+		switch err := err.(type) {
 		case filter.ErrInvalidFilterAPIResponse:
 			status = http.StatusBadGateway
 		case ClientError:
-			status = err.(ClientError).Code()
+			status = err.Code()
 		default:
 			status = http.StatusInternalServerError
 		}

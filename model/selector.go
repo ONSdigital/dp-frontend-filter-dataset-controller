@@ -2,7 +2,7 @@ package model
 
 import core "github.com/ONSdigital/dp-renderer/v2/model"
 
-// Selector ...
+// Selector represents the data for a selector page
 type Selector struct {
 	core.Page
 	Pagination core.Pagination `json:"pagination,omitempty"`
@@ -10,7 +10,7 @@ type Selector struct {
 	FilterID   string          `json:"job_id"`
 }
 
-// ListSelector ..
+// ListSelector represents the metadata for a selector page
 type ListSelector struct {
 	Title         string   `json:"title"`
 	AddFromRange  Link     `json:"add_from_range"`
@@ -25,13 +25,13 @@ type ListSelector struct {
 	DatasetTitle  string   `json:"dataset_title"`
 }
 
-// Range ...
+// Range represents the data to display a range
 type Range struct {
 	URL    string  `json:"url"`
 	Values []Value `json:"values"`
 }
 
-// Value ...
+// Value represents the data to display an individual value
 type Value struct {
 	Label      string `json:"label"`
 	ID         string `json:"id"`

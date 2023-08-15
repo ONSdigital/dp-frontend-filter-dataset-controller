@@ -125,7 +125,6 @@ func (f *Filter) buildHierarchyModel(ctx context.Context, fil filter.Model, name
 }
 
 func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID, eTag string) {
-
 	ctx := req.Context()
 	var err error
 
@@ -145,7 +144,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 		return
 	}
 
-	var options []string
+	options := []string{}
 	for _, child := range h.Children {
 		options = append(options, child.Links.Code.ID)
 	}
@@ -234,10 +233,10 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 
 		// The user might want to retry this handler if eTags don't match
 		if eTag0 != eTag1 {
-			err := errors.New("inconsistent filter data")
-			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", err,
+			conflictErr := errors.New("inconsistent filter data")
+			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", conflictErr,
 				log.Data{"filter_id": filterID, "dimension": name, "e_tag_0": eTag0, "e_tag_1": eTag1})
-			setStatusCode(req, w, err)
+			setStatusCode(req, w, conflictErr)
 			return
 		}
 
@@ -399,11 +398,10 @@ func (n *flatNodes) sort() {
 // Flatten the geography hierarchy - please note this will only work for this particular hierarchy,
 // need helper functions for other geog hierarchies too.
 func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string) (h hierarchy.Model, err error) {
-
 	// obtain root element
 	root, err := f.HierarchyClient.GetRoot(ctx, instanceID, "geography")
 	if err != nil {
-		return
+		return h, err
 	}
 
 	// if root has data, we need to copy label and links to the model
@@ -424,18 +422,18 @@ func (f *Filter) flattenGeographyTopLevel(ctx context.Context, instanceID string
 		if val.Links.Code.ID == GreatBritain {
 			nodes.addWithoutChildren(val)
 
-			child, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", GreatBritain)
-			if err != nil {
-				return h, err
+			child, childErr := f.HierarchyClient.GetChild(ctx, instanceID, "geography", GreatBritain)
+			if childErr != nil {
+				return h, childErr
 			}
 
 			for _, childVal := range child.Children {
 				if childVal.Links.Code.ID == EnglandAndWales {
 					nodes.addWithoutChildren(childVal)
 
-					grandChild, err := f.HierarchyClient.GetChild(ctx, instanceID, "geography", childVal.Links.Code.ID)
-					if err != nil {
-						return h, err
+					grandChild, cErr := f.HierarchyClient.GetChild(ctx, instanceID, "geography", childVal.Links.Code.ID)
+					if cErr != nil {
+						return h, cErr
 					}
 
 					for _, grandChildVal := range grandChild.Children {

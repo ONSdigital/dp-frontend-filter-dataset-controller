@@ -176,7 +176,6 @@ func TestHierarchy(t *testing.T) {
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
 			So(w.Body.Bytes(), ShouldBeNil)
 		})
-
 	})
 }
 
@@ -353,7 +352,6 @@ func TestHierarchyUpdate(t *testing.T) {
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
 		})
 	})
-
 }
 
 func TestFlattenGeographyTopLevel(t *testing.T) {
@@ -409,7 +407,6 @@ func TestFlattenGeographyTopLevel(t *testing.T) {
 	})
 
 	Convey("Given mocked hierarchy model and child items", t, func() {
-
 		order0 := 0
 		order1 := 10
 		order2 := 25
@@ -639,7 +636,6 @@ func TestFlattenGeographyTopLevel(t *testing.T) {
 }
 
 func TestFlatNodes_AddWithChildren(t *testing.T) {
-
 	testChild := hierarchy.Child{
 		Label: "testLabel",
 		Links: hierarchy.Links{
@@ -664,7 +660,6 @@ func TestFlatNodes_AddWithChildren(t *testing.T) {
 }
 
 func TestFlatNodes_AddWithoutChildren(t *testing.T) {
-
 	testChildWithData := hierarchy.Child{
 		Label: "testLabel",
 		Links: hierarchy.Links{
@@ -711,7 +706,6 @@ func TestFlatNodes_AddWithoutChildren(t *testing.T) {
 }
 
 func TestFlatNodes_HasOrder(t *testing.T) {
-
 	order1 := 1
 	order2 := 2
 
@@ -752,7 +746,6 @@ func TestFlatNodes_HasOrder(t *testing.T) {
 }
 
 func TestFlatNodes_GetOrder(t *testing.T) {
-
 	order1 := 1
 	order2 := 2
 
@@ -780,7 +773,6 @@ func TestFlatNodes_GetOrder(t *testing.T) {
 }
 
 func TestFlatNodes_GetDefaultOrder(t *testing.T) {
-
 	order1 := 1
 
 	Convey("given an empty flatNodes, then getDefaultOrder returns -1", t, func() {
@@ -827,7 +819,6 @@ func TestFlatNodes_GetDefaultOrder(t *testing.T) {
 }
 
 func TestFlatNodes_Sort(t *testing.T) {
-
 	order1 := 1
 	order2 := 2
 	order3 := 3

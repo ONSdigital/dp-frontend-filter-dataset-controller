@@ -41,9 +41,9 @@ func (f *Filter) UpdateAge() http.HandlerFunc {
 			return
 		}
 
-		if err := req.ParseForm(); err != nil {
-			log.Error(ctx, "failed to parse form", err, log.Data{"filter_id": filterID, "e_tag": eTag})
-			setStatusCode(req, w, err)
+		if fErr := req.ParseForm(); fErr != nil {
+			log.Error(ctx, "failed to parse form", fErr, log.Data{"filter_id": filterID, "e_tag": eTag})
+			setStatusCode(req, w, fErr)
 			return
 		}
 
@@ -60,17 +60,17 @@ func (f *Filter) UpdateAge() http.HandlerFunc {
 		log.Info(ctx, "age-selection", log.Data{dimensionName: req.Form.Get("age-selection")})
 		switch req.Form.Get("age-selection") {
 		case "all":
-			eTag, err = f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, req.Form.Get("all-ages-option"), eTag)
+			_, err = f.FilterClient.AddDimensionValue(ctx, userAccessToken, "", collectionID, filterID, dimensionName, req.Form.Get("all-ages-option"), eTag)
 			if err != nil {
 				log.Warn(ctx, "failed to add all ages option", log.FormatErrors([]error{err}), log.Data{"age_case": "all"})
 			}
 		case "range":
-			eTag, err = f.addAgeRange(filterID, userAccessToken, collectionID, req, eTag)
+			_, err = f.addAgeRange(filterID, userAccessToken, collectionID, req, eTag)
 			if err != nil {
 				log.Warn(ctx, "failed to add age range", log.FormatErrors([]error{err}), log.Data{"age_case": "range"})
 			}
 		case "list":
-			eTag, err = f.addAgeList(filterID, userAccessToken, collectionID, req, eTag)
+			_, err = f.addAgeList(filterID, userAccessToken, collectionID, req, eTag)
 			if err != nil {
 				log.Warn(ctx, "failed to add age list", log.FormatErrors([]error{err}), log.Data{"age_case": "list"})
 			}
@@ -85,9 +85,9 @@ func (f *Filter) addAgeList(filterID, userAccessToken, collectionID string, req 
 	ctx := req.Context()
 	dimensionName := "age"
 
-	var options []string
+	options := []string{}
 	for k := range req.Form {
-		if _, err := strconv.Atoi(k); err != nil {
+		if _, err = strconv.Atoi(k); err != nil {
 			if !strings.Contains(k, "+") {
 				continue
 			}
@@ -123,7 +123,7 @@ func (f *Filter) addAgeRange(filterID, userAccessToken, collectionID string, req
 		return "", err
 	}
 
-	var intValues []int
+	intValues := []int{}
 	for _, val := range values {
 		intVal, err := strconv.Atoi(val)
 		if err != nil {
@@ -150,7 +150,7 @@ func (f *Filter) addAgeRange(filterID, userAccessToken, collectionID string, req
 	var options []string
 	for i, age := range values {
 		if i == len(values)-1 && oldestHasPlus {
-			age = age + "+"
+			age += "+"
 		}
 
 		if youngest == age {
@@ -243,10 +243,10 @@ func (f *Filter) Age() http.HandlerFunc {
 
 		// The user might want to retry this handler if eTags don't match
 		if eTag0 != eTag1 {
-			err := errors.New("inconsistent filter data")
-			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", err,
+			ConflictErr := errors.New("inconsistent filter data")
+			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", ConflictErr,
 				log.Data{"filter_id": filterID, "dimension": dimensionName, "e_tag_0": eTag0, "e_tag_1": eTag1})
-			setStatusCode(req, w, err)
+			setStatusCode(req, w, ConflictErr)
 			return
 		}
 

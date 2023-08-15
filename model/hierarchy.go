@@ -2,14 +2,14 @@ package model
 
 import core "github.com/ONSdigital/dp-renderer/v2/model"
 
-// Page ...
+// Hierarchy represents the data for a hierarchy page
 type Hierarchy struct {
 	core.Page
 	Data     HierarchyData `json:"data"`
 	FilterID string        `json:"filter_id"`
 }
 
-// Hierarchy ...
+// HierarchyData represents the metadata for a hierarchy page
 type HierarchyData struct {
 	Title           string   `json:"title"`
 	SaveAndReturn   Link     `json:"save_and_return"`
@@ -33,19 +33,19 @@ type HierarchyData struct {
 	HasData         bool     `json:"has_data"`
 }
 
-// AddAll ...
+// AddAll represents the data to add all options
 type AddAll struct {
 	Amount string `json:"amount"`
 	URL    string `json:"url"`
 }
 
-// Metadata ...
+// Metadata represents the metadata for the hierarchy
 type Metadata struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
-// List ...
+// List represents the data required for a list
 type List struct {
 	Label    string `json:"label"`
 	Selected bool   `json:"selected"`

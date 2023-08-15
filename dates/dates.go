@@ -24,7 +24,7 @@ func (p TimeSlice) Swap(i, j int) {
 // ConvertToReadable takes a list of dates in the format Jan-06 and converts to
 // a list of time.Time
 func ConvertToReadable(dates []string) ([]time.Time, error) {
-	var readableDates []time.Time
+	readableDates := []time.Time{}
 	for _, val := range dates {
 		date, err := time.Parse("Jan-06", val)
 		if err != nil {
@@ -52,7 +52,7 @@ func Sort(dates []time.Time) TimeSlice {
 // ConvertToCoded takes a list of time.Time and converts to a list of strings in
 // the format yyyy.mm
 func ConvertToCoded(dates []time.Time) []string {
-	var codedDates []string
+	codedDates := []string{}
 	for _, date := range dates {
 		codedDates = append(codedDates, date.Format("Jan-06"))
 	}

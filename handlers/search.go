@@ -46,10 +46,10 @@ func (f *Filter) Search() http.HandlerFunc {
 
 		// The user might want to retry this handler if eTags don't match
 		if eTag0 != eTag1 {
-			err := errors.New("inconsistent filter data")
-			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", err,
+			conflictErr := errors.New("inconsistent filter data")
+			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", conflictErr,
 				log.Data{"filter_id": filterID, "dimension": name, "e_tag_0": eTag0, "e_tag_1": eTag1})
-			setStatusCode(req, w, err)
+			setStatusCode(req, w, conflictErr)
 			return
 		}
 
@@ -113,7 +113,6 @@ func (f *Filter) Search() http.HandlerFunc {
 		p := mapper.CreateHierarchySearchPage(req, bp, searchRes.Items, d, fil, selValsLabelMap, dims.Items, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 		f.Render.BuildPage(w, p, "hierarchy")
 	})
-
 }
 
 // SearchUpdate will update a dimension based on selected search results
@@ -203,10 +202,10 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 
 		// The user might want to retry this handler if eTags don't match
 		if eTag != eTag1 {
-			err := errors.New("inconsistent filter data")
-			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between get calls", err,
+			conflictErr := errors.New("inconsistent filter data")
+			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between get calls", conflictErr,
 				log.Data{"filter_id": filterID, "dimension": name, "e_tag_0": eTag, "e_tag_1": eTag1})
-			setStatusCode(req, w, err)
+			setStatusCode(req, w, conflictErr)
 			return
 		}
 
@@ -236,5 +235,4 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 
 		http.Redirect(w, req, redirectURI, 302)
 	})
-
 }

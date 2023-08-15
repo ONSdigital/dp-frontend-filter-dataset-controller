@@ -75,7 +75,6 @@ func TestUseLatest(t *testing.T) {
 	})
 
 	Convey("The batch processor function calls filter API patch endpoint with the expected options", t, func() {
-
 		// mocked dimension Options batch for testing (similar to a real paginated response from filter API)
 		mockDimensionOptionsBatch := filter.DimensionOptions{
 			Items: []filter.DimensionOption{

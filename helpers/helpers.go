@@ -13,7 +13,7 @@ import (
 // ExtractDatasetInfoFromPath gets the datasetID, edition and version from a given path
 func ExtractDatasetInfoFromPath(ctx context.Context, path string) (datasetID, edition, version string, err error) {
 	log.Info(ctx, "attempting to extract dataset details from path", log.Data{"path": path})
-	pathReg := regexp.MustCompile(`\/datasets\/(.+)\/editions\/(.+)\/versions\/(.+)`)
+	pathReg := regexp.MustCompile(`/datasets/(.+)/editions/(.+)/versions/(.+)`)
 	subs := pathReg.FindStringSubmatch(path)
 	if len(subs) < 4 {
 		err = fmt.Errorf("unable to extract datasetID, edition and version from path: %s", path)
@@ -49,8 +49,8 @@ func CheckAllDimensionsHaveAnOption(dims []filter.ModelDimension) (check bool, e
 		return
 	}
 	check = true
-	for _, dim := range dims {
-		if len(dim.Options) == 0 {
+	for i := range dims {
+		if len(dims[i].Options) == 0 {
 			check = false
 		}
 	}

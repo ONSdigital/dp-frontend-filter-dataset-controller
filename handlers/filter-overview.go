@@ -44,10 +44,10 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 
 		// The user might want to retry this handler if eTags don't match
 		if eTag0 != eTag1 {
-			err := errors.New("inconsistent filter data")
-			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", err,
+			conflictErr := errors.New("inconsistent filter data")
+			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", conflictErr,
 				log.Data{"filter_id": filterID, "e_tag_0": eTag0, "e_tag_1": eTag1})
-			setStatusCode(req, w, err)
+			setStatusCode(req, w, conflictErr)
 			return
 		}
 
@@ -75,27 +75,27 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 
 		// get selected options from filter API for each dimension and then get the labels from dataset API for each option
 		var dimensions FilterModelDimensions
-		for _, dim := range dims.Items {
-			selVals, eTag2, err := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, f.BatchSize, f.BatchMaxWorkers)
-			if err != nil {
-				log.Error(ctx, "failed to get options from filter client", err, log.Data{"filter_id": filterID, "dimension": dim.Name})
-				setStatusCode(req, w, err)
+		for i := range dims.Items {
+			selVals, eTag2, oErr := f.FilterClient.GetDimensionOptionsInBatches(req.Context(), userAccessToken, "", collectionID, filterID, dims.Items[i].Name, f.BatchSize, f.BatchMaxWorkers)
+			if oErr != nil {
+				log.Error(ctx, "failed to get options from filter client", oErr, log.Data{"filter_id": filterID, "dimension": dims.Items[i].Name})
+				setStatusCode(req, w, oErr)
 				return
 			}
 
 			// The user might want to retry this handler if eTags don't match
 			if eTag2 != eTag1 {
-				err := errors.New("inconsistent filter data")
-				log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", err,
+				conflictErr := errors.New("inconsistent filter data")
+				log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", conflictErr,
 					log.Data{"filter_id": filterID, "e_tag_1": eTag1, "e_tag_2": eTag2})
-				setStatusCode(req, w, err)
+				setStatusCode(req, w, conflictErr)
 				return
 			}
 
-			selValsLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, dim.Name, selVals)
-			if err != nil {
-				log.Error(ctx, "failed to get options from dataset client", err, log.Data{"dimension": dim.Name, "dataset_id": datasetID, "edition": edition, "version": version})
-				setStatusCode(req, w, err)
+			selValsLabelMap, oErr := f.getIDNameLookupFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, dims.Items[i].Name, selVals)
+			if oErr != nil {
+				log.Error(ctx, "failed to get options from dataset client", oErr, log.Data{"dimension": dims.Items[i].Name, "dataset_id": datasetID, "edition": edition, "version": version})
+				setStatusCode(req, w, oErr)
 				return
 			}
 
@@ -105,7 +105,7 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 			}
 
 			dimensions = append(dimensions, filter.ModelDimension{
-				Name:   dim.Name,
+				Name:   dims.Items[i].Name,
 				Values: labels,
 			})
 		}
@@ -154,7 +154,6 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 
 		f.Render.BuildPage(w, p, "filter-overview")
 	})
-
 }
 
 // FilterOverviewClearAll removes all selected options for all dimensions
@@ -170,17 +169,17 @@ func (f *Filter) FilterOverviewClearAll() http.HandlerFunc {
 			return
 		}
 
-		for _, dim := range dims.Items {
-			eTag, err = f.FilterClient.RemoveDimension(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, eTag)
+		for i := range dims.Items {
+			eTag, err = f.FilterClient.RemoveDimension(req.Context(), userAccessToken, "", collectionID, filterID, dims.Items[i].Name, eTag)
 			if err != nil {
-				log.Error(ctx, "failed to remove dimension", err, log.Data{"filter_id": filterID, "dimension": dim.Name})
+				log.Error(ctx, "failed to remove dimension", err, log.Data{"filter_id": filterID, "dimension": dims.Items[i].Name})
 				setStatusCode(req, w, err)
 				return
 			}
 
-			eTag, err = f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, filterID, dim.Name, eTag)
+			eTag, err = f.FilterClient.AddDimension(req.Context(), userAccessToken, "", collectionID, filterID, dims.Items[i].Name, eTag)
 			if err != nil {
-				log.Error(ctx, "failed to add dimension", err, log.Data{"filter_id": filterID, "dimension": dim.Name})
+				log.Error(ctx, "failed to add dimension", err, log.Data{"filter_id": filterID, "dimension": dims.Items[i].Name})
 				setStatusCode(req, w, err)
 				return
 			}

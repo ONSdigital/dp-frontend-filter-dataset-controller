@@ -359,7 +359,6 @@ func TestUnitMapper(t *testing.T) {
 		So(pp.EmergencyBanner.Description, ShouldEqual, emergencyBanner.Description)
 		So(pp.EmergencyBanner.URI, ShouldEqual, emergencyBanner.URI)
 		So(pp.EmergencyBanner.LinkText, ShouldEqual, emergencyBanner.LinkText)
-
 	})
 
 	Convey("test CreateListSelector page... ", t, func() {
@@ -481,7 +480,6 @@ func TestUnitMapper(t *testing.T) {
 			So(p.Data.RangeData.Values[2].Label, ShouldEqual, "England")
 			So(p.Data.RangeData.Values[3].Label, ShouldEqual, "Ireland")
 		})
-
 	})
 }
 
@@ -1278,7 +1276,6 @@ func getExpectedEmptyPageModel() model.Age {
 }
 
 func TestCreateAgePage(t *testing.T) {
-
 	apiRouterVersion := "v1"
 	datasetID := "cpih01"
 	lang := dprequest.DefaultLang
