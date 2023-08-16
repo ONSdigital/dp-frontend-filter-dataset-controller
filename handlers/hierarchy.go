@@ -260,12 +260,6 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, version)
-		if err != nil {
-			log.Error(req.Context(), "failed to get version", err, log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
-			setStatusCode(req, w, err)
-			return
-		}
 
 		dims, err := f.DatasetClient.GetVersionDimensions(req.Context(), userAccessToken, "", collectionID, datasetID, edition, version)
 		if err != nil {
@@ -289,7 +283,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 		}
 
 		bp := f.Render.NewBasePageModel()
-		p := mapper.CreateHierarchyPage(req, bp, h, d, fil, selValsLabelMap, dims, name, req.URL.Path, datasetID, ver.ReleaseDate, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
+		p := mapper.CreateHierarchyPage(req, bp, h, d, fil, selValsLabelMap, dims, name, req.URL.Path, datasetID, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 		f.Render.BuildPage(w, p, "hierarchy")
 	})
 }

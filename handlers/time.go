@@ -226,12 +226,6 @@ func (f *Filter) Time() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		ver, err := f.DatasetClient.GetVersion(ctx, userAccessToken, "", "", collectionID, datasetID, edition, version)
-		if err != nil {
-			log.Error(ctx, "failed to get version", err, log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
-			setStatusCode(req, w, err)
-			return
-		}
 
 		// count number of options for the dimension in dataset API
 		opts, err := f.DatasetClient.GetOptions(ctx, userAccessToken, "", collectionID, datasetID, edition, version, dimensionName, &dataset.QueryParams{Offset: 0, Limit: 1})
@@ -287,7 +281,7 @@ func (f *Filter) Time() http.HandlerFunc {
 		}
 
 		bp := f.Render.NewBasePageModel()
-		p, err := mapper.CreateTimePage(req, bp, fj, datasetDetails, ver, allValues, selValues.Items, dims, datasetID, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
+		p, err := mapper.CreateTimePage(req, bp, fj, datasetDetails, allValues, selValues.Items, dims, datasetID, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 		if err != nil {
 			log.Error(ctx, "failed to map data to page", err, log.Data{"filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})
 			setStatusCode(req, w, err)

@@ -100,7 +100,6 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name,
 				batchSize, maxWorkers).Return(testSelectedOptions, testETag(0), nil)
 			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
-			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetVersionDimensions(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version).Return(dataset.VersionDimensions{}, nil)
 			mzc.EXPECT().GetHomepageContent(ctx, mockUserAuthToken, mockCollectionID, "en", "/").Return(zebedee.HomepageContent{}, nil)
 			mdc.EXPECT().GetOptionsBatchProcess(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
@@ -151,23 +150,6 @@ func TestUnitSearch(t *testing.T) {
 			So(w.Code, ShouldEqual, http.StatusInternalServerError)
 		})
 
-		Convey("Then search returns server error if GetVersion errors", func() {
-			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{
-				Links: filter.Links{
-					Version: filter.Link{
-						HRef: "http://localhost:23200/v1/datasets/abcde/editions/2017/versions/1",
-					},
-				},
-			}, testETag(0), nil)
-			mfc.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name,
-				batchSize, maxWorkers).Return(filter.DimensionOptions{}, testETag(0), nil)
-			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
-			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, errors.New("get version error"))
-
-			w := callSearch()
-			So(w.Code, ShouldEqual, http.StatusInternalServerError)
-		})
-
 		Convey("Then search returns server error if GetOptionsBatchProcess errors", func() {
 			mfc.EXPECT().GetJobState(ctx, mockUserAuthToken, "", "", mockCollectionID, filterID).Return(filter.Model{
 				Links: filter.Links{
@@ -179,7 +161,6 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name,
 				batchSize, maxWorkers).Return(testSelectedOptions, testETag(0), nil)
 			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
-			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetOptionsBatchProcess(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
 				&[]string{"op1", "op2"}, gomock.Any(), maxDatasetOptions, maxWorkers).Return(errors.New("get options error"))
 			w := callSearch()
@@ -197,7 +178,6 @@ func TestUnitSearch(t *testing.T) {
 			mfc.EXPECT().GetDimensionOptionsInBatches(ctx, mockUserAuthToken, "", mockCollectionID, filterID, name,
 				batchSize, maxWorkers).Return(testSelectedOptions, testETag(0), nil)
 			mdc.EXPECT().Get(ctx, mockUserAuthToken, "", mockCollectionID, datasetID).Return(dataset.DatasetDetails{}, nil)
-			mdc.EXPECT().GetVersion(ctx, mockUserAuthToken, "", "", mockCollectionID, datasetID, edition, version).Return(dataset.Version{}, nil)
 			mdc.EXPECT().GetOptionsBatchProcess(ctx, mockUserAuthToken, "", mockCollectionID, datasetID, edition, version, name,
 				&[]string{"op1", "op2"}, gomock.Any(), maxDatasetOptions, maxWorkers).Return(nil)
 			msc.EXPECT().Dimension(ctx, datasetID, edition, version, name, query, expectedSearchClientConfigs).Return(&search.Model{}, errors.New("search api error"))

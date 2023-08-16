@@ -73,12 +73,6 @@ func (f *Filter) Search() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		ver, err := f.DatasetClient.GetVersion(ctx, userAccessToken, "", "", collectionID, datasetID, edition, version)
-		if err != nil {
-			log.Error(ctx, "failed to get version", err, log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
-			setStatusCode(req, w, err)
-			return
-		}
 
 		selValsLabelMap, err := f.getIDNameLookupFromDatasetAPI(ctx, userAccessToken, collectionID, datasetID, edition, version, name, selVals)
 		if err != nil {
@@ -110,7 +104,7 @@ func (f *Filter) Search() http.HandlerFunc {
 		}
 
 		bp := f.Render.NewBasePageModel()
-		p := mapper.CreateHierarchySearchPage(req, bp, searchRes.Items, d, fil, selValsLabelMap, dims.Items, name, req.URL.Path, datasetID, ver.ReleaseDate, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
+		p := mapper.CreateHierarchySearchPage(req, bp, searchRes.Items, d, fil, selValsLabelMap, dims.Items, name, req.URL.Path, datasetID, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 		f.Render.BuildPage(w, p, "hierarchy")
 	})
 }

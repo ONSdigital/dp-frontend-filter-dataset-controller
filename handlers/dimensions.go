@@ -235,13 +235,6 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			return
 		}
 
-		ver, err := f.DatasetClient.GetVersion(req.Context(), userAccessToken, "", "", collectionID, datasetID, edition, version)
-		if err != nil {
-			log.Error(ctx, "failed to get version", err, log.Data{"dataset_id": datasetID, "edition": edition, "version": version})
-			setStatusCode(req, w, err)
-			return
-		}
-
 		// TODO: This is a shortcut for now, if the hierarchy api returns a status 200
 		// then the dimension should be populated as a hierarchy
 		isHierarchy, err := f.isHierarchicalDimension(ctx, fj.InstanceID, name)
@@ -299,7 +292,7 @@ func (f *Filter) DimensionSelector() http.HandlerFunc {
 			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
 		}
 
-		f.listSelector(w, req, name, selectedValues.Items, allValues, fj, datasetDetails, dims, datasetID, ver.ReleaseDate, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
+		f.listSelector(w, req, name, selectedValues.Items, allValues, fj, datasetDetails, dims, datasetID, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 	})
 }
 
@@ -348,9 +341,9 @@ func splitCode(id string) (month, year string, err error) {
 
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
-func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, fm filter.Model, ds dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, releaseDate, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) {
+func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, fm filter.Model, ds dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) {
 	bp := f.Render.NewBasePageModel()
-	p := mapper.CreateListSelectorPage(req, bp, name, selectedValues, allValues, fm, ds, dims, datasetID, releaseDate, f.APIRouterVersion, lang, serviceMessage, emergencyBannerContent)
+	p := mapper.CreateListSelectorPage(req, bp, name, selectedValues, allValues, fm, ds, dims, datasetID, f.APIRouterVersion, lang, serviceMessage, emergencyBannerContent)
 	f.Render.BuildPage(w, p, "list-selector")
 }
 
