@@ -40,6 +40,7 @@ func getExpectedFilterOverviewPage() model.Overview {
 	expectedPageModel.SearchDisabled = true
 	expectedPageModel.IsInFilterBreadcrumb = true
 	expectedPageModel.BetaBannerEnabled = true
+	expectedPageModel.RemoveGalleryBackground = true
 	expectedPageModel.Metadata = core.Metadata{Title: "Filter Options"}
 	expectedPageModel.CookiesPolicy = core.CookiesPolicy{Essential: true}
 	expectedPageModel.FeatureFlags.SixteensVersion = sixteensVersion
@@ -722,6 +723,7 @@ func TestCreateHierarchyPage(t *testing.T) {
 			Taxonomy:                         nil,
 			ReleaseDate:                      "",
 			IsInFilterBreadcrumb:             true,
+			RemoveGalleryBackground:          true,
 			Language:                         "en",
 			IncludeAssetsIntegrityAttributes: false,
 			DatasetTitle:                     "datasetTitle",
@@ -899,6 +901,7 @@ func getExpectedTimePage(datasetID, filterID, lang string) model.Time {
 	p.Metadata = core.Metadata{Title: "Time"}
 	p.SearchDisabled = true
 	p.BetaBannerEnabled = true
+	p.RemoveGalleryBackground = true
 	p.Language = lang
 	p.CookiesPolicy = core.CookiesPolicy{Essential: true}
 	p.FeatureFlags.SixteensVersion = sixteensVersion
@@ -1024,6 +1027,7 @@ func TestCreateTimePage(t *testing.T) {
 		expected.BetaBannerEnabled = true
 		expected.CookiesPolicy = core.CookiesPolicy{Essential: true}
 		expected.FeatureFlags.SixteensVersion = sixteensVersion
+		expected.RemoveGalleryBackground = true
 
 		timeModelPage, err := CreateTimePage(req, bp, filter.Model{}, dataset.DatasetDetails{}, dataset.Version{}, dataset.Options{}, []filter.DimensionOption{}, dataset.VersionDimensions{}, "", "", "", "", zebedee.EmergencyBanner{})
 		So(err, ShouldBeNil)
@@ -1262,6 +1266,7 @@ func getExpectedEmptyPageModel() model.Age {
 			FeatureFlags: core.FeatureFlags{
 				SixteensVersion: sixteensVersion,
 			},
+			RemoveGalleryBackground: true,
 		},
 		Data: model.AgeData{
 			CheckedRadio: "range",

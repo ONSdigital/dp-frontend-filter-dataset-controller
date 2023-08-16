@@ -18,6 +18,8 @@ import (
 	"github.com/ONSdigital/dp-cookies/cookies"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/model"
 	core "github.com/ONSdigital/dp-renderer/v2/model"
@@ -44,6 +46,7 @@ func CreateFilterOverview(req *http.Request, bp core.Page, dimensions []filter.M
 	}
 	p.BetaBannerEnabled = true
 	p.FeatureFlags.SixteensVersion = sixteensVersion
+	p.RemoveGalleryBackground = true
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
@@ -147,13 +150,14 @@ func CreateListSelectorPage(req *http.Request, bp core.Page, name string, select
 	}
 	p.BetaBannerEnabled = true
 	p.FeatureFlags.SixteensVersion = sixteensVersion
+	p.RemoveGalleryBackground = true
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
 	log.Info(ctx, "mapping api response models to list selector page model", log.Data{"filterID": fm.FilterID, "datasetID": datasetID, "dimension": name})
 
-	pageTitle := strings.Title(name)
+	pageTitle := titleCaseStr(name)
 
 	for i := range dims.Items {
 		if dims.Items[i].Name == name {
@@ -280,6 +284,7 @@ func CreatePreviewPage(req *http.Request, bp core.Page, dimensions []filter.Mode
 	p.Language = lang
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
+	p.RemoveGalleryBackground = true
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
@@ -355,6 +360,12 @@ func CreatePreviewPage(req *http.Request, bp core.Page, dimensions []filter.Mode
 	return p
 }
 
+// titleCaseStr is a helper function that returns a given string in title case
+func titleCaseStr(input string) string {
+	c := cases.Title(language.English, cases.NoLower)
+	return c.String(input)
+}
+
 func getNameIDLookup(vals dataset.Options) map[string]string {
 	lookup := make(map[string]string)
 	for i := range vals.Items {
@@ -383,6 +394,7 @@ func CreateAgePage(req *http.Request, bp core.Page, f filter.Model, d dataset.Da
 	}
 	p.BetaBannerEnabled = true
 	p.FeatureFlags.SixteensVersion = sixteensVersion
+	p.RemoveGalleryBackground = true
 
 	ctx := req.Context()
 
@@ -530,6 +542,7 @@ func CreateTimePage(req *http.Request, bp core.Page, f filter.Model, d dataset.D
 	}
 	p.BetaBannerEnabled = true
 	p.FeatureFlags.SixteensVersion = sixteensVersion
+	p.RemoveGalleryBackground = true
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
@@ -812,13 +825,14 @@ func CreateHierarchySearchPage(req *http.Request, bp core.Page, items []search.I
 	}
 	p.BetaBannerEnabled = true
 	p.FeatureFlags.SixteensVersion = sixteensVersion
+	p.RemoveGalleryBackground = true
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
 	log.Info(ctx, "mapping api response models to hierarchy search page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "name": name})
 
-	pageTitle := strings.Title(name)
+	pageTitle := titleCaseStr(name)
 	for i := range dims {
 		if dims[i].Name == name && len(dims[i].Label) > 0 {
 			pageTitle = dims[i].Label
@@ -915,13 +929,14 @@ func CreateHierarchyPage(req *http.Request, bp core.Page, h hierarchyClient.Mode
 	p.BetaBannerEnabled = true
 	p.FeatureFlags.SixteensVersion = sixteensVersion
 	p.Language = lang
+	p.RemoveGalleryBackground = true
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
 	ctx := req.Context()
 	log.Info(ctx, "mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "label": h.Label})
 
-	pageTitle := strings.Title(name)
+	pageTitle := titleCaseStr(name)
 	for i := range dims.Items {
 		if dims.Items[i].Name == name {
 			p.Metadata.Description = dims.Items[i].Description
