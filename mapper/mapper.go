@@ -383,6 +383,7 @@ func getIDNameLookup(vals dataset.Options) map[string]string {
 }
 
 // CreateAgePage creates an age selector page based on api responses
+// TODO: refactor to reduce complexity
 //
 //nolint:gocyclo // cyclomatic complexity 27
 func CreateAgePage(req *http.Request, bp core.Page, f filter.Model, d dataset.DatasetDetails, allVals dataset.Options, selVals filter.DimensionOptions, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) (model.Age, error) {
@@ -534,6 +535,7 @@ func CreateAgePage(req *http.Request, bp core.Page, f filter.Model, d dataset.Da
 }
 
 // CreateTimePage will create a time selector page based on api response models
+// TODO: refactor to reduce complexity
 //
 //nolint:gocyclo // cyclomatic complexity 36
 func CreateTimePage(req *http.Request, bp core.Page, f filter.Model, d dataset.DatasetDetails, allVals dataset.Options, selVals []filter.DimensionOption, dims dataset.VersionDimensions, datasetID, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) (model.Time, error) {
@@ -920,6 +922,7 @@ func CreateHierarchySearchPage(req *http.Request, bp core.Page, items []search.I
 }
 
 // CreateHierarchyPage maps data items from API responses to form a hierarchy page
+// TODO: refactor to reduce complexity
 //
 //nolint:gocyclo // cyclomatic complexity 26
 func CreateHierarchyPage(req *http.Request, bp core.Page, h hierarchyClient.Model, dst dataset.DatasetDetails, f filter.Model, selectedValueLabels map[string]string, dims dataset.VersionDimensions, name, curPath, datasetID, apiRouterVersion, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) model.Hierarchy {

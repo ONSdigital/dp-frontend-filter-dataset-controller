@@ -69,6 +69,7 @@ func (f Filter) Submit() http.HandlerFunc {
 }
 
 // OutputPage controls the rendering of the preview and download page
+// TODO: refactor to reduce complexity
 //
 //nolint:gocognit,gocyclo // cognitive complexity 109 and cyclomatic complexity 40
 func (f *Filter) OutputPage() http.HandlerFunc {
