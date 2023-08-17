@@ -262,7 +262,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			// Can we trust opts.TotalCount?
 			if opts.TotalCount == 1 {
 				if len(opts.Items) < 1 {
-					err = errors.New("Incongruent opts.TotalCount (actual items length zero)")
+					err = errors.New("incongruent opts.TotalCount (actual items length zero)")
 					log.Error(ctx, "failed to build dimensions", err, log.Data{
 						"filter_output_id": filterOutputID, "opts.TotalCount": opts.TotalCount, "opts.Items length": len(opts.Items),
 					})
@@ -270,7 +270,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 					return
 				}
 				p.Data.SingleValueDimensions = append(p.Data.SingleValueDimensions, model.PreviewDimension{
-					Name:   strings.Title(dims.Items[i].Name),
+					Name:   helpers.TitleCaseStr(dims.Items[i].Name),
 					Values: []string{opts.Items[0].Label},
 				})
 			}

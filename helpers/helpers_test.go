@@ -238,11 +238,33 @@ func TestCheckAllDimensionHaveAnOption(t *testing.T) {
 		})
 	}
 
-	Convey("No dimesions provided return error", t, func() {
+	Convey("No dimensions provided return error", t, func() {
 		testDimensions := []filter.ModelDimension{}
 
 		sut, err := CheckAllDimensionsHaveAnOption(testDimensions)
 		So(err, ShouldBeError, "no dimensions provided: []")
 		So(sut, ShouldEqual, false)
 	})
+}
+
+// TestTitleCaseStr test the helper function TitleCaseStr
+func TestTitleCaseStr(t *testing.T) {
+	cases := []struct {
+		Description string
+		Input       string
+		Expected    string
+	}{
+		{"Given string to title case", "title", "Title"},
+		{"Given string in title case", "Title", "Title"},
+		{"Given string in mixed case", "tItle", "TItle"},        // tests exist that expect this behaviour
+		{"Given strings to title case", "title me", "Title Me"}, // tests exist that expect this behaviour
+		{"Empty string given", "", ""},
+	}
+
+	for _, test := range cases {
+		Convey(test.Description, t, func() {
+			got := TitleCaseStr(test.Input)
+			So(got, ShouldEqual, test.Expected)
+		})
+	}
 }

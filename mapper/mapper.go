@@ -18,8 +18,6 @@ import (
 	"github.com/ONSdigital/dp-cookies/cookies"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/model"
 	core "github.com/ONSdigital/dp-renderer/v2/model"
@@ -68,7 +66,7 @@ func CreateFilterOverview(req *http.Request, bp core.Page, dimensions []filter.M
 		if dimensions[i].Name == "time" {
 			for j := range datasetDims {
 				if datasetDims[j].Name == dimensions[i].Name {
-					fod.Filter = strings.Title(datasetDims[j].Name)
+					fod.Filter = helpers.TitleCaseStr(datasetDims[j].Name)
 					if len(datasetDims[j].Label) > 0 {
 						fod.Filter = datasetDims[j].Label
 					}
@@ -89,7 +87,7 @@ func CreateFilterOverview(req *http.Request, bp core.Page, dimensions []filter.M
 
 			for j := range datasetDims {
 				if datasetDims[j].Name == dimensions[i].Name {
-					fod.Filter = strings.Title(datasetDims[j].Name)
+					fod.Filter = helpers.TitleCaseStr(datasetDims[j].Name)
 					if len(datasetDims[j].Label) > 0 {
 						fod.Filter = datasetDims[j].Label
 					}
@@ -157,7 +155,7 @@ func CreateListSelectorPage(req *http.Request, bp core.Page, name string, select
 	ctx := req.Context()
 	log.Info(ctx, "mapping api response models to list selector page model", log.Data{"filterID": fm.FilterID, "datasetID": datasetID, "dimension": name})
 
-	pageTitle := titleCaseStr(name)
+	pageTitle := helpers.TitleCaseStr(name)
 
 	for i := range dims.Items {
 		if dims.Items[i].Name == name {
@@ -358,12 +356,6 @@ func CreatePreviewPage(req *http.Request, bp core.Page, dimensions []filter.Mode
 	}
 
 	return p
-}
-
-// titleCaseStr is a helper function that returns a given string in title case
-func titleCaseStr(input string) string {
-	c := cases.Title(language.English, cases.NoLower)
-	return c.String(input)
 }
 
 func getNameIDLookup(vals dataset.Options) map[string]string {
@@ -834,7 +826,7 @@ func CreateHierarchySearchPage(req *http.Request, bp core.Page, items []search.I
 	ctx := req.Context()
 	log.Info(ctx, "mapping api response models to hierarchy search page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "name": name})
 
-	pageTitle := titleCaseStr(name)
+	pageTitle := helpers.TitleCaseStr(name)
 	for i := range dims {
 		if dims[i].Name == name && len(dims[i].Label) > 0 {
 			pageTitle = dims[i].Label
@@ -939,7 +931,7 @@ func CreateHierarchyPage(req *http.Request, bp core.Page, h hierarchyClient.Mode
 	ctx := req.Context()
 	log.Info(ctx, "mapping api response models to hierarchy page", log.Data{"filterID": f.FilterID, "datasetID": datasetID, "label": h.Label})
 
-	pageTitle := titleCaseStr(name)
+	pageTitle := helpers.TitleCaseStr(name)
 	for i := range dims.Items {
 		if dims.Items[i].Name == name {
 			p.Metadata.Description = dims.Items[i].Description

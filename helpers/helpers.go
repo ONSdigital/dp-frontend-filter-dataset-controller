@@ -8,6 +8,8 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
 	"github.com/ONSdigital/log.go/v2/log"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // ExtractDatasetInfoFromPath gets the datasetID, edition and version from a given path
@@ -55,4 +57,10 @@ func CheckAllDimensionsHaveAnOption(dims []filter.ModelDimension) (check bool, e
 		}
 	}
 	return
+}
+
+// TitleCaseStr is a helper function that returns a given string in title case
+func TitleCaseStr(input string) string {
+	c := cases.Title(language.English, cases.NoLower)
+	return c.String(input)
 }
