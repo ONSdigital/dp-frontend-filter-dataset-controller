@@ -257,7 +257,7 @@ func (f *Filter) Age() http.HandlerFunc {
 			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
 		}
 
-		bp := f.Render.NewBasePageModel()
+		bp := f.RenderClient.NewBasePageModel()
 		p, err := mapper.CreateAgePage(req, bp, fj, datasetDetails, allValues, selValues, dims, datasetID, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 		if err != nil {
 			log.Error(ctx, "failed to map data to page", err,
@@ -265,6 +265,6 @@ func (f *Filter) Age() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		f.Render.BuildPage(w, p, "age")
+		f.RenderClient.BuildPage(w, p, "age")
 	})
 }

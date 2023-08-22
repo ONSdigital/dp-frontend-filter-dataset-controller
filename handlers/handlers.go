@@ -10,7 +10,7 @@ import (
 
 // Filter represents the handlers for Filtering
 type Filter struct {
-	Render               RenderClient
+	RenderClient         RenderClient
 	FilterClient         FilterClient
 	DatasetClient        DatasetClient
 	ZebedeeClient        ZebedeeClient
@@ -29,7 +29,7 @@ type Filter struct {
 func NewFilter(rc RenderClient, fc FilterClient, dc DatasetClient, hc HierarchyClient,
 	sc SearchClient, zc ZebedeeClient, apiRouterVersion string, cfg *config.Config) *Filter {
 	return &Filter{
-		Render:               rc,
+		RenderClient:         rc,
 		FilterClient:         fc,
 		DatasetClient:        dc,
 		HierarchyClient:      hc,

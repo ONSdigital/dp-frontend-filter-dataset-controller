@@ -342,9 +342,9 @@ func splitCode(id string) (month, year string, err error) {
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, fm filter.Model, ds dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) {
-	bp := f.Render.NewBasePageModel()
+	bp := f.RenderClient.NewBasePageModel()
 	p := mapper.CreateListSelectorPage(req, bp, name, selectedValues, allValues, fm, ds, dims, datasetID, f.APIRouterVersion, lang, serviceMessage, emergencyBannerContent)
-	f.Render.BuildPage(w, p, "list-selector")
+	f.RenderClient.BuildPage(w, p, "list-selector")
 }
 
 // DimensionAddAll will add all dimension values to a basket

@@ -123,7 +123,7 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
 		}
 
-		bp := f.Render.NewBasePageModel()
+		bp := f.RenderClient.NewBasePageModel()
 		p := mapper.CreateFilterOverview(req, bp, dimensions, datasetDimensions.Items, fj, dataset, filterID, datasetID, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 
 		editionDetails, err := f.DatasetClient.GetEdition(req.Context(), userAccessToken, "", collectionID, datasetID, edition)
@@ -145,7 +145,7 @@ func (f *Filter) FilterOverview() http.HandlerFunc {
 			p.Data.HasUnsetDimensions = true
 		}
 
-		f.Render.BuildPage(w, p, "filter-overview")
+		f.RenderClient.BuildPage(w, p, "filter-overview")
 	})
 }
 

@@ -282,9 +282,9 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
 		}
 
-		bp := f.Render.NewBasePageModel()
+		bp := f.RenderClient.NewBasePageModel()
 		p := mapper.CreateHierarchyPage(req, bp, h, d, fil, selValsLabelMap, dims, name, req.URL.Path, datasetID, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
-		f.Render.BuildPage(w, p, "hierarchy")
+		f.RenderClient.BuildPage(w, p, "hierarchy")
 	})
 }
 

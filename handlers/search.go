@@ -103,9 +103,9 @@ func (f *Filter) Search() http.HandlerFunc {
 			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
 		}
 
-		bp := f.Render.NewBasePageModel()
+		bp := f.RenderClient.NewBasePageModel()
 		p := mapper.CreateHierarchySearchPage(req, bp, searchRes.Items, d, fil, selValsLabelMap, dims.Items, name, req.URL.Path, datasetID, req.Referer(), req.URL.Query().Get("q"), f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
-		f.Render.BuildPage(w, p, "hierarchy")
+		f.RenderClient.BuildPage(w, p, "hierarchy")
 	})
 }
 

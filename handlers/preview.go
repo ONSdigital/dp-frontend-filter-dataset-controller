@@ -209,7 +209,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		}
 
 		latestPath := strings.TrimPrefix(latestURL.Path, f.APIRouterVersion)
-		bp := f.Render.NewBasePageModel()
+		bp := f.RenderClient.NewBasePageModel()
 		p := mapper.CreatePreviewPage(req, bp, dimensions, fj, datasetDetails, filterOutputID, datasetID, ver.ReleaseDate, f.APIRouterVersion, f.EnableDatasetPreview, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 
 		editionDetails, err := f.DatasetClient.GetEdition(req.Context(), userAccessToken, "", collectionID, datasetID, edition)
@@ -308,7 +308,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			URI:       fmt.Sprintf("/datasets/%s/editions/%s/versions/%s/metadata.txt", datasetID, edition, version),
 		})
 
-		f.Render.BuildPage(w, p, "preview")
+		f.RenderClient.BuildPage(w, p, "preview")
 	})
 }
 

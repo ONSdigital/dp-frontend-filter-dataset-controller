@@ -280,7 +280,7 @@ func (f *Filter) Time() http.HandlerFunc {
 			log.Warn(ctx, "unable to get homepage content", log.FormatErrors([]error{err}), log.Data{"homepage_content": err})
 		}
 
-		bp := f.Render.NewBasePageModel()
+		bp := f.RenderClient.NewBasePageModel()
 		p, err := mapper.CreateTimePage(req, bp, fj, datasetDetails, allValues, selValues.Items, dims, datasetID, f.APIRouterVersion, lang, homepageContent.ServiceMessage, homepageContent.EmergencyBanner)
 		if err != nil {
 			log.Error(ctx, "failed to map data to page", err, log.Data{"filter_id": filterID, "dataset_id": datasetID, "dimension": dimensionName})
@@ -288,6 +288,6 @@ func (f *Filter) Time() http.HandlerFunc {
 			return
 		}
 
-		f.Render.BuildPage(w, p, "time")
+		f.RenderClient.BuildPage(w, p, "time")
 	})
 }
