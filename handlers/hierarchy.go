@@ -97,7 +97,7 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		http.Redirect(w, req, redirectURI, 302)
+		http.Redirect(w, req, redirectURI, http.StatusFound)
 	})
 }
 
@@ -153,7 +153,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 		log.Error(ctx, "failed to add dimension values", err)
 	}
 
-	http.Redirect(w, req, redirectURI, 302)
+	http.Redirect(w, req, redirectURI, http.StatusFound)
 }
 
 func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Request, fil filter.Model, name, code, redirectURI, userAccessToken, collectionID, eTag string) {
@@ -188,7 +188,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 		log.Error(ctx, "failed to remove dimension values using a patch", err, log.Data{"filter_id": fil.FilterID, "dimension": name, "code": code, "options": removeOptions})
 	}
 
-	http.Redirect(w, req, redirectURI, 302)
+	http.Redirect(w, req, redirectURI, http.StatusFound)
 }
 
 // Hierarchy controls the creation of a hierarchy page

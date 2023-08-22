@@ -409,7 +409,7 @@ func (f *Filter) addAll(w http.ResponseWriter, req *http.Request, redirectURL, u
 		return
 	}
 
-	http.Redirect(w, req, redirectURL, 302)
+	http.Redirect(w, req, redirectURL, http.StatusFound)
 }
 
 // AddList sets a list of values, removing any existing value.
@@ -436,7 +436,7 @@ func (f *Filter) AddList() http.HandlerFunc {
 
 		if len(req.Form["remove-all"]) > 0 {
 			redirectURL = fmt.Sprintf("/filters/%s/dimensions/%s/remove-all", filterID, name)
-			http.Redirect(w, req, redirectURL, 302)
+			http.Redirect(w, req, redirectURL, http.StatusFound)
 			return
 		}
 
@@ -454,7 +454,7 @@ func (f *Filter) AddList() http.HandlerFunc {
 			log.Warn(ctx, "failed to add dimension values", log.FormatErrors([]error{err}))
 		}
 
-		http.Redirect(w, req, redirectURL, 302)
+		http.Redirect(w, req, redirectURL, http.StatusFound)
 	})
 }
 
@@ -514,7 +514,7 @@ func (f *Filter) DimensionRemoveAll() http.HandlerFunc {
 		}
 
 		redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-		http.Redirect(w, req, redirectURL, 302)
+		http.Redirect(w, req, redirectURL, http.StatusFound)
 	})
 }
 
@@ -535,6 +535,6 @@ func (f *Filter) DimensionRemoveOne() http.HandlerFunc {
 		}
 
 		redirectURL := fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
-		http.Redirect(w, req, redirectURL, 302)
+		http.Redirect(w, req, redirectURL, http.StatusFound)
 	})
 }

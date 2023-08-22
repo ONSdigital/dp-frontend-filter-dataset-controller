@@ -48,12 +48,12 @@ func (f *Filter) UpdateAge() http.HandlerFunc {
 		}
 
 		if len(req.Form.Get("add-all")) > 0 {
-			http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/age/add-all", filterID), 302)
+			http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/age/add-all", filterID), http.StatusFound)
 			return
 		}
 
 		if len(req.Form.Get("remove-all")) > 0 {
-			http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/age/remove-all", filterID), 302)
+			http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/age/remove-all", filterID), http.StatusFound)
 			return
 		}
 
@@ -77,7 +77,7 @@ func (f *Filter) UpdateAge() http.HandlerFunc {
 		}
 
 		redirectURL := fmt.Sprintf("/filters/%s/dimensions", filterID)
-		http.Redirect(w, req, redirectURL, 302)
+		http.Redirect(w, req, redirectURL, http.StatusFound)
 	})
 }
 

@@ -88,7 +88,7 @@ func (f *Filter) UseLatest() http.HandlerFunc {
 		}
 
 		redirectURL := fmt.Sprintf("/filters/%s/dimensions", newFilterID)
-		http.Redirect(w, req, redirectURL, 302)
+		http.Redirect(w, req, redirectURL, http.StatusFound)
 	})
 }
 

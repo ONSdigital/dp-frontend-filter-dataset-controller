@@ -154,7 +154,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 		searchRes, err := f.SearchClient.Dimension(ctx, datasetID, edition, version, name, q, searchConfig...)
 		if err != nil {
 			log.Error(ctx, "failed to retrieve dimension search result, redirecting", err)
-			http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions", filterID), 302)
+			http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions", filterID), http.StatusFound)
 			return
 		}
 
@@ -227,6 +227,6 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 			return
 		}
 
-		http.Redirect(w, req, redirectURI, 302)
+		http.Redirect(w, req, redirectURI, http.StatusFound)
 	})
 }
