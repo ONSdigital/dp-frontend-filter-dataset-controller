@@ -237,10 +237,10 @@ func (f *Filter) Age() http.HandlerFunc {
 
 		// The user might want to retry this handler if eTags don't match
 		if eTag0 != eTag1 {
-			ConflictErr := errors.New("inconsistent filter data")
-			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", ConflictErr,
+			conflictErr := errors.New("inconsistent filter data")
+			log.Error(ctx, "data consistency cannot be guaranteed because filter was modified between calls", conflictErr,
 				log.Data{"filter_id": filterID, "dimension": dimensionName, "e_tag_0": eTag0, "e_tag_1": eTag1})
-			setStatusCode(req, w, ConflictErr)
+			setStatusCode(req, w, conflictErr)
 			return
 		}
 
