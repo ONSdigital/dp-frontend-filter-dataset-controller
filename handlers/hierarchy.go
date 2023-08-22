@@ -144,7 +144,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 		return
 	}
 
-	options := []string{}
+	options := make([]string, 0, len(h.Children))
 	for _, child := range h.Children {
 		options = append(options, child.Links.Code.ID)
 	}
