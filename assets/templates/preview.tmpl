@@ -25,9 +25,6 @@
             <div class="col-wrap">
                 <div class="col">
                     {{if not .NoDimensionData}}
-                    {{if not .Data.IsLatestVersion}}
-                    {{ template "partials/latest-release-alert" . }}
-                    {{ end }}
                     <a
                         id="adjust-filter-options"
                         href="/filters/{{.Data.FilterID}}/dimensions"
