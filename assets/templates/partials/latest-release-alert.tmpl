@@ -1,26 +1,12 @@
-{{ $releases := .Data.ReleaseCalendar.Releases }}
-{{ $releasesLen := len .Data.ReleaseCalendar.Releases }}
-
-<article class="tile tile__content col col--lg-29 margin-top-lg--2 margin-top-md--2 margin-left-lg--1 height-lg--31">
-    <header class="margin-top--1">
-        <h2 class="margin-top--0 margin-right--0 margin-bottom--0 margin-left--0">
-            <span class="tile__title">{{ localise "LatestReleases" .Language 1 }}</span>
-        </h2>
-    </header>
-    <div class="tile__content-container--space-between">
-        <p class="tile__content tile__text-description margin-top--0 margin-bottom--0 font-size--18">
-            {{ localise "ReleaseCalendarTileInfo" .Language 1 }}
-            {{ if gt $releasesLen 0 }}{{ localise "ReleaseCalendarTilePublicationCount" .Language 1 }}
-            {{ .Data.ReleaseCalendar.NumberOfReleases }}
-            {{ localise "ReleaseCalendarTilePublicationPeriod" .Language 1 }} {{ end }}
-        </p>
-        <p class="margin-top--0 margin-bottom--0 padding-bottom--0">
-            <a
-                class="tile__link"
-                href="/releasecalendar"
-            >
-                {{ localise "AllReleases" .Language 1 }}
-            </a>
-        </p>
+<div class="status status--amber margin-right-sm--1 margin-left-sm--1">
+    <div class="status__content">This is not the latest release.
+        <a
+            class="status__link"
+            href="{{.Data.LatestVersion.DatasetLandingPageURL}}"
+        >View latest release <span class="visuallyhidden"> of {{ .DatasetTitle }} dataset</span></a>
     </div>
-</article>
+    <a
+        class="btn btn--primary"
+        href="{{.Data.LatestVersion.FilterJourneyWithLatestJourney}}"
+    ><strong>Apply these filters to the latest release</strong></a>
+</div>
