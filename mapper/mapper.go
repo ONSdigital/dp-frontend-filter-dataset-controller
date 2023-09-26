@@ -24,7 +24,7 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-const sixteensVersion = "7d2d294"
+const sixteensVersion = "749a88b"
 
 var hierarchyBrowseLookup = map[string]string{
 	"geography": "area",
