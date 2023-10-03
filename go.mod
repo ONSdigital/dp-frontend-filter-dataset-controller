@@ -1,13 +1,13 @@
 module github.com/ONSdigital/dp-frontend-filter-dataset-controller
 
-go 1.20
+go 1.21
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.254.1
 	github.com/ONSdigital/dp-cookies v0.4.0
 	github.com/ONSdigital/dp-healthcheck v1.6.1
 	github.com/ONSdigital/dp-net/v2 v2.11.0
-	github.com/ONSdigital/dp-renderer/v2 v2.3.0
+	github.com/ONSdigital/dp-renderer/v2 v2.4.0
 	github.com/ONSdigital/log.go/v2 v2.4.1
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
@@ -16,7 +16,7 @@ require (
 	github.com/kevinburke/go-bindata v3.24.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/smartystreets/goconvey v1.8.1
-	golang.org/x/text v0.12.0
+	golang.org/x/text v0.13.0
 )
 
 require (
@@ -35,6 +35,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
 	github.com/unrolled/render v1.6.0 // indirect
-	golang.org/x/net v0.14.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/net v0.15.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
 )
