@@ -13,8 +13,10 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/routes"
 	render "github.com/ONSdigital/dp-renderer/v2"
+	"github.com/ONSdigital/dp-renderer/v2/middleware/renderror"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
 	"github.com/pkg/errors"
 )
 
@@ -64,8 +66,12 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	// Initialise router
 	r := mux.NewRouter()
+	middleware := []alice.Constructor{
+		renderror.Handler(svc.clients.Render),
+	}
+	newAlice := alice.New(middleware...).Then(r)
 	routes.Init(ctx, r, cfg, svc.clients)
-	svc.Server = serviceList.GetHTTPServer(cfg.BindAddr, r)
+	svc.Server = serviceList.GetHTTPServer(cfg.BindAddr, newAlice)
 
 	// Start Healthcheck and HTTP Server
 	log.Info(ctx, "service listening...", log.Data{
