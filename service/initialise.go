@@ -7,6 +7,7 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dphttp "github.com/ONSdigital/dp-net/v2/http"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // ExternalServiceList holds the initialiser and initialisation state of external services.
@@ -48,7 +49,8 @@ func (e *ExternalServiceList) GetHealthCheck(cfg *config.Config, buildTime, gitC
 
 // DoGetHTTPServer creates an HTTP Server with the provided bind address and router
 func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer {
-	s := dphttp.NewServer(bindAddr, router)
+	otelHandler := otelhttp.NewHandler(router, "/")
+	s := dphttp.NewServer(bindAddr, otelHandler)
 	s.HandleOSSignals = false
 	return s
 }

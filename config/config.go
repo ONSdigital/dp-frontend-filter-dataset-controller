@@ -24,6 +24,8 @@ type Config struct {
 	PprofToken                 string        `envconfig:"PPROF_TOKEN" json:"-"`
 	SearchAPIAuthToken         string        `envconfig:"SEARCH_API_AUTH_TOKEN"  json:"-"`
 	SiteDomain                 string        `envconfig:"SITE_DOMAIN"`
+	OTExporterOTLPEndpoint     string        `envconfig:"OTEL_EXPORTER_OTLP_ENDPOINT"`
+	OTServiceName              string        `envconfig:"OTEL_SERVICE_NAME"`
 }
 
 var cfg *Config
@@ -64,6 +66,8 @@ func get() (*Config, error) {
 		HealthCheckInterval:        30 * time.Second,
 		MaxDatasetOptions:          200,
 		SiteDomain:                 "localhost",
+		OTExporterOTLPEndpoint:     "localhost:4317",
+		OTServiceName:              "dp-frontend-filter-dataset-controller",
 	}
 
 	return cfg, envconfig.Process("", cfg)

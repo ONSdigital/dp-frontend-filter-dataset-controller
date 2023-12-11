@@ -18,6 +18,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 )
 
 // Service contains all the configs, server and clients to run the frontend filter dataset controller
@@ -66,6 +67,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 
 	// Initialise router
 	r := mux.NewRouter()
+	r.Use(otelmux.Middleware(cfg.OTServiceName))
 	middleware := []alice.Constructor{
 		renderror.Handler(svc.clients.Render),
 	}
