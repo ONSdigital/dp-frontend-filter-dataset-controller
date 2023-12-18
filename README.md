@@ -26,6 +26,7 @@ An HTTP service for the controlling of data relevant to the filtering of a parti
 | SITE_DOMAIN                  | string                                | Domain taken from environment configs                                                                |
 | OTEL_EXPORTER_OTLP_ENDPOINT  | localhost:4317                        | Endpoint for OpenTelemetry service                                                                   |
 | OTEL_SERVICE_NAME            | dp-frontend-filter-dataset-controller | Label of service for OpenTelemetry service                                                           |
+| OTEL_BATCH_TIMEOUT           | 5s                                    | Timeout for OpenTelemetry                                                                            |
 
 `HEALTHCHECK_INTERVAL` and `HEALTHCHECK_CRITICAL_TIMEOUT` can use the following formats to represent duration of time:
 

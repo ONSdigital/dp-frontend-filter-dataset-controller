@@ -31,6 +31,9 @@ func TestConfig(t *testing.T) {
 				So(cfg.MaxDatasetOptions, ShouldEqual, 200)
 				So(cfg.PatternLibraryAssetsPath, ShouldEqual, "//cdn.ons.gov.uk/dp-design-system/3f77ec1")
 				So(cfg.SiteDomain, ShouldEqual, "localhost")
+				So(cfg.OTExporterOTLPEndpoint, ShouldEqual, "localhost:4317")
+				So(cfg.OTServiceName, ShouldEqual, "dp-cantabular-filter-dataset-controller")
+				So(cfg.OTBatchTimeout, ShouldEqual, 5*time.Second)
 			})
 
 			Convey("Then a second call to config should return the same config", func() {

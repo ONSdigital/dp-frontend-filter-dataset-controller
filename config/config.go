@@ -26,6 +26,7 @@ type Config struct {
 	SiteDomain                 string        `envconfig:"SITE_DOMAIN"`
 	OTExporterOTLPEndpoint     string        `envconfig:"OTEL_EXPORTER_OTLP_ENDPOINT"`
 	OTServiceName              string        `envconfig:"OTEL_SERVICE_NAME"`
+	OTBatchTimeout 			   time.Duration `envconfig:"OTEL_BATCH_TIMEOUT"`
 }
 
 var cfg *Config
@@ -68,6 +69,7 @@ func get() (*Config, error) {
 		SiteDomain:                 "localhost",
 		OTExporterOTLPEndpoint:     "localhost:4317",
 		OTServiceName:              "dp-frontend-filter-dataset-controller",
+		OTBatchTimeout: 			5 * time.Second,
 	}
 
 	return cfg, envconfig.Process("", cfg)
