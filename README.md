@@ -1,13 +1,11 @@
 # dp-frontend-filter-dataset-controller
 
-==================
-
 An HTTP service for the controlling of data relevant to the filtering of a particular dataset.
 
 ## Configuration
 
 | Environment variable         | Default                               | Description                                                                                          |
-| ---------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+|------------------------------|---------------------------------------|------------------------------------------------------------------------------------------------------|
 | API_ROUTER_URL               | <http://localhost:23200/v1>           | The URL of the API Router                                                                            |
 | BATCH_MAX_WORKERS            | 100                                   | maximum number of concurrent go-routines requesting items concurrently from APIs with pagination     |
 | BATCH_SIZE_LIMIT             | 1000                                  | maximum limit value to get items from APIs in a single call                                          |
@@ -15,7 +13,9 @@ An HTTP service for the controlling of data relevant to the filtering of a parti
 | DEBUG                        | false                                 | Enable local debugging                                                                               |
 | DOWNLOAD_SERVICE_URL         | <http://localhost:23600>              | The URL of the download service                                                                      |
 | ENABLE_DATASET_PREVIEW       | false                                 | Flag to add preview of dataset to output page                                                        |
+| ENABLE_FEEDBACK_API          | false                                 | Enable feedback api                                                                                  |
 | ENABLE_PROFILER              | false                                 | Flag to enable go profiler                                                                           |
+| FEEDBACK_API_URL             | <http://localhost:23200/v1/feedback>  | The public `dp-api-router` address for feedback, not the internal one                                |
 | GRACEFUL_SHUTDOWN_TIMEOUT    | 5s                                    | The graceful shutdown timeout in seconds                                                             |
 | HEALTHCHECK_CRITICAL_TIMEOUT | 90s                                   | The time taken for the health changes from warning state to critical due to subsystem check failures |
 | HEALTHCHECK_INTERVAL         | 30s                                   | The time between calling healthcheck endpoints for check subsystems                                  |
@@ -30,7 +30,7 @@ An HTTP service for the controlling of data relevant to the filtering of a parti
 
 `HEALTHCHECK_INTERVAL` and `HEALTHCHECK_CRITICAL_TIMEOUT` can use the following formats to represent duration of time:
 
-```
+```text
 "300ms" = 300 milliseconds
 "1.5h" =  1.5 hours
 "2h45m" = 2 hours 45 minutes
@@ -49,7 +49,7 @@ Valid time units are
 An optional `/debug` endpoint has been added, in order to profile this service via `pprof` go library.
 In order to use this endpoint, you will need to enable profiler flag and set a PPROF_TOKEN:
 
-```
+```text
 export ENABLE_PROFILER=true
 export PPROF_TOKEN={generated uuid}
 ```
@@ -71,6 +71,6 @@ See [CONTRIBUTING](CONTRIBUTING.md) for details
 
 ### Licence
 
-Copyright © 2023, Office for National Statistics (<https://www.ons.gov.uk>)
+Copyright © 2025, Office for National Statistics (<https://www.ons.gov.uk>)
 
 Released under MIT license, see [LICENSE](LICENSE.md) for details.
