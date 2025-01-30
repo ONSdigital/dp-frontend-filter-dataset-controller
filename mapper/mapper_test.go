@@ -44,6 +44,7 @@ func getExpectedFilterOverviewPage() model.Overview {
 	expectedPageModel.Metadata = core.Metadata{Title: "Filter Options"}
 	expectedPageModel.CookiesPolicy = core.CookiesPolicy{Essential: true}
 	expectedPageModel.FeatureFlags.SixteensVersion = sixteensVersion
+	expectedPageModel.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 	return expectedPageModel
 }
 
@@ -774,6 +775,8 @@ func TestCreateHierarchyPage(t *testing.T) {
 		}
 		testHierarchyPage.FilterID = "12349876"
 
+		testHierarchyPage.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
+
 		testSelectedOptions := map[string]string{"op1": "This is option 1"}
 
 		testVersionDimensions := dataset.VersionDimensions{
@@ -919,6 +922,7 @@ func getExpectedTimePage(datasetID, filterID, lang string) model.Time {
 	}
 	p.ServiceMessage = getTestServiceMessage()
 	p.EmergencyBanner = core.EmergencyBanner(returnCorrectlyFormedEmergencyBanner())
+	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 	return p
 }
 
@@ -1265,6 +1269,7 @@ func getExpectedEmptyPageModel() model.Age {
 		},
 	}
 	p.URI = "/"
+	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 	return p
 }
 
