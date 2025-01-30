@@ -16,6 +16,7 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/search"
 	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
 	"github.com/ONSdigital/dp-cookies/cookies"
+	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/dates"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
 
@@ -35,6 +36,10 @@ var topLevelGeographies = map[string]bool{
 	"K03000001": true,
 	"K04000001": true,
 }
+
+var (
+	cfg, _ = config.Get()
+)
 
 // CreateFilterOverview maps data items from API responses to form a filter overview
 // front end page model
@@ -59,6 +64,8 @@ func CreateFilterOverview(req *http.Request, bp core.Page, dimensions []filter.M
 	p.URI = req.URL.Path
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
+	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
+	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	for i := range dimensions {
 		var fod model.Dimension
@@ -176,6 +183,8 @@ func CreateListSelectorPage(req *http.Request, bp core.Page, name string, select
 	p.URI = req.URL.Path
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
+	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
+	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	versionURL, err := url.Parse(fm.Links.Version.HRef)
 	if err != nil {
@@ -283,6 +292,8 @@ func CreatePreviewPage(req *http.Request, bp core.Page, dimensions []filter.Mode
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
 	p.RemoveGalleryBackground = true
+	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
+	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
 
@@ -408,6 +419,8 @@ func CreateAgePage(req *http.Request, bp core.Page, f filter.Model, d dataset.Da
 	p.URI = req.URL.Path
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
+	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
+	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
 	if err != nil {
@@ -558,6 +571,8 @@ func CreateTimePage(req *http.Request, bp core.Page, f filter.Model, d dataset.D
 	p.URI = req.URL.Path
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
+	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
+	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	for i := range dims.Items {
 		if dims.Items[i].Name == "time" {
@@ -841,6 +856,8 @@ func CreateHierarchySearchPage(req *http.Request, bp core.Page, items []search.I
 	p.URI = fmt.Sprintf("%s?q=%s", req.URL.Path, url.QueryEscape(req.URL.Query().Get("q")))
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
+	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
+	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	title := pageTitle
 
@@ -947,6 +964,8 @@ func CreateHierarchyPage(req *http.Request, bp core.Page, h hierarchyClient.Mode
 	p.URI = req.URL.Path
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
+	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
+	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	var title string
 	if len(h.Breadcrumbs) == 0 {
