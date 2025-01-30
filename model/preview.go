@@ -27,6 +27,8 @@ type PreviewPage struct {
 	UnitOfMeasurement     string             `json:"unit_of_measurement"`
 	SingleValueDimensions []PreviewDimension `json:"single_value_dimensions"`
 	FilterOutputID        string             `json:"filter_output_id"`
+	EnableFeedbackAPI     bool               `json:"enable_feedback_api"`
+	FeedbackAPIURL        string             `json:"feedback_api_url"`
 }
 
 // Download has the details for an individual downloadable file

@@ -11,15 +11,17 @@ type Age struct {
 
 // Data represents the data for the age page
 type AgeData struct {
-	Youngest      string     `json:"youngest"`
-	Oldest        string     `json:"oldest"`
-	FirstSelected string     `json:"first_selected"`
-	LastSelected  string     `json:"last_selected"`
-	Ages          []AgeValue `json:"ages"`
-	CheckedRadio  string     `json:"checked_radio"`
-	FormAction    Link       `json:"form_action"`
-	HasAllAges    bool       `json:"has_all_ages"`
-	AllAgesOption string     `json:"all_ages_option"`
+	Youngest          string     `json:"youngest"`
+	Oldest            string     `json:"oldest"`
+	FirstSelected     string     `json:"first_selected"`
+	LastSelected      string     `json:"last_selected"`
+	Ages              []AgeValue `json:"ages"`
+	CheckedRadio      string     `json:"checked_radio"`
+	FormAction        Link       `json:"form_action"`
+	HasAllAges        bool       `json:"has_all_ages"`
+	AllAgesOption     string     `json:"all_ages_option"`
+	EnableFeedbackAPI bool       `json:"enable_feedback_api"`
+	FeedbackAPIURL    string     `json:"feedback_api_url"`
 }
 
 // Value represents a single age value
