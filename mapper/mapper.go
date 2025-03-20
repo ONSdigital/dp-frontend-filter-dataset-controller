@@ -64,7 +64,6 @@ func CreateFilterOverview(req *http.Request, bp core.Page, dimensions []filter.M
 	p.URI = req.URL.Path
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
-	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
 	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	for i := range dimensions {
@@ -183,7 +182,6 @@ func CreateListSelectorPage(req *http.Request, bp core.Page, name string, select
 	p.URI = req.URL.Path
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
-	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
 	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	versionURL, err := url.Parse(fm.Links.Version.HRef)
@@ -292,7 +290,6 @@ func CreatePreviewPage(req *http.Request, bp core.Page, dimensions []filter.Mode
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
 	p.RemoveGalleryBackground = true
-	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
 	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	mapCookiePreferences(req, &p.CookiesPreferencesSet, &p.CookiesPolicy)
@@ -419,7 +416,6 @@ func CreateAgePage(req *http.Request, bp core.Page, f filter.Model, d dataset.Da
 	p.URI = req.URL.Path
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
-	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
 	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	versionURL, err := url.Parse(f.Links.Version.HRef)
@@ -571,7 +567,6 @@ func CreateTimePage(req *http.Request, bp core.Page, f filter.Model, d dataset.D
 	p.URI = req.URL.Path
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
-	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
 	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	for i := range dims.Items {
@@ -856,7 +851,6 @@ func CreateHierarchySearchPage(req *http.Request, bp core.Page, items []search.I
 	p.URI = fmt.Sprintf("%s?q=%s", req.URL.Path, url.QueryEscape(req.URL.Query().Get("q")))
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
-	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
 	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	title := pageTitle
@@ -964,7 +958,6 @@ func CreateHierarchyPage(req *http.Request, bp core.Page, h hierarchyClient.Mode
 	p.URI = req.URL.Path
 	p.ServiceMessage = serviceMessage
 	p.EmergencyBanner = mapEmergencyBanner(emergencyBannerContent)
-	p.FeatureFlags.EnableFeedbackAPI = cfg.EnableFeedbackAPI
 	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	var title string

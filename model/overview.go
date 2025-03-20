@@ -19,7 +19,6 @@ type FilterOverview struct {
 	LatestVersion      LatestVersion `json:"latest_version"`
 	DatasetTitle       string        `json:"dataset_title"`
 	HasUnsetDimensions bool          `json:"has_unset_dimensions"`
-	EnableFeedbackAPI  bool          `json:"enable_feedback_api"`
 	FeedbackAPIURL     string        `json:"feedback_api_url"`
 }
 

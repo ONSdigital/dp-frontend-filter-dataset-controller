@@ -13,7 +13,6 @@ An HTTP service for the controlling of data relevant to the filtering of a parti
 | DEBUG                        | false                                 | Enable local debugging                                                                               |
 | DOWNLOAD_SERVICE_URL         | <http://localhost:23600>              | The URL of the download service                                                                      |
 | ENABLE_DATASET_PREVIEW       | false                                 | Flag to add preview of dataset to output page                                                        |
-| ENABLE_FEEDBACK_API          | false                                 | Enable feedback api                                                                                  |
 | ENABLE_PROFILER              | false                                 | Flag to enable go profiler                                                                           |
 | FEEDBACK_API_URL             | <http://localhost:23200/v1/feedback>  | The public `dp-api-router` address for feedback, not the internal one                                |
 | GRACEFUL_SHUTDOWN_TIMEOUT    | 5s                                    | The graceful shutdown timeout in seconds                                                             |

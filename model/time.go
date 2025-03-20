@@ -25,7 +25,6 @@ type TimeData struct {
 	Type               string           `json:"type"`
 	DatasetTitle       string           `json:"dataset_title"`
 	GroupedSelection   GroupedSelection `json:"grouped_selection"`
-	EnableFeedbackAPI  bool             `json:"enable_feedback_api"`
 	FeedbackAPIURL     string           `json:"feedback_api_url"`
 }
 

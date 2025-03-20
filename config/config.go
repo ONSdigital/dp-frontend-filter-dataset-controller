@@ -15,7 +15,6 @@ type Config struct {
 	Debug                      bool          `envconfig:"DEBUG"`
 	DownloadServiceURL         string        `envconfig:"DOWNLOAD_SERVICE_URL"`
 	EnableDatasetPreview       bool          `envconfig:"ENABLE_DATASET_PREVIEW"`
-	EnableFeedbackAPI          bool          `envconfig:"ENABLE_FEEDBACK_API"`
 	EnableProfiler             bool          `envconfig:"ENABLE_PROFILER"`
 	FeedbackAPIURL             string        `envconfig:"FEEDBACK_API_URL"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
@@ -63,7 +62,6 @@ func get() (*Config, error) {
 		Debug:                      false,
 		DownloadServiceURL:         "http://localhost:23600",
 		EnableDatasetPreview:       false,
-		EnableFeedbackAPI:          false,
 		EnableProfiler:             false,
 		FeedbackAPIURL:             "http://localhost:23200/v1/feedback",
 		GracefulShutdownTimeout:    5 * time.Second,
