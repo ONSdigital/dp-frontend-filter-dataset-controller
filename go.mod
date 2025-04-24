@@ -2,8 +2,6 @@ module github.com/ONSdigital/dp-frontend-filter-dataset-controller
 
 go 1.24
 
-toolchain go1.24.1
-
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.266.0
 	github.com/ONSdigital/dp-cookies v0.5.0
@@ -12,12 +10,10 @@ require (
 	github.com/ONSdigital/dp-otel-go v0.0.7
 	github.com/ONSdigital/dp-renderer/v2 v2.20.0
 	github.com/ONSdigital/log.go/v2 v2.4.5
-	github.com/golang/glog v1.2.4
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/justinas/alice v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/kevinburke/go-bindata v3.24.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/smartystreets/goconvey v1.8.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux v0.51.0
@@ -34,6 +30,7 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/golang/glog v1.2.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/gosimple/slug v1.15.0 // indirect
@@ -41,6 +38,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
+	github.com/kevinburke/go-bindata v3.24.0+incompatible // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/nicksnyder/go-i18n/v2 v2.4.1 // indirect
@@ -67,4 +65,11 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
 	google.golang.org/grpc v1.70.0 // indirect
 	google.golang.org/protobuf v1.35.2 // indirect
+)
+
+tool (
+	// This is required to remove vulnerability CVE-2024-45339
+	github.com/golang/glog
+	// Used for building frontend assets
+	github.com/kevinburke/go-bindata
 )
