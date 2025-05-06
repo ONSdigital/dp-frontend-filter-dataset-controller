@@ -12,7 +12,7 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/service"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/service/mock"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dphttp "github.com/ONSdigital/dp-net/v2/http"
+	dphttp "github.com/ONSdigital/dp-net/v3/http"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 )
