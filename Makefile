@@ -23,8 +23,8 @@ debug: generate-debug
 
 .PHONY: lint 
 lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.53.3
-	golangci-lint run ./...
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.6
+	golangci-lint run ./... --build-tags 'production'
 
 .PHONY: test
 test: generate-prod
