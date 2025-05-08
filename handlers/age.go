@@ -26,7 +26,7 @@ func (f *Filter) UpdateAge() http.HandlerFunc {
 		ctx := req.Context()
 		vars := mux.Vars(req)
 		filterID := vars["filterID"]
-		dimensionName := "age"
+		dimensionName := age
 
 		eTag, err := f.FilterClient.RemoveDimension(ctx, userAccessToken, "", collectionID, filterID, dimensionName, headers.IfMatchAnyETag)
 		if err != nil {
@@ -64,15 +64,15 @@ func (f *Filter) UpdateAge() http.HandlerFunc {
 			if err != nil {
 				log.Warn(ctx, "failed to add all ages option", log.FormatErrors([]error{err}), log.Data{"age_case": "all"})
 			}
-		case "range":
+		case strRange:
 			_, err = f.addAgeRange(filterID, userAccessToken, collectionID, req, eTag)
 			if err != nil {
-				log.Warn(ctx, "failed to add age range", log.FormatErrors([]error{err}), log.Data{"age_case": "range"})
+				log.Warn(ctx, "failed to add age range", log.FormatErrors([]error{err}), log.Data{"age_case": strRange})
 			}
-		case "list":
+		case list:
 			_, err = f.addAgeList(filterID, userAccessToken, collectionID, req, eTag)
 			if err != nil {
-				log.Warn(ctx, "failed to add age list", log.FormatErrors([]error{err}), log.Data{"age_case": "list"})
+				log.Warn(ctx, "failed to add age list", log.FormatErrors([]error{err}), log.Data{"age_case": list})
 			}
 		}
 
@@ -83,7 +83,7 @@ func (f *Filter) UpdateAge() http.HandlerFunc {
 
 func (f *Filter) addAgeList(filterID, userAccessToken, collectionID string, req *http.Request, eTag string) (newETag string, err error) {
 	ctx := req.Context()
-	dimensionName := "age"
+	dimensionName := age
 
 	options := []string{}
 	for k := range req.Form {
@@ -111,7 +111,7 @@ func (f *Filter) addAgeRange(filterID, userAccessToken, collectionID string, req
 	reg := regexp.MustCompile(`\d+\+`)
 	ctx := req.Context()
 
-	dimensionName := "age"
+	dimensionName := age
 
 	oldestHasPlus := reg.MatchString(oldest)
 	if oldestHasPlus {
@@ -174,7 +174,7 @@ func (f *Filter) Age() http.HandlerFunc {
 		vars := mux.Vars(req)
 		filterID := vars["filterID"]
 		ctx := req.Context()
-		dimensionName := "age"
+		dimensionName := age
 
 		fj, eTag0, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
@@ -265,6 +265,6 @@ func (f *Filter) Age() http.HandlerFunc {
 			setStatusCode(req, w, err)
 			return
 		}
-		f.RenderClient.BuildPage(w, p, "age")
+		f.RenderClient.BuildPage(w, p, age)
 	})
 }

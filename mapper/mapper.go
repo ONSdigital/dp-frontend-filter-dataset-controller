@@ -25,7 +25,17 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-const sixteensVersion = "bc2c02c"
+const (
+	age             = "age"
+	geography       = "geography"
+	latest          = "latest"
+	list            = "list"
+	single          = "single"
+	sixteensVersion = "bc2c02c"
+	strRange        = "range"
+	strTime         = "time"
+	strType         = "type"
+)
 
 var hierarchyBrowseLookup = map[string]string{
 	"geography": "area",
@@ -69,7 +79,7 @@ func CreateFilterOverview(req *http.Request, bp core.Page, dimensions []filter.M
 	for i := range dimensions {
 		var fod model.Dimension
 
-		if dimensions[i].Name == "time" {
+		if dimensions[i].Name == strTime {
 			for j := range datasetDims {
 				if datasetDims[j].Name == dimensions[i].Name {
 					fod.Filter = helpers.TitleCaseStr(datasetDims[j].Name)
@@ -404,7 +414,7 @@ func CreateAgePage(req *http.Request, bp core.Page, f filter.Model, d dataset.Da
 	log.Info(ctx, "mapping api responses to age page model", log.Data{"filterID": f.FilterID, "datasetID": datasetID})
 
 	for i := range dims.Items {
-		if dims.Items[i].Name == "age" {
+		if dims.Items[i].Name == age {
 			p.Metadata.Description = dims.Items[i].Description
 		}
 	}
@@ -503,7 +513,7 @@ func CreateAgePage(req *http.Request, bp core.Page, f filter.Model, d dataset.Da
 		p.Data.Oldest = strconv.Itoa(oldest)
 	}
 
-	p.Data.CheckedRadio = "range"
+	p.Data.CheckedRadio = strRange
 
 	for i, val := range p.Data.Ages {
 		if val.IsSelected {
@@ -513,7 +523,7 @@ func CreateAgePage(req *http.Request, bp core.Page, f filter.Model, d dataset.Da
 				}
 				for k := j; k < len(p.Data.Ages); k++ {
 					if p.Data.Ages[k].IsSelected {
-						p.Data.CheckedRadio = "list"
+						p.Data.CheckedRadio = list
 						break
 					}
 				}
@@ -521,7 +531,7 @@ func CreateAgePage(req *http.Request, bp core.Page, f filter.Model, d dataset.Da
 		}
 	}
 
-	if p.Data.CheckedRadio == "range" {
+	if p.Data.CheckedRadio == strRange {
 		for _, val := range p.Data.Ages {
 			if val.IsSelected {
 				if p.Data.FirstSelected == "" {
@@ -570,7 +580,7 @@ func CreateTimePage(req *http.Request, bp core.Page, f filter.Model, d dataset.D
 	p.FeatureFlags.FeedbackAPIURL = cfg.FeedbackAPIURL
 
 	for i := range dims.Items {
-		if dims.Items[i].Name == "time" {
+		if dims.Items[i].Name == strTime {
 			p.Metadata.Description = dims.Items[i].Description
 		}
 	}
@@ -671,9 +681,9 @@ func CreateTimePage(req *http.Request, bp core.Page, f filter.Model, d dataset.D
 	}
 
 	if len(selVals) == 1 && latestSelected {
-		p.Data.CheckedRadio = "latest"
+		p.Data.CheckedRadio = latest
 	} else if len(selVals) == 1 {
-		p.Data.CheckedRadio = "single"
+		p.Data.CheckedRadio = single
 		date, err := time.Parse("Jan-06", selVals[0].Option)
 		if err != nil {
 			log.Warn(ctx, "unable to parse date", log.FormatErrors([]error{err}))
@@ -683,16 +693,16 @@ func CreateTimePage(req *http.Request, bp core.Page, f filter.Model, d dataset.D
 	} else if len(selVals) == 0 {
 		p.Data.CheckedRadio = ""
 	} else if len(selVals) == len(allVals.Items) {
-		p.Data.CheckedRadio = "list"
+		p.Data.CheckedRadio = list
 	} else {
 		if isTimeRange(sortedTimes, selVals) {
-			p.Data.CheckedRadio = "range"
+			p.Data.CheckedRadio = strRange
 		} else {
-			p.Data.CheckedRadio = "list"
+			p.Data.CheckedRadio = list
 		}
 	}
 
-	if p.Data.CheckedRadio == "range" {
+	if p.Data.CheckedRadio == strRange {
 		var selOptions []string
 		for _, val := range selVals {
 			selOptions = append(selOptions, val.Option)
@@ -858,7 +868,7 @@ func CreateHierarchySearchPage(req *http.Request, bp core.Page, items []search.I
 	p.IsInFilterBreadcrumb = true
 	var ok bool
 	if p.Type, ok = hierarchyBrowseLookup[name]; !ok {
-		p.Type = "type"
+		p.Type = strType
 	}
 
 	p.SearchDisabled = true
@@ -1003,10 +1013,10 @@ func CreateHierarchyPage(req *http.Request, bp core.Page, h hierarchyClient.Mode
 		})
 
 	if len(h.Breadcrumbs) > 0 {
-		if name == "geography" {
+		if name == geography {
 			p.Breadcrumb = append(p.Breadcrumb, core.TaxonomyNode{
 				Title: "Geographic Areas",
-				URI:   fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, "geography"),
+				URI:   fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, geography),
 			})
 
 			if !topLevelGeographies[h.Links.Code.ID] {
@@ -1056,7 +1066,7 @@ func CreateHierarchyPage(req *http.Request, bp core.Page, h hierarchyClient.Mode
 	p.Metadata.Title = fmt.Sprintf("Filter Options - %s", title)
 
 	if len(h.Breadcrumbs) > 0 {
-		if len(h.Breadcrumbs) == 1 || topLevelGeographies[h.Breadcrumbs[0].Links.Code.ID] && name == "geography" {
+		if len(h.Breadcrumbs) == 1 || topLevelGeographies[h.Breadcrumbs[0].Links.Code.ID] && name == geography {
 			p.Data.Parent = pageTitle
 			p.Data.GoBack = model.Link{
 				URL: fmt.Sprintf("/filters/%s/dimensions/%s", f.FilterID, name),

@@ -29,7 +29,7 @@ func (f *Filter) UpdateTime() http.HandlerFunc {
 		vars := mux.Vars(req)
 		filterID := vars["filterID"]
 		ctx := req.Context()
-		dimensionName := "time"
+		dimensionName := strTime
 
 		eTag, err := f.FilterClient.RemoveDimension(ctx, userAccessToken, "", collectionID, filterID, dimensionName, headers.IfMatchAnyETag)
 		if err != nil {
@@ -94,7 +94,7 @@ func (f *Filter) addSingleTime(filterID, userAccessToken, collectionID string, r
 
 	month := req.Form.Get("month-single")
 	year := req.Form.Get("year-single")
-	dimensionName := "time"
+	dimensionName := strTime
 
 	date, err := time.Parse("January 2006", fmt.Sprintf("%s %s", month, year))
 	if err != nil {
@@ -107,7 +107,7 @@ func (f *Filter) addSingleTime(filterID, userAccessToken, collectionID string, r
 // addTimeList will save form time grouped list form data to the filter
 func (f *Filter) addTimeList(filterID, userAccessToken, collectionID string, req *http.Request, eTag string) (newETag string, err error) {
 	ctx := req.Context()
-	dimensionName := "time"
+	dimensionName := strTime
 
 	var options []string
 	startYearStr := req.Form.Get("start-year-grouped")
@@ -153,7 +153,7 @@ func (f *Filter) addTimeRange(filterID, userAccessToken, collectionID string, re
 	endMonth := req.Form.Get("end-month")
 	endYear := req.Form.Get("end-year")
 	ctx := req.Context()
-	dimensionName := "time"
+	dimensionName := strTime
 
 	values, labelIDMap, err := f.getDimensionValues(ctx, userAccessToken, collectionID, filterID, dimensionName)
 	if err != nil {
@@ -197,7 +197,7 @@ func (f *Filter) Time() http.HandlerFunc {
 		vars := mux.Vars(req)
 		filterID := vars["filterID"]
 		ctx := req.Context()
-		dimensionName := "time"
+		dimensionName := strTime
 
 		fj, eTag0, err := f.FilterClient.GetJobState(ctx, userAccessToken, "", "", collectionID, filterID)
 		if err != nil {
@@ -288,6 +288,6 @@ func (f *Filter) Time() http.HandlerFunc {
 			return
 		}
 
-		f.RenderClient.BuildPage(w, p, "time")
+		f.RenderClient.BuildPage(w, p, strTime)
 	})
 }

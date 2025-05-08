@@ -8,6 +8,15 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
+// Constants
+const (
+	age       = "age"
+	geography = "geography"
+	list      = "list"
+	strRange  = "range"
+	strTime   = "time"
+)
+
 // Filter represents the handlers for Filtering
 type Filter struct {
 	RenderClient         RenderClient

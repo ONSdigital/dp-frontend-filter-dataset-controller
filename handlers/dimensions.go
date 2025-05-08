@@ -59,7 +59,7 @@ func (f *Filter) GetAllDimensionOptionsJSON() http.HandlerFunc {
 
 		var lids []labelID
 
-		if name == "time" {
+		if name == strTime {
 			var codedDates []string
 			labelIDMap := make(map[string]string)
 			for k, v := range idNameMap {
@@ -160,7 +160,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 
 		var lids []labelID
 
-		if name == "time" {
+		if name == strTime {
 			var codedDates []string
 			labelIDMap := make(map[string]string)
 			for _, opt := range opts.Items {
