@@ -133,7 +133,6 @@ func (svc *Service) Close(ctx context.Context) error {
 }
 
 func (svc *Service) registerCheckers(ctx context.Context, cfg *config.Config) (err error) {
-
 	hasErrors := false
 
 	if err = svc.HealthCheck.AddCheck("API router", svc.routerHealthClient.Checker); err != nil {
