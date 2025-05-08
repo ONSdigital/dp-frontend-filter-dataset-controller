@@ -71,7 +71,7 @@ func TestUnitSearch(t *testing.T) {
 
 		callSearch := func() *httptest.ResponseRecorder {
 			target := fmt.Sprintf("/filters/%s/dimensions/%s/search?q=%s", filterID, name, query)
-			req := httptest.NewRequest(http.MethodGet, target, nil)
+			req := httptest.NewRequest(http.MethodGet, target, http.NoBody)
 			req.Header.Add(dprequest.FlorenceHeaderKey, mockUserAuthToken)
 			req.Header.Add(dprequest.CollectionIDHeaderKey, mockCollectionID)
 			w := httptest.NewRecorder()

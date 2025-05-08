@@ -49,7 +49,7 @@ func getExpectedFilterOverviewPage() model.Overview {
 }
 
 func TestCreateFilterOverview(t *testing.T) {
-	req := httptest.NewRequest("GET", "/", nil)
+	req := httptest.NewRequest("GET", "/", http.NoBody)
 	filterID := "12349876"
 	datasetID := "12345"
 	apiRouterVersion := "/v1"
@@ -317,7 +317,7 @@ func TestCreateFilterOverview(t *testing.T) {
 }
 
 func TestUnitMapper(t *testing.T) {
-	req := httptest.NewRequest("GET", "/", nil)
+	req := httptest.NewRequest("GET", "/", http.NoBody)
 	serviceMessage := getTestServiceMessage()
 	emergencyBanner := getTestEmergencyBanner()
 	bp := core.Page{}
@@ -678,7 +678,7 @@ func getTestDataset() dataset.DatasetDetails {
 }
 
 func TestUnitMapCookiesPreferences(t *testing.T) {
-	req := httptest.NewRequest("", "/", nil)
+	req := httptest.NewRequest("", "/", http.NoBody)
 	pageModel := core.Page{
 		CookiesPreferencesSet: false,
 		CookiesPolicy: core.CookiesPolicy{
@@ -798,7 +798,7 @@ func TestCreateHierarchyPage(t *testing.T) {
 		testServiceMessage := getTestServiceMessage()
 		testEmergencyBanner := getTestEmergencyBanner()
 
-		req := httptest.NewRequest("", "/", nil)
+		req := httptest.NewRequest("", "/", http.NoBody)
 		filterModel := getTestFilter()
 		apiRouterVersion := "v1"
 		lang := dprequest.DefaultLang
@@ -1015,7 +1015,7 @@ func TestIsTimeRange(t *testing.T) {
 }
 
 func TestCreateTimePage(t *testing.T) {
-	req := httptest.NewRequest("", "/", nil)
+	req := httptest.NewRequest("", "/", http.NoBody)
 	datasetID := "cpih01"
 	apiRouterVersion := "v1"
 	lang := dprequest.DefaultLang
@@ -1281,7 +1281,7 @@ func TestCreateAgePage(t *testing.T) {
 	bp := core.Page{}
 
 	Convey("Given a valid request, empty values for filter, dataset, options and selected options", t, func() {
-		req := httptest.NewRequest("", "/", nil)
+		req := httptest.NewRequest("", "/", http.NoBody)
 		filterModel := filter.Model{}
 		datasetDetails := dataset.DatasetDetails{}
 		options := dataset.Options{}
@@ -1307,7 +1307,7 @@ func TestCreateAgePage(t *testing.T) {
 	})
 
 	Convey("Given a valid request, valid non-empty values for filter, dataset, datasetID and language", t, func() {
-		req := httptest.NewRequest("", "/", nil)
+		req := httptest.NewRequest("", "/", http.NoBody)
 		filterModel := getTestFilter()
 		datasetDetails := getTestDataset()
 		versionDimensions := dataset.VersionDimensions{Items: getTestDatasetDimensions()}
@@ -1480,7 +1480,7 @@ func TestCreateAgePage(t *testing.T) {
 	})
 
 	Convey("calling CreateAGePage with an invalid filter version link results in an empty age page being generated and the expected error being returned", t, func() {
-		req := httptest.NewRequest("", "/", nil)
+		req := httptest.NewRequest("", "/", http.NoBody)
 		filterModel := filter.Model{
 			Links: filter.Links{
 				Version: filter.Link{

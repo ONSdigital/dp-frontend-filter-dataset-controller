@@ -64,7 +64,7 @@ func TestUseLatest(t *testing.T) {
 
 		router := mux.NewRouter()
 		router.Path("/filters/{filterID}/use-latest-version").HandlerFunc(f.UseLatest())
-		req := httptest.NewRequest("GET", "/filters/current-filter-id/use-latest-version", nil)
+		req := httptest.NewRequest("GET", "/filters/current-filter-id/use-latest-version", http.NoBody)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 

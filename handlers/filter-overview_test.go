@@ -78,7 +78,7 @@ func TestUnitFilterOverview(t *testing.T) {
 			mockRend.EXPECT().NewBasePageModel().Return(core.NewPage(cfg.PatternLibraryAssetsPath, cfg.SiteDomain))
 			mockRend.EXPECT().BuildPage(gomock.Any(), gomock.Any(), "filter-overview")
 
-			req := httptest.NewRequest("GET", "/filters/12345/dimensions", nil)
+			req := httptest.NewRequest("GET", "/filters/12345/dimensions", http.NoBody)
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()
@@ -105,7 +105,7 @@ func TestUnitFilterOverview(t *testing.T) {
 			mockFilterClient.EXPECT().RemoveDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Goods and Services", testETag(4)).Return(testETag(5), nil)
 			mockFilterClient.EXPECT().AddDimension(ctx, mockUserAuthToken, mockServiceAuthToken, mockCollectionID, filterID, "Goods and Services", testETag(5)).Return(testETag(6), nil)
 
-			req := httptest.NewRequest("GET", "/filters/12345/dimensions/clear-all", nil)
+			req := httptest.NewRequest("GET", "/filters/12345/dimensions/clear-all", http.NoBody)
 			w := httptest.NewRecorder()
 
 			router := mux.NewRouter()

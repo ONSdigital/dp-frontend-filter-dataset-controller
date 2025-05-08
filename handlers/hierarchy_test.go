@@ -103,7 +103,7 @@ func TestHierarchy(t *testing.T) {
 
 		// prepare request for provided url and form, then perform the call with a response writer, which is returned
 		callHierarchy := func(url string) *httptest.ResponseRecorder {
-			req, err := http.NewRequest(http.MethodGet, url, nil)
+			req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
 			So(err, ShouldBeNil)
 			cookie := http.Cookie{Name: dprequest.CollectionIDCookieKey, Value: mockCollectionID}
 			req.AddCookie(&cookie)
@@ -223,7 +223,7 @@ func TestHierarchyUpdate(t *testing.T) {
 
 		// prepare request for provided url and form, then perform the call with a response writer, which is returned
 		callUpdateHierarchy := func(url string, form url.Values) *httptest.ResponseRecorder {
-			req, err := http.NewRequest(http.MethodGet, url, nil)
+			req, err := http.NewRequest(http.MethodGet, url, http.NoBody)
 			So(err, ShouldBeNil)
 			cookie := http.Cookie{Name: dprequest.CollectionIDCookieKey, Value: mockCollectionID}
 			req.AddCookie(&cookie)
