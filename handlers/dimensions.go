@@ -93,6 +93,7 @@ func (f *Filter) GetAllDimensionOptionsJSON() http.HandlerFunc {
 			return
 		}
 
+		//nolint:errcheck // ignore error
 		w.Write(b)
 	})
 }
@@ -194,6 +195,7 @@ func (f *Filter) GetSelectedDimensionOptionsJSON() http.HandlerFunc {
 			return
 		}
 
+		//nolint:errcheck // ignore error
 		w.Write(b)
 	})
 }

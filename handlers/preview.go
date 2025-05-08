@@ -352,6 +352,7 @@ func (f *Filter) GetFilterJob() http.HandlerFunc {
 			return
 		}
 
+		//nolint:errcheck // ignore error
 		w.Write(b)
 	})
 }
