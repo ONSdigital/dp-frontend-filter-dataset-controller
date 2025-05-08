@@ -315,30 +315,6 @@ func (f *Filter) isHierarchicalDimension(ctx context.Context, instanceID, dimens
 	return true, nil
 }
 
-type sorting struct {
-	substring string
-	option    dataset.Option
-}
-
-func splitCode(id string) (month, year string, err error) {
-	code := strings.Split(id, "-")
-	if len(code) == 1 {
-		return "", "", errors.New("code cannot be split")
-	}
-
-	if len(code) < 3 {
-		return "", "", errors.New("code does not match expected format")
-	}
-
-	month = code[len(code)-2]
-	month = strings.ToLower(month)
-
-	year = code[len(code)-1]
-	year = strings.ToLower(year)
-
-	return month, year, nil
-}
-
 // ListSelector controls the render of the age selector list template
 // Contains stubbed data for now - page to be populated by the API
 func (f *Filter) listSelector(w http.ResponseWriter, req *http.Request, name string, selectedValues []filter.DimensionOption, allValues dataset.Options, fm filter.Model, ds dataset.DatasetDetails, dims dataset.VersionDimensions, datasetID, lang, serviceMessage string, emergencyBannerContent zebedee.EmergencyBanner) {

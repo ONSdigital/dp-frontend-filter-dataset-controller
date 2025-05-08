@@ -33,10 +33,6 @@ var funcDoGetHealthcheckErr = func(cfg *config.Config, buildTime string, gitComm
 	return nil, errHealthcheck
 }
 
-var funcDoGetHTTPServerNil = func(bindAddr string, router http.Handler) service.HTTPServer {
-	return nil
-}
-
 func TestRun(t *testing.T) {
 
 	Convey("Having a set of mocked dependencies", t, func() {
