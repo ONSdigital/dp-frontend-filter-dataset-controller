@@ -83,7 +83,7 @@ func CreateFilterOverview(req *http.Request, bp core.Page, dimensions []filter.M
 			for j := range datasetDims {
 				if datasetDims[j].Name == dimensions[i].Name {
 					fod.Filter = helpers.TitleCaseStr(datasetDims[j].Name)
-					if len(datasetDims[j].Label) > 0 {
+					if datasetDims[j].Label != "" {
 						fod.Filter = datasetDims[j].Label
 					}
 				}
@@ -104,7 +104,7 @@ func CreateFilterOverview(req *http.Request, bp core.Page, dimensions []filter.M
 			for j := range datasetDims {
 				if datasetDims[j].Name == dimensions[i].Name {
 					fod.Filter = helpers.TitleCaseStr(datasetDims[j].Name)
-					if len(datasetDims[j].Label) > 0 {
+					if datasetDims[j].Label != "" {
 						fod.Filter = datasetDims[j].Label
 					}
 				}
@@ -176,7 +176,7 @@ func CreateListSelectorPage(req *http.Request, bp core.Page, name string, select
 	for i := range dims.Items {
 		if dims.Items[i].Name == name {
 			p.Metadata.Description = dims.Items[i].Description
-			if len(dims.Items[i].Label) > 0 {
+			if dims.Items[i].Label != "" {
 				pageTitle = dims.Items[i].Label
 			}
 		}
@@ -848,7 +848,7 @@ func CreateHierarchySearchPage(req *http.Request, bp core.Page, items []search.I
 
 	pageTitle := helpers.TitleCaseStr(name)
 	for i := range dims {
-		if dims[i].Name == name && len(dims[i].Label) > 0 {
+		if dims[i].Name == name && dims[i].Label != "" {
 			pageTitle = dims[i].Label
 		}
 	}
@@ -956,7 +956,7 @@ func CreateHierarchyPage(req *http.Request, bp core.Page, h hierarchyClient.Mode
 	for i := range dims.Items {
 		if dims.Items[i].Name == name {
 			p.Metadata.Description = dims.Items[i].Description
-			if len(dims.Items[i].Label) > 0 {
+			if dims.Items[i].Label != "" {
 				pageTitle = dims.Items[i].Label
 			}
 		}

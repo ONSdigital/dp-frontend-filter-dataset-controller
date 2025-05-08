@@ -284,11 +284,11 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 		}
 
 		for i, d := range p.Data.Downloads {
-			if d.Extension == "xls" && (len(d.Size) > 0 || d.Skipped) {
+			if d.Extension == "xls" && (d.Size != "" || d.Skipped) {
 				p.IsDownloadLoaded = true
 			}
 
-			if len(f.downloadServiceURL) > 0 {
+			if f.downloadServiceURL != "" {
 				downloadURL, err := url.Parse(d.URI)
 				if err != nil {
 					setStatusCode(req, w, err)

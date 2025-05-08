@@ -26,7 +26,7 @@ func (f *Filter) Search() http.HandlerFunc {
 		q := url.QueryEscape(req.URL.Query().Get("q"))
 
 		var searchConfig []search.Config
-		if len(req.Header.Get("X-Florence-Token")) > 0 {
+		if req.Header.Get("X-Florence-Token") != "" {
 			searchConfig = append(searchConfig, search.Config{InternalToken: f.SearchAPIAuthToken, FlorenceToken: req.Header.Get("X-Florence-Token")})
 		}
 
@@ -119,7 +119,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 		}
 
 		var searchConfig []search.Config
-		if len(req.Header.Get("X-Florence-Token")) > 0 {
+		if req.Header.Get("X-Florence-Token") != "" {
 			searchConfig = append(searchConfig, search.Config{InternalToken: f.SearchAPIAuthToken, FlorenceToken: req.Header.Get("X-Florence-Token")})
 		}
 

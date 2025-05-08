@@ -47,12 +47,12 @@ func (f *Filter) UpdateAge() http.HandlerFunc {
 			return
 		}
 
-		if len(req.Form.Get("add-all")) > 0 {
+		if req.Form.Get("add-all") != "" {
 			http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/age/add-all", filterID), http.StatusFound)
 			return
 		}
 
-		if len(req.Form.Get("remove-all")) > 0 {
+		if req.Form.Get("remove-all") != "" {
 			http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/age/remove-all", filterID), http.StatusFound)
 			return
 		}

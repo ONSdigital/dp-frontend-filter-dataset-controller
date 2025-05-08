@@ -49,7 +49,7 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 		if len(req.Form["save-and-return"]) > 0 {
 			redirectURI = fmt.Sprintf("/filters/%s/dimensions", filterID)
 		} else {
-			if len(code) > 0 {
+			if code != "" {
 				redirectURI = fmt.Sprintf("/filters/%s/dimensions/%s/%s", filterID, name, code)
 			} else {
 				redirectURI = fmt.Sprintf("/filters/%s/dimensions/%s", filterID, name)
@@ -102,7 +102,7 @@ func (f *Filter) HierarchyUpdate() http.HandlerFunc {
 }
 
 func (f *Filter) buildHierarchyModel(ctx context.Context, fil filter.Model, name, code string) (h hierarchy.Model, err error) {
-	if len(code) > 0 {
+	if code != "" {
 		return f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
 	}
 	if name == geography {
@@ -129,7 +129,7 @@ func (f *Filter) addAllHierarchyLevel(w http.ResponseWriter, req *http.Request, 
 	var err error
 
 	var h hierarchy.Model
-	if len(code) > 0 {
+	if code != "" {
 		h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
 	} else {
 		if name == geography {
@@ -161,7 +161,7 @@ func (f *Filter) removeAllHierarchyLevel(w http.ResponseWriter, req *http.Reques
 	var h hierarchy.Model
 	var err error
 
-	if len(code) > 0 {
+	if code != "" {
 		h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
 	} else {
 		if name == geography {
@@ -208,7 +208,7 @@ func (f *Filter) Hierarchy() http.HandlerFunc {
 		}
 
 		var h hierarchy.Model
-		if len(code) > 0 {
+		if code != "" {
 			h, err = f.HierarchyClient.GetChild(ctx, fil.InstanceID, name, code)
 		} else {
 			if name == geography {

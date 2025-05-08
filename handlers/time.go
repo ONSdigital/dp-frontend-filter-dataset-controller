@@ -51,12 +51,12 @@ func (f *Filter) UpdateTime() http.HandlerFunc {
 			return
 		}
 
-		if len(req.Form.Get("add-all")) > 0 {
+		if req.Form.Get("add-all") != "" {
 			http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/time/add-all", filterID), http.StatusFound)
 			return
 		}
 
-		if len(req.Form.Get("remove-all")) > 0 {
+		if req.Form.Get("remove-all") != "" {
 			http.Redirect(w, req, fmt.Sprintf("/filters/%s/dimensions/time/remove-all", filterID), http.StatusFound)
 			return
 		}
