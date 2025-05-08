@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -23,7 +24,7 @@ func Test_isHierarchicalDimension(t *testing.T) {
 
 		target := &Filter{HierarchyClient: mockHierarchyClient}
 
-		isHierarchy, err := target.isHierarchicalDimension(nil, "", "")
+		isHierarchy, err := target.isHierarchicalDimension(context.TODO(), "", "")
 
 		So(isHierarchy, ShouldBeTrue)
 		So(err, ShouldBeNil)
@@ -37,7 +38,7 @@ func Test_isHierarchicalDimension(t *testing.T) {
 
 		target := &Filter{HierarchyClient: mockHierarchyClient}
 
-		isHierarchy, err := target.isHierarchicalDimension(nil, "", "")
+		isHierarchy, err := target.isHierarchicalDimension(context.TODO(), "", "")
 
 		So(isHierarchy, ShouldBeFalse)
 		So(err, ShouldBeNil)
@@ -51,7 +52,7 @@ func Test_isHierarchicalDimension(t *testing.T) {
 
 		target := &Filter{HierarchyClient: mockHierarchyClient}
 
-		isHierarchy, err := target.isHierarchicalDimension(nil, "", "")
+		isHierarchy, err := target.isHierarchicalDimension(context.TODO(), "", "")
 
 		So(isHierarchy, ShouldBeFalse)
 		So(err, ShouldResemble, hierarchyErr)
@@ -65,7 +66,7 @@ func Test_isHierarchicalDimension(t *testing.T) {
 
 		target := &Filter{HierarchyClient: mockHierarchyClient}
 
-		isHierarchy, err := target.isHierarchicalDimension(nil, "", "")
+		isHierarchy, err := target.isHierarchicalDimension(context.TODO(), "", "")
 
 		So(isHierarchy, ShouldBeFalse)
 		So(err, ShouldResemble, err)
