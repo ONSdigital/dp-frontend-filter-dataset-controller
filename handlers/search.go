@@ -216,8 +216,7 @@ func (f *Filter) SearchUpdate() http.HandlerFunc {
 		}
 
 		// get options to add and overwrite redirectURI, if provided in the form
-		var addOptions []string
-		addOptions = getOptionsAndRedirect(req.Form, &redirectURI)
+		addOptions := getOptionsAndRedirect(req.Form, &redirectURI)
 
 		// sent the PATCH with options to add and remove
 		_, err = f.FilterClient.PatchDimensionValues(ctx, userAccessToken, "", collectionID, filterID, name, addOptions, removeOptions, f.BatchSize, eTag1)

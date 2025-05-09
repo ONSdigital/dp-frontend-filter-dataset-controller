@@ -193,12 +193,12 @@ func (d FilterModelDimensions) Less(i, j int) bool {
 	iRunes := []rune(d[i].Name)
 	jRunes := []rune(d[j].Name)
 
-	max := len(iRunes)
-	if max > len(jRunes) {
-		max = len(jRunes)
+	maxRunes := len(iRunes)
+	if maxRunes > len(jRunes) {
+		maxRunes = len(jRunes)
 	}
 
-	for idx := 0; idx < max; idx++ {
+	for idx := 0; idx < maxRunes; idx++ {
 		ir := iRunes[idx]
 		jr := jRunes[idx]
 

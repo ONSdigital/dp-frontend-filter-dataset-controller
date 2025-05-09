@@ -5,6 +5,7 @@ import (
 	goerrors "errors"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/service"
@@ -12,6 +13,7 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/pkg/errors"
 
+	//nolint:gosec // Exposing endpoint is expected and behind authentication
 	_ "net/http/pprof"
 )
 
@@ -41,7 +43,7 @@ func main() {
 
 func run(ctx context.Context) error {
 	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt, os.Kill)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
 	// Create service initialiser and an error channel for fatal errors
 	svcErrors := make(chan error, 1)
