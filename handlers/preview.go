@@ -104,7 +104,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			}
 
 			if len(prev.Headers[0]) < 4 || strings.ToUpper(prev.Headers[0][0:3]) != "V4_" {
-				pErr = errors.New("Unexpected format - expected `V4_N` in header")
+				pErr = errors.New("unexpected format - expected `V4_N` in header")
 				log.Error(ctx, "failed to format header", pErr, log.Data{"filter_output_id": filterOutputID, "header": prev.Headers})
 				setStatusCode(req, w, pErr)
 				return
@@ -118,7 +118,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 			}
 
 			if markingsColumnCount > len(prev.Headers) {
-				pErr = errors.New("Incongruent column count - column count from cell greater than header count")
+				pErr = errors.New("incongruent column count - column count from cell greater than header count")
 				log.Error(ctx, "failed to verify column count", pErr, log.Data{
 					"filter_output_id": filterOutputID, "header_count": len(prev.Headers), "column_count": markingsColumnCount,
 				})
@@ -145,7 +145,7 @@ func (f *Filter) OutputPage() http.HandlerFunc {
 
 				if len(row) > 0 {
 					if markingsColumnCount > len(row) {
-						pErr = errors.New("Incongruent row length - column count from cell greater than row length")
+						pErr = errors.New("incongruent row length - column count from cell greater than row length")
 						log.Error(ctx, "failed to read row", pErr, log.Data{
 							"filter_output_id": filterOutputID, "row_length": len(row), "column_count": markingsColumnCount,
 						})
