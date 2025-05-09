@@ -22,8 +22,7 @@ debug: generate-debug
 	HUMAN_LOG=1 DEBUG=1 $(BINPATH)/dp-frontend-filter-dataset-controller
 
 .PHONY: lint 
-lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.6
+lint: generate-prod
 	golangci-lint run ./... --build-tags 'production'
 
 .PHONY: test
