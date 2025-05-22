@@ -31,7 +31,7 @@ const (
 	latest          = "latest"
 	list            = "list"
 	single          = "single"
-	sixteensVersion = "2c5867a"
+	sixteensVersion = "662bc97"
 	strRange        = "range"
 	strTime         = "time"
 	strType         = "type"
@@ -1129,11 +1129,13 @@ func CreateHierarchyPage(req *http.Request, bp core.Page, h hierarchyClient.Mode
 
 // mapCookiePreferences reads cookie policy and preferences cookies and then maps the values to the page model
 func mapCookiePreferences(req *http.Request, preferencesIsSet *bool, policy *core.CookiesPolicy) {
-	preferencesCookie := cookies.GetCookiePreferences(req)
+	preferencesCookie := cookies.GetONSCookiePreferences(req)
 	*preferencesIsSet = preferencesCookie.IsPreferenceSet
 	*policy = core.CookiesPolicy{
-		Essential: preferencesCookie.Policy.Essential,
-		Usage:     preferencesCookie.Policy.Usage,
+		Communications: preferencesCookie.Policy.Campaigns,
+		Essential:      preferencesCookie.Policy.Essential,
+		Settings:       preferencesCookie.Policy.Settings,
+		Usage:          preferencesCookie.Policy.Usage,
 	}
 }
 
