@@ -31,7 +31,7 @@ const (
 	latest          = "latest"
 	list            = "list"
 	single          = "single"
-	sixteensVersion = "662bc97"
+	sixteensVersion = "a18521a"
 	strRange        = "range"
 	strTime         = "time"
 	strType         = "type"
