@@ -9,11 +9,13 @@ import (
 	"github.com/ONSdigital/dp-api-clients-go/v2/hierarchy"
 	"github.com/ONSdigital/dp-api-clients-go/v2/search"
 	"github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
+	dpDatasetApiModels "github.com/ONSdigital/dp-dataset-api/models"
+	dpDatasetApiSdk "github.com/ONSdigital/dp-dataset-api/sdk"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-renderer/v2/model"
 )
 
-//go:generate mockgen -source=clients.go -destination=mock_clients.go -package=handlers github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers FilterClient,DatasetClient,HierarchyClient,SearchClient,Renderer
+//go:generate mockgen -source=clients.go -destination=mock_clients.go -package=handlers github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers FilterClient,DatasetClient,DatasetAPISdkClient,HierarchyClient,SearchClient,Renderer
 
 // ClientError implements error interface with additional code method
 type ClientError interface {
@@ -53,6 +55,10 @@ type DatasetClient interface {
 	GetOptionsBatchProcess(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, id, edition, version, dimension string, optionIDs *[]string, processBatch dataset.OptionsBatchProcessor, batchSize, maxWorkers int) (err error)
 	GetVersionMetadata(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version string) (m dataset.Metadata, err error)
 	GetEdition(ctx context.Context, userAuthToken, serviceAuthToken, collectionID, datasetID, edition string) (m dataset.Edition, err error)
+}
+
+type DatasetAPISdkClient interface {
+	GetDataset(ctx context.Context, headers dpDatasetApiSdk.Headers, collectionID, datasetID string) (m dpDatasetApiModels.Dataset, err error)
 }
 
 // HierarchyClient contains methods expected for a hierarchy client

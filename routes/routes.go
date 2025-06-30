@@ -13,7 +13,6 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
-	dpRouterHelpers "github.com/ONSdigital/dp-frontend-router/helpers"
 	render "github.com/ONSdigital/dp-renderer/v2"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
@@ -22,13 +21,14 @@ import (
 
 // Clients represents a list of clients
 type Clients struct {
-	Filter             *filter.Client
-	Dataset            *dataset.Client
-	Hierarchy          *hierarchy.Client
-	HealthcheckHandler func(w http.ResponseWriter, req *http.Request)
-	Render             *render.Render
-	Search             *search.Client
-	Zebedee            *zebedee.Client
+	Filter             		*filter.Client
+	Dataset            		*dataset.Client
+	DatasetAPISdkClient 	handlers.DatasetAPISdkClient
+	Hierarchy          		*hierarchy.Client
+	HealthcheckHandler 		func(w http.ResponseWriter, req *http.Request)
+	Render             		*render.Render
+	Search             		*search.Client
+	Zebedee            		*zebedee.Client
 }
 
 // Init initialises routes for the service
@@ -46,7 +46,7 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients *Clien
 	filterHandler := dpRouterHelpers.CreateReverseProxy("filters", filterDatasetControllerURL)   // CMD
 	filterFlexHandler := dpRouterHelpers.CreateReverseProxy("flex", filterFlexDatasetServiceURL) // Cantabular
 
-	r.Path("/filters/{uri:.*}").HandlerFunc(handlers.FilterPageHandler(f.FilterClient, f.DatasetClient, filterHandler, filterFlexHandler))
+	r.Path("/filters/{uri:.*}").HandlerFunc(handlers.FilterPageHandler(f.FilterClient, clients.DatasetAPISdkClient, filterHandler, filterFlexHandler))
 
 	r.StrictSlash(true).Path("/health").HandlerFunc(clients.HealthcheckHandler)
 

@@ -4,13 +4,14 @@ import (
 	"net/http"
 	"strings"
 
+	dpDatasetApiSdk "github.com/ONSdigital/dp-dataset-api/sdk"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 )
 
 // Handler is middleware that a accepts a filter and dataset client that returns either the filter or filterFlex handler dependent on the type of dataset
 // FilterPageHandler handles requests to /filters/{filterID}
-func FilterPageHandler(f FilterClient, datasetClient DatasetClient, filter, filterFlex http.Handler) http.HandlerFunc {
+func FilterPageHandler(f FilterClient, datasetClient DatasetAPISdkClient, filter, filterFlex http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		vars := mux.Vars(r)
@@ -19,6 +20,13 @@ func FilterPageHandler(f FilterClient, datasetClient DatasetClient, filter, filt
 		serviceAuthToken := ""
 		collectionID := ""
 		downloadServiceToken := ""
+
+		headers := dpDatasetApiSdk.Headers{
+			CollectionID:         collectionID,
+			DownloadServiceToken: downloadServiceToken,
+			ServiceToken:         serviceAuthToken,
+			UserAccessToken:      userAuthToken,
+		}
 
 		filterID := vars["filterID"]
 		if filterID == "" {
@@ -35,7 +43,7 @@ func FilterPageHandler(f FilterClient, datasetClient DatasetClient, filter, filt
 			return
 		}
 
-		datasetDetails, err := datasetClient.Get(ctx, userAuthToken, serviceAuthToken, collectionID, filterModel.Dataset.DatasetID)
+		datasetDetails, err := datasetClient.GetDataset(ctx, headers, collectionID, filterModel.Dataset.DatasetID)
 		if err != nil {
 			log.Error(ctx, "failed to get dataset details", err)
 			http.Error(w, "failed to get dataset", http.StatusInternalServerError)

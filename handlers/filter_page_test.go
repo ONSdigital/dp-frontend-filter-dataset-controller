@@ -12,6 +12,7 @@ import (
 
 	dpApiClientsGoDataset "github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
+	dpDatasetApiSdk "github.com/ONSdigital/dp-dataset-api/sdk"
 	"github.com/ONSdigital/dp-frontend-router/router/routertest"
 )
 
@@ -27,7 +28,7 @@ func TestFilterPageHandler(t *testing.T) {
 
 	mockContext := gomock.Any()
 	mockFilterClient := NewMockFilterClient(mockCtrl)
-	mockDatasetClient := NewMockDatasetClient(mockCtrl)
+	mockDatasetClient := NewMockDatasetAPISdkClient(mockCtrl)
 
 	mockFilterModel := &filter.Model{
 		Dataset: filter.Dataset{
@@ -36,9 +37,16 @@ func TestFilterPageHandler(t *testing.T) {
 	}
 
 	collectionID := ""
-	userAuthToken := ""
-	serviceAuthToken := ""
 	downloadServiceToken := ""
+	serviceAuthToken := ""
+	userAuthToken := ""
+	
+	headers := dpDatasetApiSdk.Headers{
+		CollectionID:         collectionID,
+		DownloadServiceToken: downloadServiceToken,
+		ServiceToken:         serviceAuthToken,
+		UserAccessToken:      userAuthToken,
+	}
 
 	Convey("Given a FilterPageHandler", t, func() {
 		Convey("When filterID is missing", func() {
@@ -98,8 +106,8 @@ func TestFilterPageHandler(t *testing.T) {
 				mockContext, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, "123",
 			).Return(*mockFilterModel, "", nil)
 
-			mockDatasetClient.EXPECT().Get(
-				mockContext, userAuthToken, serviceAuthToken, collectionID, "123",
+			mockDatasetClient.EXPECT().GetDataset(
+				mockContext, headers, collectionID, "123",
 			).Return(dpApiClientsGoDataset.DatasetDetails{}, errors.New("dataset error"))
 
 			router.ServeHTTP(mockRequestWriter, mockRequest)
@@ -129,8 +137,8 @@ func TestFilterPageHandler(t *testing.T) {
 				mockContext, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, "123",
 			).Return(*mockFilterModel, "", nil)
 
-			mockDatasetClient.EXPECT().Get(
-				mockContext, userAuthToken, serviceAuthToken, collectionID, "123",
+			mockDatasetClient.EXPECT().GetDataset(
+				mockContext, headers, collectionID, "123",
 			).Return(datasetDetails, nil)
 
 			router.ServeHTTP(mockRequestWriter, mockRequest)
@@ -169,8 +177,8 @@ func TestFilterPageHandler(t *testing.T) {
 				mockContext, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, "123",
 			).Return(*mockFilterModel, "", nil)
 
-			mockDatasetClient.EXPECT().Get(
-				mockContext, userAuthToken, serviceAuthToken, collectionID, "123",
+			mockDatasetClient.EXPECT().GetDataset(
+				mockContext, headers, collectionID, "123",
 			).Return(datasetDetails, nil)
 
 			router.ServeHTTP(mockRequestWriter, mockRequest)

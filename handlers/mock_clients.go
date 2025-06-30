@@ -14,6 +14,8 @@ import (
 	hierarchy "github.com/ONSdigital/dp-api-clients-go/v2/hierarchy"
 	search "github.com/ONSdigital/dp-api-clients-go/v2/search"
 	zebedee "github.com/ONSdigital/dp-api-clients-go/v2/zebedee"
+	models "github.com/ONSdigital/dp-dataset-api/models"
+	sdk "github.com/ONSdigital/dp-dataset-api/sdk"
 	healthcheck "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	model "github.com/ONSdigital/dp-renderer/v2/model"
 	gomock "github.com/golang/mock/gomock"
@@ -508,6 +510,44 @@ func (m *MockDatasetClient) GetVersionMetadata(ctx context.Context, userAuthToke
 func (mr *MockDatasetClientMockRecorder) GetVersionMetadata(ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersionMetadata", reflect.TypeOf((*MockDatasetClient)(nil).GetVersionMetadata), ctx, userAuthToken, serviceAuthToken, collectionID, datasetID, edition, version)
+}
+
+// MockDatasetAPISdkClient is a mock of DatasetAPISdkClient interface.
+type MockDatasetAPISdkClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockDatasetAPISdkClientMockRecorder
+}
+
+// MockDatasetAPISdkClientMockRecorder is the mock recorder for MockDatasetAPISdkClient.
+type MockDatasetAPISdkClientMockRecorder struct {
+	mock *MockDatasetAPISdkClient
+}
+
+// NewMockDatasetAPISdkClient creates a new mock instance.
+func NewMockDatasetAPISdkClient(ctrl *gomock.Controller) *MockDatasetAPISdkClient {
+	mock := &MockDatasetAPISdkClient{ctrl: ctrl}
+	mock.recorder = &MockDatasetAPISdkClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDatasetAPISdkClient) EXPECT() *MockDatasetAPISdkClientMockRecorder {
+	return m.recorder
+}
+
+// GetDataset mocks base method.
+func (m *MockDatasetAPISdkClient) GetDataset(ctx context.Context, headers sdk.Headers, collectionID, datasetID string) (models.Dataset, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataset", ctx, headers, collectionID, datasetID)
+	ret0, _ := ret[0].(models.Dataset)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDataset indicates an expected call of GetDataset.
+func (mr *MockDatasetAPISdkClientMockRecorder) GetDataset(ctx, headers, collectionID, datasetID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataset", reflect.TypeOf((*MockDatasetAPISdkClient)(nil).GetDataset), ctx, headers, collectionID, datasetID)
 }
 
 // MockHierarchyClient is a mock of HierarchyClient interface.
