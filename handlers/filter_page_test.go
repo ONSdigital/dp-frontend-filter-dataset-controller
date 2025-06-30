@@ -12,7 +12,6 @@ import (
 
 	dpApiClientsGoDataset "github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
-	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-router/router/routertest"
 )
 
@@ -27,15 +26,8 @@ func TestFilterPageHandler(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockContext := gomock.Any()
-	mockConfig := config.Config{
-		FilterFlexDatasetServiceURL:        "http://localhost:27100",
-		FrontendFilterDatasetControllerURL: "http://localhost:20001",
-	}
-
 	mockFilterClient := NewMockFilterClient(mockCtrl)
 	mockDatasetClient := NewMockDatasetClient(mockCtrl)
-	filterHandler := NewHandlerMock()
-	filterFlexHandler := NewHandlerMock()
 
 	mockFilterModel := &filter.Model{
 		Dataset: filter.Dataset{
@@ -49,12 +41,9 @@ func TestFilterPageHandler(t *testing.T) {
 	downloadServiceToken := ""
 
 	Convey("Given a FilterPageHandler", t, func() {
-		handler := FilterPageHandler(mockFilterClient, mockDatasetClient, filterHandler, filterFlexHandler)
-		router := mux.NewRouter()
-		router.HandleFunc("/filters/{filterID}/dimensions", handler)
-		router.HandleFunc("/filters/{filterID}/dimensions/{dimension}", handler)
-
 		Convey("When filterID is missing", func() {
+			filterHandler := NewHandlerMock()
+			filterFlexHandler := NewHandlerMock()
 			mockRequestWriter := httptest.NewRecorder()
 			mockRequest := httptest.NewRequest(http.MethodGet, "/filters/missing-filter-id/dimensions", http.NoBody)
 
@@ -70,7 +59,15 @@ func TestFilterPageHandler(t *testing.T) {
 			})
 		})
 
-		Convey("If GetJobState returns error", func() {
+		Convey("When GetJobState returns error", func() {
+			filterHandler := NewHandlerMock()
+			filterFlexHandler := NewHandlerMock()
+
+			handler := FilterPageHandler(mockFilterClient, mockDatasetClient, filterHandler, filterFlexHandler)
+			router := mux.NewRouter()
+			router.HandleFunc("/filters/{filterID}/dimensions", handler)
+			router.HandleFunc("/filters/{filterID}/dimensions/{dimension}", handler)
+
 			mockRequestWriter := httptest.NewRecorder()
 			mockRequest := httptest.NewRequest(http.MethodGet, "/filters/123/dimensions", http.NoBody)
 
@@ -85,9 +82,17 @@ func TestFilterPageHandler(t *testing.T) {
 			})
 		})
 
-		Convey("If error is returned fetching dataset", func() {
+		Convey("When error is returned fetching dataset", func() {
 			mockRequestWriter := httptest.NewRecorder()
 			mockRequest := httptest.NewRequest(http.MethodGet, "/filters/123/dimensions", http.NoBody)
+
+			filterHandler := NewHandlerMock()
+			filterFlexHandler := NewHandlerMock()
+
+			router := mux.NewRouter()
+			handler := FilterPageHandler(mockFilterClient, mockDatasetClient, filterHandler, filterFlexHandler)
+			router.HandleFunc("/filters/{filterID}/dimensions", handler)
+			router.HandleFunc("/filters/{filterID}/dimensions/{dimension}", handler)
 
 			mockFilterClient.EXPECT().GetJobState(
 				mockContext, userAuthToken, serviceAuthToken, downloadServiceToken, collectionID, "123",
@@ -104,9 +109,17 @@ func TestFilterPageHandler(t *testing.T) {
 			})
 		})
 
-		Convey("If dataset is 'cantabular' type", func() {
+		Convey("When dataset is 'cantabular' type", func() {
 			mockRequestWriter := httptest.NewRecorder()
 			mockRequest := httptest.NewRequest(http.MethodGet, "/filters/123/dimensions/ltla", http.NoBody)
+
+			filterHandler := NewHandlerMock()
+			filterFlexHandler := NewHandlerMock()
+
+			router := mux.NewRouter()
+			handler := FilterPageHandler(mockFilterClient, mockDatasetClient, filterHandler, filterFlexHandler)
+			router.HandleFunc("/filters/{filterID}/dimensions", handler)
+			router.HandleFunc("/filters/{filterID}/dimensions/{dimension}", handler)
 
 			datasetDetails := dpApiClientsGoDataset.DatasetDetails{
 				Type: "cantabular",
@@ -122,19 +135,31 @@ func TestFilterPageHandler(t *testing.T) {
 
 			router.ServeHTTP(mockRequestWriter, mockRequest)
 
-			Convey("Then the status code is 307", func() {
-				So(mockRequestWriter.Code, ShouldEqual, http.StatusTemporaryRedirect)
+			Convey("Then the status code is 200", func() {
+				So(mockRequestWriter.Code, ShouldEqual, http.StatusOK)
 			})
 
-			// TODO: look at other redirects used in this repo
-			Convey("Then a redirect is made to FilterFlexDatasetServiceURL ", func() {
-				So(mockRequestWriter.Header().Get("Location"), ShouldStartWith, mockConfig.FilterFlexDatasetServiceURL)
+			Convey("Then the request is sent to Filter Flex Dataset Service", func() {
+				So(len(filterFlexHandler.ServeHTTPCalls()), ShouldEqual, 1)
+				So(filterFlexHandler.ServeHTTPCalls()[0].In2.URL.Path, ShouldResemble, "/filters/123/dimensions/ltla")
+			})
+
+			Convey("Then Filter Dataset Service was not called", func() {
+				So(len(filterHandler.ServeHTTPCalls()), ShouldEqual, 0)
 			})
 		})
 
-		Convey("If dataset is not 'cantabular' type", func() {
+		Convey("When dataset is not 'cantabular' type", func() {
+			filterHandler := NewHandlerMock()
+			filterFlexHandler := NewHandlerMock()
+
 			mockRequestWriter := httptest.NewRecorder()
 			mockRequest := httptest.NewRequest(http.MethodGet, "/filters/123/dimensions", http.NoBody)
+
+			router := mux.NewRouter()
+			handler := FilterPageHandler(mockFilterClient, mockDatasetClient, filterHandler, filterFlexHandler)
+			router.HandleFunc("/filters/{filterID}/dimensions", handler)
+			router.HandleFunc("/filters/{filterID}/dimensions/{dimension}", handler)
 
 			datasetDetails := dpApiClientsGoDataset.DatasetDetails{
 				Type: "cmd",
@@ -150,13 +175,17 @@ func TestFilterPageHandler(t *testing.T) {
 
 			router.ServeHTTP(mockRequestWriter, mockRequest)
 
-			Convey("Then the status code is 307", func() {
-				So(mockRequestWriter.Code, ShouldEqual, http.StatusTemporaryRedirect)
+			Convey("Then the status code is 200", func() {
+				So(mockRequestWriter.Code, ShouldEqual, http.StatusOK)
 			})
 
-			// TODO: look at other redirects used in this repo
-			Convey("Then a redirect is made to FrontendFilterDatasetControllerURL ", func() {
-				So(mockRequestWriter.Header().Get("Location"), ShouldStartWith, mockConfig.FrontendFilterDatasetControllerURL)
+			Convey("Then the request is sent to Filter Flex Dataset Service", func() {
+				So(len(filterHandler.ServeHTTPCalls()), ShouldEqual, 1)
+				So(filterHandler.ServeHTTPCalls()[0].In2.URL.Path, ShouldResemble, "/filters/123/dimensions")
+			})
+
+			Convey("Then Filter Dataset Service was not called", func() {
+				So(len(filterFlexHandler.ServeHTTPCalls()), ShouldEqual, 0)
 			})
 		})
 	})

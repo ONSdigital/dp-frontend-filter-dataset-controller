@@ -16,11 +16,10 @@ func FilterPageHandler(f FilterClient, datasetClient DatasetClient, filter, filt
 		ctx := r.Context()
 		vars := mux.Vars(r)
 
-		userAuthToken := "" 
+		userAuthToken := ""
 		serviceAuthToken := ""
 		collectionID := ""
 		downloadServiceToken := ""
-
 
 		filterID := vars["filterID"]
 		if filterID == "" {
