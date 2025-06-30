@@ -21,6 +21,13 @@ func FilterPageHandler(f FilterClient, datasetClient DatasetAPISdkClient, filter
 		collectionID := ""
 		downloadServiceToken := ""
 
+		// Obtain access_token from cookie
+		c, err := r.Cookie(`access_token`)
+		if err == nil && c.Value != "" {
+			userAuthToken = c.Value
+			log.Info(r.Context(), "obtained access_token Cookie")
+		}
+
 		headers := dpDatasetApiSdk.Headers{
 			CollectionID:         collectionID,
 			DownloadServiceToken: downloadServiceToken,
@@ -32,13 +39,6 @@ func FilterPageHandler(f FilterClient, datasetClient DatasetAPISdkClient, filter
 		if filterID == "" {
 			http.Error(w, "missing filter ID", http.StatusBadRequest)
 			return
-		}
-
-		// Obtain access_token from cookie
-		c, err := r.Cookie(`access_token`)
-		if err == nil && c.Value != "" {
-			userAuthToken = c.Value
-			log.Info(r.Context(), "obtained access_token Cookie")
 		}
 
 		filterModel, _, err := f.GetJobState(
