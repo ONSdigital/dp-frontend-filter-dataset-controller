@@ -39,6 +39,13 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients *Clien
 
 	f := handlers.NewFilter(clients.Render, clients.Filter, clients.Dataset,
 		clients.Hierarchy, clients.Search, clients.Zebedee, apiRouterVersion, cfg)
+	
+	filterDatasetControllerURL, _ := helpers.ParseURL(ctx, cfg.FrontendFilterDatasetControllerURL, "FilterDatasetControllerURL")
+	filterFlexDatasetServiceURL, _ := helpers.ParseURL(ctx, cfg.FilterFlexDatasetServiceURL, "FilterFlexDatasetServiceURL")
+	filterHandler := helpers.CreateReverseProxy("filters", filterDatasetControllerURL) // CMD
+	filterFlexHandler := helpers.CreateReverseProxy("flex", filterFlexDatasetServiceURL) // Cantabular
+
+	r.Path("/filters/{uri:.*}").HandlerFunc(handlers.FilterPageHandler(f.FilterClient, f.DatasetClient, filterHandler, filterFlexHandler))
 
 	r.StrictSlash(true).Path("/health").HandlerFunc(clients.HealthcheckHandler)
 

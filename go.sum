@@ -4,6 +4,8 @@ github.com/ONSdigital/dp-api-clients-go/v2 v2.266.0 h1:NQbu+x2Q7ZhrjGKvN73qVxG/n
 github.com/ONSdigital/dp-api-clients-go/v2 v2.266.0/go.mod h1:bLseTP21r8LCStUEeOdVPyqtrTomOFP/azPjKWW4deA=
 github.com/ONSdigital/dp-cookies v0.6.0 h1:bYiV/M0W7ufn7bIJf2cYjY2vtMUrdU0uLt7mYP3TV4c=
 github.com/ONSdigital/dp-cookies v0.6.0/go.mod h1:YQyEcsQJQcndQFraHt6YawJGOccsm6wJv+31f9jaKfI=
+github.com/ONSdigital/dp-frontend-router v1.102.0 h1:Ae6qjK3eS/Kv4U7KSNnMXoC8PqIm/g7i5mVr6NRExd0=
+github.com/ONSdigital/dp-frontend-router v1.102.0/go.mod h1:FJ1hEojxWISsyoxAxpPnQ7BaDx8niqyeLJfLB0nj7BQ=
 github.com/ONSdigital/dp-healthcheck v1.6.4 h1:FhWOuVmob36dYq7AzCdbgyf0Vk58IFitSl8y8pWJ8ck=
 github.com/ONSdigital/dp-healthcheck v1.6.4/go.mod h1:j3UNbGT4ZJg1chrRkPLE6YUVYCg1su3AAQ8frcBrvgc=
 github.com/ONSdigital/dp-mocking v0.11.0 h1:laln6e2JD4vtsYbg0cTw9ur1Xf390AUYdd85cG2UNQw=
