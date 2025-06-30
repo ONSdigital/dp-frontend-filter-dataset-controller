@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -52,13 +51,4 @@ func FilterPageHandler(f FilterClient, datasetClient DatasetClient, filter, filt
 		// If CMD type, the CMD filter journey works as it currently does i.e. to frontend-filter-dataset-controller
 		filter.ServeHTTP(w, r)
 	}
-}
-
-func ReturnSecondSegmentFromPath(path string) (secondSegment string, err error) {
-	subs := strings.Split(path, "/")
-	if len(subs) < 3 {
-		err = fmt.Errorf("unable to extract secondSegment from path: %s", path)
-		return
-	}
-	return subs[2], nil
 }

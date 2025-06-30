@@ -13,6 +13,7 @@ import (
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/config"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/handlers"
 	"github.com/ONSdigital/dp-frontend-filter-dataset-controller/helpers"
+	dpRouterHelpers "github.com/ONSdigital/dp-frontend-router/helpers"
 	render "github.com/ONSdigital/dp-renderer/v2"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
@@ -40,10 +41,10 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients *Clien
 	f := handlers.NewFilter(clients.Render, clients.Filter, clients.Dataset,
 		clients.Hierarchy, clients.Search, clients.Zebedee, apiRouterVersion, cfg)
 
-	filterDatasetControllerURL, _ := helpers.ParseURL(ctx, cfg.FrontendFilterDatasetControllerURL, "FilterDatasetControllerURL")
-	filterFlexDatasetServiceURL, _ := helpers.ParseURL(ctx, cfg.FilterFlexDatasetServiceURL, "FilterFlexDatasetServiceURL")
-	filterHandler := helpers.CreateReverseProxy("filters", filterDatasetControllerURL)   // CMD
-	filterFlexHandler := helpers.CreateReverseProxy("flex", filterFlexDatasetServiceURL) // Cantabular
+	filterDatasetControllerURL, _ := dpRouterHelpers.ParseURL(ctx, cfg.FrontendFilterDatasetControllerURL, "FilterDatasetControllerURL")
+	filterFlexDatasetServiceURL, _ := dpRouterHelpers.ParseURL(ctx, cfg.FilterFlexDatasetServiceURL, "FilterFlexDatasetServiceURL")
+	filterHandler := dpRouterHelpers.CreateReverseProxy("filters", filterDatasetControllerURL)   // CMD
+	filterFlexHandler := dpRouterHelpers.CreateReverseProxy("flex", filterFlexDatasetServiceURL) // Cantabular
 
 	r.Path("/filters/{uri:.*}").HandlerFunc(handlers.FilterPageHandler(f.FilterClient, f.DatasetClient, filterHandler, filterFlexHandler))
 
