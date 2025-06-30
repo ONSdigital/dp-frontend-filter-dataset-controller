@@ -23,7 +23,7 @@ import (
 type Clients struct {
 	Filter             		*filter.Client
 	Dataset            		*dataset.Client
-	DatasetAPISdkClient 	handlers.DatasetAPISdkClient
+	DatasetAPISdkClient 	*handlers.DatasetAPISdkClient
 	Hierarchy          		*hierarchy.Client
 	HealthcheckHandler 		func(w http.ResponseWriter, req *http.Request)
 	Render             		*render.Render
@@ -46,7 +46,7 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients *Clien
 	filterHandler := dpRouterHelpers.CreateReverseProxy("filters", filterDatasetControllerURL)   // CMD
 	filterFlexHandler := dpRouterHelpers.CreateReverseProxy("flex", filterFlexDatasetServiceURL) // Cantabular
 
-	r.Path("/filters/{uri:.*}").HandlerFunc(handlers.FilterPageHandler(f.FilterClient, clients.DatasetAPISdkClient, filterHandler, filterFlexHandler))
+	r.Path("/filters/{uri:.*}").HandlerFunc(handlers.FilterPageHandler(f.FilterClient, *clients.DatasetAPISdkClient, filterHandler, filterFlexHandler))
 
 	r.StrictSlash(true).Path("/health").HandlerFunc(clients.HealthcheckHandler)
 
