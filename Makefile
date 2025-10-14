@@ -9,8 +9,8 @@ VERSION ?= $(shell git tag --points-at HEAD | grep ^v | head -n 1)
 all: audit test build
 
 .PHONY: audit
-audit:
-	go list -m all | nancy sleuth
+audit: generate-prod
+	dis-vulncheck --build-tags=production
 
 .PHONY: build
 build: generate-prod
