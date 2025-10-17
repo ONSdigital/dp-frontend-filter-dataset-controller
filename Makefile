@@ -21,8 +21,17 @@ debug: generate-debug
 	go build -tags 'debug' -o $(BINPATH)/dp-frontend-filter-dataset-controller -ldflags "-X main.BuildTime=$(BUILD_TIME) -X main.GitCommit=$(GIT_COMMIT) -X main.Version=$(VERSION)"
 	HUMAN_LOG=1 DEBUG=1 $(BINPATH)/dp-frontend-filter-dataset-controller
 
-.PHONY: lint 
-lint: generate-prod
+.PHONY: lint
+lint: ## Used in ci to run linters against Go code
+	cp assets/assets.go assets/assets.go.bak
+	echo 'func Asset(_ string) ([]byte, error) { return nil, nil }' >> assets/assets.go
+	echo 'func AssetNames() []string { return []string{} }' >> assets/assets.go
+	gofmt -w assets/assets.go
+	golangci-lint run ./... --build-tags 'production'|| { echo "Linting failed, restoring original assets.go"; mv assets/assets.go.bak assets/assets.go; exit 1; }
+	mv assets/assets.go.bak assets/assets.go
+
+.PHONY: lint-local
+lint-local: ## Use locally to run linters against Go code
 	golangci-lint run ./... --build-tags 'production'
 
 .PHONY: test
