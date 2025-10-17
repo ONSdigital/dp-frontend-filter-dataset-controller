@@ -324,21 +324,21 @@ func TestUnitMapper(t *testing.T) {
 
 	Convey("test CreatePreviewPage correctly maps to model.Preview", t, func() {
 		dimensions := getTestDimensions()
-		filter := getTestFilter()
-		dataset := getTestDataset()
+		f := getTestFilter()
+		d := getTestDataset()
 
-		pp := CreatePreviewPage(req, bp, dimensions, filter, dataset, filter.FilterID, "12345", "11-11-1992", "/v1", false, "en", serviceMessage, emergencyBanner)
+		pp := CreatePreviewPage(req, bp, dimensions, f, d, f.FilterID, "12345", "11-11-1992", "/v1", false, "en", serviceMessage, emergencyBanner)
 		So(pp.SearchDisabled, ShouldBeFalse)
 		So(pp.Breadcrumb, ShouldHaveLength, 4)
-		So(pp.Breadcrumb[0].Title, ShouldEqual, dataset.Title)
+		So(pp.Breadcrumb[0].Title, ShouldEqual, d.Title)
 		So(pp.Breadcrumb[0].URI, ShouldEqual, "/datasets//editions")
 		So(pp.Breadcrumb[1].Title, ShouldEqual, "5678")
 		So(pp.Breadcrumb[1].URI, ShouldEqual, "/datasets/1234/editions/5678/versions/1")
 		So(pp.Breadcrumb[2].Title, ShouldEqual, "Filter options")
-		So(pp.Breadcrumb[2].URI, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
+		So(pp.Breadcrumb[2].URI, ShouldEqual, "/filters/"+f.FilterID+"/dimensions")
 		So(pp.Breadcrumb[3].Title, ShouldEqual, "Preview")
 		So(pp.Breadcrumb[3].URI, ShouldEqual, "")
-		So(pp.Data.FilterID, ShouldEqual, filter.Links.FilterBlueprint.ID)
+		So(pp.Data.FilterID, ShouldEqual, f.Links.FilterBlueprint.ID)
 		if pp.Data.Downloads[0].Extension == "csv" {
 			So(pp.Data.Downloads[0].Extension, ShouldEqual, "csv")
 			So(pp.Data.Downloads[0].Size, ShouldEqual, "362783")
@@ -355,7 +355,7 @@ func TestUnitMapper(t *testing.T) {
 		}
 
 		So(pp.ServiceMessage, ShouldEqual, serviceMessage)
-		So(pp.EmergencyBanner.Type, ShouldEqual, strings.Replace(emergencyBanner.Type, "_", "-", -1))
+		So(pp.EmergencyBanner.Type, ShouldEqual, strings.ReplaceAll(emergencyBanner.Type, "_", "-"))
 		So(pp.EmergencyBanner.Title, ShouldEqual, emergencyBanner.Title)
 		So(pp.EmergencyBanner.Description, ShouldEqual, emergencyBanner.Description)
 		So(pp.EmergencyBanner.URI, ShouldEqual, emergencyBanner.URI)
@@ -390,12 +390,12 @@ func TestUnitMapper(t *testing.T) {
 				},
 			}
 
-			filter := getTestFilter()
+			f := getTestFilter()
 
-			p := CreateListSelectorPage(req, bp, "time", selectedValues, allValues, filter, d, dataset.VersionDimensions{}, "12345", "/v1", "en", serviceMessage, emergencyBanner)
+			p := CreateListSelectorPage(req, bp, "time", selectedValues, allValues, f, d, dataset.VersionDimensions{}, "12345", "/v1", "en", serviceMessage, emergencyBanner)
 			So(p.Data.Title, ShouldEqual, "Time")
 			So(p.SearchDisabled, ShouldBeTrue)
-			So(p.FilterID, ShouldEqual, filter.FilterID)
+			So(p.FilterID, ShouldEqual, f.FilterID)
 
 			So(p.Breadcrumb, ShouldHaveLength, 4)
 			So(p.Breadcrumb[0].Title, ShouldEqual, d.Title)
@@ -403,16 +403,16 @@ func TestUnitMapper(t *testing.T) {
 			So(p.Breadcrumb[1].Title, ShouldEqual, "5678")
 			So(p.Breadcrumb[1].URI, ShouldEqual, "/datasets/1234/editions/5678/versions/1")
 			So(p.Breadcrumb[2].Title, ShouldEqual, "Filter options")
-			So(p.Breadcrumb[2].URI, ShouldEqual, "/filters/"+filter.Links.FilterBlueprint.ID+"/dimensions")
+			So(p.Breadcrumb[2].URI, ShouldEqual, "/filters/"+f.Links.FilterBlueprint.ID+"/dimensions")
 			So(p.Breadcrumb[3].Title, ShouldEqual, "Time")
 			So(p.Breadcrumb[3].URI, ShouldEqual, "")
 			So(p.Data.AddFromRange.Label, ShouldEqual, "add time range")
-			So(p.Data.AddFromRange.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time")
-			So(p.Data.SaveAndReturn.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
-			So(p.Data.Cancel.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions")
+			So(p.Data.AddFromRange.URL, ShouldEqual, "/filters/"+f.FilterID+"/dimensions/time")
+			So(p.Data.SaveAndReturn.URL, ShouldEqual, "/filters/"+f.FilterID+"/dimensions")
+			So(p.Data.Cancel.URL, ShouldEqual, "/filters/"+f.FilterID+"/dimensions")
 			So(p.Data.AddAllInRange.Label, ShouldEqual, "All times")
-			So(p.Data.RangeData.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/list")
-			So(p.Data.RemoveAll.URL, ShouldEqual, "/filters/"+filter.FilterID+"/dimensions/time/remove-all")
+			So(p.Data.RangeData.URL, ShouldEqual, "/filters/"+f.FilterID+"/dimensions/time/list")
+			So(p.Data.RemoveAll.URL, ShouldEqual, "/filters/"+f.FilterID+"/dimensions/time/remove-all")
 			So(p.Data.RangeData.Values, ShouldHaveLength, 3)
 			So(p.Data.RangeData.Values[0].Label, ShouldEqual, "Feb-10")
 			So(p.Data.RangeData.Values[0].IsSelected, ShouldBeFalse)
@@ -423,7 +423,7 @@ func TestUnitMapper(t *testing.T) {
 			So(p.Data.FiltersAmount, ShouldEqual, 2)
 
 			So(p.ServiceMessage, ShouldEqual, serviceMessage)
-			So(p.EmergencyBanner.Type, ShouldEqual, strings.Replace(emergencyBanner.Type, "_", "-", -1))
+			So(p.EmergencyBanner.Type, ShouldEqual, strings.ReplaceAll(emergencyBanner.Type, "_", "-"))
 			So(p.EmergencyBanner.Title, ShouldEqual, emergencyBanner.Title)
 			So(p.EmergencyBanner.Description, ShouldEqual, emergencyBanner.Description)
 			So(p.EmergencyBanner.URI, ShouldEqual, emergencyBanner.URI)

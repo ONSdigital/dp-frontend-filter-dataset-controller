@@ -662,7 +662,7 @@ func CreateTimePage(req *http.Request, bp core.Page, f filter.Model, d dataset.D
 		for _, selVal := range selVals {
 			if val.Format("Jan-06") == selVal.Option {
 				isSelected = true
-				if val == sortedTimes[len(sortedTimes)-1] {
+				if val.Equal(sortedTimes[len(sortedTimes)-1]) {
 					latestSelected = true
 				}
 			}
@@ -1144,7 +1144,7 @@ func mapEmergencyBanner(bannerData zebedee.EmergencyBanner) core.EmergencyBanner
 	emptyBannerObj := zebedee.EmergencyBanner{}
 	if bannerData != emptyBannerObj {
 		mappedEmergencyBanner.Title = bannerData.Title
-		mappedEmergencyBanner.Type = strings.Replace(bannerData.Type, "_", "-", -1)
+		mappedEmergencyBanner.Type = strings.ReplaceAll(bannerData.Type, "_", "-")
 		mappedEmergencyBanner.Description = bannerData.Description
 		mappedEmergencyBanner.URI = bannerData.URI
 		mappedEmergencyBanner.LinkText = bannerData.LinkText

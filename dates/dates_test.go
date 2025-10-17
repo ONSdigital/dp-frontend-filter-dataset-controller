@@ -25,9 +25,9 @@ func TestUnitDates(t *testing.T) {
 	})
 
 	Convey("test ConvertToMonthYear", t, func() {
-		time, err := time.Parse("01-02-2006", "05-01-2006")
+		time1, err := time.Parse("01-02-2006", "05-01-2006")
 		So(err, ShouldBeNil)
-		formattedData := ConvertToMonthYear(time)
+		formattedData := ConvertToMonthYear(time1)
 		So(formattedData, ShouldEqual, "May 2006")
 	})
 
