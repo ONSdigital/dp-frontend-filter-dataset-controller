@@ -2,8 +2,6 @@ module github.com/ONSdigital/dp-frontend-filter-dataset-controller
 
 go 1.24.0
 
-toolchain go1.24.1
-
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.269.0
 	github.com/ONSdigital/dp-cookies v0.7.0
@@ -64,9 +62,9 @@ require (
 	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/net v0.46.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20251029180050-ab9386a59fda // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251029180050-ab9386a59fda // indirect
-	google.golang.org/grpc v1.76.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250929231259-57b25ae835d4 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250929231259-57b25ae835d4 // indirect
+	google.golang.org/grpc v1.75.1 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 )
 
