@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/dataset"
 	"github.com/ONSdigital/dp-api-clients-go/v2/filter"
@@ -45,8 +46,6 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients *Clien
 	r.Path("/filter-outputs/{filterOutputID}.json").Methods("GET").HandlerFunc(f.GetFilterJob())
 	r.StrictSlash(true).Path("/filter-outputs/{filterOutputID}").Methods("GET").HandlerFunc(f.OutputPage())
 
-	r.StrictSlash(true).Path("/filters/{filterID}/submit").Methods("POST").HandlerFunc(f.Submit())
-	r.StrictSlash(true).Path("/filters/{filterID}/dimensions").Methods("GET").HandlerFunc(f.FilterOverview())
 	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/clear-all").HandlerFunc(f.FilterOverviewClearAll())
 
 	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/time").Methods("GET").HandlerFunc(f.Time())
@@ -58,7 +57,18 @@ func Init(ctx context.Context, r *mux.Router, cfg *config.Config, clients *Clien
 	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/{name}/search").Methods("GET").HandlerFunc(f.Search())
 	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/{name}/search/update").HandlerFunc(f.SearchUpdate())
 
-	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/{name}").Methods("GET").HandlerFunc(f.DimensionSelector())
+	filterFlexDatasetServiceURL, _ := url.Parse(cfg.FilterFlexDatasetServiceURL)
+	filterFlexHandler := helpers.CreateReverseProxy("flex", filterFlexDatasetServiceURL) // Cantabular
+
+	// routes to perform filter type check on for cantabular and divert to correct service
+	r.StrictSlash(true).Path("/filters/{filterID}/dimensions").Methods("GET").HandlerFunc(f.FilterType(f.DatasetClient, f.FilterOverview(), filterFlexHandler))
+	r.StrictSlash(true).Path("/filters/{filterID}/dimensions").Methods("POST").HandlerFunc(f.FilterType(f.DatasetClient, f.FilterOverview(), filterFlexHandler))
+	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/{name}").Methods("GET").HandlerFunc(f.FilterType(f.DatasetClient, f.DimensionSelector(), filterFlexHandler))
+	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/{name}").Methods("POST").HandlerFunc(f.FilterType(f.DatasetClient, f.DimensionSelector(), filterFlexHandler))
+	r.StrictSlash(true).Path("/filters/{filterID}/submit").Methods("POST").HandlerFunc(f.FilterType(f.DatasetClient, f.Submit(), filterFlexHandler))
+	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/geography/coverage").Methods("GET").HandlerFunc(f.FilterType(f.DatasetClient, nil, filterFlexHandler))
+	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/geography/coverage").Methods("POST").HandlerFunc(f.FilterType(f.DatasetClient, nil, filterFlexHandler))
+
 	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/{name}/remove-all").HandlerFunc(f.DimensionRemoveAll())
 	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/{name}/add-all").HandlerFunc(f.DimensionAddAll())
 	r.StrictSlash(true).Path("/filters/{filterID}/dimensions/{name}/update").HandlerFunc(f.HierarchyUpdate())
