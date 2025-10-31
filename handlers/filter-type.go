@@ -9,7 +9,6 @@ import (
 )
 
 // Handler is middleware that a accepts a filter and dataset client that returns either the filter or filterFlex handler dependent on the type of dataset
-// func Handler(filterClient FilterClient, datasetClient DatasetClient) func(filter, filterFlex http.Handler) http.Handler {
 func (f *Filter) FilterType(datasetClient DatasetClient, filter, filterFlex http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		path := req.URL.Path

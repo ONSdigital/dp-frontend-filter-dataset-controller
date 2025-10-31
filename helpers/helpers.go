@@ -19,9 +19,6 @@ import (
 	"golang.org/x/text/language"
 )
 
-//go:generate moq -out helperstest/helper.go -pkg helperstest . Handler
-type Handler http.Handler
-
 // ExtractDatasetInfoFromPath gets the datasetID, edition and version from a given path
 func ExtractDatasetInfoFromPath(ctx context.Context, path string) (datasetID, edition, version string, err error) {
 	log.Info(ctx, "attempting to extract dataset details from path", log.Data{"path": path})
