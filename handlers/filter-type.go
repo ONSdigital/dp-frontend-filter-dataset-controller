@@ -24,7 +24,13 @@ func (f *Filter) FilterType(datasetClient DatasetClient, filter, filterFlex http
 		// Obtain access_token from cookie
 		userAccessToken := ""
 		c, err := req.Cookie(`access_token`)
-		if err == nil && c.Value != "" {
+		if err != nil {
+			if err != http.ErrNoCookie {
+				log.Info(ctx, "access_token cookie does not exist")
+			} else {
+				log.Error(ctx, "error retrieving access_token cookie", err)
+			}
+		} else {
 			userAccessToken = c.Value
 			log.Info(req.Context(), "obtained access_token Cookie")
 		}
