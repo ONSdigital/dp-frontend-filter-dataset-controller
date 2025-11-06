@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -33,6 +34,8 @@ type Config struct {
 
 var cfg *Config
 
+var RendererVersion = "v1.0.0"
+
 // Get returns the default config with any modifications through environment
 // variables
 func Get() (*Config, error) {
@@ -44,7 +47,7 @@ func Get() (*Config, error) {
 	if config.Debug {
 		config.PatternLibraryAssetsPath = "http://localhost:9002/dist/assets"
 	} else {
-		config.PatternLibraryAssetsPath = "//cdn.ons.gov.uk/dp-design-system/f3e1909"
+		config.PatternLibraryAssetsPath = fmt.Sprintf("//cdn.ons.gov.uk/dis-design-system-go/%s", RendererVersion)
 	}
 
 	return config, nil

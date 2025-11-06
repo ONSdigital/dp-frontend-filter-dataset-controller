@@ -29,7 +29,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.HealthCheckCriticalTimeout, ShouldEqual, 90*time.Second)
 				So(cfg.HealthCheckInterval, ShouldEqual, 30*time.Second)
 				So(cfg.MaxDatasetOptions, ShouldEqual, 200)
-				So(cfg.PatternLibraryAssetsPath, ShouldEqual, "//cdn.ons.gov.uk/dp-design-system/f3e1909")
+				So(cfg.PatternLibraryAssetsPath, ShouldEqual, "//cdn.ons.gov.uk/dis-design-system-go/v1.0.0")
 				So(cfg.SiteDomain, ShouldEqual, "localhost")
 				So(cfg.OTExporterOTLPEndpoint, ShouldEqual, "localhost:4317")
 				So(cfg.OTServiceName, ShouldEqual, "dp-frontend-filter-dataset-controller")
