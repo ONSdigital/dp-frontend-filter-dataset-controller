@@ -1,6 +1,6 @@
 package model
 
-import core "github.com/ONSdigital/dp-renderer/v2/model"
+import core "github.com/ONSdigital/dis-design-system-go/model"
 
 // Overview represents the data for a overview page
 type Overview struct {

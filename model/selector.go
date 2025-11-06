@@ -1,6 +1,6 @@
 package model
 
-import core "github.com/ONSdigital/dp-renderer/v2/model"
+import core "github.com/ONSdigital/dis-design-system-go/model"
 
 // Selector represents the data for a selector page
 type Selector struct {

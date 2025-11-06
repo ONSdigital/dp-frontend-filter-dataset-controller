@@ -1,6 +1,6 @@
 SHELL=bash
 BINPATH ?= build
-LOCAL_DP_RENDERER_IN_USE = $(shell grep -c "\"github.com/ONSdigital/dp-renderer/v2\" =" go.mod)
+LOCAL_RENDERER_IN_USE = $(shell grep -c "\"github.com/ONSdigital/dis-design-system-go\" =" go.mod)
 BUILD_TIME=$(shell date +%s)
 GIT_COMMIT=$(shell git rev-parse HEAD)
 VERSION ?= $(shell git tag --points-at HEAD | grep ^v | head -n 1)
@@ -33,13 +33,13 @@ test: generate-prod
 test-component:
 	exit
 
-.PHONY: fetch-dp-renderer
+.PHONY: fetch-renderer
 fetch-renderer-lib:
-ifeq ($(LOCAL_DP_RENDERER_IN_USE), 1)
-	$(eval CORE_ASSETS_PATH = $(shell cat go.mod | grep -v "replace" | grep -w "github.com/ONSdigital/dp-renderer/v2" | awk '{print $2}' | tr -d '"'))
+ifeq ($(LOCAL_RENDERER_IN_USE), 1)
+	$(eval CORE_ASSETS_PATH = $(shell cat go.mod | grep -v "replace" | grep -w "github.com/ONSdigital/dis-design-system-go" | awk '{print $2}' | tr -d '"'))
 else
-	$(eval APP_RENDERER_VERSION=$(shell cat go.mod | grep -v "replace" | grep "github.com/ONSdigital/dp-renderer/v2"  | cut -d ' ' -f2 ))
-	$(eval CORE_ASSETS_PATH = $(shell go get github.com/ONSdigital/dp-renderer/v2@$(APP_RENDERER_VERSION) && go list -f '{{.Dir}}' -m github.com/ONSdigital/dp-renderer/v2))
+	$(eval APP_RENDERER_VERSION=$(shell cat go.mod | grep -v "replace" | grep "github.com/ONSdigital/dis-design-system-go"  | cut -d ' ' -f2 ))
+	$(eval CORE_ASSETS_PATH = $(shell go get github.com/ONSdigital/dis-design-system-go@$(APP_RENDERER_VERSION) && go list -f '{{.Dir}}' -m github.com/ONSdigital/dis-design-system-go))
 endif
 
 .PHONY: generate-debug
