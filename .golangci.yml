@@ -80,6 +80,10 @@ linters:
         path: ^handlers/
         text: G710
         # G710: redirects use fixed root relative to the root.
+      - linters:
+          - staticcheck
+        text: 'SA1019: github\.com/ONSdigital/dp-api-clients-go/v2/dataset is deprecated:'
+        # Tech debt: Replace deprecated client with dp-dataset-api SDK client.
 issues:
   new: false
 formatters:
